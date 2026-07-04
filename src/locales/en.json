@@ -28,8 +28,20 @@
       "requiredField": "This field is required",
       "successTitle": "Registration successful",
       "successBody": "Your information has been saved",
+      "alreadyRegisteredTitle": "You're already registered",
+      "alreadyRegisteredBody": "Hi {{name}}, this device is already registered.",
       "viewMyQr": "View my QR",
-      "viewItinerary": "View itinerary"
+      "viewItinerary": "View itinerary",
+      "viewMyRoom": "View my room",
+      "alreadyRegisteredLink": "Already registered? Restore my info",
+      "recoveryTitle": "Restore your registration",
+      "recoveryByPhone": "Search by phone",
+      "recoveryByQr": "Scan my old QR",
+      "phonePlaceholder": "Enter the phone number you registered with",
+      "recoveryNoMatch": "No registration found with this phone number",
+      "recoverySelectYou": "Found a match — select your name",
+      "recoveryQrHint": "Scan the QR code you received when you first registered",
+      "recoveryQrNotFound": "No registration matches this QR code"
     },
     "itinerary": {
       "title": "Itinerary",
@@ -99,6 +111,16 @@
       "pinFormatError": "PIN must be 4 digits",
       "cannotDeleteSelf": "You can't delete your own account",
       "confirmDelete": "Remove \"{{name}}\" from the team?"
+    },
+    "guestManager": {
+      "title": "Manage guests",
+      "subtitle": "{{count}} guests registered — view their registration details",
+      "searchPlaceholder": "Search name, phone, or other info",
+      "noResults": "No guests match your search",
+      "noValue": "No data",
+      "callGuest": "Call {{phone}}",
+      "deleteGuest": "Delete this guest",
+      "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone."
     },
     "dashboard": {
       "title": "Dashboard",

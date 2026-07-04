@@ -28,8 +28,20 @@
       "requiredField": "请填写此项",
       "successTitle": "报名成功",
       "successBody": "您的信息已保存",
+      "alreadyRegisteredTitle": "您已经报名过了",
+      "alreadyRegisteredBody": "{{name}} 您好，此设备已完成报名。",
       "viewMyQr": "查看我的二维码",
-      "viewItinerary": "查看行程"
+      "viewItinerary": "查看行程",
+      "viewMyRoom": "查看我的房间",
+      "alreadyRegisteredLink": "已经报名过？恢复我的信息",
+      "recoveryTitle": "恢复报名信息",
+      "recoveryByPhone": "用电话号码查找",
+      "recoveryByQr": "扫描原二维码",
+      "phonePlaceholder": "输入报名时使用的电话号码",
+      "recoveryNoMatch": "未找到与此号码匹配的报名信息",
+      "recoverySelectYou": "找到匹配信息 — 请选择您的姓名",
+      "recoveryQrHint": "扫描您首次报名时收到的二维码",
+      "recoveryQrNotFound": "未找到与此二维码匹配的报名信息"
     },
     "itinerary": {
       "title": "行程安排",
@@ -99,6 +111,16 @@
       "pinFormatError": "密码必须是4位数字",
       "cannotDeleteSelf": "无法删除自己的账户",
       "confirmDelete": "确定要将“{{name}}”移出团队吗？"
+    },
+    "guestManager": {
+      "title": "客人管理",
+      "subtitle": "共 {{count}} 位客人已报名 — 查看报名详情",
+      "searchPlaceholder": "搜索姓名、电话或其他信息",
+      "noResults": "没有符合搜索条件的客人",
+      "noValue": "暂无数据",
+      "callGuest": "拨打 {{phone}}",
+      "deleteGuest": "删除此客人",
+      "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。"
     },
     "dashboard": {
       "title": "仪表板",

@@ -28,8 +28,20 @@
       "requiredField": "กรุณากรอกข้อมูลนี้",
       "successTitle": "ลงทะเบียนสำเร็จ",
       "successBody": "บันทึกข้อมูลของคุณเรียบร้อยแล้ว",
+      "alreadyRegisteredTitle": "คุณลงทะเบียนไว้แล้ว",
+      "alreadyRegisteredBody": "สวัสดีคุณ {{name}} เครื่องนี้เคยลงทะเบียนไว้แล้ว",
       "viewMyQr": "ดู QR ของฉัน",
-      "viewItinerary": "ดูแผนการเดินทาง"
+      "viewItinerary": "ดูแผนการเดินทาง",
+      "viewMyRoom": "ดูห้องพักของฉัน",
+      "alreadyRegisteredLink": "เคยลงทะเบียนแล้ว? กู้คืนข้อมูลของฉัน",
+      "recoveryTitle": "กู้คืนข้อมูลการลงทะเบียน",
+      "recoveryByPhone": "ค้นหาด้วยเบอร์โทร",
+      "recoveryByQr": "สแกน QR เดิม",
+      "phonePlaceholder": "กรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียน",
+      "recoveryNoMatch": "ไม่พบข้อมูลที่ตรงกับเบอร์นี้",
+      "recoverySelectYou": "พบข้อมูลที่ตรงกัน — เลือกชื่อของคุณ",
+      "recoveryQrHint": "สแกน QR ที่คุณเคยได้รับตอนลงทะเบียนครั้งแรก",
+      "recoveryQrNotFound": "ไม่พบข้อมูลที่ตรงกับ QR นี้"
     },
     "itinerary": {
       "title": "แผนการเดินทาง",
@@ -99,6 +111,16 @@
       "pinFormatError": "PIN ต้องเป็นตัวเลข 4 หลัก",
       "cannotDeleteSelf": "ไม่สามารถลบบัญชีของตัวเองได้",
       "confirmDelete": "ต้องการลบ \"{{name}}\" ออกจากทีมงานใช่ไหม?"
+    },
+    "guestManager": {
+      "title": "จัดการลูกทัวร์",
+      "subtitle": "ลูกทัวร์ทั้งหมด {{count}} คน — ดูข้อมูลจากการลงทะเบียน",
+      "searchPlaceholder": "ค้นหาชื่อ เบอร์โทร หรือข้อมูลอื่นๆ",
+      "noResults": "ไม่พบลูกทัวร์ที่ตรงกับการค้นหา",
+      "noValue": "ไม่มีข้อมูล",
+      "callGuest": "โทร {{phone}}",
+      "deleteGuest": "ลบลูกทัวร์คนนี้",
+      "confirmDelete": "ต้องการลบข้อมูลลงทะเบียนของ \"{{name}}\" ใช่ไหม? ข้อมูลจะหายถาวร"
     },
     "dashboard": {
       "title": "แดชบอร์ด",

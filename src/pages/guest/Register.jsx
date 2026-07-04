@@ -4,11 +4,14 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
-import { saveGuestId } from '../../lib/guestSession'
+import { getGuestId, saveGuestId, clearGuestId } from '../../lib/guestSession'
+import { findFieldByPurpose } from '../../lib/guestFields'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
+import BottomSheet from '../../components/common/BottomSheet'
+import QrScanner from '../../components/common/QrScanner'
 
 export default function Register() {
   const { t } = useTranslation()
@@ -23,6 +26,149 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [savedGuest, setSavedGuest] = useState(null)
+
+  // เครื่องนี้เคยลงทะเบียนไว้แล้วหรือยัง — ถ้าเคย ไม่ต้องโชว์ฟอร์มเปล่าซ้ำ
+  const [checkingExisting, setCheckingExisting] = useState(true)
+  const [existingGuest, setExistingGuest] = useState(null)
+
+  // กู้คืนตัวตนบนเครื่องใหม่ — ค้นด้วยเบอร์โทร หรือสแกน QR เดิม
+  const [recoverySheetOpen, setRecoverySheetOpen] = useState(false)
+  const [recoveryTab, setRecoveryTab] = useState('phone') // 'phone' | 'qr'
+  const [phoneInput, setPhoneInput] = useState('')
+  const [phoneSearching, setPhoneSearching] = useState(false)
+  const [phoneMatches, setPhoneMatches] = useState(null) // null = not searched yet, [] = no match, [..] = matches
+  const [phoneSearchError, setPhoneSearchError] = useState(null)
+  const [qrScanError, setQrScanError] = useState(null)
+
+  function restoreGuestSession(guest) {
+    saveGuestId(guest.id)
+    setExistingGuest(guest)
+    setRecoverySheetOpen(false)
+  }
+
+  async function searchByPhone(e) {
+    e.preventDefault()
+    const phone = phoneInput.trim()
+    if (!phone) return
+
+    setPhoneSearching(true)
+    setPhoneSearchError(null)
+    setPhoneMatches(null)
+
+    try {
+      const { data: fieldsData, error: fieldsError } = await supabase
+        .from('form_fields')
+        .select('id, field_key, field_purpose, is_core')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+
+      if (fieldsError) throw fieldsError
+
+      const phoneField = findFieldByPurpose(fieldsData ?? [], 'phone')
+
+      let matches = []
+      if (!phoneField || phoneField.is_core) {
+        const coreKey = phoneField?.field_key || 'phone'
+        const { data, error } = await supabase
+          .from('guests')
+          .select('id, name, nickname, qr_token')
+          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq(coreKey, phone)
+
+        if (error) throw error
+        matches = data ?? []
+      } else {
+        const { data: responseRows, error: responseError } = await supabase
+          .from('guest_form_responses')
+          .select('guest_id, value')
+          .eq('field_id', phoneField.id)
+          .eq('value', phone)
+
+        if (responseError) throw responseError
+
+        const guestIds = (responseRows ?? []).map((r) => r.guest_id)
+        if (guestIds.length > 0) {
+          const { data, error } = await supabase
+            .from('guests')
+            .select('id, name, nickname, qr_token')
+            .eq('tour_id', ACTIVE_TOUR_ID)
+            .in('id', guestIds)
+
+          if (error) throw error
+          matches = data ?? []
+        }
+      }
+
+      setPhoneMatches(matches)
+    } catch (err) {
+      console.error('[Register] phone search failed', err)
+      setPhoneSearchError(t('common.error'))
+    } finally {
+      setPhoneSearching(false)
+    }
+  }
+
+  async function handleRestoreScan(decodedText) {
+    setQrScanError(null)
+    const { data, error } = await supabase
+      .from('guests')
+      .select('id, name, nickname')
+      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('qr_token', decodedText)
+      .maybeSingle()
+
+    if (error || !data) {
+      setQrScanError(t('guest.register.recoveryQrNotFound'))
+      return
+    }
+
+    restoreGuestSession(data)
+  }
+
+  function handleRestoreScanError() {
+    setQrScanError(t('staff.checkIn.scanCameraError'))
+  }
+
+  function openRecoverySheet() {
+    setRecoveryTab('phone')
+    setPhoneInput('')
+    setPhoneMatches(null)
+    setPhoneSearchError(null)
+    setQrScanError(null)
+    setRecoverySheetOpen(true)
+  }
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function checkExisting() {
+      const guestId = getGuestId()
+      if (!guestId) {
+        setCheckingExisting(false)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('guests')
+        .select('id, name, nickname')
+        .eq('id', guestId)
+        .maybeSingle()
+
+      if (!isMounted) return
+
+      if (error || !data) {
+        // guest_id ในเครื่องไม่ตรงกับข้อมูลจริงแล้ว (เช่นถูกลบไปฝั่ง staff) — เคลียร์แล้วให้ลงทะเบียนใหม่
+        clearGuestId()
+      } else {
+        setExistingGuest(data)
+      }
+      setCheckingExisting(false)
+    }
+
+    checkExisting()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -130,16 +276,25 @@ export default function Register() {
     }
   }
 
-  if (savedGuest) {
+  if (savedGuest || existingGuest) {
+    const guestForDisplay = savedGuest || existingGuest
     return (
       <div className="min-h-screen bg-gray-50">
         <AnnouncementBanner />
         <div className="p-4">
           <Card className="mx-auto mt-8 max-w-md text-center">
             <h1 className="text-xl font-bold text-gray-900">
-              {t('guest.register.successTitle')}
+              {savedGuest
+                ? t('guest.register.successTitle')
+                : t('guest.register.alreadyRegisteredTitle')}
             </h1>
-            <p className="mt-2 text-gray-600">{t('guest.register.successBody')}</p>
+            <p className="mt-2 text-gray-600">
+              {savedGuest
+                ? t('guest.register.successBody')
+                : t('guest.register.alreadyRegisteredBody', {
+                    name: guestForDisplay.nickname || guestForDisplay.name,
+                  })}
+            </p>
 
             <div className="mt-6 flex flex-col gap-3">
               <Button onClick={() => navigate('/my-qr')}>
@@ -148,8 +303,22 @@ export default function Register() {
               <Button variant="secondary" onClick={() => navigate('/itinerary')}>
                 {t('guest.register.viewItinerary')}
               </Button>
+              <Button variant="secondary" onClick={() => navigate('/my-room')}>
+                {t('guest.register.viewMyRoom')}
+              </Button>
             </div>
           </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (checkingExisting) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AnnouncementBanner />
+        <div className="p-4">
+          <p className="text-gray-500">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -188,8 +357,100 @@ export default function Register() {
               </form>
             )}
           </Card>
+
+          <button
+            onClick={openRecoverySheet}
+            className="mt-4 w-full text-center text-sm font-medium text-sky-600 underline"
+          >
+            {t('guest.register.alreadyRegisteredLink')}
+          </button>
         </div>
       </div>
+
+      <BottomSheet
+        open={recoverySheetOpen}
+        onClose={() => setRecoverySheetOpen(false)}
+        title={t('guest.register.recoveryTitle')}
+      >
+        <div className="mb-3 flex gap-2">
+          <button
+            onClick={() => setRecoveryTab('phone')}
+            className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
+              recoveryTab === 'phone' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {t('guest.register.recoveryByPhone')}
+          </button>
+          <button
+            onClick={() => setRecoveryTab('qr')}
+            className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
+              recoveryTab === 'qr' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {t('guest.register.recoveryByQr')}
+          </button>
+        </div>
+
+        {recoveryTab === 'phone' && (
+          <div>
+            <form onSubmit={searchByPhone} className="flex gap-2">
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder={t('guest.register.phonePlaceholder')}
+                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              />
+              <Button type="submit" disabled={phoneSearching} className="w-auto shrink-0 px-4">
+                {t('common.search')}
+              </Button>
+            </form>
+
+            {phoneSearching && <p className="mt-3 text-sm text-gray-500">{t('common.loading')}</p>}
+            {phoneSearchError && <p className="mt-3 text-sm text-red-500">{phoneSearchError}</p>}
+
+            {phoneMatches && phoneMatches.length === 0 && (
+              <p className="mt-3 text-sm text-gray-500">{t('guest.register.recoveryNoMatch')}</p>
+            )}
+
+            {phoneMatches && phoneMatches.length > 0 && (
+              <div className="mt-3 flex flex-col gap-2">
+                <p className="text-sm text-gray-500">{t('guest.register.recoverySelectYou')}</p>
+                {phoneMatches.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => restoreGuestSession(g)}
+                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-left text-sm font-medium text-gray-900 hover:bg-gray-50"
+                  >
+                    {g.nickname || g.name}
+                    {g.nickname && <span className="ml-1 text-gray-400">({g.name})</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {recoveryTab === 'qr' && (
+          <div>
+            <QrScanner onScan={handleRestoreScan} onError={handleRestoreScanError} />
+            <p className="mt-3 text-center text-sm text-gray-500">
+              {t('guest.register.recoveryQrHint')}
+            </p>
+            {qrScanError && (
+              <p className="mt-2 text-center text-sm text-red-500">{qrScanError}</p>
+            )}
+          </div>
+        )}
+
+        <Button
+          variant="secondary"
+          className="mt-3"
+          onClick={() => setRecoverySheetOpen(false)}
+        >
+          {t('common.cancel')}
+        </Button>
+      </BottomSheet>
     </div>
   )
 }

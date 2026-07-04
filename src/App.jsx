@@ -21,6 +21,7 @@ import FormBuilder from './pages/staff/FormBuilder.jsx'
 import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
 import StaffManager from './pages/staff/StaffManager.jsx'
+import GuestManager from './pages/staff/GuestManager.jsx'
 import StaffAuthGuard from './components/common/StaffAuthGuard.jsx'
 
 function App() {
@@ -121,6 +122,14 @@ function App() {
         element={
           <StaffAuthGuard>
             <StaffManager />
+          </StaffAuthGuard>
+        }
+      />
+      <Route
+        path="/staff/guest-manager"
+        element={
+          <StaffAuthGuard>
+            <GuestManager />
           </StaffAuthGuard>
         }
       />
