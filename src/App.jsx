@@ -7,6 +7,7 @@ import MyQR from './pages/guest/MyQR.jsx'
 import MyRoom from './pages/guest/MyRoom.jsx'
 import BingoCard from './pages/guest/BingoCard.jsx'
 import ShareLocation from './pages/guest/ShareLocation.jsx'
+import BagLookup from './pages/guest/BagLookup.jsx'
 
 // Staff pages
 import Login from './pages/staff/Login.jsx'
@@ -22,6 +23,8 @@ import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
 import StaffManager from './pages/staff/StaffManager.jsx'
 import GuestManager from './pages/staff/GuestManager.jsx'
+import LuggageManager from './pages/staff/LuggageManager.jsx'
+import PrintExport from './pages/staff/PrintExport.jsx'
 import StaffAuthGuard from './components/common/StaffAuthGuard.jsx'
 
 function App() {
@@ -34,6 +37,7 @@ function App() {
       <Route path="/my-room" element={<MyRoom />} />
       <Route path="/bingo" element={<BingoCard />} />
       <Route path="/share-location" element={<ShareLocation />} />
+      <Route path="/bag/:tagCode" element={<BagLookup />} />
 
       {/* Staff routes — เข้าได้เฉพาะหลัง login ด้วย PIN (ยกเว้นหน้า login เอง) */}
       <Route path="/staff/login" element={<Login />} />
@@ -130,6 +134,22 @@ function App() {
         element={
           <StaffAuthGuard>
             <GuestManager />
+          </StaffAuthGuard>
+        }
+      />
+      <Route
+        path="/staff/luggage-manager"
+        element={
+          <StaffAuthGuard>
+            <LuggageManager />
+          </StaffAuthGuard>
+        }
+      />
+      <Route
+        path="/staff/print"
+        element={
+          <StaffAuthGuard>
+            <PrintExport />
           </StaffAuthGuard>
         }
       />

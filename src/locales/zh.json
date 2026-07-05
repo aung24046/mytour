@@ -66,6 +66,11 @@
       "roomTypeDouble": "大床房",
       "roomTypeTriple": "三人房"
     },
+    "bagLookup": {
+      "title": "这个行李属于",
+      "notFound": "找不到此行李标签的信息",
+      "unassigned": "此行李标签尚未绑定主人"
+    },
     "bingo": {
       "title": "宾果",
       "noGame": "目前没有进行中的宾果游戏",
@@ -119,8 +124,75 @@
       "noResults": "没有符合搜索条件的客人",
       "noValue": "暂无数据",
       "callGuest": "拨打 {{phone}}",
+      "editGuest": "编辑信息",
       "deleteGuest": "删除此客人",
       "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。"
+    },
+    "luggageManager": {
+      "title": "行李管理",
+      "summary": "共 {{total}} 件 — 已装车 {{loaded}} 件 — 未绑定 {{unassigned}} 件",
+      "mode": {
+        "generate": "生成标签",
+        "assign": "绑定主人",
+        "loading": "装车核对",
+        "list": "全部列表"
+      },
+      "genLabel": "要生成的标签数量",
+      "generateButton": "生成",
+      "genHint": "提前生成空白标签，打印成二维码贴纸后贴在行李上",
+      "scanTag": "扫描标签以绑定主人",
+      "scanTagHint": "扫描尚未绑定的行李二维码",
+      "tagNotFound": "系统中未找到此标签",
+      "unassignedList": "未绑定标签（{{count}}）",
+      "noUnassigned": "没有未绑定的标签了，请生成更多",
+      "assignThis": "绑定主人",
+      "assignTitle": "绑定主人 — 标签 {{code}}",
+      "searchGuestPlaceholder": "搜索客人姓名",
+      "photoLabel": "行李照片",
+      "takePhoto": "拍照 / 选择照片",
+      "loadingProgress": "已装车",
+      "missingCount": "还差 {{count}} 件",
+      "scanToLoad": "扫描以核对装车",
+      "scanToLoadHint": "装车时逐一扫描每件行李的二维码，系统会自动更新状态",
+      "loadSuccess": "已装车：{{name}} 的行李",
+      "loadDuplicate": "{{name}} 的行李已装车",
+      "loadUnassigned": "标签 {{code}} 尚未绑定主人，请先绑定",
+      "notLoadedYet": "尚未装车",
+      "searchPlaceholder": "搜索标签或客人姓名",
+      "status": {
+        "all": "全部",
+        "unassigned": "未绑定",
+        "tagged": "已绑定",
+        "loaded": "已装车",
+        "delivered": "已送达",
+        "returned": "已归还"
+      },
+      "noResults": "没有符合搜索条件的标签",
+      "unassignTag": "取消绑定",
+      "deleteTag": "删除标签",
+      "confirmUnassign": "确定要取消标签 {{code}} 的绑定吗？",
+      "confirmDeleteTag": "确定要删除标签 {{code}} 吗？此操作无法撤销。"
+    },
+    "printExport": {
+      "title": "打印与导出",
+      "subtitle": "打印行李标签或客人腕带的二维码标签",
+      "modeLabel": "标签类型",
+      "mode": {
+        "luggage": "行李标签",
+        "wristband": "腕带"
+      },
+      "sizeLabel": "标签尺寸",
+      "defaultSize": "默认",
+      "selectedCount": "已选 {{selected}} / 共 {{total}} 项",
+      "selectAll": "全选",
+      "clearSelection": "取消选择",
+      "noLabels": "暂无可打印的标签",
+      "unassigned": "尚未绑定",
+      "printButton": "打印（{{count}} 张）",
+      "exportCsvButton": "导出 CSV",
+      "csvNameHeader": "姓名",
+      "csvUrlHeader": "链接 / 二维码内容",
+      "sizeLockHint": "实际打印时会通过 @page 锁定尺寸——建议先打印 1 张测试，确认与实际标签尺寸相符后再批量打印。"
     },
     "dashboard": {
       "title": "仪表板",

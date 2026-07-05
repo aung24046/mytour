@@ -11,6 +11,8 @@ import Card from '../../components/common/Card'
 const LINKS = [
   { to: '/staff/check-in', key: 'checkIn' },
   { to: '/staff/guest-manager', key: 'guestManager' },
+  { to: '/staff/luggage-manager', key: 'luggageManager' },
+  { to: '/staff/print', key: 'printExport' },
   { to: '/staff/broadcast', key: 'broadcast' },
   { to: '/staff/itinerary-builder', key: 'itineraryBuilder' },
   { to: '/staff/dietary-summary', key: 'dietarySummary' },

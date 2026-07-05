@@ -66,6 +66,11 @@
       "roomTypeDouble": "Double Room",
       "roomTypeTriple": "Triple Room"
     },
+    "bagLookup": {
+      "title": "This bag belongs to",
+      "notFound": "We couldn't find this bag tag",
+      "unassigned": "This bag hasn't been assigned to an owner yet"
+    },
     "bingo": {
       "title": "Bingo",
       "noGame": "No bingo game running right now.",
@@ -119,8 +124,75 @@
       "noResults": "No guests match your search",
       "noValue": "No data",
       "callGuest": "Call {{phone}}",
+      "editGuest": "Edit info",
       "deleteGuest": "Delete this guest",
       "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone."
+    },
+    "luggageManager": {
+      "title": "Manage luggage",
+      "summary": "{{total}} total — {{loaded}} loaded — {{unassigned}} unassigned",
+      "mode": {
+        "generate": "Generate tags",
+        "assign": "Assign owner",
+        "loading": "Loading checklist",
+        "list": "All tags"
+      },
+      "genLabel": "Number of tags to generate",
+      "generateButton": "Generate",
+      "genHint": "Generate blank tags ahead of time, then print them as QR stickers before attaching to bags",
+      "scanTag": "Scan tag to assign owner",
+      "scanTagHint": "Scan the QR code on a bag that hasn't been assigned yet",
+      "tagNotFound": "This tag wasn't found in the system",
+      "unassignedList": "Unassigned tags ({{count}})",
+      "noUnassigned": "No unassigned tags left. Try generating more.",
+      "assignThis": "Assign owner",
+      "assignTitle": "Assign owner — Tag {{code}}",
+      "searchGuestPlaceholder": "Search guest name",
+      "photoLabel": "Bag photo",
+      "takePhoto": "Take / choose photo",
+      "loadingProgress": "Loaded onto vehicle",
+      "missingCount": "{{count}} bags still missing",
+      "scanToLoad": "Scan to check loaded",
+      "scanToLoadHint": "Scan each bag's QR as it's loaded — status updates automatically",
+      "loadSuccess": "Loaded {{name}}'s bag",
+      "loadDuplicate": "{{name}}'s bag is already loaded",
+      "loadUnassigned": "Tag {{code}} hasn't been assigned yet — assign it first",
+      "notLoadedYet": "Not loaded yet",
+      "searchPlaceholder": "Search tag or guest name",
+      "status": {
+        "all": "All",
+        "unassigned": "Unassigned",
+        "tagged": "Tagged",
+        "loaded": "Loaded",
+        "delivered": "Delivered",
+        "returned": "Returned"
+      },
+      "noResults": "No tags match your search",
+      "unassignTag": "Unassign",
+      "deleteTag": "Delete tag",
+      "confirmUnassign": "Unassign tag {{code}}?",
+      "confirmDeleteTag": "Delete tag {{code}}? This can't be undone."
+    },
+    "printExport": {
+      "title": "Print & Export",
+      "subtitle": "Print QR labels for luggage tags or guest wristbands",
+      "modeLabel": "Label type",
+      "mode": {
+        "luggage": "Luggage tag",
+        "wristband": "Wristband"
+      },
+      "sizeLabel": "Label size",
+      "defaultSize": "default",
+      "selectedCount": "{{selected}} of {{total}} selected",
+      "selectAll": "Select all",
+      "clearSelection": "Clear selection",
+      "noLabels": "No labels to print yet",
+      "unassigned": "Not assigned yet",
+      "printButton": "Print ({{count}})",
+      "exportCsvButton": "Export CSV",
+      "csvNameHeader": "Name",
+      "csvUrlHeader": "URL / QR value",
+      "sizeLockHint": "The size is locked via @page when you actually print — print one test label before printing the whole batch to confirm it matches your real labels."
     },
     "dashboard": {
       "title": "Dashboard",

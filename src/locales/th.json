@@ -66,6 +66,11 @@
       "roomTypeDouble": "Double Room",
       "roomTypeTriple": "Triple Room"
     },
+    "bagLookup": {
+      "title": "กระเป๋าใบนี้เป็นของ",
+      "notFound": "ไม่พบข้อมูลกระเป๋าใบนี้",
+      "unassigned": "กระเป๋าใบนี้ยังไม่ได้ผูกกับเจ้าของ"
+    },
     "bingo": {
       "title": "บิงโก",
       "noGame": "ยังไม่มีเกมบิงโกเริ่มตอนนี้",
@@ -119,8 +124,75 @@
       "noResults": "ไม่พบลูกทัวร์ที่ตรงกับการค้นหา",
       "noValue": "ไม่มีข้อมูล",
       "callGuest": "โทร {{phone}}",
+      "editGuest": "แก้ไขข้อมูล",
       "deleteGuest": "ลบลูกทัวร์คนนี้",
       "confirmDelete": "ต้องการลบข้อมูลลงทะเบียนของ \"{{name}}\" ใช่ไหม? ข้อมูลจะหายถาวร"
+    },
+    "luggageManager": {
+      "title": "จัดการกระเป๋า",
+      "summary": "ทั้งหมด {{total}} ใบ — โหลดแล้ว {{loaded}} ใบ — ยังไม่ได้ผูก {{unassigned}} ใบ",
+      "mode": {
+        "generate": "สร้าง Tag",
+        "assign": "ผูกเจ้าของ",
+        "loading": "เช็คโหลดขึ้นรถ",
+        "list": "รายการทั้งหมด"
+      },
+      "genLabel": "จำนวน Tag ที่จะสร้าง",
+      "generateButton": "สร้าง Tag",
+      "genHint": "สร้าง tag เปล่าไว้ล่วงหน้า แล้วนำไปพิมพ์เป็นสติกเกอร์ QR ก่อนติดกระเป๋า",
+      "scanTag": "สแกน Tag เพื่อผูกเจ้าของ",
+      "scanTagHint": "สแกน QR บนกระเป๋าที่ยังไม่ได้ผูกเจ้าของ",
+      "tagNotFound": "ไม่พบ Tag นี้ในระบบ",
+      "unassignedList": "Tag ที่ยังไม่ได้ผูก ({{count}})",
+      "noUnassigned": "ไม่มี Tag ที่ว่างอยู่ ลองสร้างเพิ่ม",
+      "assignThis": "ผูกเจ้าของ",
+      "assignTitle": "ผูกเจ้าของ — Tag {{code}}",
+      "searchGuestPlaceholder": "ค้นหาชื่อลูกทัวร์",
+      "photoLabel": "รูปกระเป๋า",
+      "takePhoto": "ถ่ายรูป / เลือกรูป",
+      "loadingProgress": "โหลดขึ้นรถแล้ว",
+      "missingCount": "ยังขาดอีก {{count}} ใบ",
+      "scanToLoad": "สแกนเพื่อเช็คโหลดขึ้นรถ",
+      "scanToLoadHint": "สแกน QR ทุกใบตอนโหลดขึ้นรถ ระบบจะทำเครื่องหมายให้อัตโนมัติ",
+      "loadSuccess": "โหลดกระเป๋าของ {{name}} แล้ว",
+      "loadDuplicate": "กระเป๋าของ {{name}} โหลดไปแล้ว",
+      "loadUnassigned": "Tag {{code}} ยังไม่ได้ผูกเจ้าของ กรุณาผูกก่อน",
+      "notLoadedYet": "ยังไม่ได้โหลด",
+      "searchPlaceholder": "ค้นหา Tag หรือชื่อลูกทัวร์",
+      "status": {
+        "all": "ทั้งหมด",
+        "unassigned": "ยังไม่ได้ผูก",
+        "tagged": "ผูกแล้ว",
+        "loaded": "โหลดขึ้นรถแล้ว",
+        "delivered": "ส่งถึงแล้ว",
+        "returned": "คืนแล้ว"
+      },
+      "noResults": "ไม่พบรายการที่ตรงกับการค้นหา",
+      "unassignTag": "ยกเลิกการผูก",
+      "deleteTag": "ลบ Tag",
+      "confirmUnassign": "ยกเลิกการผูกเจ้าของของ Tag {{code}} ใช่ไหม?",
+      "confirmDeleteTag": "ลบ Tag {{code}} ใช่ไหม? ลบแล้วกู้คืนไม่ได้"
+    },
+    "printExport": {
+      "title": "พิมพ์และส่งออก",
+      "subtitle": "พิมพ์ label QR สำหรับ tag กระเป๋า หรือสายรัดข้อมือลูกทัวร์",
+      "modeLabel": "ประเภท Label",
+      "mode": {
+        "luggage": "Tag กระเป๋า",
+        "wristband": "สายรัดข้อมือ"
+      },
+      "sizeLabel": "ขนาด Label",
+      "defaultSize": "ค่าเริ่มต้น",
+      "selectedCount": "เลือกอยู่ {{selected}} จาก {{total}} รายการ",
+      "selectAll": "เลือกทั้งหมด",
+      "clearSelection": "ยกเลิกการเลือก",
+      "noLabels": "ยังไม่มีรายการให้พิมพ์",
+      "unassigned": "ยังไม่ได้ผูกเจ้าของ",
+      "printButton": "พิมพ์ ({{count}} ดวง)",
+      "exportCsvButton": "Export CSV",
+      "csvNameHeader": "ชื่อ",
+      "csvUrlHeader": "URL / รหัส QR",
+      "sizeLockHint": "ขนาดจะถูกตั้งเป็น @page ตอนสั่งพิมพ์จริง — ควรพิมพ์ทดสอบ 1 ดวงก่อนพิมพ์ทั้งชุด เพื่อตรวจสอบขนาดให้ตรงกับ label ที่ใช้จริง"
     },
     "dashboard": {
       "title": "แดชบอร์ด",

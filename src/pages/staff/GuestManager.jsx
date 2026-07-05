@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import Card from '../../components/common/Card'
+import Button from '../../components/common/Button'
+import DynamicField from '../../components/common/DynamicField'
 
 const CORE_FIELD_KEYS = [
   'name',
@@ -27,6 +29,12 @@ export default function GuestManager() {
 
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState(null)
+
+  // แก้ไขข้อมูลลูกทัวร์ — รองรับกรณีฟอร์มมีคำถามเพิ่ม/เปลี่ยนแปลงหลังลูกทัวร์คนนี้ลงทะเบียนไปแล้ว
+  const [editingId, setEditingId] = useState(null)
+  const [editValues, setEditValues] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
 
   async function loadAll() {
     setLoading(true)
@@ -109,6 +117,79 @@ export default function GuestManager() {
     return responsesByGuestId[guest.id]?.[field.id] ?? ''
   }
 
+  // checkbox เก็บเป็น string คั่นด้วย ", " ทั้งใน guests และ guest_form_responses (ตามที่ Register.jsx บันทึกไว้)
+  // ตอนแก้ไขต้องแปลงกลับเป็น array ให้ DynamicField ใช้ แล้วค่อย join กลับตอนบันทึก
+  function startEditing(guest) {
+    const initial = {}
+    for (const f of activeFields) {
+      const raw = getFieldValue(guest, f)
+      initial[f.id] = f.field_type === 'checkbox'
+        ? (raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : [])
+        : raw
+    }
+    setEditValues(initial)
+    setSaveError(null)
+    setEditingId(guest.id)
+  }
+
+  function cancelEditing() {
+    setEditingId(null)
+    setEditValues({})
+    setSaveError(null)
+  }
+
+  function setEditFieldValue(fieldId, value) {
+    setEditValues((prev) => ({ ...prev, [fieldId]: value }))
+  }
+
+  async function saveEditing(guest) {
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const corePayload = {}
+      const customUpserts = []
+
+      for (const f of activeFields) {
+        const raw = editValues[f.id]
+        const value = f.field_type === 'checkbox' ? (raw ?? []).join(', ') : (raw ?? '').toString().trim()
+
+        if (f.is_core && CORE_FIELD_KEYS.includes(f.field_key)) {
+          corePayload[f.field_key] = value || null
+        } else {
+          customUpserts.push({ guest_id: guest.id, field_id: f.id, value })
+        }
+      }
+
+      if (Object.keys(corePayload).length > 0) {
+        const { error: coreError } = await supabase
+          .from('guests')
+          .update(corePayload)
+          .eq('id', guest.id)
+
+        if (coreError) throw coreError
+      }
+
+      if (customUpserts.length > 0) {
+        // upsert ตาม (guest_id, field_id) — เผื่อฟิลด์นี้เพิ่งถูกเพิ่มเข้าฟอร์มทีหลัง คนนี้เลยยังไม่มีคำตอบเดิม
+        const { error: responsesError } = await supabase
+          .from('guest_form_responses')
+          .upsert(customUpserts, { onConflict: 'guest_id,field_id' })
+
+        if (responsesError) throw responsesError
+      }
+
+      await loadAll()
+      setEditingId(null)
+      setEditValues({})
+    } catch (err) {
+      console.error('[GuestManager] save edit failed', err)
+      setSaveError(err.message ?? t('common.error'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const filteredGuests = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return guests
@@ -167,7 +248,10 @@ export default function GuestManager() {
                 return (
                   <Card key={guest.id} className="p-3">
                     <button
-                      onClick={() => setExpandedId(isExpanded ? null : guest.id)}
+                      onClick={() => {
+                        if (editingId === guest.id) cancelEditing()
+                        setExpandedId(isExpanded ? null : guest.id)
+                      }}
                       className="flex w-full items-center justify-between text-left"
                     >
                       <div className="min-w-0">
@@ -194,7 +278,7 @@ export default function GuestManager() {
                       </div>
                     </button>
 
-                    {isExpanded && (
+                    {isExpanded && editingId !== guest.id && (
                       <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
                         {activeFields.map((field) => {
                           const value = getFieldValue(guest, field)
@@ -222,11 +306,40 @@ export default function GuestManager() {
                         )}
 
                         <button
+                          onClick={() => startEditing(guest)}
+                          className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700"
+                        >
+                          {t('staff.guestManager.editGuest')}
+                        </button>
+
+                        <button
                           onClick={() => deleteGuest(guest)}
-                          className="mt-1 w-full rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
+                          className="w-full rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
                         >
                           {t('staff.guestManager.deleteGuest')}
                         </button>
+                      </div>
+                    )}
+
+                    {isExpanded && editingId === guest.id && (
+                      <div className="mt-3 flex flex-col gap-3 border-t border-gray-100 pt-3">
+                        {activeFields.map((field) => (
+                          <DynamicField
+                            key={field.id}
+                            field={field}
+                            value={editValues[field.id]}
+                            onChange={(v) => setEditFieldValue(field.id, v)}
+                          />
+                        ))}
+
+                        {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+
+                        <Button onClick={() => saveEditing(guest)} disabled={saving}>
+                          {saving ? t('common.loading') : t('common.save')}
+                        </Button>
+                        <Button variant="secondary" onClick={cancelEditing} disabled={saving}>
+                          {t('common.cancel')}
+                        </Button>
                       </div>
                     )}
                   </Card>
