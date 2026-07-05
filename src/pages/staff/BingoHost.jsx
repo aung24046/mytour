@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -52,7 +53,7 @@ export default function BingoHost() {
         .from('bingo_cards')
         .select('id, guest_id, marked_numbers, has_bingo, bingo_claimed_at, is_confirmed')
         .eq('game_id', gameId),
-      supabase.from('guests').select('id, name, nickname').eq('tour_id', ACTIVE_TOUR_ID),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID),
     ])
     setCards(cardsRes.data ?? [])
     setGuests(guestsRes.data ?? [])
@@ -359,7 +360,7 @@ export default function BingoHost() {
                       const guest = guestById[p.guest_id]
                       return (
                         <div key={p.id} className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className={`text-sm font-medium ${genderTextClass(guest?.gender) || 'text-gray-900'}`}>
                             {guest ? guest.nickname || guest.name : t('staff.locationMonitor.unknownGuest')}
                           </span>
                           <StatusBadge tone={p.is_confirmed ? 'success' : 'warning'}>
@@ -384,7 +385,7 @@ export default function BingoHost() {
                     {winners.map((w) => {
                       const guest = guestById[w.guest_id]
                       return (
-                        <p key={w.id} className="text-sm font-medium text-gray-900">
+                        <p key={w.id} className={`text-sm font-medium ${genderTextClass(guest?.gender) || 'text-gray-900'}`}>
                           🎉{' '}
                           {guest ? guest.nickname || guest.name : t('staff.locationMonitor.unknownGuest')}
                         </p>

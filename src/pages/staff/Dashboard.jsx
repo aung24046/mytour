@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { getStaffSession, clearStaffSession } from '../../lib/staffSession'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 
 const LINKS = [
@@ -47,7 +48,7 @@ export default function Dashboard() {
     const [guestsRes, fieldsRes] = await Promise.all([
       supabase
         .from('guests')
-        .select('id, name, nickname, phone, check_in_status')
+        .select('id, name, nickname, gender, phone, check_in_status')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('name'),
       supabase
@@ -161,7 +162,7 @@ export default function Dashboard() {
                     key={g.id}
                     className="flex items-center justify-between rounded-control bg-danger-bg/60 px-3 py-2.5"
                   >
-                    <span className="font-semibold text-ink">
+                    <span className={`font-semibold ${genderTextClass(g.gender) || 'text-ink'}`}>
                       {g.nickname || g.name}
                     </span>
                     {phone ? (

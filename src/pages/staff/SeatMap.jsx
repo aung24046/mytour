@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass, genderBgClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -39,7 +40,7 @@ export default function SeatMap() {
         .from('bus_seats')
         .select('id, bus_id, row_number, seat_position, guest_id, is_available, is_seat')
         .eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('guests').select('id, name, nickname').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
     ])
 
     if (busesRes.error || seatsRes.error || guestsRes.error) {
@@ -450,7 +451,7 @@ export default function SeatMap() {
 
         {selectedSeat?.is_seat && selectedSeat?.guest_id && (
           <div className="mb-4 flex items-center justify-between rounded-xl bg-sky-50 px-3 py-2">
-            <span className="font-medium text-gray-900">
+            <span className={`font-medium ${genderTextClass(guestById[selectedSeat.guest_id]?.gender) || 'text-gray-900'}`}>
               {guestById[selectedSeat.guest_id]?.nickname || guestById[selectedSeat.guest_id]?.name}
             </span>
             <button
@@ -484,7 +485,7 @@ export default function SeatMap() {
                   disabled={assigning}
                   className="rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:bg-gray-50"
                 >
-                  <span className="font-medium text-gray-900">{g.nickname || g.name}</span>
+                  <span className={`font-medium ${genderTextClass(g.gender) || 'text-gray-900'}`}>{g.nickname || g.name}</span>
                   {g.nickname && <span className="ml-1 text-sm text-gray-400">{g.name}</span>}
                 </button>
               ))}
@@ -527,7 +528,7 @@ function SeatButton({ seat, guest, onClick }) {
     <button
       onClick={onClick}
       className={`flex h-10 w-10 items-center justify-center rounded-lg text-xs font-semibold ${
-        occupied ? 'bg-sky-500 text-white' : 'bg-gray-200 text-gray-400'
+        occupied ? genderBgClass(guest?.gender) : 'bg-gray-200 text-gray-400'
       }`}
     >
       {occupied ? label : seat.seat_position}

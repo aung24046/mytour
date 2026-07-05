@@ -7,10 +7,13 @@ import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
 import StatusBadge from '../../components/common/StatusBadge'
+import { groupFieldsByCategory } from '../../lib/formFieldGroups'
+import { genderTextClass } from '../../lib/genderColor'
 
 const CORE_FIELD_KEYS = [
   'name',
   'nickname',
+  'gender',
   'phone',
   'food_allergy',
   'medical_condition',
@@ -45,13 +48,13 @@ export default function GuestManager() {
       supabase
         .from('guests')
         .select(
-          'id, name, nickname, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token'
+          'id, name, nickname, gender, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token'
         )
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('created_at', { ascending: false }),
       supabase
         .from('form_fields')
-        .select('id, field_key, label, field_type, is_core, is_active, sort_order')
+        .select('id, field_key, label, field_type, options, is_core, is_active, sort_order, category')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('sort_order', { ascending: true }),
       supabase.from('guest_form_responses').select('guest_id, field_id, value'),
@@ -256,7 +259,7 @@ export default function GuestManager() {
                       className="flex w-full items-center justify-between text-left"
                     >
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-gray-900">
+                        <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                           {guest.nickname || guest.name}
                         </p>
                         {guest.nickname && (
@@ -275,21 +278,28 @@ export default function GuestManager() {
 
                     {isExpanded && editingId !== guest.id && (
                       <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
-                        {activeFields.map((field) => {
-                          const value = getFieldValue(guest, field)
-                          return (
-                            <div key={field.id}>
-                              <p className="text-xs font-medium text-gray-400">{field.label}</p>
-                              <p className="text-sm text-gray-900">
-                                {value || (
-                                  <span className="text-gray-300">
-                                    {t('staff.guestManager.noValue')}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          )
-                        })}
+                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => (
+                          <div key={category} className="flex flex-col gap-2">
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-sky-600">
+                              {t(`guest.register.category.${category}`)}
+                            </p>
+                            {groupFields.map((field) => {
+                              const value = getFieldValue(guest, field)
+                              return (
+                                <div key={field.id}>
+                                  <p className="text-xs font-medium text-gray-400">{field.label}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {value || (
+                                      <span className="text-gray-300">
+                                        {t('staff.guestManager.noValue')}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ))}
 
                         {guest.phone && (
                           <a
@@ -317,14 +327,21 @@ export default function GuestManager() {
                     )}
 
                     {isExpanded && editingId === guest.id && (
-                      <div className="mt-3 flex flex-col gap-3 border-t border-gray-100 pt-3">
-                        {activeFields.map((field) => (
-                          <DynamicField
-                            key={field.id}
-                            field={field}
-                            value={editValues[field.id]}
-                            onChange={(v) => setEditFieldValue(field.id, v)}
-                          />
+                      <div className="mt-3 flex flex-col gap-4 border-t border-gray-100 pt-3">
+                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => (
+                          <div key={category} className="flex flex-col gap-3">
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-sky-600">
+                              {t(`guest.register.category.${category}`)}
+                            </p>
+                            {groupFields.map((field) => (
+                              <DynamicField
+                                key={field.id}
+                                field={field}
+                                value={editValues[field.id]}
+                                onChange={(v) => setEditFieldValue(field.id, v)}
+                              />
+                            ))}
+                          </div>
                         ))}
 
                         {saveError && <p className="text-sm text-red-500">{saveError}</p>}

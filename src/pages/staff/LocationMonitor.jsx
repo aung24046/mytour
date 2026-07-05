@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -48,7 +49,7 @@ export default function LocationMonitor() {
     setLoadingLocations(true)
 
     const [guestsRes, locationsRes] = await Promise.all([
-      supabase.from('guests').select('id, name, nickname').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
       supabase
         .from('guest_locations')
         .select('id, guest_id, latitude, longitude, accuracy, recorded_at')
@@ -211,7 +212,7 @@ export default function LocationMonitor() {
             return (
               <Card key={loc.id} className="flex items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-gray-900">
+                  <p className={`truncate font-medium ${genderTextClass(guest?.gender) || 'text-gray-900'}`}>
                     {guest ? guest.nickname || guest.name : t('staff.locationMonitor.unknownGuest')}
                   </p>
                   <p className="text-xs text-gray-500">{timeAgoLabel(t, loc.recorded_at)}</p>

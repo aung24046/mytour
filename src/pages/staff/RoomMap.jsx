@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -86,7 +87,7 @@ export default function RoomMap() {
         .from('room_assignments')
         .select('id, room_id, guest_id')
         .eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('guests').select('id, name, nickname').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
     ])
 
     if (hotelsRes.error || roomsRes.error || assignmentsRes.error || guestsRes.error) {
@@ -723,7 +724,7 @@ export default function RoomMap() {
                                 <div key={slotIndex} className="flex items-center justify-between gap-1">
                                   {guest ? (
                                     <>
-                                      <span className="truncate text-sm font-medium text-gray-900">
+                                      <span className={`truncate text-sm font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                                         {guest.nickname || guest.name}
                                       </span>
                                       <button
@@ -790,7 +791,7 @@ export default function RoomMap() {
               disabled={assigning}
               className="rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:bg-gray-50"
             >
-              <span className="font-medium text-gray-900">{g.nickname || g.name}</span>
+              <span className={`font-medium ${genderTextClass(g.gender) || 'text-gray-900'}`}>{g.nickname || g.name}</span>
               {g.nickname && <span className="ml-1 text-sm text-gray-400">{g.name}</span>}
             </button>
           ))}

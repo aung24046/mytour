@@ -11,7 +11,10 @@
     "close": "Close",
     "search": "Search",
     "error": "Something went wrong",
-    "success": "Success"
+    "success": "Success",
+    "hoursShort": "hr",
+    "minutesShort": "min",
+    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   },
   "guest": {
     "nav": {
@@ -24,6 +27,12 @@
     },
     "register": {
       "title": "Register for the trip",
+      "category": {
+        "personal": "Basic Personal Information",
+        "health": "Health, Safety & Dietary",
+        "emergency": "Emergency Contact",
+        "other": "Other"
+      },
       "fullName": "Full name",
       "nickname": "Nickname",
       "phone": "Phone number",
@@ -345,7 +354,8 @@
       "fieldLabel": "Field label",
       "fieldType": "Field type",
       "purpose": "Data purpose",
-      "optionsHelp": "Options (one per line)"
+      "category": "Category",
+      "optionsHelp": "Options (one per line — add * at the end of a line to add a follow-up text box when that option is chosen, e.g. \"Other, please specify*\")"
     },
     "itineraryBuilder": {
       "title": "Itinerary builder",

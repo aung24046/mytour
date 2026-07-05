@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
@@ -102,7 +103,7 @@ export default function LuggageManager() {
         .order('created_at', { ascending: true }),
       supabase
         .from('guests')
-        .select('id, name, nickname')
+        .select('id, name, nickname, gender')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('name'),
     ])
@@ -490,7 +491,7 @@ export default function LuggageManager() {
                 .map((tag) => (
                   <Card key={tag.id} className="flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-900">{tag.tag_code}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className={`text-sm ${genderTextClass(guestById[tag.guest_id]?.gender) || 'text-gray-600'}`}>
                       {guestById[tag.guest_id]?.nickname || guestById[tag.guest_id]?.name || '-'}
                     </span>
                   </Card>
@@ -546,7 +547,7 @@ export default function LuggageManager() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="font-mono text-sm font-semibold text-gray-900">{tag.tag_code}</p>
-                        <p className="truncate text-xs text-gray-500">
+                        <p className={`truncate text-xs ${genderTextClass(guest?.gender) || 'text-gray-500'}`}>
                           {guest ? guest.nickname || guest.name : t('staff.luggageManager.status.unassigned')}
                         </p>
                       </div>
@@ -636,7 +637,9 @@ export default function LuggageManager() {
                   key={g.id}
                   onClick={() => setAssignGuestId(g.id)}
                   className={`block w-full border-b border-gray-50 px-3 py-2 text-left text-sm last:border-b-0 ${
-                    assignGuestId === g.id ? 'bg-sky-50 font-semibold text-sky-700' : 'text-gray-900'
+                    assignGuestId === g.id
+                      ? 'bg-sky-50 font-semibold text-sky-700'
+                      : genderTextClass(g.gender) || 'text-gray-900'
                   }`}
                 >
                   {g.nickname || g.name}

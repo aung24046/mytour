@@ -13,7 +13,18 @@ const FIELD_TYPES = [
   { value: 'phone', label: 'เบอร์โทรศัพท์' },
   { value: 'textarea', label: 'ข้อความยาว' },
   { value: 'select', label: 'ตัวเลือกเดียว (dropdown)' },
+  { value: 'radio', label: 'ตัวเลือกเดียว (ปุ่มกลม)' },
   { value: 'checkbox', label: 'เลือกได้หลายข้อ' },
+  { value: 'date', label: 'วันที่ (wheel เลื่อน)' },
+  { value: 'duration', label: 'ระยะเวลา (ชม./นาที)' },
+]
+
+// หมวดหมู่ ใช้จัดกลุ่มคำถามตอนแสดงผลในฟอร์มลงทะเบียน/หน้าแก้ไขข้อมูลลูกทัวร์
+const CATEGORIES = [
+  { value: 'personal', label: 'ข้อมูลส่วนตัวพื้นฐาน' },
+  { value: 'health', label: 'สุขภาพ ความปลอดภัย และอาหาร' },
+  { value: 'emergency', label: 'ผู้ติดต่อฉุกเฉิน' },
+  { value: 'other', label: 'อื่นๆ' },
 ]
 
 // field_purpose ให้ฟีเจอร์อื่น (Dashboard, CheckIn) หา field ที่ต้องการได้โดยไม่ hardcode field_key
@@ -29,8 +40,19 @@ const NEW_FIELD_TEMPLATE = {
   label: '',
   field_type: 'text',
   field_purpose: 'generic',
+  category: 'other',
   is_required: false,
-  optionsText: '', // one option per line, converted to jsonb on save
+  optionsText: '', // one option per line, converted to jsonb on save — ต่อท้ายด้วย * เพื่อเปิดช่อง "โปรดระบุ" เพิ่ม
+}
+
+// แปลงบรรทัด option → {value, label, hasText?, textPlaceholder?}
+// ธรรมเนียม: พิมพ์ * ต่อท้ายบรรทัดไหน จะเปิดช่องกรอกข้อความเพิ่มเมื่อลูกทัวร์เลือกข้อนั้น (เช่น "อื่นๆ โปรดระบุ*")
+function parseOptionLine(line) {
+  const hasText = line.trim().endsWith('*')
+  const clean = hasText ? line.trim().slice(0, -1).trim() : line.trim()
+  return hasText
+    ? { value: clean, label: clean, hasText: true, textPlaceholder: 'โปรดระบุ' }
+    : { value: clean, label: clean }
 }
 
 export default function FormBuilder() {
@@ -123,13 +145,13 @@ export default function FormBuilder() {
     setCreating(true)
     const maxSort = fields.reduce((max, f) => Math.max(max, f.sort_order), 0)
 
-    const needsOptions = newField.field_type === 'select' || newField.field_type === 'checkbox'
+    const needsOptions = ['select', 'checkbox', 'radio'].includes(newField.field_type)
     const options = needsOptions
       ? newField.optionsText
           .split('\n')
           .map((line) => line.trim())
           .filter(Boolean)
-          .map((line) => ({ value: line, label: line }))
+          .map(parseOptionLine)
       : null
 
     // field_key must be unique-ish and URL/DB-safe; slugify from label + timestamp for custom fields
@@ -141,6 +163,7 @@ export default function FormBuilder() {
       label: newField.label.trim(),
       field_type: newField.field_type,
       field_purpose: newField.field_purpose,
+      category: newField.category,
       options,
       is_required: newField.is_required,
       is_core: false,
@@ -208,6 +231,21 @@ export default function FormBuilder() {
                   </div>
                 </div>
               </div>
+
+              <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                <span className="shrink-0">{t('staff.formBuilder.category')}</span>
+                <select
+                  value={field.category ?? 'other'}
+                  onChange={(e) => updateField(field.id, { category: e.target.value })}
+                  className="w-full rounded-lg border border-gray-200 px-2 py-1 text-sm"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                 <span className="shrink-0">{t('staff.formBuilder.purpose')}</span>
@@ -284,6 +322,15 @@ export default function FormBuilder() {
             />
 
             <SelectField
+              label={t('staff.formBuilder.category')}
+              options={CATEGORIES}
+              value={newField.category}
+              onChange={(e) =>
+                setNewField((prev) => ({ ...prev, category: e.target.value }))
+              }
+            />
+
+            <SelectField
               label={t('staff.formBuilder.purpose')}
               options={FIELD_PURPOSES}
               value={newField.field_purpose}
@@ -292,7 +339,7 @@ export default function FormBuilder() {
               }
             />
 
-            {(newField.field_type === 'select' || newField.field_type === 'checkbox') && (
+            {['select', 'checkbox', 'radio'].includes(newField.field_type) && (
               <label className="block">
                 <span className="mb-1 block text-sm font-medium text-gray-700">
                   {t('staff.formBuilder.optionsHelp')}

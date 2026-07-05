@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { getGuestId, saveGuestId, clearGuestId } from '../../lib/guestSession'
 import { findFieldByPurpose } from '../../lib/guestFields'
+import { groupFieldsByCategory } from '../../lib/formFieldGroups'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -179,7 +180,7 @@ export default function Register() {
 
       const { data, error } = await supabase
         .from('form_fields')
-        .select('id, field_key, label, field_type, options, is_required, is_core, sort_order')
+        .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
@@ -346,15 +347,22 @@ export default function Register() {
             {loadError && <p className="text-red-500">{loadError}</p>}
 
             {!loadingFields && !loadError && (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                {fields.map((f) => (
-                  <DynamicField
-                    key={f.id}
-                    field={f}
-                    value={values[f.id]}
-                    onChange={(v) => setFieldValue(f.id, v)}
-                    error={errors[f.id]}
-                  />
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                {groupFieldsByCategory(fields).map(({ category, fields: groupFields }) => (
+                  <div key={category} className="flex flex-col gap-4">
+                    <h2 className="border-b border-neutral-bg pb-1.5 text-sm font-bold uppercase tracking-wide text-brand">
+                      {t(`guest.register.category.${category}`)}
+                    </h2>
+                    {groupFields.map((f) => (
+                      <DynamicField
+                        key={f.id}
+                        field={f}
+                        value={values[f.id]}
+                        onChange={(v) => setFieldValue(f.id, v)}
+                        error={errors[f.id]}
+                      />
+                    ))}
+                  </div>
                 ))}
 
                 {submitError && <p className="text-sm text-red-500">{submitError}</p>}

@@ -11,7 +11,10 @@
     "close": "关闭",
     "search": "搜索",
     "error": "出错了",
-    "success": "成功"
+    "success": "成功",
+    "hoursShort": "小时",
+    "minutesShort": "分钟",
+    "monthsShort": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
   },
   "guest": {
     "nav": {
@@ -24,6 +27,12 @@
     },
     "register": {
       "title": "行程报名",
+      "category": {
+        "personal": "基本个人信息",
+        "health": "健康、安全与饮食",
+        "emergency": "紧急联系人",
+        "other": "其他"
+      },
       "fullName": "姓名",
       "nickname": "昵称",
       "phone": "电话号码",
@@ -345,7 +354,8 @@
       "fieldLabel": "问题名称",
       "fieldType": "问题类型",
       "purpose": "数据用途",
-      "optionsHelp": "选项（每行一个）"
+      "category": "分类",
+      "optionsHelp": "选项（每行一个 — 在某行末尾加 * 可在选中该项时显示补充文字输入框，例如\"其他，请说明*\"）"
     },
     "itineraryBuilder": {
       "title": "行程管理",

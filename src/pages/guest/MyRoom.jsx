@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { getGuestId } from '../../lib/guestSession'
 import { saveCache, loadCache } from '../../lib/offlineCache'
+import { genderTextClass } from '../../lib/genderColor'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
@@ -71,7 +72,7 @@ export default function MyRoom() {
           .in('id', roomIds),
         supabase
           .from('room_assignments')
-          .select('room_id, guest_id, guests(id, name, nickname)')
+          .select('room_id, guest_id, guests(id, name, nickname, gender)')
           .in('room_id', roomIds),
       ])
 
@@ -211,7 +212,7 @@ export default function MyRoom() {
                       ) : (
                         <div className="flex flex-col gap-1">
                           {roommates.map((g) => (
-                            <p key={g.id} className="text-sm text-gray-800">
+                            <p key={g.id} className={`text-sm ${genderTextClass(g.gender) || 'text-gray-800'}`}>
                               {g.nickname || g.name}
                             </p>
                           ))}

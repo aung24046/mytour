@@ -1,32 +1,21 @@
 import { buildEntry, extractText, matchEntry } from '../../lib/optionOtherText'
 
-export default function CheckboxGroup({
+// เลือกได้ข้อเดียว (radio) — value เป็น string เดียวเสมอ เข้ากับ contract ของ DynamicField
+// รองรับ hasText แบบเดียวกับ CheckboxGroup เช่น "มี (Yes) โปรดระบุชื่อยาที่แพ้"
+export default function RadioGroup({
   label,
   required = false,
   options = [],
-  value = [],
+  value = '',
   onChange,
   className = '',
 }) {
-  function findEntry(optValue) {
-    return value.find((entry) => matchEntry(entry, optValue))
-  }
-
-  function toggle(opt) {
-    const existing = findEntry(opt.value)
-    if (existing !== undefined) {
-      onChange?.(value.filter((entry) => entry !== existing))
-    } else {
-      onChange?.([...value, buildEntry(opt.value, '')])
-    }
+  function select(opt) {
+    onChange?.(buildEntry(opt.value, ''))
   }
 
   function updateText(opt, text) {
-    const existing = findEntry(opt.value)
-    if (existing === undefined) return
-    onChange?.(
-      value.map((entry) => (entry === existing ? buildEntry(opt.value, text) : entry))
-    )
+    onChange?.(buildEntry(opt.value, text))
   }
 
   return (
@@ -39,9 +28,8 @@ export default function CheckboxGroup({
       )}
       <div className="flex flex-col gap-2">
         {options.map((opt) => {
-          const existing = findEntry(opt.value)
-          const checked = existing !== undefined
-          const text = existing !== undefined ? extractText(existing, opt.value) : ''
+          const checked = matchEntry(value, opt.value)
+          const text = checked ? extractText(value, opt.value) : ''
           return (
             <div key={opt.value}>
               <label
@@ -52,10 +40,10 @@ export default function CheckboxGroup({
                 }`}
               >
                 <input
-                  type="checkbox"
+                  type="radio"
                   checked={checked}
-                  onChange={() => toggle(opt)}
-                  className="h-5 w-5 rounded-md border-gray-300 text-brand focus:ring-brand-light"
+                  onChange={() => select(opt)}
+                  className="h-5 w-5 border-gray-300 text-brand focus:ring-brand-light"
                 />
                 <span className="text-base text-ink">{opt.label}</span>
               </label>

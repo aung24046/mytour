@@ -6,6 +6,7 @@ import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
@@ -65,7 +66,7 @@ export default function CheckIn() {
       const [guestsRes, fieldsRes, busesRes, busSeatsRes] = await Promise.all([
         supabase
           .from('guests')
-          .select('id, name, nickname, phone, qr_token, check_in_status, check_in_time')
+          .select('id, name, nickname, gender, phone, qr_token, check_in_status, check_in_time')
           .eq('tour_id', ACTIVE_TOUR_ID)
           .order('name', { ascending: true }),
         supabase
@@ -392,7 +393,9 @@ export default function CheckIn() {
                 onClick={() => toggleCheckIn(guest)}
               >
                 <div>
-                  <p className="font-medium text-gray-900">{guest.name}</p>
+                  <p className={`font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                    {guest.name}
+                  </p>
                   {guest.nickname && (
                     <p className="text-sm text-gray-500">{guest.nickname}</p>
                   )}

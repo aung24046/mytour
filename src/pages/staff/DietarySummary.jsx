@@ -5,14 +5,21 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import Card from '../../components/common/Card'
 
-// รวมคำตอบ dietary/medical ทั้งจาก core field (guests.food_allergy, guests.medical_condition)
-// และ custom field ที่ admin แท็ก field_purpose ไว้ แล้วนับจำนวนต่อค่า
+// รวมคำตอบ dietary/medical ทั้งจาก core field เดิม (guests.food_allergy, guests.medical_condition)
+// และ custom field (checkbox/radio ใหม่) ที่ admin แท็ก field_purpose ไว้ แล้วนับจำนวนต่อค่า
+// checkbox แบบเลือกได้หลายข้อ เก็บเป็น string เดียวคั่นด้วย ", " (เช่น "อาหารทะเล, ไข่")
+// ต้องแยกก่อนนับ ไม่งั้นแต่ละคนจะกลายเป็นคนละ entry กันหมด นับจำนวนคนที่แพ้แต่ละอย่างไม่ได้จริง
 function tallyByValue(entries) {
   const counts = new Map()
   for (const raw of entries) {
-    const value = raw?.trim()
-    if (!value) continue
-    counts.set(value, (counts.get(value) ?? 0) + 1)
+    if (!raw) continue
+    const parts = raw
+      .split(', ')
+      .map((v) => v.trim())
+      .filter(Boolean)
+    for (const value of parts) {
+      counts.set(value, (counts.get(value) ?? 0) + 1)
+    }
   }
   return Array.from(counts.entries())
     .map(([value, count]) => ({ value, count }))
