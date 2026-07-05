@@ -7,6 +7,7 @@ import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
 import QrScanner from '../../components/common/QrScanner'
+import StatusBadge from '../../components/common/StatusBadge'
 
 const MODES = ['generate', 'assign', 'loading', 'list']
 const STATUS_FILTERS = ['all', 'unassigned', 'tagged', 'loaded', 'delivered', 'returned']
@@ -549,17 +550,18 @@ export default function LuggageManager() {
                           {guest ? guest.nickname || guest.name : t('staff.luggageManager.status.unassigned')}
                         </p>
                       </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      <StatusBadge
+                        tone={
                           tag.status === 'unassigned'
-                            ? 'bg-gray-100 text-gray-500'
+                            ? 'neutral'
                             : tag.status === 'loaded' || tag.status === 'delivered'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-amber-100 text-amber-700'
-                        }`}
+                              ? 'success'
+                              : 'warning'
+                        }
+                        className="shrink-0"
                       >
                         {t(`staff.luggageManager.status.${tag.status}`)}
-                      </span>
+                      </StatusBadge>
                     </div>
 
                     <div className="mt-2 flex gap-2">

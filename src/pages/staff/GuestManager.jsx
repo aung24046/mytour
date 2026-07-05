@@ -6,6 +6,7 @@ import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
+import StatusBadge from '../../components/common/StatusBadge'
 
 const CORE_FIELD_KEYS = [
   'name',
@@ -263,17 +264,11 @@ export default function GuestManager() {
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            guest.check_in_status
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-500'
-                          }`}
-                        >
+                        <StatusBadge tone={guest.check_in_status ? 'success' : 'neutral'}>
                           {guest.check_in_status
                             ? t('staff.checkIn.arrived')
                             : t('staff.checkIn.notArrived')}
-                        </span>
+                        </StatusBadge>
                         <span className="text-gray-400">{isExpanded ? '▲' : '▼'}</span>
                       </div>
                     </button>

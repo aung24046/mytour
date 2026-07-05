@@ -6,6 +6,7 @@ import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
+import StatusBadge from '../../components/common/StatusBadge'
 
 const MAX_NUMBER = 75
 
@@ -361,17 +362,11 @@ export default function BingoHost() {
                           <span className="text-sm font-medium text-gray-900">
                             {guest ? guest.nickname || guest.name : t('staff.locationMonitor.unknownGuest')}
                           </span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                              p.is_confirmed
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-amber-100 text-amber-700'
-                            }`}
-                          >
+                          <StatusBadge tone={p.is_confirmed ? 'success' : 'warning'}>
                             {p.is_confirmed
                               ? t('staff.bingoHost.statusReady')
                               : t('staff.bingoHost.statusPreparing')}
-                          </span>
+                          </StatusBadge>
                         </div>
                       )
                     })}
