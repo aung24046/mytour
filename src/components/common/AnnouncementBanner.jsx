@@ -63,11 +63,12 @@ export default function AnnouncementBanner() {
   if (!announcement || dismissed) return null
 
   return (
-    <div className="sticky top-0 z-10 flex items-start gap-2 bg-amber-400 px-4 py-3 text-sm font-medium text-amber-950 shadow-sm">
-      <span className="flex-1">{announcement.message}</span>
+    <div className="sticky top-0 z-10 flex items-start gap-2.5 bg-gradient-to-r from-amber-400 to-orange-400 px-4 py-3 text-sm font-semibold text-amber-950 shadow-md">
+      <span aria-hidden="true" className="mt-px shrink-0 text-base leading-none">📢</span>
+      <span className="flex-1 leading-snug">{announcement.message}</span>
       <button
         onClick={() => setDismissed(true)}
-        className="shrink-0 rounded-full px-2 font-bold text-amber-900"
+        className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-amber-900/80 transition hover:bg-white/30"
         aria-label="close"
       >
         ×

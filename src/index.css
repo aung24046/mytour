@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,4 +11,63 @@ html, body, #root {
 body {
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', system-ui, sans-serif;
+  color: #0f2b35;
+  /* พื้นหลังแอปแบบไล่เฉดฟ้า–มิ้นท์นุ่มๆ ให้ดูสดใสทั้งแอป */
+  background:
+    radial-gradient(1200px 520px at 100% -10%, #cffafe 0%, transparent 55%),
+    radial-gradient(900px 520px at -10% 0%, #e0f7fa 0%, transparent 50%),
+    linear-gradient(180deg, #f6f9fb 0%, #eef4f7 100%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar บางๆ เข้าธีม */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b6d4de transparent;
+}
+*::-webkit-scrollbar { height: 8px; width: 8px; }
+*::-webkit-scrollbar-thumb { background: #b6d4de; border-radius: 9999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  /* หัวข้อหน้าแบบ hero ไล่เฉดฟ้าทะเล — ใช้ครอบ header ของแต่ละหน้าได้ */
+  .hero-gradient {
+    background: linear-gradient(135deg, #22d3ee 0%, #0891b2 55%, #0e7490 100%);
+    color: #ffffff;
+  }
+  /* การ์ดกระจก โปร่งแสงเล็กน้อย ให้ลอยเหนือพื้นหลัง */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+@layer base {
+  /* โฟกัสคีย์บอร์ดชัดเจน เพื่อ accessibility */
+  :focus-visible {
+    outline: 2px solid #0891b2;
+    outline-offset: 2px;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+@keyframes sheet {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

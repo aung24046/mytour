@@ -144,12 +144,12 @@ export default function ShareLocation() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <AnnouncementBanner />
-      <div className="p-4">
+      <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
-          <h1 className="mb-4 text-xl font-bold text-gray-900">
-            {t('guest.shareLocation.title')}
+          <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
+            <span aria-hidden="true">📍</span>{t('guest.shareLocation.title')}
           </h1>
 
           <GuestNav active="shareLocation" />

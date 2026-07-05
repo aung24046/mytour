@@ -6,6 +6,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "back": "Back",
+    "home": "Home",
     "next": "Next",
     "close": "Close",
     "search": "Search",
@@ -13,6 +14,14 @@
     "success": "Success"
   },
   "guest": {
+    "nav": {
+      "home": "Home",
+      "itinerary": "Plan",
+      "myQr": "QR",
+      "myRoom": "Room",
+      "bingo": "Bingo",
+      "shareLocation": "Location"
+    },
     "register": {
       "title": "Register for the trip",
       "fullName": "Full name",
@@ -57,6 +66,7 @@
     "myRoom": {
       "title": "My Room",
       "noRoom": "Your room hasn't been assigned yet.",
+      "stayNumber": "Stay {{number}}",
       "roomNumber": "Room {{number}}",
       "floorLabel": "Floor {{floor}}",
       "roommates": "Roommates",
@@ -274,7 +284,8 @@
       "searchRooms": "Search room / floor / occupant name",
       "allRoomTypes": "All room types",
       "allFloors": "All floors",
-      "noRoomsMatch": "No rooms match the current filters"
+      "noRoomsMatch": "No rooms match the current filters",
+      "removeGuest": "Remove from room"
     },
     "locationMonitor": {
       "title": "Location monitor",

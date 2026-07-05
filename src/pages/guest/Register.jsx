@@ -279,16 +279,19 @@ export default function Register() {
   if (savedGuest || existingGuest) {
     const guestForDisplay = savedGuest || existingGuest
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <AnnouncementBanner />
         <div className="p-4">
-          <Card className="mx-auto mt-8 max-w-md text-center">
-            <h1 className="text-xl font-bold text-gray-900">
+          <Card className="mx-auto mt-8 max-w-md text-center shadow-card-hover">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-success-bg text-3xl">
+              🎉
+            </div>
+            <h1 className="text-xl font-extrabold text-ink">
               {savedGuest
                 ? t('guest.register.successTitle')
                 : t('guest.register.alreadyRegisteredTitle')}
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-ink-muted">
               {savedGuest
                 ? t('guest.register.successBody')
                 : t('guest.register.alreadyRegisteredBody', {
@@ -325,15 +328,20 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <AnnouncementBanner />
       <div className="p-4">
         <div className="mx-auto max-w-md">
-          <h1 className="mb-4 text-xl font-bold text-gray-900">
-            {t('guest.register.title')}
-          </h1>
+          <div className="mb-5 mt-2 flex flex-col items-center text-center">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-gradient text-3xl shadow-brand">
+              ✈️
+            </div>
+            <h1 className="text-2xl font-extrabold text-ink">
+              {t('guest.register.title')}
+            </h1>
+          </div>
 
-          <Card>
+          <Card className="shadow-card-hover">
             {loadingFields && <p className="text-gray-500">{t('common.loading')}</p>}
             {loadError && <p className="text-red-500">{loadError}</p>}
 
@@ -360,7 +368,7 @@ export default function Register() {
 
           <button
             onClick={openRecoverySheet}
-            className="mt-4 w-full text-center text-sm font-medium text-sky-600 underline"
+            className="mt-4 w-full text-center text-sm font-semibold text-brand underline decoration-brand-light underline-offset-2 hover:text-brand-hover"
           >
             {t('guest.register.alreadyRegisteredLink')}
           </button>
@@ -375,16 +383,16 @@ export default function Register() {
         <div className="mb-3 flex gap-2">
           <button
             onClick={() => setRecoveryTab('phone')}
-            className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
-              recoveryTab === 'phone' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+            className={`flex-1 rounded-control px-3 py-2 text-sm font-semibold transition ${
+              recoveryTab === 'phone' ? 'bg-brand-gradient text-white shadow-brand' : 'bg-surface-sunken text-neutral-text'
             }`}
           >
             {t('guest.register.recoveryByPhone')}
           </button>
           <button
             onClick={() => setRecoveryTab('qr')}
-            className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
-              recoveryTab === 'qr' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+            className={`flex-1 rounded-control px-3 py-2 text-sm font-semibold transition ${
+              recoveryTab === 'qr' ? 'bg-brand-gradient text-white shadow-brand' : 'bg-surface-sunken text-neutral-text'
             }`}
           >
             {t('guest.register.recoveryByQr')}
@@ -399,9 +407,9 @@ export default function Register() {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder={t('guest.register.phonePlaceholder')}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
               />
-              <Button type="submit" disabled={phoneSearching} className="w-auto shrink-0 px-4">
+              <Button type="submit" disabled={phoneSearching} fullWidth={false} className="shrink-0 px-4">
                 {t('common.search')}
               </Button>
             </form>

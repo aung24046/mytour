@@ -9,8 +9,8 @@ import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
 
 const STATUS_STYLES = {
-  completed: 'opacity-50',
-  current: 'border-l-4 border-l-sky-500 bg-sky-50',
+  completed: 'opacity-55',
+  current: 'border-l-4 border-l-brand bg-brand-lighter ring-1 ring-brand-light',
   upcoming: '',
 }
 
@@ -93,11 +93,12 @@ export default function Itinerary() {
   }, {})
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <AnnouncementBanner />
-      <div className="p-4">
+      <div className="p-4 pb-28">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-4 text-xl font-bold text-gray-900">
+        <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
+          <span aria-hidden="true">🗺️</span>
           {t('guest.itinerary.title')}
         </h1>
 
@@ -116,7 +117,7 @@ export default function Itinerary() {
           !error &&
           Object.entries(dayGroups).map(([day, dayItems]) => (
             <div key={day} className="mb-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              <h2 className="mb-2.5 inline-flex items-center gap-2 rounded-pill bg-brand-light px-3 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
                 {t('guest.itinerary.day', { day })}
               </h2>
 
@@ -126,16 +127,18 @@ export default function Itinerary() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         {item.scheduled_time && (
-                          <p className="text-sm font-medium text-sky-600">
+                          <p className="text-sm font-bold text-brand">
                             {formatTime(item.scheduled_time)}
                           </p>
                         )}
-                        <p className="font-semibold text-gray-900">{item.title}</p>
+                        <p className="font-bold text-ink">{item.title}</p>
                         {item.location_name && (
-                          <p className="text-sm text-gray-500">{item.location_name}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-sm text-ink-muted">
+                            <span aria-hidden="true">📍</span>{item.location_name}
+                          </p>
                         )}
                         {item.description && (
-                          <p className="mt-1 text-sm text-gray-600">{item.description}</p>
+                          <p className="mt-1 text-sm text-ink-muted">{item.description}</p>
                         )}
                       </div>
 
@@ -144,7 +147,7 @@ export default function Itinerary() {
                           href={item.maps_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="shrink-0 rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white"
+                          className="shrink-0 rounded-control bg-brand-gradient px-3 py-2 text-sm font-semibold text-white shadow-brand"
                         >
                           {t('guest.itinerary.navigate')}
                         </a>

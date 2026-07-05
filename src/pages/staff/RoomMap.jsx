@@ -41,8 +41,14 @@ export default function RoomMap() {
   const [createHotelError, setCreateHotelError] = useState(null)
 
   const [editingInfoHotelId, setEditingInfoHotelId] = useState(null)
-  const [infoDraft, setInfoDraft] = useState('')
+  const [hotelDraft, setHotelDraft] = useState({
+    name: '',
+    check_in_date: '',
+    check_out_date: '',
+    general_info: '',
+  })
   const [savingInfo, setSavingInfo] = useState(false)
+  const [saveInfoError, setSaveInfoError] = useState(null)
 
   const [showNewRoomForm, setShowNewRoomForm] = useState(false)
   const [newRoomBatch, setNewRoomBatch] = useState(NEW_ROOM_BATCH_TEMPLATE)
@@ -71,7 +77,11 @@ export default function RoomMap() {
       supabase
         .from('hotel_rooms')
         .select('id, hotel_id, room_number, floor, room_type, max_guests')
-        .eq('tour_id', ACTIVE_TOUR_ID),
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        // เรียงตาม created_at เป็นหลัก + id เป็นตัวตัดสินสำรอง เพราะห้องที่สร้างพร้อมกันเป็นชุด (bulk insert)
+        // จะมี created_at เท่ากันเป๊ะ ถ้าไม่มี tiebreaker ลำดับอาจไม่นิ่งข้าม query
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true }),
       supabase
         .from('room_assignments')
         .select('id, room_id, guest_id')
@@ -113,7 +123,22 @@ export default function RoomMap() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'hotel_rooms', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
-        () => loadAll()
+        (payload) => {
+          // แก้บั๊ก "ห้องเด้งลงล่างตอนกำลังพิมพ์" — เดิม full reload ทุกครั้งที่มีการแก้ไข
+          // ทำให้ลำดับห้องสลับใหม่ทุกครั้ง (Postgres ไม่การันตีลำดับถ้าไม่มี ORDER BY ที่ query ตรง)
+          // เปลี่ยนมา patch state เฉพาะแถวที่เปลี่ยน แทนการโหลดใหม่ทั้งหมด — ลำดับเดิมจึงไม่ขยับ
+          if (payload.eventType === 'DELETE') {
+            setRooms((prev) => prev.filter((r) => r.id !== payload.old.id))
+          } else if (payload.eventType === 'INSERT') {
+            setRooms((prev) =>
+              prev.some((r) => r.id === payload.new.id) ? prev : [...prev, payload.new]
+            )
+          } else if (payload.eventType === 'UPDATE') {
+            setRooms((prev) =>
+              prev.map((r) => (r.id === payload.new.id ? { ...r, ...payload.new } : r))
+            )
+          }
+        }
       )
       .subscribe()
 
@@ -141,7 +166,18 @@ export default function RoomMap() {
     return map
   }, [assignments])
 
-  const assignedGuestIds = useMemo(() => new Set(assignments.map((a) => a.guest_id)), [assignments])
+  // แก้บั๊ก "ผูกคนในโรงแรม 1 แล้วหาชื่อในโรงแรม 2 ไม่เจอ" — เดิมเช็คว่าลูกทัวร์ถูกผูกห้องไปแล้วหรือยัง
+  // แบบรวมทั้งทริป (ทุกโรงแรม) ทั้งที่ schema อนุญาตให้คนเดียวกันอยู่ได้หลายห้อง/หลายโรงแรม
+  // (unique constraint คือ room_id+guest_id ไม่ใช่ guest_id เดี่ยวๆ) เพราะทัวร์ย้ายโรงแรมคนละคืนได้ปกติ
+  // แก้เป็นเช็คเฉพาะห้องของโรงแรมที่กำลังเปิดอยู่เท่านั้น
+  const activeHotelRoomIds = useMemo(() => new Set(hotelRooms.map((r) => r.id)), [hotelRooms])
+  const assignedGuestIdsInActiveHotel = useMemo(
+    () =>
+      new Set(
+        assignments.filter((a) => activeHotelRoomIds.has(a.room_id)).map((a) => a.guest_id)
+      ),
+    [assignments, activeHotelRoomIds]
+  )
 
   const guestById = useMemo(() => {
     const map = {}
@@ -179,10 +215,10 @@ export default function RoomMap() {
       ? (assignmentsByRoom[selectedRoom.id] ?? []).map((a) => a.guest_id)
       : []
     return guests
-      .filter((g) => !assignedGuestIds.has(g.id) || currentOccupantIds.includes(g.id))
+      .filter((g) => !assignedGuestIdsInActiveHotel.has(g.id) || currentOccupantIds.includes(g.id))
       .filter((g) => g.name?.toLowerCase().includes(q) || g.nickname?.toLowerCase().includes(q))
       .slice(0, 20)
-  }, [guests, search, assignedGuestIds, selectedRoom, assignmentsByRoom])
+  }, [guests, search, assignedGuestIdsInActiveHotel, selectedRoom, assignmentsByRoom])
 
   async function handleCreateHotel(e) {
     e.preventDefault()
@@ -191,13 +227,17 @@ export default function RoomMap() {
     setCreatingHotel(true)
     setCreateHotelError(null)
 
-    const { error: insertError } = await supabase.from('hotels').insert({
-      tour_id: ACTIVE_TOUR_ID,
-      name: newHotel.name.trim(),
-      check_in_date: newHotel.check_in_date || null,
-      check_out_date: newHotel.check_out_date || null,
-      general_info: newHotel.general_info.trim() || null,
-    })
+    const { data: insertedHotel, error: insertError } = await supabase
+      .from('hotels')
+      .insert({
+        tour_id: ACTIVE_TOUR_ID,
+        name: newHotel.name.trim(),
+        check_in_date: newHotel.check_in_date || null,
+        check_out_date: newHotel.check_out_date || null,
+        general_info: newHotel.general_info.trim() || null,
+      })
+      .select('id')
+      .single()
 
     if (insertError) {
       console.error('[RoomMap] create hotel failed', insertError)
@@ -209,7 +249,11 @@ export default function RoomMap() {
     setNewHotel(NEW_HOTEL_TEMPLATE)
     setShowNewHotelForm(false)
     setCreatingHotel(false)
-    loadAll()
+    await loadAll()
+    // แก้บั๊ก "กดเพิ่มโรงแรมแล้วเด้งกลับไปโรงแรมแรก" — เดิม loadAll() ไม่เปลี่ยน activeHotelId
+    // เลยค้างอยู่ที่โรงแรมเดิมที่เคยเลือกไว้ (ซึ่งถ้าเป็นครั้งแรกจะดูเหมือน "เด้งกลับไปโรงแรมแรก")
+    // ตอนนี้สลับไปที่โรงแรมที่เพิ่งสร้างให้เลยทันที
+    if (insertedHotel?.id) setActiveHotelId(insertedHotel.id)
   }
 
   async function deleteHotel(hotel) {
@@ -227,19 +271,39 @@ export default function RoomMap() {
   }
 
   function startEditInfo(hotel) {
+    // แก้บั๊ก "แก้ไขวันที่ไม่ได้หลังสร้างโรงแรมแล้ว" — เดิมแก้ได้แค่ general_info
+    // ตอนนี้ดึงชื่อ/วันที่เข้ามาด้วย ให้แก้ไขได้ทั้งหมดในฟอร์มเดียว
     setEditingInfoHotelId(hotel.id)
-    setInfoDraft(hotel.general_info ?? '')
+    setHotelDraft({
+      name: hotel.name ?? '',
+      check_in_date: hotel.check_in_date ?? '',
+      check_out_date: hotel.check_out_date ?? '',
+      general_info: hotel.general_info ?? '',
+    })
+    setSaveInfoError(null)
   }
 
   async function saveInfo(hotelId) {
+    if (!hotelDraft.name.trim()) return
+
     setSavingInfo(true)
-    const patch = { general_info: infoDraft.trim() || null }
+    setSaveInfoError(null)
+
+    const patch = {
+      name: hotelDraft.name.trim(),
+      check_in_date: hotelDraft.check_in_date || null,
+      check_out_date: hotelDraft.check_out_date || null,
+      general_info: hotelDraft.general_info.trim() || null,
+    }
     setHotels((prev) => prev.map((h) => (h.id === hotelId ? { ...h, ...patch } : h)))
 
     const { error: updateError } = await supabase.from('hotels').update(patch).eq('id', hotelId)
     if (updateError) {
       console.error('[RoomMap] save info failed', updateError)
+      setSaveInfoError(updateError.message ?? t('common.error'))
       loadAll()
+      setSavingInfo(false)
+      return
     }
     setSavingInfo(false)
     setEditingInfoHotelId(null)
@@ -436,7 +500,7 @@ export default function RoomMap() {
                 {/* Hotel general info — visible to all guests */}
                 <Card className="mt-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-900">{t('staff.roomMap.generalInfo')}</h2>
+                    <h2 className="font-semibold text-gray-900">{activeHotel.name}</h2>
                     {editingInfoHotelId !== activeHotel.id && (
                       <button
                         onClick={() => startEditInfo(activeHotel)}
@@ -449,13 +513,48 @@ export default function RoomMap() {
 
                   {editingInfoHotelId === activeHotel.id ? (
                     <div className="mt-2 flex flex-col gap-2">
-                      <TextAreaField
-                        value={infoDraft}
-                        onChange={(e) => setInfoDraft(e.target.value)}
-                        placeholder={t('staff.roomMap.generalInfoPlaceholder')}
+                      <TextField
+                        label={t('staff.roomMap.hotelName')}
+                        required
+                        value={hotelDraft.name}
+                        onChange={(e) =>
+                          setHotelDraft((prev) => ({ ...prev, name: e.target.value }))
+                        }
                       />
                       <div className="flex gap-2">
-                        <Button onClick={() => saveInfo(activeHotel.id)} disabled={savingInfo}>
+                        <TextField
+                          label={t('staff.roomMap.checkInDate')}
+                          type="date"
+                          value={hotelDraft.check_in_date}
+                          onChange={(e) =>
+                            setHotelDraft((prev) => ({ ...prev, check_in_date: e.target.value }))
+                          }
+                          className="flex-1"
+                        />
+                        <TextField
+                          label={t('staff.roomMap.checkOutDate')}
+                          type="date"
+                          value={hotelDraft.check_out_date}
+                          onChange={(e) =>
+                            setHotelDraft((prev) => ({ ...prev, check_out_date: e.target.value }))
+                          }
+                          className="flex-1"
+                        />
+                      </div>
+                      <TextAreaField
+                        label={t('staff.roomMap.generalInfo')}
+                        value={hotelDraft.general_info}
+                        onChange={(e) =>
+                          setHotelDraft((prev) => ({ ...prev, general_info: e.target.value }))
+                        }
+                        placeholder={t('staff.roomMap.generalInfoPlaceholder')}
+                      />
+                      {saveInfoError && <p className="text-sm text-red-500">{saveInfoError}</p>}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => saveInfo(activeHotel.id)}
+                          disabled={savingInfo || !hotelDraft.name.trim()}
+                        >
                           {t('common.save')}
                         </Button>
                         <Button
@@ -468,9 +567,19 @@ export default function RoomMap() {
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
-                      {activeHotel.general_info || t('staff.roomMap.noGeneralInfo')}
-                    </p>
+                    <>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {t('staff.roomMap.checkInDate')}: {activeHotel.check_in_date || '—'}
+                        {'  →  '}
+                        {t('staff.roomMap.checkOutDate')}: {activeHotel.check_out_date || '—'}
+                      </p>
+                      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        {t('staff.roomMap.generalInfo')}
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                        {activeHotel.general_info || t('staff.roomMap.noGeneralInfo')}
+                      </p>
+                    </>
                   )}
                 </Card>
 
@@ -621,7 +730,7 @@ export default function RoomMap() {
                                         onClick={() => removeGuestFromRoom(occupant.id)}
                                         className="shrink-0 text-xs font-medium text-red-500"
                                       >
-                                        {t('staff.seatMap.removeGuest')}
+                                        {t('staff.roomMap.removeGuest')}
                                       </button>
                                     </>
                                   ) : (
@@ -666,14 +775,11 @@ export default function RoomMap() {
         onClose={closeAssignSheet}
         title={t('staff.roomMap.assignGuest')}
       >
-        <input
-          type="text"
-          placeholder={t('staff.checkIn.searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
-        />
-        <div className="mt-3 flex flex-col gap-1.5">
+        {/* แก้บั๊ก "มองไม่เห็น dropdown ชื่อคน" — เดิมผลลัพธ์อยู่ใต้ช่องค้นหา
+            พอคีย์บอร์ดมือถือเด้งขึ้นมาจะบังผลลัพธ์ที่อยู่ด้านล่างจนมองไม่เห็น
+            สลับมาโชว์ผลลัพธ์ไว้ด้านบน ช่องค้นหาปักไว้ด้านล่างสุดแทน (แบบเดียวกับกล่องแชท)
+            เพื่อให้ผลลัพธ์ยังอยู่เหนือคีย์บอร์ดเสมอ */}
+        <div className="flex max-h-[50vh] flex-col gap-1.5 overflow-y-auto">
           {search.trim() && searchResults.length === 0 && (
             <p className="text-sm text-gray-400">{t('staff.checkIn.noResults')}</p>
           )}
@@ -689,6 +795,13 @@ export default function RoomMap() {
             </button>
           ))}
         </div>
+        <input
+          type="text"
+          placeholder={t('staff.checkIn.searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mt-3 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+        />
       </BottomSheet>
     </div>
   )

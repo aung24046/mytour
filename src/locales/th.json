@@ -6,6 +6,7 @@
     "cancel": "ยกเลิก",
     "confirm": "ยืนยัน",
     "back": "ย้อนกลับ",
+    "home": "หน้าหลัก",
     "next": "ถัดไป",
     "close": "ปิด",
     "search": "ค้นหา",
@@ -13,6 +14,14 @@
     "success": "สำเร็จ"
   },
   "guest": {
+    "nav": {
+      "home": "หน้าหลัก",
+      "itinerary": "กำหนดการ",
+      "myQr": "QR",
+      "myRoom": "ห้องพัก",
+      "bingo": "บิงโก",
+      "shareLocation": "ตำแหน่ง"
+    },
     "register": {
       "title": "ลงทะเบียนเข้าร่วมทริป",
       "fullName": "ชื่อ-นามสกุล",
@@ -57,6 +66,7 @@
     "myRoom": {
       "title": "ห้องพัก",
       "noRoom": "ยังไม่มีข้อมูลห้องพักของคุณ",
+      "stayNumber": "ที่พักที่ {{number}}",
       "roomNumber": "ห้อง {{number}}",
       "floorLabel": "ชั้น {{floor}}",
       "roommates": "เพื่อนร่วมห้อง",
@@ -274,7 +284,8 @@
       "searchRooms": "ค้นหาห้อง / ชั้น / ชื่อผู้เข้าพัก",
       "allRoomTypes": "ทุก Room type",
       "allFloors": "ทุกชั้น",
-      "noRoomsMatch": "ไม่พบห้องที่ตรงกับตัวกรอง"
+      "noRoomsMatch": "ไม่พบห้องที่ตรงกับตัวกรอง",
+      "removeGuest": "นำออกจากห้อง"
     },
     "locationMonitor": {
       "title": "ตรวจสอบตำแหน่ง",

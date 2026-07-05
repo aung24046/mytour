@@ -9,19 +9,19 @@ import { getStaffSession, clearStaffSession } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 
 const LINKS = [
-  { to: '/staff/check-in', key: 'checkIn' },
-  { to: '/staff/guest-manager', key: 'guestManager' },
-  { to: '/staff/luggage-manager', key: 'luggageManager' },
-  { to: '/staff/print', key: 'printExport' },
-  { to: '/staff/broadcast', key: 'broadcast' },
-  { to: '/staff/itinerary-builder', key: 'itineraryBuilder' },
-  { to: '/staff/dietary-summary', key: 'dietarySummary' },
-  { to: '/staff/seat-map', key: 'seatMap' },
-  { to: '/staff/room-map', key: 'roomMap' },
-  { to: '/staff/location-monitor', key: 'locationMonitor' },
-  { to: '/staff/bingo-host', key: 'bingoHost' },
-  { to: '/staff/form-builder', key: 'formBuilder' },
-  { to: '/staff/staff-manager', key: 'staffManager' },
+  { to: '/staff/check-in', key: 'checkIn', icon: '✅' },
+  { to: '/staff/guest-manager', key: 'guestManager', icon: '👥' },
+  { to: '/staff/luggage-manager', key: 'luggageManager', icon: '🧳' },
+  { to: '/staff/print', key: 'printExport', icon: '🖨️' },
+  { to: '/staff/broadcast', key: 'broadcast', icon: '📢' },
+  { to: '/staff/itinerary-builder', key: 'itineraryBuilder', icon: '🗺️' },
+  { to: '/staff/dietary-summary', key: 'dietarySummary', icon: '🍽️' },
+  { to: '/staff/seat-map', key: 'seatMap', icon: '💺' },
+  { to: '/staff/room-map', key: 'roomMap', icon: '🛏️' },
+  { to: '/staff/location-monitor', key: 'locationMonitor', icon: '📍' },
+  { to: '/staff/bingo-host', key: 'bingoHost', icon: '🎯' },
+  { to: '/staff/form-builder', key: 'formBuilder', icon: '📝' },
+  { to: '/staff/staff-manager', key: 'staffManager', icon: '⚙️' },
 ]
 
 export default function Dashboard() {
@@ -107,79 +107,92 @@ export default function Dashboard() {
   const missingGuests = guests.filter((g) => !g.check_in_status)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{t('staff.dashboard.title')}</h1>
-            {staffSession?.name && (
-              <p className="text-sm text-gray-500">{staffSession.name}</p>
-            )}
+        <div className="hero-gradient mb-5 rounded-card p-5 shadow-brand">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+                MyTour
+              </p>
+              <h1 className="text-2xl font-extrabold text-white">{t('staff.dashboard.title')}</h1>
+              {staffSession?.name && (
+                <p className="mt-0.5 text-sm text-white/80">{staffSession.name}</p>
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="rounded-pill bg-white/20 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30"
+            >
+              {t('staff.dashboard.logout')}
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600"
-          >
-            {t('staff.dashboard.logout')}
-          </button>
+
+          {!loading && !error && (
+            <div className="mt-4 rounded-control bg-white/15 p-4 backdrop-blur">
+              <p className="text-sm font-medium text-white/80">{t('staff.dashboard.headcount')}</p>
+              <p className="mt-0.5 text-4xl font-extrabold text-white">
+                {checkedInCount}
+                <span className="text-xl font-semibold text-white/60"> / {guests.length}</span>
+              </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-pill bg-white/25">
+                <div
+                  className="h-full rounded-pill bg-white transition-all"
+                  style={{ width: `${guests.length ? (checkedInCount / guests.length) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
-        {!loading && !error && (
-          <Card className="mb-4">
-            <p className="text-sm text-gray-500">{t('staff.dashboard.headcount')}</p>
-            <p className="mt-1 text-3xl font-bold text-gray-900">
-              {checkedInCount}
-              <span className="text-lg font-medium text-gray-400"> / {guests.length}</span>
+        {!loading && !error && missingGuests.length > 0 && (
+          <Card className="mb-5">
+            <p className="mb-2 text-sm font-semibold text-ink">
+              {t('staff.dashboard.missingList', { count: missingGuests.length })}
             </p>
-
-            {missingGuests.length > 0 && (
-              <div className="mt-3 border-t border-gray-100 pt-3">
-                <p className="mb-2 text-sm font-medium text-gray-600">
-                  {t('staff.dashboard.missingList', { count: missingGuests.length })}
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {missingGuests.map((g) => {
-                    const phone = resolveGuestPhone(g, phoneField, responsesByGuestId)
-                    return (
-                      <div
-                        key={g.id}
-                        className="flex items-center justify-between rounded-xl bg-red-50 px-3 py-2"
+            <div className="flex flex-col gap-1.5">
+              {missingGuests.map((g) => {
+                const phone = resolveGuestPhone(g, phoneField, responsesByGuestId)
+                return (
+                  <div
+                    key={g.id}
+                    className="flex items-center justify-between rounded-control bg-danger-bg/60 px-3 py-2.5"
+                  >
+                    <span className="font-semibold text-ink">
+                      {g.nickname || g.name}
+                    </span>
+                    {phone ? (
+                      <a
+                        href={`tel:${phone}`}
+                        className="rounded-pill bg-white px-3 py-1 text-sm font-semibold text-brand shadow-sm"
                       >
-                        <span className="font-medium text-gray-900">
-                          {g.nickname || g.name}
-                        </span>
-                        {phone ? (
-                          <a
-                            href={`tel:${phone}`}
-                            className="rounded-lg bg-white px-2.5 py-1 text-sm font-semibold text-sky-600 shadow-sm"
-                          >
-                            {phone}
-                          </a>
-                        ) : (
-                          <span className="text-sm text-gray-400">
-                            {t('staff.dashboard.noPhone')}
-                          </span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+                        {phone}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-ink-faint">
+                        {t('staff.dashboard.noPhone')}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </Card>
         )}
 
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {LINKS.map((link) => (
-            <Link key={link.to} to={link.to}>
-              <Card className="flex items-center justify-between hover:bg-gray-50">
-                <span className="font-medium text-gray-900">
+            <Link key={link.to} to={link.to} className="group">
+              <Card className="flex h-full flex-col gap-2 transition-all group-hover:-translate-y-0.5 group-hover:shadow-card-hover">
+                <span className="flex h-11 w-11 items-center justify-center rounded-control bg-brand-lighter text-xl">
+                  {link.icon}
+                </span>
+                <span className="text-sm font-semibold leading-tight text-ink">
                   {t(`staff.${link.key}.title`)}
                 </span>
-                <span className="text-gray-400">›</span>
               </Card>
             </Link>
           ))}

@@ -187,7 +187,7 @@ export default function LocationMonitor() {
                 </p>
                 {session.label && <p className="text-sm text-gray-600">{session.label}</p>}
               </div>
-              <Button variant="danger" className="w-auto px-3 py-2 text-sm" onClick={stopSession}>
+              <Button variant="danger" fullWidth={false} className="px-3 py-2 text-sm" onClick={stopSession}>
                 {t('staff.locationMonitor.stopSession')}
               </Button>
             </div>

@@ -84,13 +84,18 @@ export default function Login() {
   const staffOptions = staffList.map((s) => ({ value: s.id, label: s.name }))
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <div className="mx-auto w-full max-w-md">
-        <h1 className="mb-4 text-center text-xl font-bold text-gray-900">
-          {t('staff.login.title')}
-        </h1>
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-gradient text-3xl shadow-brand">
+            🧭
+          </div>
+          <h1 className="text-2xl font-extrabold text-ink">
+            {t('staff.login.title')}
+          </h1>
+        </div>
 
-        <Card>
+        <Card className="shadow-card-hover">
           {loadingStaff && <p className="text-gray-500">{t('common.loading')}</p>}
           {loadError && <p className="text-red-500">{loadError}</p>}
 
@@ -108,9 +113,9 @@ export default function Login() {
               />
 
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">
+                <span className="mb-1.5 block text-sm font-semibold text-neutral-text">
                   {t('staff.login.pin')}
-                  <span className="text-red-500"> *</span>
+                  <span className="text-accent"> *</span>
                 </span>
                 <input
                   type="password"
@@ -122,7 +127,7 @@ export default function Login() {
                     setPin(e.target.value.replace(/\D/g, ''))
                     setAuthError(null)
                   }}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-center text-2xl tracking-[0.5em] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                  className="w-full rounded-control border border-transparent bg-surface-sunken px-3 py-3.5 text-center text-2xl tracking-[0.5em] shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                   placeholder="••••"
                 />
               </label>

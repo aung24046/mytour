@@ -26,9 +26,11 @@ import GuestManager from './pages/staff/GuestManager.jsx'
 import LuggageManager from './pages/staff/LuggageManager.jsx'
 import PrintExport from './pages/staff/PrintExport.jsx'
 import StaffAuthGuard from './components/common/StaffAuthGuard.jsx'
+import HomeButton from './components/common/HomeButton.jsx'
 
 function App() {
   return (
+    <>
     <Routes>
       {/* Guest routes — เข้าผ่านลิงก์/QR เฉพาะทริป */}
       <Route path="/" element={<Register />} />
@@ -154,6 +156,8 @@ function App() {
         }
       />
     </Routes>
+    <HomeButton />
+    </>
   )
 }
 

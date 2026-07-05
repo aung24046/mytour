@@ -8,13 +8,13 @@ export default function SelectField({
   return (
     <label className={`block ${className}`}>
       {label && (
-        <span className="mb-1 block text-sm font-medium text-neutral-text">
+        <span className="mb-1.5 block text-sm font-semibold text-neutral-text">
           {label}
-          {required && <span className="text-danger"> *</span>}
+          {required && <span className="text-accent"> *</span>}
         </span>
       )}
       <select
-        className="w-full rounded-control border border-gray-300 bg-surface px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
+        className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
         {...props}
       >
         <option value="">—</option>
