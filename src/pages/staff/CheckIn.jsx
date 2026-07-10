@@ -37,6 +37,21 @@ export default function CheckIn() {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanFeedback, setScanFeedback] = useState(null) // { type: 'success' | 'error' | 'duplicate', name }
 
+  // เช็คชื่อหลาย event ผูกกับแผนการเดินทาง — event แรก (is_core) คือเช็คอินจุดนัดพบเดิม
+  // ยังใช้ guests.check_in_status + offline queue เหมือนเดิมทุกประการ ส่วน event อื่นๆ (สร้างใหม่
+  // ผูกกับจุดหมายในแผนการเดินทาง หรือกำหนดเอง) ใช้ตาราง checkin_records แยกต่างหาก — ไม่รองรับ
+  // โหมดออฟไลน์ (ต้องมีเน็ตตอนเช็ค) เพื่อจำกัดขอบเขตงานให้จัดการได้
+  const [events, setEvents] = useState([])
+  const [itineraryItems, setItineraryItems] = useState([])
+  const [selectedEventId, setSelectedEventId] = useState(null)
+  const [eventRecords, setEventRecords] = useState([])
+  const [eventPickerOpen, setEventPickerOpen] = useState(false)
+  const [createEventOpen, setCreateEventOpen] = useState(false)
+  const [createEventTab, setCreateEventTab] = useState('itinerary') // 'itinerary' | 'custom'
+  const [selectedItineraryItemId, setSelectedItineraryItemId] = useState('')
+  const [newEventTitle, setNewEventTitle] = useState('')
+  const [creatingEvent, setCreatingEvent] = useState(false)
+
   function refreshPendingCount() {
     setPendingCount(getQueue().filter((a) => a.type === 'checkin').length)
   }
@@ -185,6 +200,178 @@ export default function CheckIn() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t])
 
+  async function loadEvents() {
+    const [eventsRes, itemsRes] = await Promise.all([
+      supabase
+        .from('checkin_events')
+        .select('id, title, is_core, itinerary_item_id, sort_order')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('itinerary_items')
+        .select('id, day_number, scheduled_time, title, location_name')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .order('day_number', { ascending: true })
+        .order('sort_order', { ascending: true }),
+    ])
+
+    if (eventsRes.data) {
+      setEvents(eventsRes.data)
+      setSelectedEventId((prev) => prev ?? eventsRes.data.find((ev) => ev.is_core)?.id ?? eventsRes.data[0]?.id ?? null)
+    }
+    if (itemsRes.data) setItineraryItems(itemsRes.data)
+  }
+
+  useEffect(() => {
+    loadEvents()
+
+    const channel = supabase
+      .channel(`checkin-events-${ACTIVE_TOUR_ID}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'checkin_events', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        () => loadEvents()
+      )
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const selectedEvent = useMemo(
+    () => events.find((ev) => ev.id === selectedEventId) ?? null,
+    [events, selectedEventId]
+  )
+  // ก่อนโหลด events เสร็จ ถือว่าเป็น core event ไปก่อน (พฤติกรรมเดิมทุกประการ ไม่กระทบของเก่า)
+  const isCoreEvent = selectedEvent ? selectedEvent.is_core : true
+
+  // โหลด/subscribe checkin_records เฉพาะตอนเลือก event ที่ไม่ใช่ core
+  useEffect(() => {
+    if (!selectedEventId || isCoreEvent) {
+      setEventRecords([])
+      return
+    }
+
+    let isMounted = true
+
+    async function loadRecords() {
+      const { data, error } = await supabase
+        .from('checkin_records')
+        .select('id, guest_id, checked_in_at')
+        .eq('event_id', selectedEventId)
+
+      if (isMounted && !error) setEventRecords(data ?? [])
+    }
+
+    loadRecords()
+
+    const channel = supabase
+      .channel(`checkin-records-${selectedEventId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'checkin_records', filter: `event_id=eq.${selectedEventId}` },
+        () => loadRecords()
+      )
+      .subscribe()
+
+    return () => {
+      isMounted = false
+      supabase.removeChannel(channel)
+    }
+  }, [selectedEventId, isCoreEvent])
+
+  const checkedInGuestIds = useMemo(
+    () => new Set(eventRecords.map((r) => r.guest_id)),
+    [eventRecords]
+  )
+
+  function isCheckedIn(guest) {
+    return isCoreEvent ? !!guest.check_in_status : checkedInGuestIds.has(guest.id)
+  }
+
+  async function toggleEventRecord(guest) {
+    setTogglingId(guest.id)
+    const currentlyIn = checkedInGuestIds.has(guest.id)
+
+    if (currentlyIn) {
+      setEventRecords((prev) => prev.filter((r) => r.guest_id !== guest.id))
+      const { error } = await supabase
+        .from('checkin_records')
+        .delete()
+        .eq('event_id', selectedEventId)
+        .eq('guest_id', guest.id)
+      if (error) console.error('[CheckIn] remove event record failed', error)
+    } else {
+      const tempRecord = { id: `temp-${guest.id}`, guest_id: guest.id, checked_in_at: new Date().toISOString() }
+      setEventRecords((prev) => [...prev, tempRecord])
+      const { error } = await supabase
+        .from('checkin_records')
+        .insert({ event_id: selectedEventId, guest_id: guest.id })
+      if (error) {
+        console.error('[CheckIn] add event record failed', error)
+        setEventRecords((prev) => prev.filter((r) => r.id !== tempRecord.id))
+      }
+    }
+    setTogglingId(null)
+  }
+
+  async function handleToggle(guest) {
+    if (isCoreEvent) {
+      await toggleCheckIn(guest)
+    } else {
+      await toggleEventRecord(guest)
+    }
+  }
+
+  async function handleCreateEvent(e) {
+    e.preventDefault()
+
+    let title = newEventTitle.trim()
+    const itineraryItemId = createEventTab === 'itinerary' ? selectedItineraryItemId || null : null
+
+    if (createEventTab === 'itinerary' && !itineraryItemId) return
+    if (!title) return
+
+    setCreatingEvent(true)
+    const maxSort = events.reduce((max, ev) => Math.max(max, ev.sort_order), 0)
+
+    const { data, error } = await supabase
+      .from('checkin_events')
+      .insert({
+        tour_id: ACTIVE_TOUR_ID,
+        itinerary_item_id: itineraryItemId,
+        title,
+        is_core: false,
+        sort_order: maxSort + 1,
+      })
+      .select('id, title, is_core, itinerary_item_id, sort_order')
+      .single()
+
+    if (!error && data) {
+      setEvents((prev) => [...prev, data])
+      setSelectedEventId(data.id)
+      setNewEventTitle('')
+      setSelectedItineraryItemId('')
+      setCreateEventTab('itinerary')
+      setCreateEventOpen(false)
+      setEventPickerOpen(false)
+    } else {
+      console.error('[CheckIn] create event failed', error)
+    }
+    setCreatingEvent(false)
+  }
+
+  function pickItineraryItem(item) {
+    setSelectedItineraryItemId(item.id)
+    setNewEventTitle(item.location_name || item.title)
+  }
+
+  function itineraryItemLabel(item) {
+    const time = item.scheduled_time ? item.scheduled_time.slice(0, 5) : ''
+    const place = item.location_name ? ` — ${item.location_name}` : ''
+    return `${t('staff.checkIn.dayLabel', { day: item.day_number })}${time ? ' · ' + time : ''} · ${item.title}${place}`
+  }
+
   async function toggleCheckIn(guest) {
     setTogglingId(guest.id)
     const nextStatus = !guest.check_in_status
@@ -226,12 +413,12 @@ export default function CheckIn() {
       return
     }
 
-    if (guest.check_in_status) {
+    if (isCheckedIn(guest)) {
       setScanFeedback({ type: 'duplicate', name: guest.nickname || guest.name })
       return
     }
 
-    await toggleCheckIn(guest)
+    await handleToggle(guest)
     setScanFeedback({ type: 'success', name: guest.nickname || guest.name })
   }
 
@@ -255,18 +442,22 @@ export default function CheckIn() {
         g.name?.toLowerCase().includes(q) ||
         g.nickname?.toLowerCase().includes(q)
 
+      const checkedIn = isCheckedIn(g)
       const matchesFilter =
         filter === 'all' ||
-        (filter === 'arrived' && g.check_in_status) ||
-        (filter === 'not_arrived' && !g.check_in_status)
+        (filter === 'arrived' && checkedIn) ||
+        (filter === 'not_arrived' && !checkedIn)
 
       const matchesBus = busFilter === 'all' || guestBusId[g.id] === busFilter
 
       return matchesSearch && matchesFilter && matchesBus
     })
-  }, [guests, search, filter, busFilter, guestBusId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guests, search, filter, busFilter, guestBusId, isCoreEvent, checkedInGuestIds])
 
-  const checkedInCount = guests.filter((g) => g.check_in_status).length
+  const checkedInCount = isCoreEvent
+    ? guests.filter((g) => g.check_in_status).length
+    : checkedInGuestIds.size
 
   const phoneField = useMemo(() => findFieldByPurpose(fields, 'phone'), [fields])
   const responsesByGuestId = useMemo(() => buildResponsesByGuestId(responses), [responses])
@@ -278,6 +469,20 @@ export default function CheckIn() {
         <p className="mt-1 text-sm text-gray-600">
           {t('staff.checkIn.summary', { checkedIn: checkedInCount, total: guests.length })}
         </p>
+
+        <button
+          onClick={() => setEventPickerOpen(true)}
+          className="mt-2 flex w-full items-center justify-between rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5 text-left"
+        >
+          <span className="min-w-0 truncate text-sm font-semibold text-sky-800">
+            📍 {selectedEvent ? selectedEvent.title : t('common.loading')}
+          </span>
+          <span className="shrink-0 text-xs font-medium text-sky-600">{t('staff.checkIn.changeEvent')}</span>
+        </button>
+
+        {!isCoreEvent && (
+          <p className="mt-1 text-xs text-amber-700">{t('staff.checkIn.eventOfflineNotice')}</p>
+        )}
 
         {(!isOnline || usingCache || pendingCount > 0) && (
           <div className="mt-2 rounded-xl bg-amber-100 px-3 py-2 text-sm text-amber-800">
@@ -382,15 +587,16 @@ export default function CheckIn() {
 
           {filteredGuests.map((guest) => {
             const phone = resolveGuestPhone(guest, phoneField, responsesByGuestId)
+            const checkedIn = isCheckedIn(guest)
             return (
               <Card
                 key={guest.id}
                 className={`flex cursor-pointer items-center justify-between border-l-4 transition ${
-                  guest.check_in_status
+                  checkedIn
                     ? 'border-l-green-500 bg-green-50'
                     : 'border-l-red-400 bg-red-50'
                 } ${togglingId === guest.id ? 'opacity-60' : ''}`}
-                onClick={() => toggleCheckIn(guest)}
+                onClick={() => handleToggle(guest)}
               >
                 <div>
                   <p className={`font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
@@ -411,12 +617,12 @@ export default function CheckIn() {
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    guest.check_in_status
+                    checkedIn
                       ? 'bg-green-500 text-white'
                       : 'bg-red-400 text-white'
                   }`}
                 >
-                  {guest.check_in_status
+                  {checkedIn
                     ? t('staff.checkIn.arrived')
                     : t('staff.checkIn.notArrived')}
                 </span>
@@ -438,6 +644,131 @@ export default function CheckIn() {
         <Button variant="secondary" className="mt-3" onClick={() => setScannerOpen(false)}>
           {t('common.cancel')}
         </Button>
+      </BottomSheet>
+
+      <BottomSheet
+        open={eventPickerOpen}
+        onClose={() => setEventPickerOpen(false)}
+        title={t('staff.checkIn.selectEvent')}
+      >
+        <div className="flex max-h-[45vh] flex-col gap-1.5 overflow-y-auto">
+          {events.map((ev) => (
+            <button
+              key={ev.id}
+              onClick={() => {
+                setSelectedEventId(ev.id)
+                setEventPickerOpen(false)
+              }}
+              className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${
+                ev.id === selectedEventId
+                  ? 'border-sky-400 bg-sky-50 text-sky-800'
+                  : 'border-gray-200 text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              {ev.title}
+              {ev.is_core && (
+                <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                  {t('staff.checkIn.coreEventTag')}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <Button
+          className="mt-3"
+          onClick={() => {
+            setEventPickerOpen(false)
+            setCreateEventOpen(true)
+          }}
+        >
+          {t('staff.checkIn.createEvent')}
+        </Button>
+        <Button variant="secondary" className="mt-2" onClick={() => setEventPickerOpen(false)}>
+          {t('common.close')}
+        </Button>
+      </BottomSheet>
+
+      <BottomSheet
+        open={createEventOpen}
+        onClose={() => setCreateEventOpen(false)}
+        title={t('staff.checkIn.createEvent')}
+      >
+        <div className="mb-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setCreateEventTab('itinerary')}
+            className={`flex-1 rounded-control px-3 py-2 text-sm font-semibold transition ${
+              createEventTab === 'itinerary'
+                ? 'bg-brand-gradient text-white shadow-brand'
+                : 'bg-surface-sunken text-neutral-text'
+            }`}
+          >
+            {t('staff.checkIn.fromItinerary')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCreateEventTab('custom')}
+            className={`flex-1 rounded-control px-3 py-2 text-sm font-semibold transition ${
+              createEventTab === 'custom'
+                ? 'bg-brand-gradient text-white shadow-brand'
+                : 'bg-surface-sunken text-neutral-text'
+            }`}
+          >
+            {t('staff.checkIn.customEvent')}
+          </button>
+        </div>
+
+        <form onSubmit={handleCreateEvent} className="flex flex-col gap-3">
+          {createEventTab === 'itinerary' && (
+            <div className="max-h-[30vh] overflow-y-auto rounded-xl border border-gray-100">
+              {itineraryItems.length === 0 && (
+                <p className="p-3 text-sm text-gray-400">{t('staff.checkIn.noItineraryItems')}</p>
+              )}
+              {itineraryItems.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => pickItineraryItem(item)}
+                  className={`block w-full border-b border-gray-50 px-3 py-2 text-left text-sm last:border-b-0 ${
+                    selectedItineraryItemId === item.id
+                      ? 'bg-sky-50 font-semibold text-sky-700'
+                      : 'text-gray-900'
+                  }`}
+                >
+                  {itineraryItemLabel(item)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-gray-700">
+              {t('staff.checkIn.eventTitleLabel')}
+            </span>
+            <input
+              type="text"
+              value={newEventTitle}
+              onChange={(e) => setNewEventTitle(e.target.value)}
+              placeholder={t('staff.checkIn.eventTitlePlaceholder')}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
+
+          <Button
+            type="submit"
+            disabled={
+              creatingEvent ||
+              !newEventTitle.trim() ||
+              (createEventTab === 'itinerary' && !selectedItineraryItemId)
+            }
+          >
+            {creatingEvent ? t('common.loading') : t('staff.checkIn.createEvent')}
+          </Button>
+          <Button variant="secondary" type="button" onClick={() => setCreateEventOpen(false)}>
+            {t('common.cancel')}
+          </Button>
+        </form>
       </BottomSheet>
     </div>
   )

@@ -14,7 +14,20 @@
     "success": "成功",
     "hoursShort": "小时",
     "minutesShort": "分钟",
-    "monthsShort": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+    "monthsShort": [
+      "1月",
+      "2月",
+      "3月",
+      "4月",
+      "5月",
+      "6月",
+      "7月",
+      "8月",
+      "9月",
+      "10月",
+      "11月",
+      "12月"
+    ]
   },
   "guest": {
     "nav": {
@@ -66,7 +79,9 @@
       "navigate": "导航",
       "day": "第 {{day}} 天",
       "empty": "暂无行程",
-      "usingCache": "正在显示本机保存的数据（离线）"
+      "usingCache": "正在显示本机保存的数据（离线）",
+      "note": "备注",
+      "itemCount": "{{count}} 项"
     },
     "myQr": {
       "title": "我的二维码",
@@ -83,7 +98,16 @@
       "roomTypeSingle": "单人房",
       "roomTypeTwin": "双床房",
       "roomTypeDouble": "大床房",
-      "roomTypeTriple": "三人房"
+      "roomTypeTriple": "三人房",
+      "hotelInfo": "酒店信息",
+      "wifi": "WIFI",
+      "wifiName": "网络名称",
+      "wifiPassword": "密码",
+      "breakfast": "早餐",
+      "time": "时间",
+      "location": "地点",
+      "checkout": "退房",
+      "notes": "补充说明"
     },
     "bagLookup": {
       "title": "这个行李属于",
@@ -115,6 +139,12 @@
       "sharingSince": "正在分享位置（最后更新 {{time}}）",
       "sharingStarting": "正在开始分享位置...",
       "hint": "勾选以开始向导游分享您的位置"
+    },
+    "home": {
+      "welcomeBack": "欢迎回来",
+      "traveler": "旅客",
+      "subtitle": "选择下方菜单查看您的行程信息",
+      "qrSubtitle": "出示以办理登记／领取行李"
     }
   },
   "staff": {
@@ -236,12 +266,22 @@
       "offline": "无网络连接",
       "usingCache": "正在显示本机保存的最新数据",
       "pendingSync": "{{count}} 条签到等待同步（恢复网络后自动发送）",
-      "scanQr": "扫描二维码",
       "scanHint": "将访客的二维码对准框内",
       "scanSuccess": "已为 {{name}} 签到",
       "scanDuplicate": "{{name}} 已经签到过了",
       "scanNotFound": "此二维码与本次行程的访客不匹配",
-      "scanCameraError": "无法打开摄像头，请允许使用摄像头权限"
+      "scanCameraError": "无法打开摄像头，请允许使用摄像头权限",
+      "changeEvent": "更改",
+      "eventOfflineNotice": "本轮签到需要网络连接，不支持离线模式。",
+      "selectEvent": "选择签到轮次",
+      "coreEventTag": "集合点",
+      "createEvent": "创建新签到轮次",
+      "fromItinerary": "从行程中选择",
+      "customEvent": "自定义",
+      "noItineraryItems": "行程中还没有项目",
+      "eventTitleLabel": "轮次名称",
+      "eventTitlePlaceholder": "例如：在大皇宫下车",
+      "dayLabel": "第 {{day}} 天"
     },
     "broadcast": {
       "title": "紧急公告",
@@ -266,7 +306,17 @@
       "noBus": "尚无巴士，点击“添加巴士”开始设置",
       "disableSeat": "停用此位置（非座位，如洗手间）",
       "enableSeat": "重新启用为座位",
-      "blockedHint": "此位置已停用（非乘客座位）"
+      "blockedHint": "此位置已停用（非乘客座位）",
+      "licensePlate": "车牌号",
+      "driverSection": "司机信息（仅限工作人员）",
+      "driverName": "司机姓名",
+      "driverPhone": "司机电话",
+      "staffOnly": "仅限工作人员",
+      "resizeHint": "调整排数/每排座位后系统会自动增减座位（原有座位及安排会保留）",
+      "seatType": "乘客类型",
+      "type_guest": "团客",
+      "type_staff": "工作人员",
+      "type_vip": "VIP"
     },
     "roomMap": {
       "title": "房间图",
@@ -294,7 +344,16 @@
       "allRoomTypes": "全部房型",
       "allFloors": "全部楼层",
       "noRoomsMatch": "没有符合筛选条件的房间",
-      "removeGuest": "移出房间"
+      "removeGuest": "移出房间",
+      "wifi": "WIFI",
+      "wifiName": "网络名称",
+      "wifiPassword": "密码",
+      "breakfast": "早餐",
+      "breakfastTime": "时间",
+      "breakfastLocation": "地点",
+      "checkoutHeading": "退房",
+      "checkoutTime": "退房时间",
+      "additionalNotes": "补充说明"
     },
     "locationMonitor": {
       "title": "位置监控",

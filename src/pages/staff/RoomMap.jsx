@@ -25,6 +25,29 @@ function maxGuestsFor(roomType) {
 const NEW_HOTEL_TEMPLATE = { name: '', check_in_date: '', check_out_date: '', general_info: '' }
 const NEW_ROOM_BATCH_TEMPLATE = { room_type: 'twin', count: 5 }
 
+// ช่องข้อมูลโรงแรมแบบมีหัวข้อ+ไอคอน ให้ staff อ่านเป็นสัดส่วน
+function HotelInfoTile({ icon, label, empty, emptyText, children }) {
+  return (
+    <div className="rounded-xl bg-gray-50 px-3 py-2.5">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        {icon} {label}
+      </p>
+      <div className="mt-1 space-y-0.5">
+        {empty ? <p className="text-sm text-gray-400">{emptyText}</p> : children}
+      </div>
+    </div>
+  )
+}
+
+function InfoLine({ label, value, mono = false }) {
+  return (
+    <p className="text-sm text-gray-700">
+      {label && <span className="text-gray-400">{label}: </span>}
+      <span className={`font-medium text-gray-900 ${mono ? 'select-all font-mono' : ''}`}>{value}</span>
+    </p>
+  )
+}
+
 export default function RoomMap() {
   const { t } = useTranslation()
 
@@ -46,6 +69,11 @@ export default function RoomMap() {
     name: '',
     check_in_date: '',
     check_out_date: '',
+    wifi_name: '',
+    wifi_password: '',
+    breakfast_time: '',
+    breakfast_location: '',
+    checkout_time: '',
     general_info: '',
   })
   const [savingInfo, setSavingInfo] = useState(false)
@@ -72,7 +100,7 @@ export default function RoomMap() {
     const [hotelsRes, roomsRes, assignmentsRes, guestsRes] = await Promise.all([
       supabase
         .from('hotels')
-        .select('id, name, check_in_date, check_out_date, general_info')
+        .select('id, name, check_in_date, check_out_date, general_info, wifi_name, wifi_password, breakfast_time, breakfast_location, checkout_time')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('check_in_date', { ascending: true }),
       supabase
@@ -279,6 +307,11 @@ export default function RoomMap() {
       name: hotel.name ?? '',
       check_in_date: hotel.check_in_date ?? '',
       check_out_date: hotel.check_out_date ?? '',
+      wifi_name: hotel.wifi_name ?? '',
+      wifi_password: hotel.wifi_password ?? '',
+      breakfast_time: hotel.breakfast_time ?? '',
+      breakfast_location: hotel.breakfast_location ?? '',
+      checkout_time: hotel.checkout_time ?? '',
       general_info: hotel.general_info ?? '',
     })
     setSaveInfoError(null)
@@ -294,6 +327,11 @@ export default function RoomMap() {
       name: hotelDraft.name.trim(),
       check_in_date: hotelDraft.check_in_date || null,
       check_out_date: hotelDraft.check_out_date || null,
+      wifi_name: hotelDraft.wifi_name.trim() || null,
+      wifi_password: hotelDraft.wifi_password.trim() || null,
+      breakfast_time: hotelDraft.breakfast_time.trim() || null,
+      breakfast_location: hotelDraft.breakfast_location.trim() || null,
+      checkout_time: hotelDraft.checkout_time.trim() || null,
       general_info: hotelDraft.general_info.trim() || null,
     }
     setHotels((prev) => prev.map((h) => (h.id === hotelId ? { ...h, ...patch } : h)))
@@ -542,8 +580,70 @@ export default function RoomMap() {
                           className="flex-1"
                         />
                       </div>
+                      {/* WIFI */}
+                      <div className="rounded-xl bg-gray-50 p-2.5">
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          📶 {t('staff.roomMap.wifi')}
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <TextField
+                            label={t('staff.roomMap.wifiName')}
+                            value={hotelDraft.wifi_name}
+                            onChange={(e) =>
+                              setHotelDraft((prev) => ({ ...prev, wifi_name: e.target.value }))
+                            }
+                          />
+                          <TextField
+                            label={t('staff.roomMap.wifiPassword')}
+                            value={hotelDraft.wifi_password}
+                            onChange={(e) =>
+                              setHotelDraft((prev) => ({ ...prev, wifi_password: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {/* อาหารเช้า */}
+                      <div className="rounded-xl bg-gray-50 p-2.5">
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          🍳 {t('staff.roomMap.breakfast')}
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <TextField
+                            label={t('staff.roomMap.breakfastTime')}
+                            placeholder="07:00 AM"
+                            value={hotelDraft.breakfast_time}
+                            onChange={(e) =>
+                              setHotelDraft((prev) => ({ ...prev, breakfast_time: e.target.value }))
+                            }
+                          />
+                          <TextField
+                            label={t('staff.roomMap.breakfastLocation')}
+                            value={hotelDraft.breakfast_location}
+                            onChange={(e) =>
+                              setHotelDraft((prev) => ({ ...prev, breakfast_location: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {/* Check-out */}
+                      <div className="rounded-xl bg-gray-50 p-2.5">
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          🚪 {t('staff.roomMap.checkoutHeading')}
+                        </p>
+                        <TextField
+                          label={t('staff.roomMap.checkoutTime')}
+                          placeholder="12:00 PM"
+                          value={hotelDraft.checkout_time}
+                          onChange={(e) =>
+                            setHotelDraft((prev) => ({ ...prev, checkout_time: e.target.value }))
+                          }
+                        />
+                      </div>
+
                       <TextAreaField
-                        label={t('staff.roomMap.generalInfo')}
+                        label={t('staff.roomMap.additionalNotes')}
                         value={hotelDraft.general_info}
                         onChange={(e) =>
                           setHotelDraft((prev) => ({ ...prev, general_info: e.target.value }))
@@ -574,12 +674,56 @@ export default function RoomMap() {
                         {'  →  '}
                         {t('staff.roomMap.checkOutDate')}: {activeHotel.check_out_date || '—'}
                       </p>
-                      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                        {t('staff.roomMap.generalInfo')}
-                      </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
-                        {activeHotel.general_info || t('staff.roomMap.noGeneralInfo')}
-                      </p>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <HotelInfoTile
+                          icon="📶"
+                          label={t('staff.roomMap.wifi')}
+                          empty={!activeHotel.wifi_name && !activeHotel.wifi_password}
+                          emptyText={t('staff.roomMap.noGeneralInfo')}
+                        >
+                          {activeHotel.wifi_name && (
+                            <InfoLine label={t('staff.roomMap.wifiName')} value={activeHotel.wifi_name} />
+                          )}
+                          {activeHotel.wifi_password && (
+                            <InfoLine label={t('staff.roomMap.wifiPassword')} value={activeHotel.wifi_password} mono />
+                          )}
+                        </HotelInfoTile>
+
+                        <HotelInfoTile
+                          icon="🍳"
+                          label={t('staff.roomMap.breakfast')}
+                          empty={!activeHotel.breakfast_time && !activeHotel.breakfast_location}
+                          emptyText={t('staff.roomMap.noGeneralInfo')}
+                        >
+                          {activeHotel.breakfast_time && (
+                            <InfoLine label={t('staff.roomMap.breakfastTime')} value={activeHotel.breakfast_time} />
+                          )}
+                          {activeHotel.breakfast_location && (
+                            <InfoLine label={t('staff.roomMap.breakfastLocation')} value={activeHotel.breakfast_location} />
+                          )}
+                        </HotelInfoTile>
+
+                        <HotelInfoTile
+                          icon="🚪"
+                          label={t('staff.roomMap.checkoutHeading')}
+                          empty={!activeHotel.checkout_time}
+                          emptyText={t('staff.roomMap.noGeneralInfo')}
+                        >
+                          <InfoLine value={activeHotel.checkout_time} />
+                        </HotelInfoTile>
+                      </div>
+
+                      {activeHotel.general_info && (
+                        <div className="mt-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                            📝 {t('staff.roomMap.additionalNotes')}
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                            {activeHotel.general_info}
+                          </p>
+                        </div>
+                      )}
                     </>
                   )}
                 </Card>

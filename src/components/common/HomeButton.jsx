@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Icon from './Icon'
 
 // ปุ่ม "หน้าหลัก" แบบลอย เห็นชัดทุกหน้า ใช้ง่ายทั้งเด็กและผู้ใหญ่
 // - ฝั่ง staff (หน้าย่อย) → กลับไป /staff
@@ -32,7 +33,7 @@ export default function HomeButton() {
       className="fixed bottom-4 left-4 z-40 flex items-center gap-1.5 rounded-pill bg-white/90 px-4 py-3 text-sm font-bold text-brand shadow-card-hover ring-1 ring-black/5 backdrop-blur transition active:scale-95 hover:bg-white"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <span aria-hidden="true" className="text-base leading-none">🏠</span>
+      <Icon name="home" size={16} filled interactive />
       {t('common.home')}
     </button>
   )

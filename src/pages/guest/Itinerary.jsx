@@ -29,6 +29,11 @@ export default function Itinerary() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [usingCache, setUsingCache] = useState(false)
+  // แต่ละวันย่อ/ขยายได้ — เก็บเฉพาะวันที่ถูก"ย่อ" (ค่าเริ่มต้นคือขยายทุกวัน)
+  const [collapsedDays, setCollapsedDays] = useState({})
+
+  const toggleDay = (day) =>
+    setCollapsedDays((prev) => ({ ...prev, [day]: !prev[day] }))
 
   useEffect(() => {
     let isMounted = true
@@ -115,49 +120,84 @@ export default function Itinerary() {
 
         {!loading &&
           !error &&
-          Object.entries(dayGroups).map(([day, dayItems]) => (
-            <div key={day} className="mb-6">
-              <h2 className="mb-2.5 inline-flex items-center gap-2 rounded-pill bg-brand-light px-3 py-1 text-sm font-bold uppercase tracking-wide text-brand-deep">
-                {t('guest.itinerary.day', { day })}
-              </h2>
+          Object.entries(dayGroups).map(([day, dayItems]) => {
+            const isCollapsed = !!collapsedDays[day]
+            return (
+              <div key={day} className="mb-4">
+                <button
+                  type="button"
+                  onClick={() => toggleDay(day)}
+                  aria-expanded={!isCollapsed}
+                  className="mb-2.5 flex w-full items-center justify-between gap-2 rounded-pill bg-brand-light px-3 py-2 text-left text-sm font-bold uppercase tracking-wide text-brand-deep transition active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    {t('guest.itinerary.day', { day })}
+                    <span className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-brand-deep">
+                      {t('guest.itinerary.itemCount', { count: dayItems.length })}
+                    </span>
+                  </span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
 
-              <div className="flex flex-col gap-2">
-                {dayItems.map((item) => (
-                  <Card key={item.id} className={STATUS_STYLES[item.status] ?? ''}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        {item.scheduled_time && (
-                          <p className="text-sm font-bold text-brand">
-                            {formatTime(item.scheduled_time)}
-                          </p>
-                        )}
-                        <p className="font-bold text-ink">{item.title}</p>
-                        {item.location_name && (
-                          <p className="mt-0.5 flex items-center gap-1 text-sm text-ink-muted">
-                            <span aria-hidden="true">📍</span>{item.location_name}
-                          </p>
-                        )}
-                        {item.description && (
-                          <p className="mt-1 text-sm text-ink-muted">{item.description}</p>
-                        )}
-                      </div>
+                {!isCollapsed && (
+                  <div className="flex flex-col gap-2">
+                    {dayItems.map((item) => (
+                      <Card key={item.id} className={STATUS_STYLES[item.status] ?? ''}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            {item.scheduled_time && (
+                              <p className="text-sm font-bold text-brand">
+                                {formatTime(item.scheduled_time)}
+                              </p>
+                            )}
+                            <p className="font-bold text-ink">{item.title}</p>
 
-                      {item.maps_url && (
-                        <a
-                          href={item.maps_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 rounded-control bg-brand-gradient px-3 py-2 text-sm font-semibold text-white shadow-brand"
-                        >
-                          {t('guest.itinerary.navigate')}
-                        </a>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                            {item.location_name && (
+                              <p className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-ink">
+                                <span aria-hidden="true" className="leading-5">📍</span>
+                                <span className="min-w-0">{item.location_name}</span>
+                              </p>
+                            )}
+
+                            {item.description && (
+                              <div className="mt-2 rounded-lg border-l-2 border-brand-light bg-surface-sunken px-2.5 py-1.5 text-sm text-ink-muted">
+                                <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-brand">
+                                  {t('guest.itinerary.note')}
+                                </span>
+                                <span className="whitespace-pre-wrap">{item.description}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {item.maps_url && (
+                            <a
+                              href={item.maps_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="shrink-0 rounded-control bg-brand-gradient px-3 py-2 text-sm font-semibold text-white shadow-brand"
+                            >
+                              {t('guest.itinerary.navigate')}
+                            </a>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
 
         {!loading && !error && items.length === 0 && (
           <p className="text-gray-500">{t('guest.itinerary.empty')}</p>

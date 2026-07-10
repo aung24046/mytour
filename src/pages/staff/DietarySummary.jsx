@@ -3,26 +3,34 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 
-// รวมคำตอบ dietary/medical ทั้งจาก core field เดิม (guests.food_allergy, guests.medical_condition)
-// และ custom field (checkbox/radio ใหม่) ที่ admin แท็ก field_purpose ไว้ แล้วนับจำนวนต่อค่า
-// checkbox แบบเลือกได้หลายข้อ เก็บเป็น string เดียวคั่นด้วย ", " (เช่น "อาหารทะเล, ไข่")
-// ต้องแยกก่อนนับ ไม่งั้นแต่ละคนจะกลายเป็นคนละ entry กันหมด นับจำนวนคนที่แพ้แต่ละอย่างไม่ได้จริง
-function tallyByValue(entries) {
-  const counts = new Map()
-  for (const raw of entries) {
+// ค่าที่แปลว่า "ไม่มีข้อจำกัด/ไม่มีโรค" — ต้องตัดออกจากสรุป เพราะไม่ใช่ข้อจำกัดจริง
+// ครอบคลุมทั้งไทยและอังกฤษ เช่น "ไม่มีอาการแพ้อาหาร (No food allergies)", "ไม่มี (None)"
+function isNoneValue(raw) {
+  const s = (raw ?? '').trim().toLowerCase()
+  if (!s) return true
+  if (s.startsWith('ไม่มี')) return true // ครอบ "ไม่มี", "ไม่มี (No)", "ไม่มีอาการแพ้อาหาร...", "ไม่มีข้อจำกัด..."
+  if (['no', 'none', 'n/a', '-', 'ไม่แพ้', 'ไม่แพ้อาหาร'].includes(s)) return true
+  if (s.includes('no food allerg') || s.includes('no restriction')) return true
+  return false
+}
+
+// รวมคำตอบ dietary/medical แล้วจัดกลุ่มตามค่า พร้อมเก็บรายชื่อคนที่มีข้อจำกัดนั้นๆ
+// checkbox แบบเลือกได้หลายข้อ เก็บเป็น string เดียวคั่นด้วย ", " ต้องแยกก่อนนับ
+function tallyWithNames(pairs) {
+  const map = new Map() // value -> [{ name, gender }]
+  for (const { raw, guest } of pairs) {
     if (!raw) continue
-    const parts = raw
-      .split(', ')
-      .map((v) => v.trim())
-      .filter(Boolean)
-    for (const value of parts) {
-      counts.set(value, (counts.get(value) ?? 0) + 1)
+    for (const value of raw.split(', ').map((v) => v.trim()).filter(Boolean)) {
+      if (isNoneValue(value)) continue
+      if (!map.has(value)) map.set(value, [])
+      map.get(value).push(guest)
     }
   }
-  return Array.from(counts.entries())
-    .map(([value, count]) => ({ value, count }))
+  return Array.from(map.entries())
+    .map(([value, people]) => ({ value, count: people.length, people }))
     .sort((a, b) => b.count - a.count)
 }
 
@@ -45,7 +53,7 @@ export default function DietarySummary() {
       const [guestsRes, fieldsRes] = await Promise.all([
         supabase
           .from('guests')
-          .select('id, food_allergy, medical_condition')
+          .select('id, name, nickname, gender, food_allergy, medical_condition')
           .eq('tour_id', ACTIVE_TOUR_ID),
         supabase
           .from('form_fields')
@@ -70,7 +78,7 @@ export default function DietarySummary() {
       if (customFieldIds.length > 0) {
         const { data: responsesData, error: responsesError } = await supabase
           .from('guest_form_responses')
-          .select('field_id, value')
+          .select('field_id, value, guest_id')
           .in('field_id', customFieldIds)
 
         if (!responsesError && isMounted) setResponses(responsesData ?? [])
@@ -85,27 +93,66 @@ export default function DietarySummary() {
     }
   }, [t])
 
-  const dietaryTally = useMemo(() => {
-    const coreValues = guests.map((g) => g.food_allergy)
-    const customFieldIds = fields
-      .filter((f) => f.field_purpose === 'dietary' && !f.is_core)
-      .map((f) => f.id)
-    const customValues = responses
-      .filter((r) => customFieldIds.includes(r.field_id))
-      .map((r) => r.value)
-    return tallyByValue([...coreValues, ...customValues])
-  }, [guests, fields, responses])
+  const guestById = useMemo(() => {
+    const map = {}
+    for (const g of guests) map[g.id] = g
+    return map
+  }, [guests])
 
-  const medicalTally = useMemo(() => {
-    const coreValues = guests.map((g) => g.medical_condition)
+  function buildPairs(purpose, coreKey) {
+    const corePairs = guests.map((g) => ({ raw: g[coreKey], guest: g }))
     const customFieldIds = fields
-      .filter((f) => f.field_purpose === 'medical' && !f.is_core)
+      .filter((f) => f.field_purpose === purpose && !f.is_core)
       .map((f) => f.id)
-    const customValues = responses
+    const customPairs = responses
       .filter((r) => customFieldIds.includes(r.field_id))
-      .map((r) => r.value)
-    return tallyByValue([...coreValues, ...customValues])
-  }, [guests, fields, responses])
+      .map((r) => ({ raw: r.value, guest: guestById[r.guest_id] }))
+      .filter((p) => p.guest)
+    return [...corePairs, ...customPairs]
+  }
+
+  const dietaryTally = useMemo(
+    () => tallyWithNames(buildPairs('dietary', 'food_allergy')),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [guests, fields, responses, guestById]
+  )
+
+  const medicalTally = useMemo(
+    () => tallyWithNames(buildPairs('medical', 'medical_condition')),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [guests, fields, responses, guestById]
+  )
+
+  function renderTally(tally, badgeClass) {
+    if (tally.length === 0) {
+      return <p className="text-sm text-gray-400">{t('staff.dietarySummary.none')}</p>
+    }
+    return (
+      <div className="flex flex-col divide-y divide-gray-100">
+        {tally.map((item) => (
+          <div key={item.value} className="py-2.5 first:pt-0 last:pb-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-gray-900">{item.value}</span>
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${badgeClass}`}>
+                {item.count}
+              </span>
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1">
+              {item.people.map((g, i) => (
+                <span
+                  key={`${g?.id ?? i}`}
+                  className={`text-sm ${genderTextClass(g?.gender) || 'text-gray-600'}`}
+                >
+                  {g?.nickname || g?.name || '—'}
+                  {i < item.people.length - 1 && <span className="text-gray-300">,</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -121,42 +168,12 @@ export default function DietarySummary() {
             <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
               {t('staff.dietarySummary.dietary')}
             </h2>
-            <Card>
-              {dietaryTally.length === 0 ? (
-                <p className="text-sm text-gray-400">{t('staff.dietarySummary.none')}</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {dietaryTally.map((item) => (
-                    <div key={item.value} className="flex items-center justify-between">
-                      <span className="text-gray-900">{item.value}</span>
-                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-semibold text-amber-700">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+            <Card>{renderTally(dietaryTally, 'bg-amber-100 text-amber-700')}</Card>
 
             <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
               {t('staff.dietarySummary.medical')}
             </h2>
-            <Card>
-              {medicalTally.length === 0 ? (
-                <p className="text-sm text-gray-400">{t('staff.dietarySummary.none')}</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {medicalTally.map((item) => (
-                    <div key={item.value} className="flex items-center justify-between">
-                      <span className="text-gray-900">{item.value}</span>
-                      <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-semibold text-red-700">
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+            <Card>{renderTally(medicalTally, 'bg-red-100 text-red-700')}</Card>
           </>
         )}
       </div>

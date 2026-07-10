@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import Icon from './Icon'
 
 // แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่บนสุดของหน้าลูกทัวร์ทุกหน้า
 // อัปเดตแบบ real-time ผ่าน Supabase Realtime — ไม่ต้อง refresh หน้า
@@ -64,7 +65,7 @@ export default function AnnouncementBanner() {
 
   return (
     <div className="sticky top-0 z-10 flex items-start gap-2.5 bg-gradient-to-r from-amber-400 to-orange-400 px-4 py-3 text-sm font-semibold text-amber-950 shadow-md">
-      <span aria-hidden="true" className="mt-px shrink-0 text-base leading-none">📢</span>
+      <Icon name="megaphone" size={17} filled className="mt-px shrink-0" />
       <span className="flex-1 leading-snug">{announcement.message}</span>
       <button
         onClick={() => setDismissed(true)}

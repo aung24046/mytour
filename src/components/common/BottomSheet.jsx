@@ -13,7 +13,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
         aria-hidden="true"
       />
       <div
-        className="relative z-10 max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-[1.75rem] border-t border-white/60 bg-surface px-5 pt-5 shadow-2xl animate-[sheet_0.22s_ease-out]"
+        className="relative z-10 max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-[1.75rem] border-t border-white/60 bg-surface px-5 pt-5 shadow-2xl animate-[sheet_0.22s_cubic-bezier(0.16,1,0.3,1)]"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="mx-auto mb-4 h-1.5 w-11 rounded-pill bg-neutral-bg" />

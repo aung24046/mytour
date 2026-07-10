@@ -19,6 +19,8 @@ body {
     radial-gradient(900px 520px at -10% 0%, #e0f7fa 0%, transparent 50%),
     linear-gradient(180deg, #f6f9fb 0%, #eef4f7 100%);
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* Scrollbar บางๆ เข้าธีม */

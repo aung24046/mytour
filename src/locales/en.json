@@ -14,7 +14,20 @@
     "success": "Success",
     "hoursShort": "hr",
     "minutesShort": "min",
-    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    "monthsShort": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ]
   },
   "guest": {
     "nav": {
@@ -66,7 +79,9 @@
       "navigate": "Navigate",
       "day": "Day {{day}}",
       "empty": "No itinerary yet",
-      "usingCache": "Showing data saved on this device (offline)"
+      "usingCache": "Showing data saved on this device (offline)",
+      "note": "Note",
+      "itemCount": "{{count}} items"
     },
     "myQr": {
       "title": "My QR",
@@ -83,7 +98,16 @@
       "roomTypeSingle": "Single Room",
       "roomTypeTwin": "Twin Room",
       "roomTypeDouble": "Double Room",
-      "roomTypeTriple": "Triple Room"
+      "roomTypeTriple": "Triple Room",
+      "hotelInfo": "Hotel info",
+      "wifi": "WIFI",
+      "wifiName": "Network",
+      "wifiPassword": "Password",
+      "breakfast": "Breakfast",
+      "time": "Time",
+      "location": "Location",
+      "checkout": "Check-out",
+      "notes": "Additional notes"
     },
     "bagLookup": {
       "title": "This bag belongs to",
@@ -115,6 +139,12 @@
       "sharingSince": "Sharing location (last updated {{time}})",
       "sharingStarting": "Starting to share location...",
       "hint": "Check the box to start sharing your location with the guide."
+    },
+    "home": {
+      "welcomeBack": "Welcome back",
+      "traveler": "Traveler",
+      "subtitle": "Pick a menu below to see your trip details",
+      "qrSubtitle": "Show to check in / claim luggage"
     }
   },
   "staff": {
@@ -236,12 +266,22 @@
       "offline": "No internet connection",
       "usingCache": "Showing the last data saved on this device",
       "pendingSync": "{{count}} check-ins waiting to sync (will send automatically once back online)",
-      "scanQr": "Scan QR",
       "scanHint": "Point the camera at the guest's QR code",
       "scanSuccess": "Checked in {{name}}",
       "scanDuplicate": "{{name}} is already checked in",
       "scanNotFound": "This QR code doesn't match anyone on this trip",
-      "scanCameraError": "Couldn't open the camera. Please allow camera access."
+      "scanCameraError": "Couldn't open the camera. Please allow camera access.",
+      "changeEvent": "Change",
+      "eventOfflineNotice": "This check-in round needs an internet connection — offline mode isn't supported.",
+      "selectEvent": "Select check-in round",
+      "coreEventTag": "meeting point",
+      "createEvent": "Create new check-in round",
+      "fromItinerary": "From itinerary",
+      "customEvent": "Custom",
+      "noItineraryItems": "No itinerary items yet",
+      "eventTitleLabel": "Round title",
+      "eventTitlePlaceholder": "e.g. Getting off the bus at the Grand Palace",
+      "dayLabel": "Day {{day}}"
     },
     "broadcast": {
       "title": "Broadcast",
@@ -266,7 +306,17 @@
       "noBus": "No buses yet. Tap \"Add bus\" to get started.",
       "disableSeat": "Disable this spot (not a seat, e.g. restroom)",
       "enableSeat": "Re-enable as a seat",
-      "blockedHint": "This spot is disabled (not a passenger seat)."
+      "blockedHint": "This spot is disabled (not a passenger seat).",
+      "licensePlate": "License plate",
+      "driverSection": "Driver info (staff only)",
+      "driverName": "Driver name",
+      "driverPhone": "Driver phone",
+      "staffOnly": "Staff only",
+      "resizeHint": "Changing rows/seats auto-adds or removes seats (existing seats and assignments are kept)",
+      "seatType": "Occupant type",
+      "type_guest": "Guest",
+      "type_staff": "Staff",
+      "type_vip": "VIP"
     },
     "roomMap": {
       "title": "Room map",
@@ -294,7 +344,16 @@
       "allRoomTypes": "All room types",
       "allFloors": "All floors",
       "noRoomsMatch": "No rooms match the current filters",
-      "removeGuest": "Remove from room"
+      "removeGuest": "Remove from room",
+      "wifi": "WIFI",
+      "wifiName": "Network name",
+      "wifiPassword": "Password",
+      "breakfast": "Breakfast",
+      "breakfastTime": "Time",
+      "breakfastLocation": "Location",
+      "checkoutHeading": "Check-out",
+      "checkoutTime": "Check-out time",
+      "additionalNotes": "Additional notes"
     },
     "locationMonitor": {
       "title": "Location monitor",

@@ -58,11 +58,18 @@ export default function ItineraryBuilder() {
     loadItems()
   }, [])
 
+  // แก้บั๊ก "ย้ายรายการขึ้น/ลงไม่ได้" — เดิม reduce แค่จัดกลุ่มตามวัน ไม่ได้เรียงตาม sort_order
+  // ตอนกด ↑/↓ โค้ดจะสลับค่า sort_order ของ 2 รายการใน state ถูกต้อง แต่ตำแหน่งใน array เดิมไม่ขยับ
+  // เพราะไม่มีการ sort ใหม่ ทำให้หน้าจอไม่เปลี่ยนอะไรเลยจนกว่าจะโหลดหน้าใหม่ ต้อง sort ตาม sort_order
+  // ทุกครั้งตอนจัดกลุ่ม เพื่อให้ลำดับที่แสดงตรงกับค่าจริงเสมอ
   const dayGroups = items.reduce((acc, item) => {
     const day = item.day_number ?? 1
     acc[day] = acc[day] ? [...acc[day], item] : [item]
     return acc
   }, {})
+  for (const day of Object.keys(dayGroups)) {
+    dayGroups[day] = [...dayGroups[day]].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  }
   const dayNumbers = Object.keys(dayGroups)
     .map(Number)
     .sort((a, b) => a - b)

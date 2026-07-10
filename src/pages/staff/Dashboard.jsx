@@ -8,21 +8,22 @@ import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '
 import { getStaffSession, clearStaffSession } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
+import Icon from '../../components/common/Icon'
 
 const LINKS = [
-  { to: '/staff/check-in', key: 'checkIn', icon: '✅' },
-  { to: '/staff/guest-manager', key: 'guestManager', icon: '👥' },
-  { to: '/staff/luggage-manager', key: 'luggageManager', icon: '🧳' },
-  { to: '/staff/print', key: 'printExport', icon: '🖨️' },
-  { to: '/staff/broadcast', key: 'broadcast', icon: '📢' },
-  { to: '/staff/itinerary-builder', key: 'itineraryBuilder', icon: '🗺️' },
-  { to: '/staff/dietary-summary', key: 'dietarySummary', icon: '🍽️' },
-  { to: '/staff/seat-map', key: 'seatMap', icon: '💺' },
-  { to: '/staff/room-map', key: 'roomMap', icon: '🛏️' },
-  { to: '/staff/location-monitor', key: 'locationMonitor', icon: '📍' },
-  { to: '/staff/bingo-host', key: 'bingoHost', icon: '🎯' },
-  { to: '/staff/form-builder', key: 'formBuilder', icon: '📝' },
-  { to: '/staff/staff-manager', key: 'staffManager', icon: '⚙️' },
+  { to: '/staff/check-in', key: 'checkIn', icon: 'check' },
+  { to: '/staff/guest-manager', key: 'guestManager', icon: 'people' },
+  { to: '/staff/luggage-manager', key: 'luggageManager', icon: 'bag' },
+  { to: '/staff/print', key: 'printExport', icon: 'print' },
+  { to: '/staff/broadcast', key: 'broadcast', icon: 'megaphone' },
+  { to: '/staff/itinerary-builder', key: 'itineraryBuilder', icon: 'map' },
+  { to: '/staff/dietary-summary', key: 'dietarySummary', icon: 'bowl' },
+  { to: '/staff/seat-map', key: 'seatMap', icon: 'seat' },
+  { to: '/staff/room-map', key: 'roomMap', icon: 'bed' },
+  { to: '/staff/location-monitor', key: 'locationMonitor', icon: 'location' },
+  { to: '/staff/bingo-host', key: 'bingoHost', icon: 'target' },
+  { to: '/staff/form-builder', key: 'formBuilder', icon: 'form' },
+  { to: '/staff/staff-manager', key: 'staffManager', icon: 'settings' },
 ]
 
 export default function Dashboard() {
@@ -187,9 +188,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-3">
           {LINKS.map((link) => (
             <Link key={link.to} to={link.to} className="group">
-              <Card className="flex h-full flex-col gap-2 transition-all group-hover:-translate-y-0.5 group-hover:shadow-card-hover">
-                <span className="flex h-11 w-11 items-center justify-center rounded-control bg-brand-lighter text-xl">
-                  {link.icon}
+              <Card hover className="flex h-full flex-col gap-2">
+                <span className="flex h-11 w-11 items-center justify-center rounded-control bg-brand-lighter text-brand">
+                  <Icon name={link.icon} size={21} />
                 </span>
                 <span className="text-sm font-semibold leading-tight text-ink">
                   {t(`staff.${link.key}.title`)}

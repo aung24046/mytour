@@ -14,7 +14,20 @@
     "success": "สำเร็จ",
     "hoursShort": "ชม.",
     "minutesShort": "นาที",
-    "monthsShort": ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+    "monthsShort": [
+      "ม.ค.",
+      "ก.พ.",
+      "มี.ค.",
+      "เม.ย.",
+      "พ.ค.",
+      "มิ.ย.",
+      "ก.ค.",
+      "ส.ค.",
+      "ก.ย.",
+      "ต.ค.",
+      "พ.ย.",
+      "ธ.ค."
+    ]
   },
   "guest": {
     "nav": {
@@ -66,7 +79,9 @@
       "navigate": "นำทาง",
       "day": "วันที่ {{day}}",
       "empty": "ยังไม่มีแผนการเดินทาง",
-      "usingCache": "แสดงข้อมูลที่บันทึกไว้ในเครื่อง (ออฟไลน์)"
+      "usingCache": "แสดงข้อมูลที่บันทึกไว้ในเครื่อง (ออฟไลน์)",
+      "note": "หมายเหตุ",
+      "itemCount": "{{count}} รายการ"
     },
     "myQr": {
       "title": "QR ส่วนตัว",
@@ -83,7 +98,16 @@
       "roomTypeSingle": "Single Room",
       "roomTypeTwin": "Twin Room",
       "roomTypeDouble": "Double Room",
-      "roomTypeTriple": "Triple Room"
+      "roomTypeTriple": "Triple Room",
+      "hotelInfo": "ข้อมูลโรงแรม",
+      "wifi": "WIFI",
+      "wifiName": "ชื่อ WIFI",
+      "wifiPassword": "รหัสผ่าน",
+      "breakfast": "อาหารเช้า",
+      "time": "เวลา",
+      "location": "สถานที่",
+      "checkout": "Check-out",
+      "notes": "หมายเหตุเพิ่มเติม"
     },
     "bagLookup": {
       "title": "กระเป๋าใบนี้เป็นของ",
@@ -115,6 +139,12 @@
       "sharingSince": "กำลังแชร์ตำแหน่ง (อัปเดตล่าสุด {{time}})",
       "sharingStarting": "กำลังเริ่มแชร์ตำแหน่ง...",
       "hint": "ติ๊กถูกเพื่อเริ่มแชร์ตำแหน่งของคุณให้ไกด์เห็น"
+    },
+    "home": {
+      "welcomeBack": "ยินดีต้อนรับกลับมา",
+      "traveler": "นักเดินทาง",
+      "subtitle": "เลือกเมนูด้านล่างเพื่อดูข้อมูลทริปของคุณ",
+      "qrSubtitle": "แสดงเพื่อเช็คอิน / รับสัมภาระ"
     }
   },
   "staff": {
@@ -236,12 +266,22 @@
       "offline": "ไม่มีสัญญาณอินเทอร์เน็ต",
       "usingCache": "แสดงข้อมูลที่บันทึกไว้ในเครื่องล่าสุด",
       "pendingSync": "รอซิงค์ {{count}} รายการ (จะส่งอัตโนมัติเมื่อเน็ตกลับมา)",
-      "scanQr": "สแกน QR",
       "scanHint": "เล็ง QR ของลูกทัวร์ให้อยู่ในกรอบ",
       "scanSuccess": "เช็คอิน {{name}} สำเร็จ",
       "scanDuplicate": "{{name}} เช็คอินไปแล้ว",
       "scanNotFound": "ไม่พบ QR นี้ในทริป",
-      "scanCameraError": "เปิดกล้องไม่สำเร็จ กรุณาอนุญาตให้ใช้กล้อง"
+      "scanCameraError": "เปิดกล้องไม่สำเร็จ กรุณาอนุญาตให้ใช้กล้อง",
+      "changeEvent": "เปลี่ยน",
+      "eventOfflineNotice": "การเช็คชื่อรอบนี้ต้องใช้อินเทอร์เน็ต ไม่รองรับโหมดออฟไลน์",
+      "selectEvent": "เลือกรอบเช็คชื่อ",
+      "coreEventTag": "จุดนัดพบ",
+      "createEvent": "สร้างรอบเช็คชื่อใหม่",
+      "fromItinerary": "จากแผนการเดินทาง",
+      "customEvent": "กำหนดเอง",
+      "noItineraryItems": "ยังไม่มีรายการในแผนการเดินทาง",
+      "eventTitleLabel": "ชื่อรอบเช็คชื่อ",
+      "eventTitlePlaceholder": "เช่น ลงรถที่วัดพระแก้ว",
+      "dayLabel": "วันที่ {{day}}"
     },
     "broadcast": {
       "title": "ประกาศด่วน",
@@ -266,7 +306,17 @@
       "noBus": "ยังไม่มีรถบัส กด \"เพิ่มรถบัส\" เพื่อเริ่มต้น",
       "disableSeat": "ปิดใช้งานจุดนี้ (ไม่ใช่ที่นั่ง เช่น ห้องน้ำ)",
       "enableSeat": "เปิดใช้งานเป็นที่นั่งอีกครั้ง",
-      "blockedHint": "จุดนี้ถูกปิดใช้งานไว้ (ไม่ใช่ที่นั่งโดยสาร)"
+      "blockedHint": "จุดนี้ถูกปิดใช้งานไว้ (ไม่ใช่ที่นั่งโดยสาร)",
+      "licensePlate": "ทะเบียนรถ",
+      "driverSection": "ข้อมูลคนขับ (staff เท่านั้น)",
+      "driverName": "ชื่อคนขับ",
+      "driverPhone": "เบอร์โทรคนขับ",
+      "staffOnly": "สำหรับ Staff เท่านั้น",
+      "resizeHint": "ปรับจำนวนแถว/ที่นั่งได้ ระบบจะเพิ่ม-ลดที่นั่งให้อัตโนมัติ (ที่นั่งเดิมและคนที่จัดไว้จะยังอยู่)",
+      "seatType": "ประเภทผู้นั่ง",
+      "type_guest": "ลูกทัวร์",
+      "type_staff": "Staff",
+      "type_vip": "VIP"
     },
     "roomMap": {
       "title": "ผังห้องพัก",
@@ -294,7 +344,16 @@
       "allRoomTypes": "ทุก Room type",
       "allFloors": "ทุกชั้น",
       "noRoomsMatch": "ไม่พบห้องที่ตรงกับตัวกรอง",
-      "removeGuest": "นำออกจากห้อง"
+      "removeGuest": "นำออกจากห้อง",
+      "wifi": "WIFI",
+      "wifiName": "ชื่อ WIFI",
+      "wifiPassword": "รหัสผ่าน",
+      "breakfast": "อาหารเช้า",
+      "breakfastTime": "เวลา",
+      "breakfastLocation": "สถานที่",
+      "checkoutHeading": "Check-out",
+      "checkoutTime": "เวลา Check-out",
+      "additionalNotes": "หมายเหตุเพิ่มเติม"
     },
     "locationMonitor": {
       "title": "ตรวจสอบตำแหน่ง",

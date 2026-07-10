@@ -1,15 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Icon from './Icon'
 
-// แถบเมนูลูกทัวร์แบบติดด้านล่าง (bottom tab bar) — เห็นตลอดเวลา ไม่ต้องเลื่อน
-// ไอคอนใหญ่ + ข้อความสั้น ใช้ง่ายทั้งเด็กและผู้ใหญ่ นิ้วโป้งกดถึงสะดวก
 const ITEMS = [
-  { to: '/', key: 'home', icon: '🏠', labelKey: 'guest.nav.home' },
-  { to: '/itinerary', key: 'itinerary', icon: '🗺️', labelKey: 'guest.nav.itinerary' },
-  { to: '/my-qr', key: 'myQr', icon: '🎫', labelKey: 'guest.nav.myQr' },
-  { to: '/my-room', key: 'myRoom', icon: '🛏️', labelKey: 'guest.nav.myRoom' },
-  { to: '/bingo', key: 'bingo', icon: '🎯', labelKey: 'guest.nav.bingo' },
-  { to: '/share-location', key: 'shareLocation', icon: '📍', labelKey: 'guest.nav.shareLocation' },
+  { to: '/', key: 'home', icon: 'home', labelKey: 'guest.nav.home' },
+  { to: '/itinerary', key: 'itinerary', icon: 'map', labelKey: 'guest.nav.itinerary' },
+  { to: '/my-qr', key: 'myQr', icon: 'ticket', labelKey: 'guest.nav.myQr' },
+  { to: '/my-room', key: 'myRoom', icon: 'bed', labelKey: 'guest.nav.myRoom' },
+  { to: '/bingo', key: 'bingo', icon: 'target', labelKey: 'guest.nav.bingo' },
+  { to: '/share-location', key: 'shareLocation', icon: 'location', labelKey: 'guest.nav.shareLocation' },
 ]
 
 export default function GuestNav({ active }) {
@@ -31,20 +30,14 @@ export default function GuestNav({ active }) {
               aria-current={isActive ? 'page' : undefined}
               className="group flex flex-1 flex-col items-center gap-0.5 px-1 pb-1.5 pt-2"
             >
-              <span
-                className={`flex h-9 w-full max-w-[3.25rem] items-center justify-center rounded-pill text-2xl leading-none transition-all ${
-                  isActive
-                    ? 'bg-brand-light scale-105'
-                    : 'grayscale-[35%] opacity-80 group-hover:opacity-100'
-                }`}
-              >
-                {item.icon}
+              <span className={`flex h-9 w-full max-w-[3.25rem] items-center justify-center rounded-[10px] transition-all ${
+                isActive ? 'scale-105 bg-brand-light text-brand-hover' : 'text-ink-muted opacity-80 group-hover:text-brand group-hover:opacity-100'
+              }`}>
+                <Icon name={item.icon} size={22} filled={isActive} interactive />
               </span>
-              <span
-                className={`text-[11px] font-semibold leading-tight ${
-                  isActive ? 'text-brand-hover' : 'text-ink-muted'
-                }`}
-              >
+              <span className={`text-[11px] font-semibold leading-tight ${
+                isActive ? 'text-brand-hover' : 'text-ink-muted'
+              }`}>
                 {t(item.labelKey)}
               </span>
             </Link>
