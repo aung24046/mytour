@@ -144,6 +144,39 @@ const RENDER = {
       <rect x="10.5" y="12" width="3" height="2.4" rx="0.5" fill={c.detail} stroke="none" />
     </>
   ),
+  wifi: (c) => (
+    <>
+      <path d="M3.7 8.6 A13 13 0 0 1 20.3 8.6" fill="none" stroke={c.color} {...S} />
+      <path d="M6.7 12 A8.6 8.6 0 0 1 17.3 12" fill="none" stroke={c.color} {...S} />
+      <path d="M9.6 15.4 A4.2 4.2 0 0 1 14.4 15.4" fill="none" stroke={c.color} {...S} />
+      <circle cx="12" cy="18.6" r="1.15" fill={c.color} stroke="none" />
+    </>
+  ),
+  coffee: (c) => (
+    <>
+      <path d="M5 8.5 H16 V13 A4 4 0 0 1 12 17 H9 A4 4 0 0 1 5 13 Z" fill={c.body} stroke={c.color} {...S} />
+      <path d="M16 9.6 H17.8 A2.2 2.2 0 0 1 17.8 13.9 H16" fill="none" stroke={c.color} {...S} />
+      <path d="M8.2 3.6 Q9.2 5 8.2 6.4" fill="none" stroke={c.color} {...S} />
+      <path d="M11.8 3.6 Q12.8 5 11.8 6.4" fill="none" stroke={c.color} {...S} />
+      <line x1="5" y1="20" x2="15" y2="20" stroke={c.color} {...S} />
+    </>
+  ),
+  door: (c) => (
+    <>
+      <rect x="6" y="3.5" width="12" height="17" rx="1.6" fill={c.body} stroke={c.color} {...S} />
+      <circle cx="14.6" cy="12" r="1.15" fill={c.detail} stroke="none" />
+    </>
+  ),
+  calendar: (c) => (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2.4" fill={c.body} stroke={c.color} {...S} />
+      <line x1="4" y1="9.5" x2="20" y2="9.5" stroke={c.color} {...S} />
+      <line x1="8" y1="3.4" x2="8" y2="6.6" stroke={c.color} {...S} />
+      <line x1="16" y1="3.4" x2="16" y2="6.6" stroke={c.color} {...S} />
+      <circle cx="9" cy="14" r="1" fill={c.detail} stroke="none" />
+      <circle cx="13" cy="14" r="1" fill={c.detail} stroke="none" />
+    </>
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

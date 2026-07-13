@@ -111,7 +111,9 @@
       "time": "Time",
       "location": "Location",
       "checkout": "Check-out",
-      "notes": "Additional notes"
+      "notes": "Additional notes",
+      "nights": "{{count}} nights",
+      "roomNumberLabel": "Room number"
     },
     "bagLookup": {
       "title": "This bag belongs to",

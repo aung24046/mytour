@@ -111,7 +111,9 @@
       "time": "เวลา",
       "location": "สถานที่",
       "checkout": "Check-out",
-      "notes": "หมายเหตุเพิ่มเติม"
+      "notes": "หมายเหตุเพิ่มเติม",
+      "nights": "{{count}} คืน",
+      "roomNumberLabel": "หมายเลขห้อง"
     },
     "bagLookup": {
       "title": "กระเป๋าใบนี้เป็นของ",

@@ -111,7 +111,9 @@
       "time": "时间",
       "location": "地点",
       "checkout": "退房",
-      "notes": "补充说明"
+      "notes": "补充说明",
+      "nights": "{{count}} 晚",
+      "roomNumberLabel": "房间号"
     },
     "bagLookup": {
       "title": "这个行李属于",
