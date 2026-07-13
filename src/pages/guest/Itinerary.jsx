@@ -291,17 +291,17 @@ export default function Itinerary() {
                       type="button"
                       onClick={() => hasDetail && toggleItem(item.id)}
                       aria-expanded={expanded}
-                      className="flex w-full items-center gap-3 p-3 text-left"
+                      className="flex w-full items-start gap-3 p-3 text-left"
                     >
-                      <span className="w-[42px] shrink-0 text-[13px] font-semibold text-ink-muted">
+                      <span className="w-[42px] shrink-0 pt-0.5 text-[13px] font-semibold text-ink-muted">
                         {formatTime(item.scheduled_time)}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-ink">{item.title}</p>
+                        <p className="text-sm font-semibold text-ink">{item.title}</p>
                         {item.location_name && (
-                          <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-faint">
-                            <Icon name="location" size={12} />
-                            <span className="truncate">{item.location_name}</span>
+                          <p className="mt-0.5 flex items-start gap-1 text-xs text-ink-faint">
+                            <Icon name="location" size={12} className="mt-0.5 shrink-0" />
+                            <span>{item.location_name}</span>
                           </p>
                         )}
                       </div>

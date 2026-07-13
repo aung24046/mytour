@@ -344,8 +344,8 @@ export default function ItineraryBuilder() {
                 const expanded = isCurrent || !!expandedItems[item.id]
 
                 const header = (
-                  <div className="flex items-center gap-2.5 p-3">
-                    <span className="flex shrink-0 items-center gap-1.5">
+                  <div className="flex items-start gap-2.5 p-3">
+                    <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
                       {isDone && <Icon name="check" size={14} filled color="#5dcaa5" />}
                       {isCurrent && <span className="h-2 w-2 rounded-full bg-success ring-2 ring-success/25" />}
                       <span className={`text-[13px] font-semibold ${isCurrent ? 'text-success-text' : 'text-ink-muted'}`}>
@@ -353,11 +353,11 @@ export default function ItineraryBuilder() {
                       </span>
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-ink">{item.title}</p>
+                      <p className="text-sm font-semibold text-ink">{item.title}</p>
                       {item.location_name && (
-                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-faint">
-                          <Icon name="location" size={12} />
-                          <span className="truncate">{item.location_name}</span>
+                        <p className="mt-0.5 flex items-start gap-1 text-[11px] text-ink-faint">
+                          <Icon name="location" size={12} className="mt-0.5 shrink-0" />
+                          <span>{item.location_name}</span>
                         </p>
                       )}
                     </div>
