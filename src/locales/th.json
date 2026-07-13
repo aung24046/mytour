@@ -462,7 +462,15 @@
       "breakfastLocation": "สถานที่",
       "checkoutHeading": "Check-out",
       "checkoutTime": "เวลา Check-out",
-      "additionalNotes": "หมายเหตุเพิ่มเติม"
+      "additionalNotes": "หมายเหตุเพิ่มเติม",
+      "assignedLabel": "จัดห้องแล้ว",
+      "filterAll": "ทั้งหมด",
+      "filterVacant": "ว่าง",
+      "filterFull": "เต็ม",
+      "statusFull": "เต็ม",
+      "statusVacantN": "ว่าง {{count}}",
+      "guestsUnit": "{{count}} คน",
+      "nights": "{{count}} คืน"
     },
     "locationMonitor": {
       "title": "ตรวจสอบตำแหน่ง",

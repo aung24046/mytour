@@ -7,9 +7,27 @@ import { genderTextClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
+import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
 import SelectField from '../../components/common/SelectField'
+
+// จุดสีตามเพศ (พื้นทึบ) สำหรับชิปผู้เข้าพัก
+function genderDotClass(gender) {
+  if (gender === 'ชาย') return 'bg-blue-500'
+  if (gender === 'หญิง') return 'bg-pink-500'
+  return 'bg-ink-faint'
+}
+
+// นับจำนวนคืนจากวันเข้าพัก–ออก (คืนค่า null ถ้าข้อมูลไม่ครบ/ไม่ถูกต้อง)
+function nightsBetween(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return null
+  const a = new Date(checkIn)
+  const b = new Date(checkOut)
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null
+  const n = Math.round((b - a) / 86400000)
+  return n > 0 ? n : null
+}
 
 const ROOM_TYPES = [
   { value: 'single', label: 'Single Room', maxGuests: 1 },
@@ -24,29 +42,6 @@ function maxGuestsFor(roomType) {
 
 const NEW_HOTEL_TEMPLATE = { name: '', check_in_date: '', check_out_date: '', general_info: '' }
 const NEW_ROOM_BATCH_TEMPLATE = { room_type: 'twin', count: 5 }
-
-// ช่องข้อมูลโรงแรมแบบมีหัวข้อ+ไอคอน ให้ staff อ่านเป็นสัดส่วน
-function HotelInfoTile({ icon, label, empty, emptyText, children }) {
-  return (
-    <div className="rounded-xl bg-gray-50 px-3 py-2.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-        {icon} {label}
-      </p>
-      <div className="mt-1 space-y-0.5">
-        {empty ? <p className="text-sm text-gray-400">{emptyText}</p> : children}
-      </div>
-    </div>
-  )
-}
-
-function InfoLine({ label, value, mono = false }) {
-  return (
-    <p className="text-sm text-gray-700">
-      {label && <span className="text-gray-400">{label}: </span>}
-      <span className={`font-medium text-gray-900 ${mono ? 'select-all font-mono' : ''}`}>{value}</span>
-    </p>
-  )
-}
 
 export default function RoomMap() {
   const { t } = useTranslation()
@@ -92,6 +87,7 @@ export default function RoomMap() {
   const [roomTypeFilter, setRoomTypeFilter] = useState('all')
   const [floorFilter, setFloorFilter] = useState('all')
   const [roomSearch, setRoomSearch] = useState('')
+  const [occupancyFilter, setOccupancyFilter] = useState('all') // 'all' | 'vacant' | 'full'
 
   async function loadAll() {
     setLoading(true)
@@ -219,6 +215,11 @@ export default function RoomMap() {
     return hotelRooms.filter((r) => {
       if (roomTypeFilter !== 'all' && r.room_type !== roomTypeFilter) return false
       if (floorFilter !== 'all' && (r.floor || '') !== floorFilter) return false
+
+      const occ = (assignmentsByRoom[r.id] ?? []).length
+      if (occupancyFilter === 'vacant' && occ >= r.max_guests) return false
+      if (occupancyFilter === 'full' && occ < r.max_guests) return false
+
       if (!q) return true
 
       const occupantNames = (assignmentsByRoom[r.id] ?? [])
@@ -235,7 +236,17 @@ export default function RoomMap() {
         occupantNames.includes(q)
       )
     })
-  }, [hotelRooms, roomTypeFilter, floorFilter, roomSearch, assignmentsByRoom, guestById])
+  }, [hotelRooms, roomTypeFilter, floorFilter, occupancyFilter, roomSearch, assignmentsByRoom, guestById])
+
+  // สรุปจำนวนห้องว่าง/เต็ม ของโรงแรมที่เปิดอยู่ (ใช้กับตัวกรอง + header)
+  const { vacantCount, fullCount } = useMemo(() => {
+    let vacant = 0
+    for (const r of hotelRooms) {
+      const occ = (assignmentsByRoom[r.id] ?? []).length
+      if (occ < r.max_guests) vacant += 1
+    }
+    return { vacantCount: vacant, fullCount: hotelRooms.length - vacant }
+  }, [hotelRooms, assignmentsByRoom])
 
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -445,40 +456,50 @@ export default function RoomMap() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.roomMap.title')}</h1>
+  const assignedInHotel = assignedGuestIdsInActiveHotel.size
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+  return (
+    <div className="min-h-screen p-4">
+      <div className="mx-auto max-w-md">
+        <div className="hero-gradient mb-4 flex items-center justify-between rounded-card p-5 shadow-brand">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/70">MyTour</p>
+            <h1 className="text-2xl font-extrabold text-white">{t('staff.roomMap.title')}</h1>
+          </div>
+          {activeHotel && (
+            <div className="text-right">
+              <p className="text-2xl font-extrabold leading-none text-white">
+                {assignedInHotel}
+                <span className="text-sm font-semibold text-white/60">/{guests.length}</span>
+              </p>
+              <p className="mt-1 text-[11px] text-white/75">{t('staff.roomMap.assignedLabel')}</p>
+            </div>
+          )}
+        </div>
+
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
             {/* Step 1: hotels */}
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {hotels.map((hotel) => (
-                <div key={hotel.id} className="flex items-center gap-1">
-                  <button
-                    onClick={() => setActiveHotelId(hotel.id)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                      activeHotelId === hotel.id ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {hotel.name}
-                  </button>
-                  <button
-                    onClick={() => deleteHotel(hotel)}
-                    className="text-sm text-red-400 hover:text-red-600"
-                    title={t('staff.roomMap.deleteHotel')}
-                  >
-                    ×
-                  </button>
-                </div>
+                <button
+                  key={hotel.id}
+                  onClick={() => setActiveHotelId(hotel.id)}
+                  className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
+                    activeHotelId === hotel.id
+                      ? 'bg-brand text-white shadow-brand'
+                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                  }`}
+                >
+                  {hotel.name}
+                </button>
               ))}
               <button
                 onClick={() => setShowNewHotelForm((v) => !v)}
-                className="rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+                className="shrink-0 rounded-pill border border-dashed border-brand/40 px-3 py-2 text-sm font-semibold text-brand"
               >
                 + {t('staff.roomMap.addHotel')}
               </button>
@@ -531,7 +552,7 @@ export default function RoomMap() {
             )}
 
             {!activeHotel && hotels.length === 0 && (
-              <p className="mt-4 text-gray-500">{t('staff.roomMap.noHotel')}</p>
+              <p className="mt-4 text-ink-muted">{t('staff.roomMap.noHotel')}</p>
             )}
 
             {activeHotel && (
@@ -539,14 +560,24 @@ export default function RoomMap() {
                 {/* Hotel general info — visible to all guests */}
                 <Card className="mt-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-900">{activeHotel.name}</h2>
+                    <h2 className="font-semibold text-ink">{activeHotel.name}</h2>
                     {editingInfoHotelId !== activeHotel.id && (
-                      <button
-                        onClick={() => startEditInfo(activeHotel)}
-                        className="text-sm font-medium text-sky-600"
-                      >
-                        {t('staff.itineraryBuilder.edit')}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => startEditInfo(activeHotel)}
+                          className="flex items-center gap-1 rounded-control bg-brand-lighter px-3 py-1.5 text-sm font-semibold text-brand"
+                        >
+                          <Icon name="form" size={14} />
+                          {t('staff.itineraryBuilder.edit')}
+                        </button>
+                        <button
+                          onClick={() => deleteHotel(activeHotel)}
+                          className="rounded-control px-2.5 py-1.5 text-sm font-semibold text-danger"
+                          title={t('staff.roomMap.deleteHotel')}
+                        >
+                          {t('staff.formBuilder.delete')}
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -669,57 +700,75 @@ export default function RoomMap() {
                     </div>
                   ) : (
                     <>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {t('staff.roomMap.checkInDate')}: {activeHotel.check_in_date || '—'}
-                        {'  →  '}
-                        {t('staff.roomMap.checkOutDate')}: {activeHotel.check_out_date || '—'}
-                      </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+                        <span className="font-medium text-ink">{activeHotel.check_in_date || '—'}</span>
+                        <span className="text-ink-faint">→</span>
+                        <span className="font-medium text-ink">{activeHotel.check_out_date || '—'}</span>
+                        {nightsBetween(activeHotel.check_in_date, activeHotel.check_out_date) && (
+                          <span className="rounded-pill bg-brand-lighter px-2 py-0.5 text-xs font-semibold text-brand">
+                            {t('staff.roomMap.nights', {
+                              count: nightsBetween(activeHotel.check_in_date, activeHotel.check_out_date),
+                            })}
+                          </span>
+                        )}
+                      </div>
 
-                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <HotelInfoTile
-                          icon="📶"
-                          label={t('staff.roomMap.wifi')}
-                          empty={!activeHotel.wifi_name && !activeHotel.wifi_password}
-                          emptyText={t('staff.roomMap.noGeneralInfo')}
-                        >
-                          {activeHotel.wifi_name && (
-                            <InfoLine label={t('staff.roomMap.wifiName')} value={activeHotel.wifi_name} />
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        <div className="rounded-control bg-surface-muted p-2.5 text-center">
+                          <p className="text-lg leading-none">📶</p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
+                            {t('staff.roomMap.wifi')}
+                          </p>
+                          {activeHotel.wifi_name || activeHotel.wifi_password ? (
+                            <div className="mt-0.5">
+                              {activeHotel.wifi_name && (
+                                <p className="break-words text-xs font-medium text-ink">{activeHotel.wifi_name}</p>
+                              )}
+                              {activeHotel.wifi_password && (
+                                <p className="select-all break-words font-mono text-[11px] text-ink-muted">
+                                  {activeHotel.wifi_password}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="mt-0.5 text-[11px] text-ink-faint">—</p>
                           )}
-                          {activeHotel.wifi_password && (
-                            <InfoLine label={t('staff.roomMap.wifiPassword')} value={activeHotel.wifi_password} mono />
-                          )}
-                        </HotelInfoTile>
+                        </div>
 
-                        <HotelInfoTile
-                          icon="🍳"
-                          label={t('staff.roomMap.breakfast')}
-                          empty={!activeHotel.breakfast_time && !activeHotel.breakfast_location}
-                          emptyText={t('staff.roomMap.noGeneralInfo')}
-                        >
-                          {activeHotel.breakfast_time && (
-                            <InfoLine label={t('staff.roomMap.breakfastTime')} value={activeHotel.breakfast_time} />
+                        <div className="rounded-control bg-surface-muted p-2.5 text-center">
+                          <p className="text-lg leading-none">🍳</p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
+                            {t('staff.roomMap.breakfast')}
+                          </p>
+                          {activeHotel.breakfast_time || activeHotel.breakfast_location ? (
+                            <div className="mt-0.5">
+                              {activeHotel.breakfast_time && (
+                                <p className="text-xs font-medium text-ink">{activeHotel.breakfast_time}</p>
+                              )}
+                              {activeHotel.breakfast_location && (
+                                <p className="break-words text-[11px] text-ink-muted">{activeHotel.breakfast_location}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="mt-0.5 text-[11px] text-ink-faint">—</p>
                           )}
-                          {activeHotel.breakfast_location && (
-                            <InfoLine label={t('staff.roomMap.breakfastLocation')} value={activeHotel.breakfast_location} />
-                          )}
-                        </HotelInfoTile>
+                        </div>
 
-                        <HotelInfoTile
-                          icon="🚪"
-                          label={t('staff.roomMap.checkoutHeading')}
-                          empty={!activeHotel.checkout_time}
-                          emptyText={t('staff.roomMap.noGeneralInfo')}
-                        >
-                          <InfoLine value={activeHotel.checkout_time} />
-                        </HotelInfoTile>
+                        <div className="rounded-control bg-surface-muted p-2.5 text-center">
+                          <p className="text-lg leading-none">🚪</p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
+                            {t('staff.roomMap.checkoutHeading')}
+                          </p>
+                          <p className="mt-0.5 text-xs font-medium text-ink">{activeHotel.checkout_time || '—'}</p>
+                        </div>
                       </div>
 
                       {activeHotel.general_info && (
-                        <div className="mt-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        <div className="mt-3 rounded-control bg-surface-muted p-2.5">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
                             📝 {t('staff.roomMap.additionalNotes')}
                           </p>
-                          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-ink-muted">
                             {activeHotel.general_info}
                           </p>
                         </div>
@@ -729,13 +778,13 @@ export default function RoomMap() {
                 </Card>
 
                 {/* Step 2: room types + bulk create */}
-                <div className="mt-4 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                    {t('staff.roomMap.rooms')}
+                <div className="mt-5 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-ink">
+                    {t('staff.roomMap.rooms')} · {hotelRooms.length}
                   </h2>
                   <button
                     onClick={() => setShowNewRoomForm((v) => !v)}
-                    className="text-sm font-medium text-sky-600"
+                    className="text-sm font-semibold text-brand"
                   >
                     + {t('staff.roomMap.addRooms')}
                   </button>
@@ -785,13 +834,13 @@ export default function RoomMap() {
                     placeholder={t('staff.roomMap.searchRooms')}
                     value={roomSearch}
                     onChange={(e) => setRoomSearch(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                    className="w-full rounded-control border border-black/10 bg-surface px-3 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
                   />
                   <div className="flex gap-2">
                     <select
                       value={roomTypeFilter}
                       onChange={(e) => setRoomTypeFilter(e.target.value)}
-                      className="flex-1 rounded-xl border border-gray-300 bg-white px-2 py-2 text-sm"
+                      className="flex-1 rounded-control border border-black/10 bg-surface px-2 py-2.5 text-sm text-ink-muted"
                     >
                       <option value="all">{t('staff.roomMap.allRoomTypes')}</option>
                       {ROOM_TYPES.map((rt) => (
@@ -803,7 +852,7 @@ export default function RoomMap() {
                     <select
                       value={floorFilter}
                       onChange={(e) => setFloorFilter(e.target.value)}
-                      className="flex-1 rounded-xl border border-gray-300 bg-white px-2 py-2 text-sm"
+                      className="flex-1 rounded-control border border-black/10 bg-surface px-2 py-2.5 text-sm text-ink-muted"
                     >
                       <option value="all">{t('staff.roomMap.allFloors')}</option>
                       {floorOptions.map((f) => (
@@ -813,35 +862,60 @@ export default function RoomMap() {
                       ))}
                     </select>
                   </div>
+
+                  {/* ตัวกรองสถานะห้อง: ทั้งหมด / ว่าง / เต็ม */}
+                  <div className="flex gap-1 rounded-control bg-surface-sunken p-1">
+                    {[
+                      { key: 'all', label: t('staff.roomMap.filterAll'), count: hotelRooms.length, dot: null },
+                      { key: 'vacant', label: t('staff.roomMap.filterVacant'), count: vacantCount, dot: 'bg-brand' },
+                      { key: 'full', label: t('staff.roomMap.filterFull'), count: fullCount, dot: 'bg-success' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setOccupancyFilter(opt.key)}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-[0.7rem] py-1.5 text-xs font-semibold transition ${
+                          occupancyFilter === opt.key
+                            ? 'bg-surface text-ink shadow-card'
+                            : 'text-ink-muted'
+                        }`}
+                      >
+                        {opt.dot && <span className={`h-1.5 w-1.5 rounded-full ${opt.dot}`} />}
+                        {opt.label}
+                        <span className="text-ink-faint">{opt.count}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="mt-2 flex flex-col gap-1.5">
+                <div className="mt-3 flex flex-col gap-2">
                   {hotelRooms.length === 0 && (
-                    <p className="text-sm text-gray-400">{t('staff.roomMap.noRooms')}</p>
+                    <p className="text-sm text-ink-faint">{t('staff.roomMap.noRooms')}</p>
                   )}
                   {hotelRooms.length > 0 && visibleRooms.length === 0 && (
-                    <p className="text-sm text-gray-400">{t('staff.roomMap.noRoomsMatch')}</p>
+                    <p className="text-sm text-ink-faint">{t('staff.roomMap.noRoomsMatch')}</p>
                   )}
                   {visibleRooms.map((room) => {
                     const occupants = assignmentsByRoom[room.id] ?? []
+                    const occ = occupants.length
+                    const isFull = occ >= room.max_guests
+                    const typeLabel =
+                      ROOM_TYPES.find((rt) => rt.value === room.room_type)?.label ?? room.room_type
                     return (
-                      <Card key={room.id} className="p-2.5">
-                        <div className="flex items-stretch gap-2">
-                          {/* Left column: floor (top), room number (bottom) */}
-                          <div className="flex w-16 shrink-0 flex-col justify-between">
+                      <Card key={room.id} className="p-3">
+                        <div className="flex items-start gap-3">
+                          {/* คีย์การ์ด: ชั้น + เลขห้อง (กดพิมพ์แก้ได้เลย) */}
+                          <div className="w-16 shrink-0 rounded-control bg-brand-lighter px-2 py-1.5">
                             <input
                               type="text"
                               placeholder={t('staff.roomMap.floor')}
                               value={room.floor}
                               onChange={(e) =>
                                 setRooms((prev) =>
-                                  prev.map((r) =>
-                                    r.id === room.id ? { ...r, floor: e.target.value } : r
-                                  )
+                                  prev.map((r) => (r.id === room.id ? { ...r, floor: e.target.value } : r))
                                 )
                               }
                               onBlur={(e) => updateRoomField(room.id, { floor: e.target.value })}
-                              className="w-full rounded-md border border-gray-200 px-1.5 py-0.5 text-xs text-gray-500"
+                              className="w-full bg-transparent text-center text-[10px] text-ink-faint placeholder:text-ink-faint/60 focus:outline-none"
                             />
                             <input
                               type="text"
@@ -855,55 +929,72 @@ export default function RoomMap() {
                                 )
                               }
                               onBlur={(e) => updateRoomField(room.id, { room_number: e.target.value })}
-                              className="mt-1 w-full rounded-md border border-gray-200 px-1.5 py-0.5 text-sm font-semibold text-gray-900"
+                              className="w-full bg-transparent text-center text-lg font-extrabold text-brand-hover placeholder:text-xs placeholder:font-normal placeholder:text-brand/40 focus:outline-none"
                             />
                           </div>
 
-                          {/* Right column: occupant names / assign buttons */}
-                          <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                            {Array.from({ length: room.max_guests }, (_, slotIndex) => {
-                              const occupant = occupants[slotIndex]
-                              const guest = occupant ? guestById[occupant.guest_id] : null
-                              return (
-                                <div key={slotIndex} className="flex items-center justify-between gap-1">
-                                  {guest ? (
-                                    <>
-                                      <span className={`truncate text-sm font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
-                                        {guest.nickname || guest.name}
-                                      </span>
-                                      <button
-                                        onClick={() => removeGuestFromRoom(occupant.id)}
-                                        className="shrink-0 text-xs font-medium text-red-500"
-                                      >
-                                        {t('staff.roomMap.removeGuest')}
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <button
-                                      onClick={() => openAssignSlot(room, slotIndex)}
-                                      className="text-sm text-sky-600"
+                          {/* กลาง: ประเภท + สถานะ + ชิปผู้เข้าพัก */}
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                              <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+                                {typeLabel} · {t('staff.roomMap.guestsUnit', { count: room.max_guests })}
+                              </span>
+                              <span
+                                className={`shrink-0 text-[11px] font-semibold ${
+                                  isFull ? 'text-success-text' : occ > 0 ? 'text-brand' : 'text-ink-faint'
+                                }`}
+                              >
+                                {isFull
+                                  ? t('staff.roomMap.statusFull')
+                                  : t('staff.roomMap.statusVacantN', { count: room.max_guests - occ })}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5">
+                              {occupants.map((occupant) => {
+                                const guest = guestById[occupant.guest_id]
+                                return (
+                                  <span
+                                    key={occupant.id}
+                                    className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-black/[0.04]"
+                                  >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${genderDotClass(guest?.gender)}`} />
+                                    <span
+                                      className={`max-w-[7rem] truncate text-xs font-medium ${
+                                        genderTextClass(guest?.gender) || 'text-ink'
+                                      }`}
                                     >
-                                      + {t('staff.roomMap.addOccupant')}
+                                      {guest ? guest.nickname || guest.name : '—'}
+                                    </span>
+                                    <button
+                                      onClick={() => removeGuestFromRoom(occupant.id)}
+                                      className="text-sm leading-none text-ink-faint"
+                                      title={t('staff.roomMap.removeGuest')}
+                                    >
+                                      ×
                                     </button>
-                                  )}
-                                </div>
-                              )
-                            })}
+                                  </span>
+                                )
+                              })}
+                              {!isFull && (
+                                <button
+                                  onClick={() => openAssignSlot(room, occ)}
+                                  className="inline-flex items-center gap-1 rounded-pill border border-dashed border-brand/40 px-2.5 py-1 text-xs font-semibold text-brand"
+                                >
+                                  + {t('staff.roomMap.addOccupant')}
+                                </button>
+                              )}
+                            </div>
                           </div>
 
-                          {/* Far right: type tag + delete */}
-                          <div className="flex shrink-0 flex-col items-end justify-between gap-1">
-                            <span className="whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                              {ROOM_TYPES.find((rt) => rt.value === room.room_type)?.label ??
-                                room.room_type}
-                            </span>
-                            <button
-                              onClick={() => deleteRoom(room)}
-                              className="text-xs font-medium text-red-500"
-                            >
-                              {t('staff.formBuilder.delete')}
-                            </button>
-                          </div>
+                          {/* ลบห้อง */}
+                          <button
+                            onClick={() => deleteRoom(room)}
+                            className="shrink-0 text-xs font-semibold text-danger"
+                            title={t('staff.formBuilder.delete')}
+                          >
+                            {t('staff.formBuilder.delete')}
+                          </button>
                         </div>
                       </Card>
                     )
@@ -926,17 +1017,17 @@ export default function RoomMap() {
             เพื่อให้ผลลัพธ์ยังอยู่เหนือคีย์บอร์ดเสมอ */}
         <div className="flex max-h-[50vh] flex-col gap-1.5 overflow-y-auto">
           {search.trim() && searchResults.length === 0 && (
-            <p className="text-sm text-gray-400">{t('staff.checkIn.noResults')}</p>
+            <p className="text-sm text-ink-faint">{t('staff.checkIn.noResults')}</p>
           )}
           {searchResults.map((g) => (
             <button
               key={g.id}
               onClick={() => assignGuestToSlot(g.id)}
               disabled={assigning}
-              className="rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:bg-gray-50"
+              className="rounded-control border border-black/10 px-3 py-2.5 text-left hover:bg-surface-muted"
             >
-              <span className={`font-medium ${genderTextClass(g.gender) || 'text-gray-900'}`}>{g.nickname || g.name}</span>
-              {g.nickname && <span className="ml-1 text-sm text-gray-400">{g.name}</span>}
+              <span className={`font-medium ${genderTextClass(g.gender) || 'text-ink'}`}>{g.nickname || g.name}</span>
+              {g.nickname && <span className="ml-1 text-sm text-ink-faint">{g.name}</span>}
             </button>
           ))}
         </div>
@@ -945,7 +1036,7 @@ export default function RoomMap() {
           placeholder={t('staff.checkIn.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mt-3 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+          className="mt-3 w-full rounded-control border border-black/10 px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
         />
       </BottomSheet>
     </div>

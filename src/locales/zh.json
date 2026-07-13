@@ -462,7 +462,15 @@
       "breakfastLocation": "地点",
       "checkoutHeading": "退房",
       "checkoutTime": "退房时间",
-      "additionalNotes": "补充说明"
+      "additionalNotes": "补充说明",
+      "assignedLabel": "已安排房间",
+      "filterAll": "全部",
+      "filterVacant": "空位",
+      "filterFull": "已满",
+      "statusFull": "已满",
+      "statusVacantN": "空 {{count}}",
+      "guestsUnit": "{{count}} 人",
+      "nights": "{{count}} 晚"
     },
     "locationMonitor": {
       "title": "位置监控",

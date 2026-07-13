@@ -462,7 +462,15 @@
       "breakfastLocation": "Location",
       "checkoutHeading": "Check-out",
       "checkoutTime": "Check-out time",
-      "additionalNotes": "Additional notes"
+      "additionalNotes": "Additional notes",
+      "assignedLabel": "Rooms assigned",
+      "filterAll": "All",
+      "filterVacant": "Vacant",
+      "filterFull": "Full",
+      "statusFull": "Full",
+      "statusVacantN": "{{count}} free",
+      "guestsUnit": "{{count}} pax",
+      "nights": "{{count}} nights"
     },
     "locationMonitor": {
       "title": "Location monitor",
