@@ -161,7 +161,9 @@
       "seatLabel": "ที่นั่งรถ",
       "floorLabel": "ชั้น {{floor}}",
       "noRoom": "ยังไม่จัดห้อง",
-      "noSeat": "ยังไม่จัดที่นั่ง"
+      "noSeat": "ยังไม่จัดที่นั่ง",
+      "todaySchedule": "กำหนดการวันนี้",
+      "viewAll": "ดูทั้งหมด"
     },
     "sos": {
       "title": "SOS ฉุกเฉิน",

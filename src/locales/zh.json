@@ -161,7 +161,9 @@
       "seatLabel": "车座",
       "floorLabel": "{{floor}} 楼",
       "noRoom": "尚未分配",
-      "noSeat": "尚未分配"
+      "noSeat": "尚未分配",
+      "todaySchedule": "今日行程",
+      "viewAll": "查看全部"
     },
     "sos": {
       "title": "紧急求助 SOS",

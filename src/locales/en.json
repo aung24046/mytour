@@ -161,7 +161,9 @@
       "seatLabel": "Bus seat",
       "floorLabel": "Floor {{floor}}",
       "noRoom": "Not assigned yet",
-      "noSeat": "Not assigned yet"
+      "noSeat": "Not assigned yet",
+      "todaySchedule": "Today's schedule",
+      "viewAll": "View all"
     },
     "sos": {
       "title": "Emergency SOS",

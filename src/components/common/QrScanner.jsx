@@ -9,6 +9,13 @@ export default function QrScanner({ onScan, onError }) {
   const scannerRef = useRef(null)
   const hasScannedRef = useRef(false)
 
+  // เก็บ callback ล่าสุดไว้ใน ref เพื่อไม่ให้กล้อง start/stop ใหม่ทุกครั้งที่ parent re-render
+  // (สำคัญตอนเปิดจากปุ่มลัดแดชบอร์ด ที่หน้า CheckIn ยิง state รัวหลายรอบตอน mount)
+  const onScanRef = useRef(onScan)
+  const onErrorRef = useRef(onError)
+  onScanRef.current = onScan
+  onErrorRef.current = onError
+
   useEffect(() => {
     hasScannedRef.current = false
     const scanner = new Html5Qrcode(SCANNER_ELEMENT_ID)
@@ -21,7 +28,7 @@ export default function QrScanner({ onScan, onError }) {
         (decodedText) => {
           if (hasScannedRef.current) return
           hasScannedRef.current = true
-          onScan(decodedText)
+          onScanRef.current?.(decodedText)
         },
         () => {
           // decode error ต่อเฟรม (ไม่เจอ QR) — เกิดขึ้นปกติทุกเฟรมที่ยังไม่เจอ ไม่ต้องแจ้งเตือน
@@ -29,11 +36,12 @@ export default function QrScanner({ onScan, onError }) {
       )
       .catch((err) => {
         console.error('[QrScanner] failed to start camera', err)
-        onError?.(err)
+        onErrorRef.current?.(err)
       })
 
     return () => {
       const runningScanner = scannerRef.current
+      scannerRef.current = null
       if (runningScanner) {
         runningScanner
           .stop()
@@ -43,7 +51,9 @@ export default function QrScanner({ onScan, onError }) {
           })
       }
     }
-  }, [onScan, onError])
+    // start กล้องครั้งเดียวตอน mount — ใช้ ref อ่าน callback ล่าสุด
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return <div id={SCANNER_ELEMENT_ID} className="w-full overflow-hidden rounded-2xl" />
 }
