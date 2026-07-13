@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 
@@ -6,15 +6,9 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
-import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
 import BottomSheet from '../../components/common/BottomSheet'
-
-const STATUS_STYLES = {
-  completed: 'opacity-55',
-  current: 'border-l-4 border-l-brand bg-brand-lighter ring-1 ring-brand-light',
-  upcoming: '',
-}
+import Icon from '../../components/common/Icon'
 
 const CACHE_KEY = 'itinerary_items'
 
@@ -32,12 +26,16 @@ export default function Itinerary() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [usingCache, setUsingCache] = useState(false)
-  // แต่ละวันย่อ/ขยายได้ — เก็บเฉพาะวันที่ถูก"ย่อ" (ค่าเริ่มต้นคือขยายทุกวัน)
-  const [collapsedDays, setCollapsedDays] = useState({})
+  // แท็บวันที่เลือกอยู่ + รายการที่ถูกกดขยาย (นอกจากจุดหมายปัจจุบันที่กางไว้เสมอ)
+  const [activeDay, setActiveDay] = useState(null)
+  const [expandedItems, setExpandedItems] = useState({})
   const [openArticle, setOpenArticle] = useState(null)
+  // กันตั้งค่าวันเริ่มต้นซ้ำ (เช่นตอน realtime อัปเดต) และกันเลื่อนจอซ้ำ
+  const didInitDay = useRef(false)
+  const didScrollToCurrent = useRef(false)
 
-  const toggleDay = (day) =>
-    setCollapsedDays((prev) => ({ ...prev, [day]: !prev[day] }))
+  const toggleItem = (id) =>
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }))
 
   useEffect(() => {
     let isMounted = true
@@ -119,119 +117,257 @@ export default function Itinerary() {
     return map
   }, [linkedArticles])
 
+  // วันที่กำลังท่องเที่ยวอยู่ตอนนี้ (มีรายการที่ status === 'current')
+  const currentDay = useMemo(() => {
+    const cur = items.find((item) => item.status === 'current')
+    return cur ? cur.day_number ?? 1 : null
+  }, [items])
+
+  const days = useMemo(
+    () => [...new Set(items.map((item) => item.day_number ?? 1))].sort((a, b) => a - b),
+    [items]
+  )
+
+  const dayItems = activeDay != null ? dayGroups[activeDay] ?? [] : []
+  const doneCount = dayItems.filter((it) => it.status === 'completed').length
+
+  // ตั้งค่าเริ่มต้น: เปิดที่วันปัจจุบัน (ไม่งั้นวันแรก) — ทำครั้งเดียวตอนโหลดเสร็จ
+  useEffect(() => {
+    if (loading || didInitDay.current || days.length === 0) return
+    didInitDay.current = true
+    setActiveDay(currentDay ?? days[0])
+  }, [loading, days, currentDay])
+
+  // เลื่อนจอไปยังจุดหมายปัจจุบันอัตโนมัติตอนเปิดหน้า (ทำครั้งเดียว)
+  useEffect(() => {
+    if (loading || didScrollToCurrent.current || activeDay == null) return
+    const el = document.getElementById('current-itinerary-item')
+    if (el) {
+      didScrollToCurrent.current = true
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [loading, activeDay])
+
+  // ปุ่ม คู่มือ / นำทาง (ใช้ทั้งจุดหมายปัจจุบันและรายการที่กางออก)
+  function renderActions(item, article) {
+    if (!article && !item.maps_url) return null
+    return (
+      <div className="mt-2.5 flex gap-2">
+        {article && (
+          <button
+            onClick={() => setOpenArticle(article)}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-control bg-brand-lighter py-2 text-sm font-semibold text-brand-hover"
+          >
+            <Icon name="book" size={15} /> {t('guest.nav.tripGuide')}
+          </button>
+        )}
+        {item.maps_url && (
+          <a
+            href={item.maps_url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-control bg-brand-gradient py-2 text-sm font-semibold text-white shadow-brand"
+          >
+            <Icon name="navigation" size={15} /> {t('guest.itinerary.navigate')}
+          </a>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen">
       <AnnouncementBanner />
       <div className="p-4 pb-28">
       <div className="mx-auto max-w-md">
         <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-          <span aria-hidden="true">🗺️</span>
+          <Icon name="map" size={24} color="#0e7490" />
           {t('guest.itinerary.title')}
         </h1>
 
         <GuestNav active="itinerary" />
 
         {usingCache && (
-          <p className="mb-3 rounded-xl bg-amber-100 px-3 py-2 text-sm text-amber-800">
+          <p className="mb-3 rounded-control bg-warning-bg px-3 py-2 text-sm text-warning-text">
             {t('guest.itinerary.usingCache')}
           </p>
         )}
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
-        {!loading &&
-          !error &&
-          Object.entries(dayGroups).map(([day, dayItems]) => {
-            const isCollapsed = !!collapsedDays[day]
-            return (
-              <div key={day} className="mb-4">
+        {!loading && !error && items.length === 0 && (
+          <p className="text-ink-muted">{t('guest.itinerary.empty')}</p>
+        )}
+
+        {!loading && !error && days.length > 0 && (
+          <>
+            {/* แท็บวัน */}
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+              {days.map((day) => (
                 <button
-                  type="button"
-                  onClick={() => toggleDay(day)}
-                  aria-expanded={!isCollapsed}
-                  className="mb-2.5 flex w-full items-center justify-between gap-2 rounded-pill bg-brand-light px-3 py-2 text-left text-sm font-bold uppercase tracking-wide text-brand-deep transition active:scale-[0.99]"
+                  key={day}
+                  onClick={() => setActiveDay(day)}
+                  className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
+                    activeDay === day
+                      ? 'bg-brand text-white shadow-brand'
+                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                  }`}
                 >
-                  <span className="flex items-center gap-2">
-                    {t('guest.itinerary.day', { day })}
-                    <span className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-brand-deep">
-                      {t('guest.itinerary.itemCount', { count: dayItems.length })}
-                    </span>
-                  </span>
-                  <svg
-                    viewBox="0 0 24 24"
-                    className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                  {t('guest.itinerary.day', { day })}
                 </button>
+              ))}
+            </div>
 
-                {!isCollapsed && (
-                  <div className="flex flex-col gap-2">
-                    {dayItems.map((item) => (
-                      <Card key={item.id} className={STATUS_STYLES[item.status] ?? ''}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            {item.scheduled_time && (
-                              <p className="text-sm font-bold text-brand">
-                                {formatTime(item.scheduled_time)}
-                              </p>
-                            )}
-                            <p className="font-bold text-ink">{item.title}</p>
+            {/* ความคืบหน้าของวัน */}
+            {dayItems.length > 0 && (
+              <div className="mb-3 flex items-center gap-2.5 px-0.5">
+                <span className="whitespace-nowrap text-xs text-ink-muted">
+                  {t('guest.itinerary.progress', { done: doneCount, total: dayItems.length })}
+                </span>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-pill bg-ink-faint/20">
+                  <div
+                    className="h-full rounded-pill bg-success transition-all"
+                    style={{ width: `${dayItems.length ? (doneCount / dayItems.length) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-                            {item.location_name && (
-                              <p className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-ink">
-                                <span aria-hidden="true" className="leading-5">📍</span>
-                                <span className="min-w-0">{item.location_name}</span>
-                              </p>
-                            )}
+            {/* รายการ */}
+            <div className="flex flex-col gap-2.5">
+              {dayItems.map((item) => {
+                const isCurrent = item.status === 'current'
+                const isDone = item.status === 'completed'
+                const article = articleByItemId[item.id]
+                const expanded = isCurrent || !!expandedItems[item.id]
+                const hasDetail = !!(item.description || article || item.maps_url)
 
-                            {item.description && (
-                              <div className="mt-2 rounded-lg border-l-2 border-brand-light bg-surface-sunken px-2.5 py-1.5 text-sm text-ink-muted">
-                                <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-brand">
-                                  {t('guest.itinerary.note')}
-                                </span>
-                                <span className="whitespace-pre-wrap">{item.description}</span>
-                              </div>
-                            )}
+                if (isCurrent) {
+                  return (
+                    <div
+                      key={item.id}
+                      id="current-itinerary-item"
+                      className="rounded-[12px] border border-success/30 border-l-4 border-l-success bg-success-bg/40 p-3.5 shadow-card"
+                    >
+                      <div className="mb-1 flex items-center justify-between">
+                        {item.scheduled_time ? (
+                          <span className="text-[13px] font-bold text-success-text">
+                            {formatTime(item.scheduled_time)}
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+                        <span className="inline-flex items-center gap-1.5 rounded-pill bg-success px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                          <span className="h-1 w-1 rounded-full bg-white" />
+                          {t('guest.itinerary.nowLabel')}
+                        </span>
+                      </div>
+                      <p className="text-base font-semibold text-ink">{item.title}</p>
+                      {item.location_name && (
+                        <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-muted">
+                          <Icon name="location" size={14} color="#5b7580" />
+                          {item.location_name}
+                        </p>
+                      )}
+                      {item.description && (
+                        <div className="mt-2.5 whitespace-pre-wrap rounded-lg bg-surface px-3 py-2 text-sm text-ink-muted">
+                          {item.description}
+                        </div>
+                      )}
+                      {renderActions(item, article)}
+                    </div>
+                  )
+                }
 
-                            {articleByItemId[item.id] && (
-                              <button
-                                onClick={() => setOpenArticle(articleByItemId[item.id])}
-                                className="mt-2 text-sm font-semibold text-brand underline decoration-brand-light underline-offset-2"
-                              >
-                                {t('guest.itinerary.viewGuide')}
-                              </button>
-                            )}
-                          </div>
+                return (
+                  <div
+                    key={item.id}
+                    className={`overflow-hidden rounded-[12px] border border-black/[0.06] border-l-4 bg-surface shadow-card ${
+                      isDone ? 'border-l-success/60' : 'border-l-ink-faint/30'
+                    } ${isDone && !expanded ? 'opacity-60' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => hasDetail && toggleItem(item.id)}
+                      aria-expanded={expanded}
+                      className="flex w-full items-center gap-3 p-3 text-left"
+                    >
+                      <span className="w-[42px] shrink-0 text-[13px] font-semibold text-ink-muted">
+                        {formatTime(item.scheduled_time)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-ink">{item.title}</p>
+                        {item.location_name && (
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-faint">
+                            <Icon name="location" size={12} />
+                            <span className="truncate">{item.location_name}</span>
+                          </p>
+                        )}
+                      </div>
 
+                      {isDone ? (
+                        <Icon name="check" size={19} color="#1d9e75" />
+                      ) : (
+                        <>
+                          {article && (
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenArticle(article)
+                              }}
+                              className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg bg-brand-lighter text-brand-hover"
+                            >
+                              <Icon name="book" size={16} />
+                            </span>
+                          )}
                           {item.maps_url && (
                             <a
                               href={item.maps_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="shrink-0 rounded-control bg-brand-gradient px-3 py-2 text-sm font-semibold text-white shadow-brand"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg bg-brand-lighter text-brand-hover"
                             >
-                              {t('guest.itinerary.navigate')}
+                              <Icon name="navigation" size={16} />
                             </a>
                           )}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                        </>
+                      )}
 
-        {!loading && !error && items.length === 0 && (
-          <p className="text-gray-500">{t('guest.itinerary.empty')}</p>
+                      {hasDetail && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          className={`h-4 w-4 shrink-0 text-ink-faint transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      )}
+                    </button>
+
+                    {expanded && hasDetail && (
+                      <div className="px-3 pb-3">
+                        {item.description && (
+                          <div className="whitespace-pre-wrap rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
+                            {item.description}
+                          </div>
+                        )}
+                        {renderActions(item, article)}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
       </div>

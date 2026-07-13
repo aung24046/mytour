@@ -85,7 +85,9 @@
       "usingCache": "正在显示本机保存的数据（离线）",
       "note": "备注",
       "itemCount": "{{count}} 项",
-      "viewGuide": "查看指南详情"
+      "viewGuide": "查看指南详情",
+      "nowLabel": "进行中",
+      "progress": "已完成 {{done}}/{{total}}"
     },
     "myQr": {
       "title": "我的二维码",

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
-import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
+import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
 
@@ -34,6 +34,14 @@ export default function ItineraryBuilder() {
   const [draft, setDraft] = useState(EMPTY_ITEM)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+
+  // แท็บวันที่เลือก + รายการที่กดขยาย (จุดหมายปัจจุบันกางไว้เสมอ)
+  const [activeDay, setActiveDay] = useState(null)
+  const [expandedItems, setExpandedItems] = useState({})
+  const didInitDay = useRef(false)
+
+  const toggleItem = (id) =>
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }))
 
   async function loadItems() {
     setLoading(true)
@@ -74,6 +82,33 @@ export default function ItineraryBuilder() {
     .map(Number)
     .sort((a, b) => a - b)
   const maxDay = dayNumbers.length > 0 ? Math.max(...dayNumbers) : 1
+
+  // วันที่มีรายการ status current (ใช้เปิดแท็บเริ่มต้น)
+  const currentDay = useMemo(() => {
+    const cur = items.find((it) => it.status === 'current')
+    return cur ? cur.day_number ?? 1 : null
+  }, [items])
+
+  // แท็บวันที่แสดง — รวมวันใหม่ที่กำลังสร้างเข้าไปด้วย
+  const displayDays = useMemo(() => {
+    const set = new Set(dayNumbers)
+    if (editingId === 'new') set.add(Number(draft.day_number) || 1)
+    return [...set].sort((a, b) => a - b)
+  }, [dayNumbers, editingId, draft.day_number])
+
+  const dayItems = activeDay != null ? dayGroups[activeDay] ?? [] : []
+
+  // เปิดแท็บเริ่มต้นที่วันปัจจุบัน (ไม่งั้นวันแรก) — ทำครั้งเดียวตอนโหลดเสร็จ
+  useEffect(() => {
+    if (loading || didInitDay.current || dayNumbers.length === 0) return
+    didInitDay.current = true
+    setActiveDay(currentDay ?? dayNumbers[0])
+  }, [loading, dayNumbers, currentDay])
+
+  function startCreateOnDay(day) {
+    setActiveDay(day)
+    startCreate(day)
+  }
 
   function startCreate(day) {
     setDraft({ ...EMPTY_ITEM, day_number: day })
@@ -232,39 +267,64 @@ export default function ItineraryBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">
+        <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+          <Icon name="map" size={24} color="#0e7490" />
           {t('staff.itineraryBuilder.title')}
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          {t('staff.itineraryBuilder.subtitle')}
-        </p>
+        <p className="mt-1 text-sm text-ink-muted">{t('staff.itineraryBuilder.subtitle')}</p>
 
-        {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="mt-4 text-danger">{error}</p>}
 
-        {!loading &&
-          !error &&
-          dayNumbers.map((day) => (
-            <div key={day} className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                {t('guest.itinerary.day', { day })}
-              </h2>
+        {!loading && !error && (
+          <>
+            {/* แท็บวัน */}
+            <div className="mb-3 mt-4 flex gap-2 overflow-x-auto pb-1">
+              {displayDays.map((day) => (
+                <button
+                  key={day}
+                  onClick={() => setActiveDay(day)}
+                  className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
+                    activeDay === day
+                      ? 'bg-brand text-white shadow-brand'
+                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                  }`}
+                >
+                  {t('guest.itinerary.day', { day })}
+                </button>
+              ))}
+              {editingId !== 'new' && (
+                <button
+                  onClick={() => startCreateOnDay(maxDay + 1)}
+                  className="shrink-0 rounded-pill border border-dashed border-brand/40 px-3 py-2 text-sm font-semibold text-brand"
+                >
+                  + {t('staff.itineraryBuilder.addDay')}
+                </button>
+              )}
+            </div>
 
-              <div className="flex flex-col gap-2">
-                {dayGroups[day].map((item, index) => (
-                  <Card
-                    key={item.id}
-                    className={
-                      item.status === 'current'
-                        ? 'border-l-4 border-l-sky-500 bg-sky-50'
-                        : item.status === 'completed'
-                          ? 'opacity-50'
-                          : ''
-                    }
-                  >
-                    {editingId === item.id ? (
+            <div className="flex flex-col gap-2.5">
+              {editingId === 'new' && Number(draft.day_number) === activeDay && (
+                <div className="rounded-[12px] border border-brand/30 bg-surface p-3 shadow-card">
+                  <ItemForm
+                    t={t}
+                    draft={draft}
+                    setDraft={setDraft}
+                    onSubmit={handleSave}
+                    onCancel={cancelEdit}
+                    saving={saving}
+                    saveError={saveError}
+                    maxDay={maxDay}
+                  />
+                </div>
+              )}
+
+              {dayItems.map((item, index) => {
+                if (editingId === item.id) {
+                  return (
+                    <div key={item.id} className="rounded-[12px] border border-brand/30 bg-surface p-3 shadow-card">
                       <ItemForm
                         t={t}
                         draft={draft}
@@ -275,84 +335,112 @@ export default function ItineraryBuilder() {
                         saveError={saveError}
                         maxDay={maxDay}
                       />
+                    </div>
+                  )
+                }
+
+                const isCurrent = item.status === 'current'
+                const isDone = item.status === 'completed'
+                const expanded = isCurrent || !!expandedItems[item.id]
+
+                const header = (
+                  <div className="flex items-center gap-2.5 p-3">
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      {isDone && <Icon name="check" size={14} filled color="#5dcaa5" />}
+                      {isCurrent && <span className="h-2 w-2 rounded-full bg-success ring-2 ring-success/25" />}
+                      <span className={`text-[13px] font-semibold ${isCurrent ? 'text-success-text' : 'text-ink-muted'}`}>
+                        {toTimeInputValue(item.scheduled_time) || '—'}
+                      </span>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink">{item.title}</p>
+                      {item.location_name && (
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-faint">
+                          <Icon name="location" size={12} />
+                          <span className="truncate">{item.location_name}</span>
+                        </p>
+                      )}
+                    </div>
+                    {!isCurrent && !isDone && (
+                      <span className="shrink-0 rounded-pill bg-warning-bg px-2 py-0.5 text-[10px] font-semibold text-warning-text">
+                        {t('staff.itineraryBuilder.status.upcoming')}
+                      </span>
+                    )}
+                    {!isCurrent && (
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`h-4 w-4 shrink-0 text-ink-faint transition-transform ${expanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    )}
+                  </div>
+                )
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`overflow-hidden rounded-[12px] border border-l-[3px] shadow-card ${
+                      isCurrent
+                        ? 'border-success/40 border-l-success bg-success-bg/40'
+                        : isDone
+                          ? `border-black/[0.06] border-l-[#9fe1cb] bg-surface ${expanded ? '' : 'opacity-60'}`
+                          : 'border-black/[0.06] border-l-ink-faint/30 bg-surface'
+                    }`}
+                  >
+                    {isCurrent ? (
+                      header
                     ) : (
-                      <>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            {item.scheduled_time && (
-                              <p className="text-sm font-medium text-sky-600">
-                                {toTimeInputValue(item.scheduled_time)}
-                              </p>
-                            )}
-                            <p className="font-semibold text-gray-900">{item.title}</p>
-                            {item.location_name && (
-                              <p className="text-sm text-gray-500">{item.location_name}</p>
-                            )}
-                          </div>
-                          <div className="flex shrink-0 gap-1">
-                            <button
-                              onClick={() => moveWithinDay(day, index, -1)}
-                              disabled={index === 0}
-                              className="rounded-lg bg-gray-100 px-2 py-1 text-sm disabled:opacity-30"
-                            >
-                              ↑
-                            </button>
-                            <button
-                              onClick={() => moveWithinDay(day, index, 1)}
-                              disabled={index === dayGroups[day].length - 1}
-                              className="rounded-lg bg-gray-100 px-2 py-1 text-sm disabled:opacity-30"
-                            >
-                              ↓
-                            </button>
-                          </div>
-                        </div>
+                      <button type="button" onClick={() => toggleItem(item.id)} className="w-full text-left">
+                        {header}
+                      </button>
+                    )}
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                              item.status === 'current'
-                                ? 'bg-sky-500 text-white'
-                                : item.status === 'completed'
-                                  ? 'bg-gray-300 text-gray-700'
-                                  : 'bg-amber-100 text-amber-700'
-                            }`}
-                          >
-                            {t(`staff.itineraryBuilder.status.${item.status}`)}
-                          </span>
-
+                    {expanded && (
+                      <div className="px-3 pb-3">
+                        <div className="flex gap-2">
                           {item.status !== 'current' && (
                             <button
                               onClick={() => startItem(item)}
-                              className="text-sm font-medium text-sky-600"
+                              className="flex flex-1 items-center justify-center gap-1.5 rounded-control bg-brand py-2 text-sm font-semibold text-white"
                             >
-                              {t('staff.itineraryBuilder.start')}
+                              <Icon name="play" size={13} /> {t('staff.itineraryBuilder.start')}
                             </button>
                           )}
                           {item.status !== 'completed' && (
                             <button
                               onClick={() => markDone(item)}
-                              className="text-sm font-medium text-green-600"
+                              className={`flex flex-1 items-center justify-center gap-1.5 rounded-control py-2 text-sm font-semibold ${
+                                isCurrent ? 'bg-success text-white' : 'bg-success-bg text-success-text'
+                              }`}
                             >
-                              {t('staff.itineraryBuilder.markDone')}
+                              <Icon name="check" size={15} /> {t('staff.itineraryBuilder.markDone')}
                             </button>
                           )}
                           {item.status !== 'upcoming' && (
                             <button
                               onClick={() => resetToUpcoming(item)}
-                              className="text-sm font-medium text-gray-500"
+                              className="flex items-center justify-center rounded-control bg-surface-sunken px-3 py-2 text-ink-muted"
+                              title={t('staff.itineraryBuilder.reset')}
                             >
-                              {t('staff.itineraryBuilder.reset')}
+                              <Icon name="rotate" size={15} />
                             </button>
                           )}
                         </div>
 
-                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2">
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <span>{t('staff.itineraryBuilder.moveToDay')}</span>
+                        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/[0.05] pt-2.5">
+                          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
+                            {t('staff.itineraryBuilder.moveToDay')}
                             <select
                               value={item.day_number}
                               onChange={(e) => moveToDay(item, Number(e.target.value))}
-                              className="rounded-lg border border-gray-300 px-1.5 py-0.5 text-sm"
+                              className="rounded-control border border-black/10 bg-surface px-2 py-1 text-sm text-ink"
                             >
                               {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
                                 <option key={d} value={d}>
@@ -360,69 +448,63 @@ export default function ItineraryBuilder() {
                                 </option>
                               ))}
                             </select>
-                          </div>
-                          <div className="flex gap-3">
+                          </label>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => moveWithinDay(activeDay, index, -1)}
+                              disabled={index === 0}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-ink-muted disabled:opacity-30"
+                            >
+                              <svg viewBox="0 0 24 24" className="h-4 w-4 rotate-180" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+                            </button>
+                            <button
+                              onClick={() => moveWithinDay(activeDay, index, 1)}
+                              disabled={index === dayItems.length - 1}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-ink-muted disabled:opacity-30"
+                            >
+                              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+                            </button>
                             <button
                               onClick={() => startEdit(item)}
-                              className="text-sm font-medium text-sky-600"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-brand"
+                              title={t('staff.itineraryBuilder.edit')}
                             >
-                              {t('staff.itineraryBuilder.edit')}
+                              <Icon name="edit" size={16} />
                             </button>
                             <button
                               onClick={() => deleteItem(item)}
-                              className="text-sm font-medium text-red-500"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-danger/20 bg-danger-bg text-danger"
+                              title={t('staff.formBuilder.delete')}
                             >
-                              {t('staff.formBuilder.delete')}
+                              <Icon name="trash" size={16} />
                             </button>
                           </div>
                         </div>
-                      </>
+                      </div>
                     )}
-                  </Card>
-                ))}
+                  </div>
+                )
+              })}
 
-                {editingId === 'new' && draft.day_number === day && (
-                  <Card>
-                    <ItemForm
-                      t={t}
-                      draft={draft}
-                      setDraft={setDraft}
-                      onSubmit={handleSave}
-                      onCancel={cancelEdit}
-                      saving={saving}
-                      saveError={saveError}
-                      maxDay={maxDay}
-                    />
-                  </Card>
-                )}
-              </div>
-
-              {editingId !== 'new' && (
+              {editingId !== 'new' && activeDay != null && (
                 <button
-                  onClick={() => startCreate(day)}
-                  className="mt-2 w-full rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+                  onClick={() => startCreate(activeDay)}
+                  className="rounded-[12px] border border-dashed border-brand/40 py-3 text-sm font-semibold text-brand"
                 >
-                  + {t('staff.itineraryBuilder.addItem')} ({t('guest.itinerary.day', { day })})
+                  + {t('staff.itineraryBuilder.addItem')}
                 </button>
               )}
             </div>
-          ))}
 
-        {!loading && !error && editingId !== 'new' && (
-          <button
-            onClick={() => startCreate(maxDay + 1)}
-            className="mt-6 w-full rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
-          >
-            + {t('staff.itineraryBuilder.addDay')}
-          </button>
-        )}
-
-        {!loading && !error && items.length === 0 && editingId !== 'new' && (
-          <div className="mt-4">
-            <Button onClick={() => startCreate(1)}>
-              {t('staff.itineraryBuilder.addItem')}
-            </Button>
-          </div>
+            {dayNumbers.length === 0 && editingId !== 'new' && (
+              <button
+                onClick={() => startCreateOnDay(1)}
+                className="mt-4 w-full rounded-[12px] border border-dashed border-brand/40 py-3 text-sm font-semibold text-brand"
+              >
+                + {t('staff.itineraryBuilder.addItem')}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

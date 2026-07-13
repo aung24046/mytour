@@ -213,6 +213,43 @@ const RENDER = {
       {...S}
     />
   ),
+  navigation: (c) => (
+    <path d="M12 3 L18.5 20 L12 16 L5.5 20 Z" fill={c.body} stroke={c.color} {...S} />
+  ),
+  'grip-vertical': (c) => (
+    <>
+      <circle cx="9" cy="6" r="1.35" fill={c.color} stroke="none" />
+      <circle cx="9" cy="12" r="1.35" fill={c.color} stroke="none" />
+      <circle cx="9" cy="18" r="1.35" fill={c.color} stroke="none" />
+      <circle cx="15" cy="6" r="1.35" fill={c.color} stroke="none" />
+      <circle cx="15" cy="12" r="1.35" fill={c.color} stroke="none" />
+      <circle cx="15" cy="18" r="1.35" fill={c.color} stroke="none" />
+    </>
+  ),
+  rotate: (c) => (
+    <>
+      <path d="M5.2 9.2 A7.6 7.6 0 1 1 4.7 14.4" fill="none" stroke={c.color} {...S} />
+      <polyline points="2.8 4.6 5.2 9.2 9.6 7.4" fill="none" stroke={c.color} {...S} />
+    </>
+  ),
+  trash: (c) => (
+    <>
+      <line x1="4.5" y1="6.6" x2="19.5" y2="6.6" stroke={c.color} {...S} />
+      <path d="M9 6.6 V5 A1.5 1.5 0 0 1 10.5 3.5 H13.5 A1.5 1.5 0 0 1 15 5 V6.6" fill="none" stroke={c.color} {...S} />
+      <path d="M6.6 6.6 L7.4 19 A1.7 1.7 0 0 0 9.1 20.5 H14.9 A1.7 1.7 0 0 0 16.6 19 L17.4 6.6 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="10" y1="10" x2="10.35" y2="16.6" stroke={c.detail} {...S} />
+      <line x1="14" y1="10" x2="13.65" y2="16.6" stroke={c.detail} {...S} />
+    </>
+  ),
+  play: (c) => (
+    <path d="M7 5.2 L18 12 L7 18.8 Z" fill={c.body} stroke={c.color} {...S} />
+  ),
+  edit: (c) => (
+    <>
+      <path d="M14.4 5.4 L18.6 9.6 L8.4 19.8 L4 20.9 L5.1 16.5 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="12.9" y1="6.9" x2="17.1" y2="11.1" stroke={c.detail} {...S} />
+    </>
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

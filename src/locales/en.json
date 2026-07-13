@@ -85,7 +85,9 @@
       "usingCache": "Showing data saved on this device (offline)",
       "note": "Note",
       "itemCount": "{{count}} items",
-      "viewGuide": "View guide details"
+      "viewGuide": "View guide details",
+      "nowLabel": "Now",
+      "progress": "{{done}}/{{total}} done"
     },
     "myQr": {
       "title": "My QR",
