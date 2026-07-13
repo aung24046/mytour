@@ -7,6 +7,7 @@ import { genderTextClass, genderBgClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
+import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
 
 const NEW_BUS_TEMPLATE = {
@@ -420,43 +421,56 @@ export default function SeatMap() {
   const leftPositions = seatPositions.slice(0, Math.ceil(seatPositions.length / 2))
   const rightPositions = seatPositions.slice(Math.ceil(seatPositions.length / 2))
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.seatMap.title')}</h1>
+  // สรุปที่นั่งที่มีคนนั่งแล้ว / ที่นั่งทั้งหมดของรถคันนี้
+  const busSeatList = useMemo(
+    () => seats.filter((s) => s.bus_id === activeBusId && s.is_seat),
+    [seats, activeBusId]
+  )
+  const occupiedCount = busSeatList.filter((s) => s.guest_id).length
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+  return (
+    <div className="min-h-screen p-4">
+      <div className="mx-auto max-w-md">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+            <Icon name="seat" size={24} filled />
+            {t('staff.seatMap.title')}
+          </h1>
+          {activeBus && (
+            <span className="inline-flex shrink-0 items-baseline gap-1 rounded-pill bg-brand-lighter px-3 py-1.5">
+              <span className="text-xs text-ink-muted">{t('staff.seatMap.assignedLabel')}</span>
+              <span className="text-sm font-bold text-brand-hover">
+                {occupiedCount}/{busSeatList.length}
+              </span>
+            </span>
+          )}
+        </div>
+
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {buses.map((bus) => (
-                <div key={bus.id} className="flex items-center gap-1">
-                  <button
-                    onClick={() => setActiveBusId(bus.id)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                      activeBusId === bus.id ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {bus.name}
-                  </button>
-                  <button
-                    onClick={() => deleteBus(bus)}
-                    className="text-sm text-red-400 hover:text-red-600"
-                    aria-label={t('staff.seatMap.deleteBus')}
-                    title={t('staff.seatMap.deleteBus')}
-                  >
-                    ×
-                  </button>
-                </div>
+                <button
+                  key={bus.id}
+                  onClick={() => setActiveBusId(bus.id)}
+                  className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
+                    activeBusId === bus.id
+                      ? 'bg-brand text-white shadow-brand'
+                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                  }`}
+                >
+                  {bus.name}
+                </button>
               ))}
               <button
                 onClick={() => {
                   setShowNewBusForm((v) => !v)
                   setEditingBusId(null)
                 }}
-                className="rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+                className="shrink-0 rounded-pill border border-dashed border-brand/40 px-3 py-2 text-sm font-semibold text-brand"
               >
                 + {t('staff.seatMap.addBus')}
               </button>
@@ -537,47 +551,62 @@ export default function SeatMap() {
             {/* ข้อมูลรถบัส + ปุ่มแก้ไข */}
             {activeBus && editingBusId !== activeBus.id && (
               <Card className="mt-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900">{activeBus.name}</p>
-                    <p className="mt-0.5 text-sm text-gray-500">
-                      {t('staff.seatMap.totalRows')}: {activeBus.total_rows} ·{' '}
-                      {t('staff.seatMap.seatsPerRow')}: {activeBus.seats_per_row}
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-brand-lighter text-brand-hover">
+                    <Icon name="bus" size={22} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-ink">{activeBus.name}</p>
+                    <p className="mt-0.5 text-[11px] text-ink-faint">
+                      {t('staff.seatMap.busSizeSummary', {
+                        rows: activeBus.total_rows,
+                        perRow: activeBus.seats_per_row,
+                      })}
                     </p>
                   </div>
+                  {activeBus.license_plate && (
+                    <span className="shrink-0 rounded-control bg-surface-sunken px-2.5 py-1 font-mono text-sm font-medium tracking-wide text-ink">
+                      {activeBus.license_plate}
+                    </span>
+                  )}
                   <button
                     onClick={() => startEditBus(activeBus)}
-                    className="shrink-0 text-sm font-medium text-sky-600"
+                    className="shrink-0 rounded-control bg-brand-lighter px-3 py-1.5 text-sm font-semibold text-brand"
                   >
                     {t('staff.itineraryBuilder.edit')}
                   </button>
                 </div>
 
-                <div className="mt-2 flex flex-col gap-1 text-sm">
-                  <p className="text-gray-700">
-                    <span className="text-gray-400">{t('staff.seatMap.licensePlate')}: </span>
-                    <span className="font-medium text-gray-900">{activeBus.license_plate || '—'}</span>
+                {/* กล่องคนขับ — เฉพาะ staff */}
+                <div className="mt-3 rounded-control bg-warning-bg px-3 py-2.5">
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-warning-text">
+                    <Icon name="lock" size={12} />
+                    {t('staff.seatMap.driverBoxTitle')}
                   </p>
-                  <div className="rounded-lg bg-amber-50 px-2.5 py-1.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                      🔒 {t('staff.seatMap.staffOnly')}
-                    </p>
-                    <p className="mt-0.5 text-gray-700">
-                      <span className="text-gray-400">{t('staff.seatMap.driverName')}: </span>
-                      <span className="font-medium text-gray-900">{activeBus.driver_name || '—'}</span>
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="text-gray-400">{t('staff.seatMap.driverPhone')}: </span>
-                      {activeBus.driver_phone ? (
-                        <a href={`tel:${activeBus.driver_phone}`} className="font-medium text-sky-600">
-                          {activeBus.driver_phone}
-                        </a>
-                      ) : (
-                        <span className="font-medium text-gray-900">—</span>
-                      )}
-                    </p>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm font-medium text-ink">
+                      {activeBus.driver_name || '—'}
+                    </span>
+                    {activeBus.driver_phone ? (
+                      <a
+                        href={`tel:${activeBus.driver_phone}`}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-control bg-surface px-3 py-1.5 text-sm font-semibold text-brand"
+                      >
+                        <Icon name="phone" size={13} />
+                        {activeBus.driver_phone}
+                      </a>
+                    ) : (
+                      <span className="shrink-0 text-sm text-ink-faint">—</span>
+                    )}
                   </div>
                 </div>
+                {/* ปุ่มลบรถ */}
+                <button
+                  onClick={() => deleteBus(activeBus)}
+                  className="mt-2 text-sm font-semibold text-danger"
+                >
+                  {t('staff.seatMap.deleteBus')}
+                </button>
               </Card>
             )}
 
@@ -654,65 +683,93 @@ export default function SeatMap() {
               </Card>
             )}
 
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-gray-200" /> {t('staff.seatMap.empty')}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-blue-500" /> / <span className="h-3 w-3 rounded bg-pink-500" /> {t('staff.seatMap.type_guest')}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-emerald-500" /> {t('staff.seatMap.type_staff')}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-amber-500" /> {t('staff.seatMap.type_vip')}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-gray-400" /> {t('staff.seatMap.blocked')}
-              </span>
-            </div>
-
             {activeBus && (
-              <div className="mt-4 flex flex-col gap-1.5">
-                {rows.map((rowNum) => (
-                  <div key={rowNum} className="flex items-stretch gap-2">
-                    <span className="flex w-5 shrink-0 items-center text-xs text-gray-400">{rowNum}</span>
-                    <div className="flex flex-1 gap-2">
-                      <div className="flex flex-1 gap-1.5">
-                        {leftPositions.map((pos) => {
-                          const seat = seatsByPosition[`${rowNum}-${pos}`]
-                          return (
-                            <SeatButton
-                              key={pos}
-                              seat={seat}
-                              guest={guestById[seat?.guest_id]}
-                              onClick={() => seat && openSeat(seat)}
-                            />
-                          )
-                        })}
-                      </div>
-                      {rightPositions.length > 0 && <div className="w-3 shrink-0" />}
-                      <div className="flex flex-1 gap-1.5">
-                        {rightPositions.map((pos) => {
-                          const seat = seatsByPosition[`${rowNum}-${pos}`]
-                          return (
-                            <SeatButton
-                              key={pos}
-                              seat={seat}
-                              guest={guestById[seat?.guest_id]}
-                              onClick={() => seat && openSeat(seat)}
-                            />
-                          )
-                        })}
-                      </div>
-                    </div>
+              <div className="mt-3 rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+                {/* คำอธิบายสี */}
+                <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('staff.seatMap.empty')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-blue-500" />/
+                    <span className="h-3 w-3 rounded bg-pink-500" /> {t('staff.seatMap.type_guest')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-emerald-500" /> {t('staff.seatMap.type_staff')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-amber-500" /> {t('staff.seatMap.type_vip')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-ink-faint/50" /> {t('staff.seatMap.blocked')}
+                  </span>
+                </div>
+
+                {/* ตัวรถ */}
+                <div className="overflow-hidden rounded-2xl border-[1.5px] border-black/10">
+                  {/* หัวรถ */}
+                  <div className="flex items-center justify-between border-b border-dashed border-black/10 bg-surface-muted px-3 py-2">
+                    <span className="flex items-center gap-1 text-[11px] text-ink-faint">
+                      <Icon name="door" size={14} /> {t('staff.seatMap.doorLabel')}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
+                      {t('staff.seatMap.frontDriver')}
+                      <Icon name="steering-wheel" size={16} color="#0e7490" />
+                    </span>
                   </div>
-                ))}
+
+                  {/* แถวที่นั่ง — ยาวถึงแถวสุดท้าย */}
+                  <div className="flex flex-col gap-1.5 px-2 py-3">
+                    {rows.map((rowNum) => (
+                      <div key={rowNum} className="flex items-stretch gap-2">
+                        <span className="flex w-5 shrink-0 items-center justify-center text-xs text-ink-faint">
+                          {rowNum}
+                        </span>
+                        <div className="flex flex-1 gap-2">
+                          <div className="flex flex-1 gap-1.5">
+                            {leftPositions.map((pos) => {
+                              const seat = seatsByPosition[`${rowNum}-${pos}`]
+                              return (
+                                <SeatButton
+                                  key={pos}
+                                  seat={seat}
+                                  guest={guestById[seat?.guest_id]}
+                                  onClick={() => seat && openSeat(seat)}
+                                />
+                              )
+                            })}
+                          </div>
+                          {rightPositions.length > 0 && <div className="w-3 shrink-0" />}
+                          <div className="flex flex-1 gap-1.5">
+                            {rightPositions.map((pos) => {
+                              const seat = seatsByPosition[`${rowNum}-${pos}`]
+                              return (
+                                <SeatButton
+                                  key={pos}
+                                  seat={seat}
+                                  guest={guestById[seat?.guest_id]}
+                                  onClick={() => seat && openSeat(seat)}
+                                />
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ท้ายรถ */}
+                  <div className="border-t border-dashed border-black/10 py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
+                    {t('staff.seatMap.rearLabel')}
+                  </div>
+                </div>
+
+                <p className="mt-3 text-center text-[11px] text-ink-faint">{t('staff.seatMap.tapHint')}</p>
               </div>
             )}
 
             {!activeBus && (
-              <p className="mt-4 text-gray-500">{t('staff.seatMap.noBus')}</p>
+              <p className="mt-4 text-ink-muted">{t('staff.seatMap.noBus')}</p>
             )}
           </>
         )}
@@ -732,7 +789,7 @@ export default function SeatMap() {
       >
         {selectedSeat && !selectedSeat.is_seat && (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-gray-500">{t('staff.seatMap.blockedHint')}</p>
+            <p className="text-sm text-ink-muted">{t('staff.seatMap.blockedHint')}</p>
             <Button onClick={enableSeat} disabled={assigning}>
               {t('staff.seatMap.enableSeat')}
             </Button>
@@ -741,20 +798,20 @@ export default function SeatMap() {
 
         {selectedSeat?.is_seat && selectedSeat?.guest_id && (
           <>
-            <div className="mb-3 flex items-center justify-between rounded-xl bg-sky-50 px-3 py-2">
-              <span className={`font-medium ${genderTextClass(guestById[selectedSeat.guest_id]?.gender) || 'text-gray-900'}`}>
+            <div className="mb-3 flex items-center justify-between rounded-control bg-brand-lighter px-3 py-2">
+              <span className={`font-medium ${genderTextClass(guestById[selectedSeat.guest_id]?.gender) || 'text-ink'}`}>
                 {guestById[selectedSeat.guest_id]?.nickname || guestById[selectedSeat.guest_id]?.name}
               </span>
               <button
                 onClick={clearSeat}
                 disabled={assigning}
-                className="text-sm font-medium text-red-500"
+                className="text-sm font-semibold text-danger"
               >
                 {t('staff.seatMap.removeGuest')}
               </button>
             </div>
 
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               {t('staff.seatMap.seatType')}
             </p>
             <TypeSelector value={selectedSeat.seat_type || 'guest'} onChange={changeSeatType} t={t} />
@@ -763,7 +820,7 @@ export default function SeatMap() {
 
         {selectedSeat?.is_seat && !selectedSeat?.guest_id && (
           <>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               {t('staff.seatMap.seatType')}
             </p>
             <TypeSelector value={assignType} onChange={setAssignType} t={t} />
@@ -773,22 +830,22 @@ export default function SeatMap() {
               placeholder={t('staff.checkIn.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="mt-3 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-3 w-full rounded-control border border-black/10 px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
             />
 
             <div className="mt-3 flex flex-col gap-1.5">
               {search.trim() && searchResults.length === 0 && (
-                <p className="text-sm text-gray-400">{t('staff.checkIn.noResults')}</p>
+                <p className="text-sm text-ink-faint">{t('staff.checkIn.noResults')}</p>
               )}
               {searchResults.map((g) => (
                 <button
                   key={g.id}
                   onClick={() => assignGuest(g.id)}
                   disabled={assigning}
-                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-left hover:bg-gray-50"
+                  className="rounded-control border border-black/10 px-3 py-2.5 text-left hover:bg-surface-muted"
                 >
-                  <span className={`font-medium ${genderTextClass(g.gender) || 'text-gray-900'}`}>{g.nickname || g.name}</span>
-                  {g.nickname && <span className="ml-1 text-sm text-gray-400">{g.name}</span>}
+                  <span className={`font-medium ${genderTextClass(g.gender) || 'text-ink'}`}>{g.nickname || g.name}</span>
+                  {g.nickname && <span className="ml-1 text-sm text-ink-faint">{g.name}</span>}
                 </button>
               ))}
             </div>
@@ -796,7 +853,7 @@ export default function SeatMap() {
             <button
               onClick={disableSeat}
               disabled={assigning}
-              className="mt-4 w-full rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 hover:border-red-300 hover:text-red-500"
+              className="mt-4 w-full rounded-control border border-dashed border-black/15 py-2 text-sm font-medium text-ink-muted hover:border-danger/40 hover:text-danger"
             >
               {t('staff.seatMap.disableSeat')}
             </button>
@@ -817,7 +874,7 @@ function TypeSelector({ value, onChange, t }) {
           type="button"
           onClick={() => onChange(type)}
           className={`flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition ${
-            value === type ? TYPE_ACTIVE_CLASS[type] : 'bg-gray-100 text-gray-600'
+            value === type ? TYPE_ACTIVE_CLASS[type] : 'bg-surface-sunken text-ink-muted'
           }`}
         >
           {t(`staff.seatMap.type_${type}`)}
@@ -836,7 +893,7 @@ function SeatButton({ seat, guest, onClick }) {
     return (
       <button
         onClick={onClick}
-        className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-gray-400 text-xs font-semibold text-white"
+        className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-ink-faint/50 text-xs font-semibold text-white"
       >
         ×
       </button>
@@ -851,7 +908,7 @@ function SeatButton({ seat, guest, onClick }) {
       onClick={onClick}
       title={occupied ? guest?.name || '' : ''}
       className={`flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 text-xs font-semibold leading-tight ${
-        occupied ? seatTypeBgClass(seat.seat_type, guest?.gender) : 'bg-gray-200 text-gray-400'
+        occupied ? seatTypeBgClass(seat.seat_type, guest?.gender) : 'bg-surface-sunken text-ink-faint'
       }`}
     >
       <span className="w-full truncate text-center">{label}</span>

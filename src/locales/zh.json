@@ -234,7 +234,11 @@
       "legendBlocked": "非座位",
       "legendGuest": "游客",
       "legendStaff": "工作人员",
-      "legendVip": "VIP"
+      "legendVip": "VIP",
+      "seatPill": "座位 {{seat}}",
+      "frontDriver": "车头 · 司机",
+      "doorLabel": "车门",
+      "rearLabel": "车尾"
     }
   },
   "staff": {
@@ -427,7 +431,14 @@
       "seatType": "乘客类型",
       "type_guest": "团客",
       "type_staff": "工作人员",
-      "type_vip": "VIP"
+      "type_vip": "VIP",
+      "assignedLabel": "已安排",
+      "doorLabel": "车门",
+      "frontDriver": "车头 · 司机",
+      "rearLabel": "车尾",
+      "tapHint": "点按座位可安排乘客或更改类型",
+      "driverBoxTitle": "仅限工作人员 · 司机",
+      "busSizeSummary": "{{rows}} 排 · 每排 {{perRow}} 座"
     },
     "roomMap": {
       "title": "房间图",

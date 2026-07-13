@@ -234,7 +234,11 @@
       "legendBlocked": "Not a seat",
       "legendGuest": "Guest",
       "legendStaff": "Staff",
-      "legendVip": "VIP"
+      "legendVip": "VIP",
+      "seatPill": "Seat {{seat}}",
+      "frontDriver": "Front · Driver",
+      "doorLabel": "Door",
+      "rearLabel": "Rear"
     }
   },
   "staff": {
@@ -427,7 +431,14 @@
       "seatType": "Occupant type",
       "type_guest": "Guest",
       "type_staff": "Staff",
-      "type_vip": "VIP"
+      "type_vip": "VIP",
+      "assignedLabel": "Assigned",
+      "doorLabel": "Door",
+      "frontDriver": "Front · Driver",
+      "rearLabel": "Rear",
+      "tapHint": "Tap a seat to assign or change type",
+      "driverBoxTitle": "Staff only · Driver",
+      "busSizeSummary": "{{rows}} rows · {{perRow}} seats/row"
     },
     "roomMap": {
       "title": "Room map",

@@ -177,6 +177,42 @@ const RENDER = {
       <circle cx="13" cy="14" r="1" fill={c.detail} stroke="none" />
     </>
   ),
+  bus: (c) => (
+    <>
+      <rect x="4" y="4.5" width="16" height="13" rx="2.6" fill={c.body} stroke={c.color} {...S} />
+      <line x1="4.5" y1="10" x2="19.5" y2="10" stroke={c.detail} {...S} />
+      <line x1="12" y1="5" x2="12" y2="10" stroke={c.detail} {...S} />
+      <circle cx="8.5" cy="19" r="1.5" fill="none" stroke={c.color} {...S} />
+      <circle cx="15.5" cy="19" r="1.5" fill="none" stroke={c.color} {...S} />
+      <line x1="6" y1="13.6" x2="7.6" y2="13.6" stroke={c.detail} {...S} />
+      <line x1="16.4" y1="13.6" x2="18" y2="13.6" stroke={c.detail} {...S} />
+    </>
+  ),
+  'steering-wheel': (c) => (
+    <>
+      <circle cx="12" cy="12" r="8.5" fill={c.body} stroke={c.color} {...S} />
+      <circle cx="12" cy="12" r="2.4" fill="none" stroke={c.detail} {...S} />
+      <line x1="12" y1="3.6" x2="12" y2="9.6" stroke={c.detail} {...S} />
+      <line x1="4.4" y1="16.4" x2="9.7" y2="13.4" stroke={c.detail} {...S} />
+      <line x1="19.6" y1="16.4" x2="14.3" y2="13.4" stroke={c.detail} {...S} />
+    </>
+  ),
+  lock: (c) => (
+    <>
+      <rect x="5" y="10" width="14" height="10" rx="2.4" fill={c.body} stroke={c.color} {...S} />
+      <path d="M8 10 V7.6 A4 4 0 0 1 16 7.6 V10" fill="none" stroke={c.color} {...S} />
+      <circle cx="12" cy="14.2" r="1.4" fill={c.detail} stroke="none" />
+      <line x1="12" y1="15" x2="12" y2="17" stroke={c.detail} {...S} />
+    </>
+  ),
+  phone: (c) => (
+    <path
+      d="M20.5 16.3v2.7a1.8 1.8 0 0 1-2 1.8 17.8 17.8 0 0 1-7.8-2.8 17.5 17.5 0 0 1-5.4-5.4A17.8 17.8 0 0 1 2.5 4.8a1.8 1.8 0 0 1 1.8-2h2.7a1.8 1.8 0 0 1 1.8 1.5 11.5 11.5 0 0 0 .6 2.5 1.8 1.8 0 0 1-.4 1.9L7.9 9.9a14.4 14.4 0 0 0 5.4 5.4l1.1-1.1a1.8 1.8 0 0 1 1.9-.4 11.5 11.5 0 0 0 2.5.6 1.8 1.8 0 0 1 1.5 1.8z"
+      fill={c.body}
+      stroke={c.color}
+      {...S}
+    />
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

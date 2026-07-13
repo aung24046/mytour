@@ -143,6 +143,12 @@ export default function MySeat() {
     return map
   }, [seats])
 
+  const mySeat = useMemo(
+    () => seats.find((s) => s.guest_id === guestId) ?? null,
+    [seats, guestId]
+  )
+  const mySeatLabel = mySeat ? `${mySeat.row_number}${mySeat.seat_position}` : ''
+
   const rows = bus ? Array.from({ length: bus.total_rows }, (_, i) => i + 1) : []
   const seatPositions = bus ? ['A', 'B', 'C', 'D'].slice(0, bus.seats_per_row) : []
   const leftPositions = seatPositions.slice(0, Math.ceil(seatPositions.length / 2))
@@ -153,10 +159,17 @@ export default function MySeat() {
       <AnnouncementBanner />
       <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
-          <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-            <Icon name="seat" size={26} filled />
-            {t('guest.mySeat.title')}
-          </h1>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+              <Icon name="seat" size={26} filled />
+              {t('guest.mySeat.title')}
+            </h1>
+            {mySeatLabel && (
+              <span className="inline-flex shrink-0 items-center rounded-pill bg-brand px-3.5 py-1.5 text-sm font-semibold text-white shadow-brand">
+                {t('guest.mySeat.seatPill', { seat: mySeatLabel })}
+              </span>
+            )}
+          </div>
 
           {!guestId && (
             <Card className="flex flex-col items-center gap-3 py-8 text-center">
@@ -168,7 +181,7 @@ export default function MySeat() {
           )}
 
           {guestId && usingCache && (
-            <p className="mb-3 rounded-xl bg-amber-100 px-3 py-2 text-sm text-amber-800">
+            <p className="mb-3 rounded-control bg-warning-bg px-3 py-2 text-sm text-warning-text">
               {t('guest.mySeat.usingCache')}
             </p>
           )}
@@ -184,74 +197,109 @@ export default function MySeat() {
 
           {guestId && !loading && !error && !notAssigned && bus && (
             <>
-              {/* ข้อมูลรถ — ไม่แสดงข้อมูลคนขับ (staff เท่านั้น) */}
-              <Card className="mb-3">
-                <p className="font-bold text-ink">{bus.name}</p>
-                <p className="mt-0.5 text-sm text-ink-muted">
-                  <span className="text-ink-muted/70">{t('guest.mySeat.licensePlate')}: </span>
-                  <span className="font-medium text-ink">{bus.license_plate || '—'}</span>
-                </p>
-              </Card>
-
-              {/* คำอธิบายสี */}
-              <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-muted">
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-gray-200" /> {t('guest.mySeat.legendEmpty')}
+              {/* แถบข้อมูลรถ — เด่นขึ้น */}
+              <div className="mb-3 flex items-center gap-3 rounded-card border border-white/60 bg-surface p-3 shadow-card ring-1 ring-black/[0.02]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-brand-lighter text-brand-hover">
+                  <Icon name="bus" size={22} />
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-blue-500" /> /{' '}
-                  <span className="h-3 w-3 rounded bg-pink-500" /> {t('guest.mySeat.legendGuest')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-emerald-500" /> {t('guest.mySeat.legendStaff')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-amber-500" /> {t('guest.mySeat.legendVip')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-gray-400" /> {t('guest.mySeat.legendBlocked')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded bg-brand ring-2 ring-brand ring-offset-1" /> {t('guest.mySeat.yourSeat')}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold text-ink">{bus.name}</p>
+                  <p className="mt-0.5 text-[11px] text-ink-faint">{t('guest.mySeat.licensePlate')}</p>
+                </div>
+                {bus.license_plate && (
+                  <span className="shrink-0 rounded-control bg-surface-sunken px-2.5 py-1 font-mono text-sm font-medium tracking-wide text-ink">
+                    {bus.license_plate}
+                  </span>
+                )}
               </div>
 
-              {/* ผังที่นั่ง */}
-              <div className="flex flex-col gap-1.5">
-                {rows.map((rowNum) => (
-                  <div key={rowNum} className="flex items-stretch gap-2">
-                    <span className="flex w-5 shrink-0 items-center text-xs text-ink-muted">{rowNum}</span>
-                    <div className="flex flex-1 gap-2">
-                      <div className="flex flex-1 gap-1.5">
-                        {leftPositions.map((pos) => {
-                          const seat = seatsByPosition[`${rowNum}-${pos}`]
-                          return (
-                            <MySeatBox
-                              key={pos}
-                              seat={seat}
-                              guest={guestsById[seat?.guest_id]}
-                              isMine={!!seat && seat.guest_id === guestId}
-                            />
-                          )
-                        })}
-                      </div>
-                      {rightPositions.length > 0 && <div className="w-3 shrink-0" />}
-                      <div className="flex flex-1 gap-1.5">
-                        {rightPositions.map((pos) => {
-                          const seat = seatsByPosition[`${rowNum}-${pos}`]
-                          return (
-                            <MySeatBox
-                              key={pos}
-                              seat={seat}
-                              guest={guestsById[seat?.guest_id]}
-                              isMine={!!seat && seat.guest_id === guestId}
-                            />
-                          )
-                        })}
-                      </div>
-                    </div>
+              {/* ผังรถ */}
+              <div className="rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+                {/* คำอธิบายสี */}
+                <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('guest.mySeat.legendEmpty')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-blue-500" />/
+                    <span className="h-3 w-3 rounded bg-pink-500" /> {t('guest.mySeat.legendGuest')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-emerald-500" /> {t('guest.mySeat.legendStaff')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-amber-500" /> {t('guest.mySeat.legendVip')}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded bg-brand" /> {t('guest.mySeat.yourSeat')}
+                  </span>
+                </div>
+
+                {/* ตัวรถ */}
+                <div className="overflow-hidden rounded-2xl border-[1.5px] border-black/10">
+                  {/* หัวรถ */}
+                  <div className="flex items-center justify-between border-b border-dashed border-black/10 bg-surface-muted px-3 py-2">
+                    <span className="flex items-center gap-1 text-[11px] text-ink-faint">
+                      <Icon name="door" size={14} /> {t('guest.mySeat.doorLabel')}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
+                      {t('guest.mySeat.frontDriver')}
+                      <Icon name="steering-wheel" size={16} color="#0e7490" />
+                    </span>
                   </div>
-                ))}
+
+                  {/* แถวที่นั่ง — ยาวถึงแถวสุดท้าย */}
+                  <div className="flex flex-col gap-1.5 px-2 py-3">
+                    {rows.map((rowNum) => {
+                      const isMyRow = mySeat && rowNum === mySeat.row_number
+                      return (
+                        <div key={rowNum} className="flex items-stretch gap-2">
+                          <span
+                            className={`flex w-5 shrink-0 items-center justify-center text-xs ${
+                              isMyRow ? 'font-semibold text-brand' : 'text-ink-faint'
+                            }`}
+                          >
+                            {rowNum}
+                          </span>
+                          <div className="flex flex-1 gap-2">
+                            <div className="flex flex-1 gap-1.5">
+                              {leftPositions.map((pos) => {
+                                const seat = seatsByPosition[`${rowNum}-${pos}`]
+                                return (
+                                  <MySeatBox
+                                    key={pos}
+                                    seat={seat}
+                                    guest={guestsById[seat?.guest_id]}
+                                    isMine={!!seat && seat.guest_id === guestId}
+                                  />
+                                )
+                              })}
+                            </div>
+                            {rightPositions.length > 0 && <div className="w-3 shrink-0" />}
+                            <div className="flex flex-1 gap-1.5">
+                              {rightPositions.map((pos) => {
+                                const seat = seatsByPosition[`${rowNum}-${pos}`]
+                                return (
+                                  <MySeatBox
+                                    key={pos}
+                                    seat={seat}
+                                    guest={guestsById[seat?.guest_id]}
+                                    isMine={!!seat && seat.guest_id === guestId}
+                                  />
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* ท้ายรถ */}
+                  <div className="border-t border-dashed border-black/10 py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
+                    {t('guest.mySeat.rearLabel')}
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -271,7 +319,7 @@ function MySeatBox({ seat, guest, isMine }) {
 
   if (!seat.is_seat) {
     return (
-      <div className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-gray-400 text-xs font-semibold text-white">
+      <div className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-ink-faint/50 text-xs font-semibold text-white">
         ×
       </div>
     )
@@ -284,7 +332,7 @@ function MySeatBox({ seat, guest, isMine }) {
     <div
       title={occupied ? guest?.name || '' : ''}
       className={`relative flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 text-xs font-semibold leading-tight transition ${
-        occupied ? seatTypeBgClass(seat.seat_type, guest?.gender) : 'bg-gray-200 text-gray-400'
+        occupied ? seatTypeBgClass(seat.seat_type, guest?.gender) : 'bg-surface-sunken text-ink-faint'
       } ${isMine ? 'ring-[3px] ring-brand ring-offset-1 scale-[1.06]' : ''}`}
     >
       {isMine && (

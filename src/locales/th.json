@@ -234,7 +234,11 @@
       "legendBlocked": "ไม่ใช่ที่นั่ง",
       "legendGuest": "ลูกทัวร์",
       "legendStaff": "Staff",
-      "legendVip": "VIP"
+      "legendVip": "VIP",
+      "seatPill": "ที่นั่ง {{seat}}",
+      "frontDriver": "หน้ารถ · คนขับ",
+      "doorLabel": "ประตู",
+      "rearLabel": "ท้ายรถ"
     }
   },
   "staff": {
@@ -427,7 +431,14 @@
       "seatType": "ประเภทผู้นั่ง",
       "type_guest": "ลูกทัวร์",
       "type_staff": "Staff",
-      "type_vip": "VIP"
+      "type_vip": "VIP",
+      "assignedLabel": "จัดแล้ว",
+      "doorLabel": "ประตู",
+      "frontDriver": "หน้ารถ · คนขับ",
+      "rearLabel": "ท้ายรถ",
+      "tapHint": "แตะที่นั่งเพื่อจัดคน / เปลี่ยนประเภท",
+      "driverBoxTitle": "เฉพาะ staff · คนขับ",
+      "busSizeSummary": "{{rows}} แถว · {{perRow}} ที่นั่ง/แถว"
     },
     "roomMap": {
       "title": "ผังห้องพัก",
