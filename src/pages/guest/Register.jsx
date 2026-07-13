@@ -15,6 +15,7 @@ import BottomSheet from '../../components/common/BottomSheet'
 import QrScanner from '../../components/common/QrScanner'
 import Icon from '../../components/common/Icon'
 import GuestNav from '../../components/common/GuestNav'
+import GuestHome from '../../components/common/GuestHome'
 
 export default function Register() {
   const { t } = useTranslation()
@@ -281,55 +282,12 @@ export default function Register() {
 
   if (savedGuest || existingGuest) {
     const guestForDisplay = savedGuest || existingGuest
-    const displayName = guestForDisplay?.nickname || guestForDisplay?.name
 
     return (
       <div className="min-h-screen">
-        <AnnouncementBanner />
         <div className="p-4 pb-28">
           <div className="mx-auto max-w-md">
-            {/* Hero ต้อนรับ */}
-            <div className="mt-2 overflow-hidden rounded-card bg-brand-gradient p-5 text-white shadow-brand">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl">
-                  {savedGuest ? '🎉' : '👋'}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-white/80">
-                    {savedGuest ? t('guest.register.successTitle') : t('guest.home.welcomeBack')}
-                  </p>
-                  <h1 className="truncate text-2xl font-extrabold">
-                    {displayName || t('guest.home.traveler')}
-                  </h1>
-                </div>
-              </div>
-              <p className="mt-3 text-sm text-white/85">
-                {savedGuest ? t('guest.register.successBody') : t('guest.home.subtitle')}
-              </p>
-            </div>
-
-            {/* QR หลัก */}
-            <button
-              onClick={() => navigate('/my-qr')}
-              className="mt-4 flex w-full items-center gap-4 rounded-card border border-white/60 bg-surface p-4 text-left shadow-card ring-1 ring-black/[0.02] transition active:scale-[0.99]"
-            >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-light text-brand-hover">
-                <Icon name="ticket" size={26} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-ink">{t('guest.nav.myQr')}</p>
-                <p className="truncate text-sm text-ink-muted">{t('guest.home.qrSubtitle')}</p>
-              </div>
-              <span className="text-lg text-ink-muted" aria-hidden="true">›</span>
-            </button>
-
-            {/* เมนูลัด */}
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <HubTile icon="map" label={t('guest.nav.itinerary')} onClick={() => navigate('/itinerary')} />
-              <HubTile icon="bed" label={t('guest.nav.myRoom')} onClick={() => navigate('/my-room')} />
-              <HubTile icon="target" label={t('guest.nav.bingo')} onClick={() => navigate('/bingo')} />
-              <HubTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate('/share-location')} />
-            </div>
+            <GuestHome guest={guestForDisplay} isNew={!!savedGuest} />
           </div>
         </div>
 
@@ -489,20 +447,5 @@ export default function Register() {
         </Button>
       </BottomSheet>
     </div>
-  )
-}
-
-// ปุ่มเมนูลัดบนหน้าหลัก
-function HubTile({ icon, label, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-start gap-3 rounded-card border border-white/60 bg-surface p-4 text-left shadow-card ring-1 ring-black/[0.02] transition active:scale-[0.98]"
-    >
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-light text-brand-hover">
-        <Icon name={icon} size={24} />
-      </span>
-      <span className="font-semibold text-ink">{label}</span>
-    </button>
   )
 }

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import ReactMarkdown from 'react-markdown'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
@@ -7,6 +8,7 @@ import { saveCache, loadCache } from '../../lib/offlineCache'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
+import BottomSheet from '../../components/common/BottomSheet'
 
 const STATUS_STYLES = {
   completed: 'opacity-55',
@@ -26,11 +28,13 @@ export default function Itinerary() {
   const { t } = useTranslation()
 
   const [items, setItems] = useState([])
+  const [linkedArticles, setLinkedArticles] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [usingCache, setUsingCache] = useState(false)
   // แต่ละวันย่อ/ขยายได้ — เก็บเฉพาะวันที่ถูก"ย่อ" (ค่าเริ่มต้นคือขยายทุกวัน)
   const [collapsedDays, setCollapsedDays] = useState({})
+  const [openArticle, setOpenArticle] = useState(null)
 
   const toggleDay = (day) =>
     setCollapsedDays((prev) => ({ ...prev, [day]: !prev[day] }))
@@ -42,28 +46,40 @@ export default function Itinerary() {
       setLoading(true)
       setError(null)
 
-      const { data, error: fetchError } = await supabase
-        .from('itinerary_items')
-        .select('id, day_number, scheduled_time, title, description, location_name, maps_url, status, sort_order')
-        .eq('tour_id', ACTIVE_TOUR_ID)
-        .order('day_number', { ascending: true })
-        .order('sort_order', { ascending: true })
+      const [itemsRes, articlesRes] = await Promise.all([
+        supabase
+          .from('itinerary_items')
+          .select('id, day_number, scheduled_time, title, description, location_name, maps_url, status, sort_order')
+          .eq('tour_id', ACTIVE_TOUR_ID)
+          .order('day_number', { ascending: true })
+          .order('sort_order', { ascending: true }),
+        supabase
+          .from('guide_articles')
+          .select('id, title, body, source_url, image_url, itinerary_item_id')
+          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('is_published', true)
+          .not('itinerary_item_id', 'is', null),
+      ])
 
       if (!isMounted) return
 
-      if (fetchError) {
-        console.error('[Itinerary] load failed — falling back to offline cache', fetchError)
+      if (itemsRes.error) {
+        console.error('[Itinerary] load failed — falling back to offline cache', itemsRes.error)
         const cached = loadCache(CACHE_KEY)
         if (cached) {
-          setItems(cached)
+          setItems(cached.items ?? cached)
+          setLinkedArticles(cached.linkedArticles ?? [])
           setUsingCache(true)
         } else {
           setError(t('common.error'))
         }
       } else {
-        setItems(data ?? [])
+        const nextItems = itemsRes.data ?? []
+        const nextArticles = articlesRes.data ?? []
+        setItems(nextItems)
+        setLinkedArticles(nextArticles)
         setUsingCache(false)
-        saveCache(CACHE_KEY, data ?? [])
+        saveCache(CACHE_KEY, { items: nextItems, linkedArticles: nextArticles })
       }
       setLoading(false)
     }
@@ -96,6 +112,12 @@ export default function Itinerary() {
     acc[day] = acc[day] ? [...acc[day], item] : [item]
     return acc
   }, {})
+
+  const articleByItemId = useMemo(() => {
+    const map = {}
+    for (const a of linkedArticles) map[a.itinerary_item_id] = a
+    return map
+  }, [linkedArticles])
 
   return (
     <div className="min-h-screen">
@@ -178,6 +200,15 @@ export default function Itinerary() {
                                 <span className="whitespace-pre-wrap">{item.description}</span>
                               </div>
                             )}
+
+                            {articleByItemId[item.id] && (
+                              <button
+                                onClick={() => setOpenArticle(articleByItemId[item.id])}
+                                className="mt-2 text-sm font-semibold text-brand underline decoration-brand-light underline-offset-2"
+                              >
+                                {t('guest.itinerary.viewGuide')}
+                              </button>
+                            )}
                           </div>
 
                           {item.maps_url && (
@@ -204,6 +235,35 @@ export default function Itinerary() {
         )}
       </div>
       </div>
+
+      <BottomSheet open={!!openArticle} onClose={() => setOpenArticle(null)} title={openArticle?.title}>
+        {openArticle && (
+          <div>
+            {openArticle.image_url && (
+              <img
+                src={openArticle.image_url}
+                alt={openArticle.title}
+                className="mb-3 h-44 w-full rounded-xl object-cover"
+              />
+            )}
+            {openArticle.source_url && (
+              <a
+                href={openArticle.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1.5 text-sm font-semibold text-brand-deep underline"
+              >
+                🔗 {t('guest.tripGuide.sourceLink')}
+              </a>
+            )}
+            {openArticle.body && (
+              <div className="max-w-none text-ink [&_a]:text-brand [&_a]:underline [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-1">
+                <ReactMarkdown>{openArticle.body}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        )}
+      </BottomSheet>
     </div>
   )
 }

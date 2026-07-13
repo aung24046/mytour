@@ -7,8 +7,7 @@ const ITEMS = [
   { to: '/itinerary', key: 'itinerary', icon: 'map', labelKey: 'guest.nav.itinerary' },
   { to: '/my-qr', key: 'myQr', icon: 'ticket', labelKey: 'guest.nav.myQr' },
   { to: '/my-room', key: 'myRoom', icon: 'bed', labelKey: 'guest.nav.myRoom' },
-  { to: '/bingo', key: 'bingo', icon: 'target', labelKey: 'guest.nav.bingo' },
-  { to: '/share-location', key: 'shareLocation', icon: 'location', labelKey: 'guest.nav.shareLocation' },
+  { to: '/my-seat', key: 'mySeat', icon: 'seat', labelKey: 'guest.nav.mySeat' },
 ]
 
 export default function GuestNav({ active }) {

@@ -3,6 +3,10 @@
 //
 // รูปแบบ action: { id, type: 'checkin', guestId, status, checkInTime, createdAt }
 // ออกแบบให้ replay ซ้ำได้อย่างปลอดภัย (idempotent) — เขียนทับค่าล่าสุดเสมอ ไม่ใช่ increment
+//
+// dedupe key: เดิมใช้ guestId ตรงๆ (1 guest = 1 action ค้างต่อ type เพราะเป็นการ "แก้ค่าล่าสุด"
+// เช่นเช็คอิน/SOS) ถ้า action ไหนไม่ใช่แบบนั้น (เช่นบันทึกรายจ่ายหลายรายการ ห้ามถูกแทนที่กัน)
+// ให้ส่ง dedupeKey เป็นค่าที่ unique ต่อรายการ (เช่น uuid ที่สุ่มตอนสร้าง) มาแทน guestId
 
 const QUEUE_KEY = 'mytour_offline_queue'
 
@@ -25,11 +29,18 @@ function writeQueue(queue) {
 
 export function enqueue(action) {
   const queue = readQueue()
-  // ถ้ามี action เดิมสำหรับ guest เดียวกันค้างอยู่ ให้แทนที่ด้วยอันล่าสุด (ไม่ sync ซ้ำซ้อน)
-  const filtered = queue.filter(
-    (a) => !(a.type === action.type && a.guestId === action.guestId)
-  )
-  filtered.push({ ...action, id: `${action.type}-${action.guestId}-${Date.now()}`, createdAt: Date.now() })
+  const dedupeKey = action.dedupeKey ?? action.guestId
+  // ถ้ามี action เดิมสำหรับ key เดียวกันค้างอยู่ ให้แทนที่ด้วยอันล่าสุด (ไม่ sync ซ้ำซ้อน)
+  // ถ้าไม่มี dedupeKey/guestId เลย (เช่นทุกรายการต้องถูกเก็บแยกกัน) จะไม่ทับของเดิม
+  const filtered =
+    dedupeKey === undefined
+      ? queue
+      : queue.filter((a) => !(a.type === action.type && (a.dedupeKey ?? a.guestId) === dedupeKey))
+  filtered.push({
+    ...action,
+    id: `${action.type}-${dedupeKey ?? 'item'}-${Date.now()}`,
+    createdAt: Date.now(),
+  })
   writeQueue(filtered)
   return filtered
 }

@@ -17,6 +17,13 @@ const FIELD_TYPES = [
   { value: 'checkbox', label: 'เลือกได้หลายข้อ' },
   { value: 'date', label: 'วันที่ (wheel เลื่อน)' },
   { value: 'duration', label: 'ระยะเวลา (ชม./นาที)' },
+  { value: 'rating', label: 'คะแนนดาว (1-5)' },
+]
+
+// สลับระหว่างฟอร์มลงทะเบียน (เดิม) กับฟอร์ม Feedback — ใช้ form_fields ตารางเดียวกัน แยกด้วยคอลัมน์ form_type
+const FORM_TYPES = [
+  { value: 'registration', label: 'ฟอร์มลงทะเบียน' },
+  { value: 'feedback', label: 'ฟอร์ม Feedback' },
 ]
 
 // หมวดหมู่ ใช้จัดกลุ่มคำถามตอนแสดงผลในฟอร์มลงทะเบียน/หน้าแก้ไขข้อมูลลูกทัวร์
@@ -58,6 +65,7 @@ function parseOptionLine(line) {
 export default function FormBuilder() {
   const { t } = useTranslation()
 
+  const [formType, setFormType] = useState('registration') // 'registration' | 'feedback'
   const [fields, setFields] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -66,13 +74,14 @@ export default function FormBuilder() {
   const [newField, setNewField] = useState(NEW_FIELD_TEMPLATE)
   const [creating, setCreating] = useState(false)
 
-  async function loadFields() {
+  async function loadFields(type) {
     setLoading(true)
     setError(null)
     const { data, error: fetchError } = await supabase
       .from('form_fields')
       .select('*')
       .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('form_type', type)
       .order('sort_order', { ascending: true })
 
     if (fetchError) {
@@ -85,8 +94,10 @@ export default function FormBuilder() {
   }
 
   useEffect(() => {
-    loadFields()
-  }, [])
+    loadFields(formType)
+    setNewField(NEW_FIELD_TEMPLATE)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formType])
 
   async function updateField(id, patch) {
     setSavingId(id)
@@ -99,7 +110,7 @@ export default function FormBuilder() {
 
     if (updateError) {
       console.error('[FormBuilder] update failed', updateError)
-      loadFields() // revert to server state on failure
+      loadFields(formType) // revert to server state on failure
     }
     setSavingId(null)
   }
@@ -134,7 +145,7 @@ export default function FormBuilder() {
     const { error: deleteError } = await supabase.from('form_fields').delete().eq('id', field.id)
     if (deleteError) {
       console.error('[FormBuilder] delete failed', deleteError)
-      loadFields()
+      loadFields(formType)
     }
   }
 
@@ -159,11 +170,13 @@ export default function FormBuilder() {
 
     const { error: insertError } = await supabase.from('form_fields').insert({
       tour_id: ACTIVE_TOUR_ID,
+      form_type: formType,
       field_key: fieldKey,
       label: newField.label.trim(),
       field_type: newField.field_type,
-      field_purpose: newField.field_purpose,
-      category: newField.category,
+      // category/field_purpose ไม่มีความหมายสำหรับฟอร์ม feedback (ใช้เฉพาะฟอร์มลงทะเบียน) — บังคับเป็นค่ากลางที่ผ่าน DB check เสมอ
+      field_purpose: formType === 'feedback' ? 'generic' : newField.field_purpose,
+      category: formType === 'feedback' ? 'other' : newField.category,
       options,
       is_required: newField.is_required,
       is_core: false,
@@ -175,7 +188,7 @@ export default function FormBuilder() {
       console.error('[FormBuilder] create failed', insertError)
     } else {
       setNewField(NEW_FIELD_TEMPLATE)
-      loadFields()
+      loadFields(formType)
     }
     setCreating(false)
   }
@@ -185,6 +198,20 @@ export default function FormBuilder() {
       <div className="mx-auto max-w-md">
         <h1 className="text-xl font-bold text-gray-900">{t('staff.formBuilder.title')}</h1>
         <p className="mt-1 text-sm text-gray-600">{t('staff.formBuilder.subtitle')}</p>
+
+        <div className="mt-3 flex gap-2">
+          {FORM_TYPES.map((ft) => (
+            <button
+              key={ft.value}
+              onClick={() => setFormType(ft.value)}
+              className={`flex-1 rounded-control px-3 py-2 text-sm font-semibold transition ${
+                formType === ft.value ? 'bg-brand-gradient text-white shadow-brand' : 'bg-surface-sunken text-neutral-text'
+              }`}
+            >
+              {ft.label}
+            </button>
+          ))}
+        </div>
 
         {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
         {error && <p className="mt-4 text-red-500">{error}</p>}
@@ -232,6 +259,7 @@ export default function FormBuilder() {
                 </div>
               </div>
 
+              {formType === 'registration' && (
               <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                 <span className="shrink-0">{t('staff.formBuilder.category')}</span>
                 <select
@@ -246,7 +274,9 @@ export default function FormBuilder() {
                   ))}
                 </select>
               </label>
+              )}
 
+              {formType === 'registration' && (
               <label className="mt-2 flex items-center gap-2 text-sm text-gray-600">
                 <span className="shrink-0">{t('staff.formBuilder.purpose')}</span>
                 <select
@@ -261,6 +291,7 @@ export default function FormBuilder() {
                   ))}
                 </select>
               </label>
+              )}
 
               <div className="mt-2 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -321,23 +352,27 @@ export default function FormBuilder() {
               }
             />
 
-            <SelectField
-              label={t('staff.formBuilder.category')}
-              options={CATEGORIES}
-              value={newField.category}
-              onChange={(e) =>
-                setNewField((prev) => ({ ...prev, category: e.target.value }))
-              }
-            />
+            {formType === 'registration' && (
+              <SelectField
+                label={t('staff.formBuilder.category')}
+                options={CATEGORIES}
+                value={newField.category}
+                onChange={(e) =>
+                  setNewField((prev) => ({ ...prev, category: e.target.value }))
+                }
+              />
+            )}
 
-            <SelectField
-              label={t('staff.formBuilder.purpose')}
-              options={FIELD_PURPOSES}
-              value={newField.field_purpose}
-              onChange={(e) =>
-                setNewField((prev) => ({ ...prev, field_purpose: e.target.value }))
-              }
-            />
+            {formType === 'registration' && (
+              <SelectField
+                label={t('staff.formBuilder.purpose')}
+                options={FIELD_PURPOSES}
+                value={newField.field_purpose}
+                onChange={(e) =>
+                  setNewField((prev) => ({ ...prev, field_purpose: e.target.value }))
+                }
+              />
+            )}
 
             {['select', 'checkbox', 'radio'].includes(newField.field_type) && (
               <label className="block">

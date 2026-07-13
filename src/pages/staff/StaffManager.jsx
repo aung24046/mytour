@@ -36,7 +36,7 @@ export default function StaffManager() {
 
     const { data, error: fetchError } = await supabase
       .from('staff')
-      .select('id, name, role, phone')
+      .select('id, name, role, phone, show_to_guest')
       .eq('tour_id', ACTIVE_TOUR_ID)
       .order('name')
 
@@ -98,6 +98,25 @@ export default function StaffManager() {
     setShowNewForm(false)
     setCreating(false)
     loadStaff()
+  }
+
+  async function toggleShowToGuest(member) {
+    const next = !member.show_to_guest
+    setStaffList((prev) =>
+      prev.map((s) => (s.id === member.id ? { ...s, show_to_guest: next } : s))
+    )
+
+    const { error } = await supabase
+      .from('staff')
+      .update({ show_to_guest: next })
+      .eq('id', member.id)
+
+    if (error) {
+      console.error('[StaffManager] toggle show_to_guest failed', error)
+      setStaffList((prev) =>
+        prev.map((s) => (s.id === member.id ? { ...s, show_to_guest: !next } : s))
+      )
+    }
   }
 
   async function deleteStaff(member) {
@@ -191,10 +210,12 @@ export default function StaffManager() {
               </Card>
             )}
 
+            <p className="mb-2 text-xs text-gray-400">{t('staff.staffManager.showToGuestHint')}</p>
+
             <div className="flex flex-col gap-2">
               {staffList.map((member) => (
-                <Card key={member.id} className="flex items-center justify-between p-3">
-                  <div>
+                <Card key={member.id} className="flex items-center justify-between p-3 gap-2">
+                  <div className="min-w-0">
                     <p className="font-medium text-gray-900">
                       {member.name}
                       {member.id === mySession?.id && (
@@ -207,12 +228,26 @@ export default function StaffManager() {
                       {ROLES.find((r) => r.value === member.role)?.label ?? member.role}
                     </p>
                   </div>
-                  <button
-                    onClick={() => deleteStaff(member)}
-                    className="shrink-0 text-sm font-medium text-red-500"
-                  >
-                    {t('staff.formBuilder.delete')}
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2.5">
+                    <button
+                      onClick={() => toggleShowToGuest(member)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        member.show_to_guest
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
+                      {member.show_to_guest
+                        ? t('staff.staffManager.shownToGuest')
+                        : t('staff.staffManager.notShownToGuest')}
+                    </button>
+                    <button
+                      onClick={() => deleteStaff(member)}
+                      className="text-sm font-medium text-red-500"
+                    >
+                      {t('staff.formBuilder.delete')}
+                    </button>
+                  </div>
                 </Card>
               ))}
             </div>

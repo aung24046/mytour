@@ -18,7 +18,8 @@
     "react-i18next": "^15.0.2",
     "i18next-browser-languagedetector": "^8.0.0",
     "qrcode.react": "^3.1.0",
-    "html5-qrcode": "^2.3.8"
+    "html5-qrcode": "^2.3.8",
+    "react-markdown": "^9.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

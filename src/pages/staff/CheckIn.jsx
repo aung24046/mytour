@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
@@ -17,6 +18,7 @@ const CACHE_KEY = 'checkin_guests'
 
 export default function CheckIn() {
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [guests, setGuests] = useState([])
   const [fields, setFields] = useState([])
@@ -51,6 +53,17 @@ export default function CheckIn() {
   const [selectedItineraryItemId, setSelectedItineraryItemId] = useState('')
   const [newEventTitle, setNewEventTitle] = useState('')
   const [creatingEvent, setCreatingEvent] = useState(false)
+
+  // เปิดกล้องสแกนอัตโนมัติเมื่อมาจากปุ่มลัดบนแดชบอร์ด (?scan=1)
+  useEffect(() => {
+    if (searchParams.get('scan') === '1') {
+      setScanFeedback(null)
+      setScannerOpen(true)
+      searchParams.delete('scan')
+      setSearchParams(searchParams, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function refreshPendingCount() {
     setPendingCount(getQueue().filter((a) => a.type === 'checkin').length)

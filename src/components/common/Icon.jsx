@@ -111,6 +111,39 @@ const RENDER = {
       <polygon points="12,7 14.2,12 12,17 9.8,12" fill={c.detail} stroke={c.detail} {...S} />
     </>
   ),
+  book: (c) => (
+    <>
+      <path d="M12 6.2 C10.4 4.9 7.8 4.4 4.6 4.7 V17.9 C7.8 17.6 10.4 18.1 12 19.4 C13.6 18.1 16.2 17.6 19.4 17.9 V4.7 C16.2 4.4 13.6 4.9 12 6.2 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="12" y1="6.2" x2="12" y2="19.4" stroke={c.detail} {...S} />
+    </>
+  ),
+  alert: (c) => (
+    <>
+      <path d="M12 3.3 L21.2 19.4 A1.2 1.2 0 0 1 20.2 21.2 H3.8 A1.2 1.2 0 0 1 2.8 19.4 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="12" y1="9.3" x2="12" y2="13.8" stroke={c.detail} {...S} />
+      <circle cx="12" cy="16.7" r="1" fill={c.detail} stroke="none" />
+    </>
+  ),
+  star: (c) => (
+    <>
+      <path d="M12 3.2 L14.6 9.2 L21.1 9.8 L16.1 14.1 L17.6 20.5 L12 17.1 L6.4 20.5 L7.9 14.1 L2.9 9.8 L9.4 9.2 Z" fill={c.body} stroke={c.color} {...S} />
+    </>
+  ),
+  wallet: (c) => (
+    <>
+      <path d="M4 8.2 A2.2 2.2 0 0 1 6.2 6 H17.8 A2.2 2.2 0 0 1 20 8.2 V16.8 A2.2 2.2 0 0 1 17.8 19 H6.2 A2.2 2.2 0 0 1 4 16.8 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="14" y1="12.5" x2="18.5" y2="12.5" stroke={c.detail} {...S} />
+      <circle cx="16" cy="12.5" r="1.1" fill={c.detail} stroke="none" />
+    </>
+  ),
+  briefcase: (c) => (
+    <>
+      <path d="M9 7.5 V5.8 A1.8 1.8 0 0 1 10.8 4 H13.2 A1.8 1.8 0 0 1 15 5.8 V7.5" fill="none" stroke={c.color} {...S} />
+      <rect x="3.5" y="7.5" width="17" height="12" rx="2.2" fill={c.body} stroke={c.color} {...S} />
+      <line x1="3.5" y1="13.2" x2="20.5" y2="13.2" stroke={c.detail} {...S} />
+      <rect x="10.5" y="12" width="3" height="2.4" rx="0.5" fill={c.detail} stroke="none" />
+    </>
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

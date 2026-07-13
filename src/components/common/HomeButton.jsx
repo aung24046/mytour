@@ -11,8 +11,12 @@ const HIDE_ON = [
   '/itinerary',
   '/my-qr',
   '/my-room',
+  '/my-seat',
   '/bingo',
   '/share-location',
+  '/trip-guide',
+  '/feedback',
+  '/sos',
   '/staff',
   '/staff/login',
 ]
