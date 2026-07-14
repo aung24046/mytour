@@ -250,6 +250,12 @@ const RENDER = {
       <line x1="12.9" y1="6.9" x2="17.1" y2="11.1" stroke={c.detail} {...S} />
     </>
   ),
+  search: (c) => (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" fill={c.body} stroke={c.color} {...S} />
+      <line x1="15.3" y1="15.3" x2="20" y2="20" stroke={c.color} {...S} />
+    </>
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

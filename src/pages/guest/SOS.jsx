@@ -49,7 +49,9 @@ export default function SOS() {
         .order('sort_order', { ascending: true }),
       supabase
         .from('staff')
-        .select('id, name, phone')
+        // เบอร์/ชื่อดึงสดจากลูกทัวร์ที่ลงทะเบียน (guest_id) ถ้าทีมงานคนนั้นถูกเพิ่มด้วยระบบผูกชื่อ
+        // ทีมงานเก่าที่ยังไม่มี guest_id จะ fallback ไปใช้ name/phone ที่กรอกไว้ตรง ๆ
+        .select('id, name, phone, guests(name, nickname, phone)')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .eq('show_to_guest', true),
     ])
@@ -66,8 +68,17 @@ export default function SOS() {
     }
 
     const guideContacts = (guideRes.data ?? [])
-      .filter((s) => s.phone)
-      .map((s) => ({ id: `staff-${s.id}`, label: s.name, phone: s.phone, category: 'guide' }))
+      .map((s) => {
+        const g = s.guests
+        const label = g ? (g.nickname ? `${g.name} (${g.nickname})` : g.name) : s.name
+        return {
+          id: `staff-${s.id}`,
+          label,
+          phone: g?.phone ?? s.phone,
+          category: 'guide',
+        }
+      })
+      .filter((c) => c.phone)
 
     const merged = [...guideContacts, ...(contactsRes.data ?? [])]
     setContacts(merged)

@@ -221,7 +221,8 @@
       "notOpenYet": "问卷目前尚未开放",
       "submit": "提交意见",
       "submitting": "提交中...",
-      "saved": "已保存 — 问卷关闭前都可以修改"
+      "saved": "已保存 — 问卷关闭前都可以修改",
+      "staffCannotReview": "工作人员无法提交评价"
     },
     "mySeat": {
       "title": "我的座位",
@@ -255,15 +256,34 @@
       "title": "团队管理",
       "subtitle": "添加或删除可以用密码登录的团队成员",
       "addStaff": "添加成员",
-      "staffName": "姓名",
+      "staffName": "姓名（从已登记的游客中选择）",
+      "searchGuestPlaceholder": "输入游客姓名、昵称或电话号码...",
+      "noGuestMatch": "未找到匹配的游客（需先完成登记）",
+      "changeGuest": "更改",
       "role": "职位",
+      "rolePlaceholder": "输入职位，或从曾用过的选项中选择",
+      "editRole": "编辑",
+      "roleLabel": {
+        "lead_guide": "领队",
+        "staff": "工作人员",
+        "driver": "司机",
+        "admin": "管理员"
+      },
       "you": "（您）",
       "pinFormatError": "密码必须是4位数字",
       "cannotDeleteSelf": "无法删除自己的账户",
+      "cannotDeleteDefault": "无法删除默认的管理员账户 — 必须始终有人能够管理本应用",
+      "defaultBadge": "默认",
       "confirmDelete": "确定要将“{{name}}”移出团队吗？",
       "shownToGuest": "对客人可见",
       "notShownToGuest": "对客人隐藏",
-      "showToGuestHint": "开启后此号码会显示在客人的 SOS 页面（导游／工作人员分类）"
+      "showToGuestHint": "开启后此号码会显示在客人的 SOS 页面（导游／工作人员分类）",
+      "changePin": "更改密码",
+      "newPinPrompt": "新密码（4位数字）",
+      "pinChanged": "密码已更新",
+      "filterByNamePlaceholder": "搜索团队成员姓名...",
+      "noStaffMatch": "没有符合搜索条件的团队成员",
+      "noRole": "尚未设置职位"
     },
     "guestManager": {
       "title": "客人管理",
@@ -365,7 +385,14 @@
       "startItem": "开始",
       "endItem": "结束",
       "noScheduleToday": "今天暂无行程",
-      "broadcast": "向所有人广播"
+      "broadcast": "向所有人广播",
+      "searchMenu": "搜索菜单…",
+      "groups": {
+        "duringTrip": "行程中",
+        "planData": "计划与数据",
+        "people": "人员与供应商",
+        "tools": "汇总与工具"
+      }
     },
     "checkIn": {
       "title": "签到",

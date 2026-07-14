@@ -221,7 +221,8 @@
       "notOpenYet": "Feedback isn't open right now",
       "submit": "Submit feedback",
       "submitting": "Submitting...",
-      "saved": "Saved — you can keep editing until feedback closes"
+      "saved": "Saved — you can keep editing until feedback closes",
+      "staffCannotReview": "Staff members can't submit a review"
     },
     "mySeat": {
       "title": "My Seat",
@@ -255,15 +256,34 @@
       "title": "Manage staff",
       "subtitle": "Add or remove team members who can log in with a PIN",
       "addStaff": "Add staff",
-      "staffName": "Name",
+      "staffName": "Name (pick a registered guest)",
+      "searchGuestPlaceholder": "Type a guest's name, nickname, or phone number...",
+      "noGuestMatch": "No matching guest found (they must register first)",
+      "changeGuest": "Change",
       "role": "Role",
+      "rolePlaceholder": "Type a position or pick a previous one",
+      "editRole": "Edit",
+      "roleLabel": {
+        "lead_guide": "Lead guide",
+        "staff": "Staff",
+        "driver": "Driver",
+        "admin": "Admin"
+      },
       "you": "(you)",
       "pinFormatError": "PIN must be 4 digits",
       "cannotDeleteSelf": "You can't delete your own account",
+      "cannotDeleteDefault": "The default Admin account can't be deleted — someone must always be able to manage the app",
+      "defaultBadge": "Default",
       "confirmDelete": "Remove \"{{name}}\" from the team?",
       "shownToGuest": "Shown to guests",
       "notShownToGuest": "Not shown to guests",
-      "showToGuestHint": "Enabled numbers appear on the guest SOS page (guide/staff category)"
+      "showToGuestHint": "Enabled numbers appear on the guest SOS page (guide/staff category)",
+      "changePin": "Change PIN",
+      "newPinPrompt": "New PIN (4 digits)",
+      "pinChanged": "PIN updated",
+      "filterByNamePlaceholder": "Search staff by name...",
+      "noStaffMatch": "No staff match your search",
+      "noRole": "No position set"
     },
     "guestManager": {
       "title": "Manage guests",
@@ -365,7 +385,14 @@
       "startItem": "Start",
       "endItem": "End",
       "noScheduleToday": "No schedule for today yet",
-      "broadcast": "Broadcast to everyone"
+      "broadcast": "Broadcast to everyone",
+      "searchMenu": "Search menu…",
+      "groups": {
+        "duringTrip": "During the trip",
+        "planData": "Plan & tour data",
+        "people": "People & suppliers",
+        "tools": "Summary & tools"
+      }
     },
     "checkIn": {
       "title": "Check-in",

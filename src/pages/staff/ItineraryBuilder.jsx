@@ -253,10 +253,28 @@ export default function ItineraryBuilder() {
   }
 
   async function markDone(item) {
+    // ถ้าจบ "รายการที่กำลังทำ" → เซ็ตรายการถัดไปในวันเดียวกันเป็น current อัตโนมัติ
+    const next =
+      item.status === 'current'
+        ? (dayGroups[item.day_number] ?? [])
+            .filter((it) => (it.sort_order ?? 0) > (item.sort_order ?? 0) && it.status !== 'completed')[0] ?? null
+        : null
+
     setItems((prev) =>
-      prev.map((it) => (it.id === item.id ? { ...it, status: 'completed' } : it))
+      prev.map((it) => {
+        if (it.id === item.id) return { ...it, status: 'completed' }
+        if (next && it.id === next.id) return { ...it, status: 'current' }
+        return it
+      })
     )
-    await supabase.from('itinerary_items').update({ status: 'completed' }).eq('id', item.id)
+
+    const updates = [
+      supabase.from('itinerary_items').update({ status: 'completed' }).eq('id', item.id),
+    ]
+    if (next) {
+      updates.push(supabase.from('itinerary_items').update({ status: 'current' }).eq('id', next.id))
+    }
+    await Promise.all(updates)
   }
 
   async function resetToUpcoming(item) {

@@ -24,6 +24,8 @@ export default function Feedback() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [savedAt, setSavedAt] = useState(null)
+  // ทีมงาน (ผูกผ่าน guest_id ในตาราง staff) ไม่สามารถส่งรีวิวได้
+  const [isStaff, setIsStaff] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -35,6 +37,20 @@ export default function Feedback() {
       }
       setLoading(true)
       setLoadError(null)
+
+      const { data: staffMatch } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('guest_id', guestId)
+        .maybeSingle()
+
+      if (!isMounted) return
+
+      if (staffMatch) {
+        setIsStaff(true)
+        setLoading(false)
+        return
+      }
 
       const { data: fieldsData, error: fieldsError } = await supabase
         .from('form_fields')
@@ -168,13 +184,19 @@ export default function Feedback() {
           {guestId && loading && <p className="text-ink-muted">{t('common.loading')}</p>}
           {guestId && loadError && <p className="text-danger">{loadError}</p>}
 
-          {guestId && !loading && !loadError && fields.length === 0 && (
+          {guestId && !loading && !loadError && isStaff && (
+            <Card className="py-8 text-center">
+              <p className="text-sm text-ink-muted">{t('guest.feedback.staffCannotReview')}</p>
+            </Card>
+          )}
+
+          {guestId && !loading && !loadError && !isStaff && fields.length === 0 && (
             <Card className="py-8 text-center">
               <p className="text-sm text-ink-muted">{t('guest.feedback.notOpenYet')}</p>
             </Card>
           )}
 
-          {guestId && !loading && !loadError && fields.length > 0 && (
+          {guestId && !loading && !loadError && !isStaff && fields.length > 0 && (
             <Card className="shadow-card-hover">
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 {fields.map((f) => (
