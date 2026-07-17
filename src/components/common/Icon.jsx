@@ -256,6 +256,14 @@ const RENDER = {
       <line x1="15.3" y1="15.3" x2="20" y2="20" stroke={c.color} {...S} />
     </>
   ),
+  heart: (c) => (
+    <path
+      d="M12 20.3 L4.5 12.8 A4.7 4.7 0 0 1 11.3 6.2 L12 6.9 L12.7 6.2 A4.7 4.7 0 0 1 19.5 12.8 Z"
+      fill={c.body}
+      stroke={c.color}
+      {...S}
+    />
+  ),
   // ---- legacy icons — not yet in the duotone design kit, kept as
   // single-tone outlines so existing pages (Dashboard, PrintExport,
   // FormBuilder, StaffManager) keep working unchanged. Safe to

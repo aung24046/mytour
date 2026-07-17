@@ -6,6 +6,12 @@ import DurationField from './DurationField'
 import DateWheelField from './DateWheelField'
 import RadioGroup from './RadioGroup'
 import StarRating from './StarRating'
+import {
+  isNationalIdField,
+  formatThaiNationalId,
+  THAI_NATIONAL_ID_MAX_LENGTH,
+  THAI_NATIONAL_ID_PLACEHOLDER,
+} from '../../lib/fieldFormat'
 
 // Renders one form_fields row as the correct input type.
 // `value` / `onChange` follow a uniform (string | string[]) contract regardless of field_type.
@@ -127,7 +133,25 @@ export default function DynamicField({ field, value, onChange, error }) {
       )
 
     case 'text':
-    default:
+    default: {
+      // ฟิลด์เลขบัตรประชาชน — จัดรูป X-XXXX-XXXXX-XX-X และจำกัด 13 หลัก
+      if (isNationalIdField(field)) {
+        return (
+          <div>
+            <TextField
+              label={field.label}
+              required={field.is_required}
+              type="text"
+              inputMode="numeric"
+              maxLength={THAI_NATIONAL_ID_MAX_LENGTH}
+              placeholder={THAI_NATIONAL_ID_PLACEHOLDER}
+              value={value ?? ''}
+              onChange={(e) => onChange(formatThaiNationalId(e.target.value))}
+            />
+            {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          </div>
+        )
+      }
       return (
         <div>
           <TextField
@@ -139,5 +163,6 @@ export default function DynamicField({ field, value, onChange, error }) {
           {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
         </div>
       )
+    }
   }
 }

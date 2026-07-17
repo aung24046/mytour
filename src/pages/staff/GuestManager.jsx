@@ -7,7 +7,8 @@ import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
 import StatusBadge from '../../components/common/StatusBadge'
-import { groupFieldsByCategory } from '../../lib/formFieldGroups'
+import Icon from '../../components/common/Icon'
+import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import { genderTextClass } from '../../lib/genderColor'
 
 const CORE_FIELD_KEYS = [
@@ -21,6 +22,20 @@ const CORE_FIELD_KEYS = [
   'emergency_contact_phone',
   'note',
 ]
+
+// หัวการ์ดหมวดสุขภาพจะเปลี่ยนเป็นสีเตือนเมื่อมีข้อมูล (แพ้อาหาร/โรค) — staff เห็นชัดตอนดูแลหน้างาน
+const HEALTH_WARNING_STYLE = { icon: 'alert', tint: '#FEF3C7', text: '#B45309', iconColor: '#B45309' }
+
+function guestInitials(g) {
+  const s = (g.nickname || g.name || '').trim()
+  return s ? s.slice(0, 2) : '–'
+}
+
+function avatarClasses(gender) {
+  if (gender === 'ชาย') return 'bg-blue-100 text-blue-700'
+  if (gender === 'หญิง') return 'bg-pink-100 text-pink-700'
+  return 'bg-gray-100 text-gray-600'
+}
 
 export default function GuestManager() {
   const { t } = useTranslation()
@@ -256,9 +271,14 @@ export default function GuestManager() {
                         if (editingId === guest.id) cancelEditing()
                         setExpandedId(isExpanded ? null : guest.id)
                       }}
-                      className="flex w-full items-center justify-between text-left"
+                      className="flex w-full items-center gap-3 text-left"
                     >
-                      <div className="min-w-0">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${avatarClasses(guest.gender)}`}
+                      >
+                        {guestInitials(guest)}
+                      </span>
+                      <div className="min-w-0 flex-1">
                         <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                           {guest.nickname || guest.name}
                         </p>
@@ -277,72 +297,95 @@ export default function GuestManager() {
                     </button>
 
                     {isExpanded && editingId !== guest.id && (
-                      <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
-                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => (
-                          <div key={category} className="flex flex-col gap-2">
-                            <p className="text-[11px] font-bold uppercase tracking-wide text-sky-600">
-                              {t(`guest.register.category.${category}`)}
-                            </p>
-                            {groupFields.map((field) => {
-                              const value = getFieldValue(guest, field)
-                              return (
-                                <div key={field.id}>
-                                  <p className="text-xs font-medium text-gray-400">{field.label}</p>
-                                  <p className="text-sm text-gray-900">
-                                    {value || (
-                                      <span className="text-gray-300">
-                                        {t('staff.guestManager.noValue')}
+                      <div className="mt-3 flex flex-col gap-2.5 border-t border-gray-100 pt-3">
+                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
+                          const hasData = groupFields.some((f) => String(getFieldValue(guest, f) || '').trim())
+                          const warn = category === 'health' && hasData
+                          const st = warn ? HEALTH_WARNING_STYLE : CATEGORY_STYLE[category] || CATEGORY_STYLE.other
+                          return (
+                            <div key={category} className="overflow-hidden rounded-xl border border-gray-100">
+                              <div className="flex items-center gap-2 px-3 py-2" style={{ background: st.tint }}>
+                                <Icon name={st.icon} size={15} color={st.iconColor} />
+                                <span className="text-xs font-bold" style={{ color: st.text }}>
+                                  {t(`guest.register.category.${category}`)}
+                                  {warn && ` · ${t('staff.guestManager.healthWarning')}`}
+                                </span>
+                              </div>
+                              <div className="px-3 py-1.5">
+                                {groupFields.map((field) => {
+                                  const value = getFieldValue(guest, field)
+                                  const isWarnField = warn && String(value || '').trim()
+                                  return (
+                                    <div key={field.id} className="flex justify-between gap-3 py-1 text-sm">
+                                      <span className="shrink-0 text-gray-400">{field.label}</span>
+                                      <span
+                                        className={`min-w-0 flex-1 text-right ${
+                                          isWarnField ? 'font-semibold text-amber-700' : 'text-gray-900'
+                                        }`}
+                                      >
+                                        {value || (
+                                          <span className="text-gray-300">{t('staff.guestManager.noValue')}</span>
+                                        )}
                                       </span>
-                                    )}
-                                  </p>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        ))}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
 
-                        {guest.phone && (
-                          <a
-                            href={`tel:${guest.phone}`}
-                            className="mt-1 w-full rounded-xl bg-sky-600 px-3 py-2 text-center text-sm font-semibold text-white"
+                        <div className="mt-1 flex gap-2">
+                          {guest.phone && (
+                            <a
+                              href={`tel:${guest.phone}`}
+                              className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white"
+                            >
+                              <Icon name="phone" size={15} color="#fff" /> {t('staff.guestManager.call')}
+                            </a>
+                          )}
+                          <button
+                            onClick={() => startEditing(guest)}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700"
                           >
-                            {t('staff.guestManager.callGuest', { phone: guest.phone })}
-                          </a>
-                        )}
-
-                        <button
-                          onClick={() => startEditing(guest)}
-                          className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700"
-                        >
-                          {t('staff.guestManager.editGuest')}
-                        </button>
-
-                        <button
-                          onClick={() => deleteGuest(guest)}
-                          className="w-full rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
-                        >
-                          {t('staff.guestManager.deleteGuest')}
-                        </button>
+                            <Icon name="edit" size={15} /> {t('staff.itineraryBuilder.edit')}
+                          </button>
+                          <button
+                            onClick={() => deleteGuest(guest)}
+                            className="rounded-xl bg-red-50 px-3 py-2 text-red-600"
+                            aria-label={t('staff.guestManager.deleteGuest')}
+                          >
+                            <Icon name="trash" size={16} color="#dc2626" />
+                          </button>
+                        </div>
                       </div>
                     )}
 
                     {isExpanded && editingId === guest.id && (
-                      <div className="mt-3 flex flex-col gap-4 border-t border-gray-100 pt-3">
-                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => (
-                          <div key={category} className="flex flex-col gap-3">
-                            <p className="text-[11px] font-bold uppercase tracking-wide text-sky-600">
-                              {t(`guest.register.category.${category}`)}
-                            </p>
-                            {groupFields.map((field) => (
-                              <DynamicField
-                                key={field.id}
-                                field={field}
-                                value={editValues[field.id]}
-                                onChange={(v) => setEditFieldValue(field.id, v)}
-                              />
-                            ))}
-                          </div>
-                        ))}
+                      <div className="mt-3 flex flex-col gap-2.5 border-t border-gray-100 pt-3">
+                        {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
+                          const st = CATEGORY_STYLE[category] || CATEGORY_STYLE.other
+                          return (
+                            <div key={category} className="overflow-hidden rounded-xl border border-gray-100">
+                              <div className="flex items-center gap-2 px-3 py-2" style={{ background: st.tint }}>
+                                <Icon name={st.icon} size={15} color={st.iconColor} />
+                                <span className="text-xs font-bold" style={{ color: st.text }}>
+                                  {t(`guest.register.category.${category}`)}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-3 px-3 py-3">
+                                {groupFields.map((field) => (
+                                  <DynamicField
+                                    key={field.id}
+                                    field={field}
+                                    value={editValues[field.id]}
+                                    onChange={(v) => setEditFieldValue(field.id, v)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
 
                         {saveError && <p className="text-sm text-red-500">{saveError}</p>}
 

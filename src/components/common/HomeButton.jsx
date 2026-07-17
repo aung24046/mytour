@@ -16,6 +16,7 @@ const HIDE_ON = [
   '/share-location',
   '/trip-guide',
   '/feedback',
+  '/edit-profile',
   '/sos',
   '/staff',
   '/staff/login',

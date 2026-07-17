@@ -12,6 +12,7 @@ import BagLookup from './pages/guest/BagLookup.jsx'
 import SOS from './pages/guest/SOS.jsx'
 import TripGuide from './pages/guest/TripGuide.jsx'
 import Feedback from './pages/guest/Feedback.jsx'
+import EditProfile from './pages/guest/EditProfile.jsx'
 
 // Staff pages
 import Login from './pages/staff/Login.jsx'
@@ -53,6 +54,7 @@ function App() {
       <Route path="/sos" element={<SOS />} />
       <Route path="/trip-guide" element={<TripGuide />} />
       <Route path="/feedback" element={<Feedback />} />
+      <Route path="/edit-profile" element={<EditProfile />} />
 
       {/* Staff routes — เข้าได้เฉพาะหลัง login ด้วย PIN (ยกเว้นหน้า login เอง) */}
       <Route path="/staff/login" element={<Login />} />

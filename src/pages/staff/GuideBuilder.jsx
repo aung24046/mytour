@@ -3,26 +3,69 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import {
+  catLabel,
+  catColor,
+  tagColor,
+  CATEGORY_COLOR_KEYS,
+  CATEGORY_ICON_CHOICES,
+  CATEGORY_LAYOUTS,
+} from '../../lib/guideCategoryStyle'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
+import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
 import SelectField from '../../components/common/SelectField'
 import BottomSheet from '../../components/common/BottomSheet'
 
-const ARTICLE_CATEGORIES = ['place', 'knowledge', 'culture', 'tips']
-
 const EMPTY_ARTICLE = {
-  category: 'knowledge',
+  category_id: '',
   title: '',
   body: '',
   source_url: '',
   itinerary_item_id: '',
   is_published: true,
+  is_featured: false,
 }
 
-const EMPTY_PHRASE = { category: '', phrase: '', translation: '', pronunciation: '', language_pair: '' }
-const LANGUAGE_PAIR_PRESETS = ['ไทย-จีน', 'ไทย-อังกฤษ', 'อังกฤษ-ไทย', 'จีน-ไทย']
+const EMPTY_CATEGORY = {
+  label_th: '',
+  label_en: '',
+  label_zh: '',
+  icon: 'book',
+  color: 'blue',
+  layout: 'list',
+}
+
+const EMPTY_PHRASE = {
+  phrase: '',
+  itinerary_item_id: '',
+  place_label: '',
+  category_l1: '',
+  category_l2: '',
+  translation_zh: '',
+  pronunciation_zh: '',
+  translation_en: '',
+}
+
+// ตัวเลือกแนะนำสำหรับ datalist (พิมพ์เพิ่มเองได้อิสระ)
+const PHRASE_CAT1_PRESETS = [
+  'สถานที่', 'อาหาร/ของกิน', 'วัฒนธรรม/ประเพณี', 'บุคคล/ประวัติศาสตร์', 'การเดินทาง',
+  'ที่พัก', 'ช้อปปิ้ง/ของฝาก', 'สื่อสารทั่วไป', 'สุขภาพ/ฉุกเฉิน',
+]
+const PHRASE_CAT2_PRESETS = [
+  'วัด/ศาสนสถาน', 'พระราชวัง/วัง', 'โบราณสถาน/ปราสาท', 'พิพิธภัณฑ์', 'อนุสาวรีย์/ศาล',
+  'ตลาด/ย่านเก่า/ชุมชน', 'ทะเล/ชายหาด/เกาะ', 'ภูเขา/น้ำตก/ถ้ำ', 'สวน/อุทยาน/ธรรมชาติ', 'จุดชมวิว/แลนด์มาร์ก',
+  'อาหารคาว', 'ของหวาน/ขนม', 'เครื่องดื่ม/กาแฟ', 'ผลไม้', 'สตรีทฟู้ด/ของกินเล่น', 'วัตถุดิบ/เครื่องปรุง', 'รสชาติ/ความเผ็ด',
+  'ศาสนา/ความเชื่อ', 'พิธีกรรม/การไหว้', 'เทศกาล/งานประเพณี', 'ศิลปะ/หัตถกรรม', 'การแต่งกาย', 'มารยาท/ข้อควรปฏิบัติ',
+  'พระมหากษัตริย์/ราชวงศ์', 'บุคคลสำคัญ/วีรบุรุษ', 'พระสงฆ์/นักบวช', 'เทพ/ตัวละครในตำนาน', 'ศิลปิน/ช่างฝีมือ', 'เหตุการณ์/ยุคสมัย',
+  'ยานพาหนะ', 'ทิศทาง/บอกทาง', 'ป้าย/สัญลักษณ์', 'ตั๋ว/ค่าโดยสาร', 'เวลา/ตารางเดินทาง',
+  'ประเภทห้อง', 'สิ่งอำนวยความสะดวก', 'เช็คอิน/เช็คเอาท์', 'ปัญหา/การร้องขอ',
+  'ของที่ระลึก', 'การต่อราคา/ราคา', 'หน่วย/จำนวน', 'การชำระเงิน',
+  'ทักทาย/กล่าวลา', 'ขอบคุณ/ขอโทษ', 'ตัวเลข/การนับ', 'เวลา/วันที่', 'คำถามพื้นฐาน', 'อารมณ์/ความรู้สึก',
+  'อาการเจ็บป่วย', 'ยา/เภสัช', 'โรงพยาบาล/หมอ', 'เหตุฉุกเฉิน/ขอความช่วยเหลือ', 'ความปลอดภัย',
+]
 
 // แยกแต่ละแถวของข้อความที่วางมา — รองรับ TSV (คัดลอกจาก Excel/Sheets) และ CSV (มี "" ครอบข้อความที่มีคอมมาได้)
 function splitLine(line) {
@@ -45,8 +88,11 @@ function splitLine(line) {
   return result
 }
 
-const HEADER_HINTS = ['category', 'หมวด', 'หมวดหมู่', 'phrase', 'คำ', 'คำ/วลี']
+const HEADER_HINTS = ['place', 'สถานที่', 'หมวด', 'หมวดหมู่', 'phrase', 'คำ', 'คำ/วลี']
 
+// รูปแบบต่อแถว (หลายภาษาในไฟล์เดียว):
+// สถานที่, คำ/วลี(ไทย), คำแปลจีน, พินอิน, คำแปลอังกฤษ, หมวด L1, หมวด L2
+// บังคับ: คำไทย + คำแปลอย่างน้อย 1 ภาษา (จีนหรืออังกฤษ) — ที่เหลือเว้นว่างได้
 function parseImportText(text) {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0)
   const rows = []
@@ -59,16 +105,19 @@ function parseImportText(text) {
 
   for (let i = startIndex; i < lines.length; i++) {
     const cells = splitLine(lines[i])
-    const [category, phrase, translation, pronunciation] = cells
-    if (!category?.trim() || !phrase?.trim() || !translation?.trim()) {
+    const [place, phrase, tZh, pZh, tEn, l1, l2] = cells
+    if (!phrase?.trim() || (!tZh?.trim() && !tEn?.trim())) {
       errorLines.push(i + 1)
       continue
     }
     rows.push({
-      category: category.trim(),
+      place_label: place?.trim() || null,
       phrase: phrase.trim(),
-      translation: translation.trim(),
-      pronunciation: pronunciation?.trim() || null,
+      translation_zh: tZh?.trim() || null,
+      pronunciation_zh: pZh?.trim() || null,
+      translation_en: tEn?.trim() || null,
+      category_l1: l1?.trim() || null,
+      category_l2: l2?.trim() || null,
     })
   }
   return { rows, errorLines }
@@ -114,8 +163,18 @@ function itineraryItemLabel(item) {
 }
 
 export default function GuideBuilder() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
   const [tab, setTab] = useState('articles') // 'articles' | 'phrasebook'
+
+  // ----- Categories (dynamic) -----
+  const [categories, setCategories] = useState([])
+  const [manageCats, setManageCats] = useState(false)
+  const [catSheetOpen, setCatSheetOpen] = useState(false)
+  const [editingCatId, setEditingCatId] = useState(null)
+  const [catDraft, setCatDraft] = useState(EMPTY_CATEGORY)
+  const [savingCat, setSavingCat] = useState(false)
+  const [catError, setCatError] = useState(null)
 
   // ----- Articles -----
   const [articles, setArticles] = useState([])
@@ -131,12 +190,21 @@ export default function GuideBuilder() {
   const fileInputRef = useRef(null)
   const articleBodyRef = useRef(null)
 
+  async function loadCategories() {
+    const { data, error } = await supabase
+      .from('guide_categories')
+      .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
+      .eq('tour_id', ACTIVE_TOUR_ID)
+      .order('sort_order', { ascending: true })
+    if (!error) setCategories(data ?? [])
+  }
+
   async function loadArticles() {
     setLoadingArticles(true)
-    const [articlesRes, itemsRes] = await Promise.all([
+    const [articlesRes, itemsRes, catsRes] = await Promise.all([
       supabase
         .from('guide_articles')
-        .select('id, category, title, body, source_url, image_url, itinerary_item_id, sort_order, is_published')
+        .select('id, category_id, title, body, source_url, image_url, itinerary_item_id, sort_order, is_published, is_featured')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('sort_order', { ascending: true }),
       supabase
@@ -145,10 +213,16 @@ export default function GuideBuilder() {
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true }),
+      supabase
+        .from('guide_categories')
+        .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .order('sort_order', { ascending: true }),
     ])
 
     if (!articlesRes.error) setArticles(articlesRes.data ?? [])
     if (!itemsRes.error) setItineraryItems(itemsRes.data ?? [])
+    if (!catsRes.error) setCategories(catsRes.data ?? [])
     setLoadingArticles(false)
   }
 
@@ -162,6 +236,11 @@ export default function GuideBuilder() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'guide_articles', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
         () => loadArticles()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'guide_categories', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        () => loadCategories()
       )
       .subscribe()
 
@@ -178,15 +257,19 @@ export default function GuideBuilder() {
   const articlesByCategory = useMemo(() => {
     const groups = {}
     for (const a of articles) {
-      if (!groups[a.category]) groups[a.category] = []
-      groups[a.category].push(a)
+      const key = a.category_id ?? '__uncat__'
+      if (!groups[key]) groups[key] = []
+      groups[key].push(a)
     }
     return groups
   }, [articles])
 
-  function openNewArticle(category) {
+  function openNewArticle(categoryId) {
     setEditingArticleId(null)
-    setArticleDraft({ ...EMPTY_ARTICLE, category: category ?? 'knowledge' })
+    setArticleDraft({
+      ...EMPTY_ARTICLE,
+      category_id: categoryId ?? categories[0]?.id ?? '',
+    })
     setArticlePhotoFile(null)
     setArticlePhotoPreview(null)
     setArticleError(null)
@@ -196,12 +279,13 @@ export default function GuideBuilder() {
   function openEditArticle(article) {
     setEditingArticleId(article.id)
     setArticleDraft({
-      category: article.category,
+      category_id: article.category_id ?? '',
       title: article.title,
       body: article.body ?? '',
       source_url: article.source_url ?? '',
       itinerary_item_id: article.itinerary_item_id ?? '',
       is_published: article.is_published,
+      is_featured: article.is_featured ?? false,
     })
     setArticlePhotoFile(null)
     setArticlePhotoPreview(null)
@@ -283,20 +367,21 @@ export default function GuideBuilder() {
 
       const payload = {
         tour_id: ACTIVE_TOUR_ID,
-        category: articleDraft.category,
+        category_id: articleDraft.category_id || null,
         title: articleDraft.title.trim(),
         body: articleDraft.body.trim() || null,
         source_url: articleDraft.source_url.trim() || null,
         image_url: imageUrl,
         itinerary_item_id: articleDraft.itinerary_item_id || null,
         is_published: articleDraft.is_published,
+        is_featured: articleDraft.is_featured,
       }
 
       let saveResult
       if (editingArticleId) {
         saveResult = await supabase.from('guide_articles').update(payload).eq('id', editingArticleId)
       } else {
-        const catItems = articlesByCategory[payload.category] ?? []
+        const catItems = articlesByCategory[payload.category_id ?? '__uncat__'] ?? []
         const maxSort = catItems.reduce((max, a) => Math.max(max, a.sort_order ?? 0), 0)
         saveResult = await supabase.from('guide_articles').insert({ ...payload, sort_order: maxSort + 1 })
       }
@@ -335,23 +420,186 @@ export default function GuideBuilder() {
     if (!error) setArticles((prev) => prev.filter((a) => a.id !== article.id))
   }
 
+  // ----- Category management -----
+  function openNewCategory() {
+    setEditingCatId(null)
+    setCatDraft(EMPTY_CATEGORY)
+    setCatError(null)
+    setCatSheetOpen(true)
+  }
+
+  function openEditCategory(cat) {
+    setEditingCatId(cat.id)
+    setCatDraft({
+      label_th: cat.label_th ?? '',
+      label_en: cat.label_en ?? '',
+      label_zh: cat.label_zh ?? '',
+      icon: cat.icon ?? 'book',
+      color: cat.color ?? 'blue',
+      layout: cat.layout ?? 'list',
+    })
+    setCatError(null)
+    setCatSheetOpen(true)
+  }
+
+  async function saveCategory() {
+    if (!catDraft.label_th.trim()) return
+    setSavingCat(true)
+    setCatError(null)
+
+    const payload = {
+      tour_id: ACTIVE_TOUR_ID,
+      label_th: catDraft.label_th.trim(),
+      label_en: catDraft.label_en.trim() || null,
+      label_zh: catDraft.label_zh.trim() || null,
+      icon: catDraft.icon,
+      color: catDraft.color,
+      layout: catDraft.layout,
+    }
+
+    let result
+    if (editingCatId) {
+      result = await supabase.from('guide_categories').update(payload).eq('id', editingCatId)
+    } else {
+      const maxSort = categories.reduce((max, c) => Math.max(max, c.sort_order ?? 0), 0)
+      result = await supabase.from('guide_categories').insert({ ...payload, sort_order: maxSort + 1 })
+    }
+
+    if (result.error) {
+      console.error('[GuideBuilder] save category failed', result.error)
+      setCatError(result.error.message ?? t('common.error'))
+    } else {
+      setCatSheetOpen(false)
+      loadCategories()
+    }
+    setSavingCat(false)
+  }
+
+  async function toggleCategoryActive(cat) {
+    setCategories((prev) => prev.map((c) => (c.id === cat.id ? { ...c, is_active: !c.is_active } : c)))
+    const { error } = await supabase
+      .from('guide_categories')
+      .update({ is_active: !cat.is_active })
+      .eq('id', cat.id)
+    if (error) loadCategories()
+  }
+
+  async function moveCategory(cat, dir) {
+    const idx = categories.findIndex((c) => c.id === cat.id)
+    const swapWith = categories[idx + dir]
+    if (!swapWith) return
+    // สลับ sort_order กัน
+    setCategories((prev) => {
+      const next = [...prev]
+      const a = { ...next[idx], sort_order: swapWith.sort_order }
+      const b = { ...next[idx + dir], sort_order: cat.sort_order }
+      next[idx] = a
+      next[idx + dir] = b
+      return next.sort((x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0))
+    })
+    await Promise.all([
+      supabase.from('guide_categories').update({ sort_order: swapWith.sort_order }).eq('id', cat.id),
+      supabase.from('guide_categories').update({ sort_order: cat.sort_order }).eq('id', swapWith.id),
+    ])
+    loadCategories()
+  }
+
+  async function deleteCategory(cat) {
+    const count = (articlesByCategory[cat.id] ?? []).length
+    if (count > 0) {
+      window.alert(t('staff.guideBuilder.catHasArticles', { count }))
+      return
+    }
+    const confirmed = window.confirm(
+      t('staff.guideBuilder.confirmDeleteCategory', { title: catLabel(cat, lang) })
+    )
+    if (!confirmed) return
+    const { error } = await supabase.from('guide_categories').delete().eq('id', cat.id)
+    if (!error) setCategories((prev) => prev.filter((c) => c.id !== cat.id))
+  }
+
   // ----- Phrasebook -----
   const [phrases, setPhrases] = useState([])
   const [loadingPhrases, setLoadingPhrases] = useState(true)
   const [phraseSheetOpen, setPhraseSheetOpen] = useState(false)
+  const [editingPhraseId, setEditingPhraseId] = useState(null)
   const [phraseDraft, setPhraseDraft] = useState(EMPTY_PHRASE)
   const [savingPhrase, setSavingPhrase] = useState(false)
   const [phraseError, setPhraseError] = useState(null)
-  const [pairFilter, setPairFilter] = useState('all')
-  const [collapsedPhraseCategories, setCollapsedPhraseCategories] = useState({})
+  const [expandedPhraseGroups, setExpandedPhraseGroups] = useState(() => new Set())
+  const [phraseSelectMode, setPhraseSelectMode] = useState(false)
+  const [selectedPhraseIds, setSelectedPhraseIds] = useState(() => new Set())
+  const [assignSheetOpen, setAssignSheetOpen] = useState(false)
+  const [assignItineraryId, setAssignItineraryId] = useState('')
+  const [assignPlaceLabel, setAssignPlaceLabel] = useState('')
+  const [assigning, setAssigning] = useState(false)
 
-  function togglePhraseCategory(category) {
-    setCollapsedPhraseCategories((prev) => ({ ...prev, [category]: !prev[category] }))
+  function togglePhraseGroup(label) {
+    setExpandedPhraseGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
+
+  function togglePhraseSelect(id) {
+    setSelectedPhraseIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function exitSelectMode() {
+    setPhraseSelectMode(false)
+    setSelectedPhraseIds(new Set())
+  }
+
+  function openAssignPlace() {
+    if (selectedPhraseIds.size === 0) return
+    setAssignItineraryId('')
+    setAssignPlaceLabel('')
+    setAssignSheetOpen(true)
+  }
+
+  async function applyAssignPlace() {
+    const ids = [...selectedPhraseIds]
+    if (ids.length === 0) return
+    setAssigning(true)
+    // ผูกกับกำหนดการ -> ล้าง place_label; ไม่ผูก -> ใช้ place_label ที่ระบุ
+    const patch = assignItineraryId
+      ? { itinerary_item_id: assignItineraryId, place_label: null }
+      : { itinerary_item_id: null, place_label: assignPlaceLabel.trim() || null }
+    const { error } = await supabase.from('phrasebook_entries').update(patch).in('id', ids)
+    if (!error) {
+      setAssignSheetOpen(false)
+      exitSelectMode()
+      loadPhrases()
+    } else {
+      console.error('[GuideBuilder] bulk assign place failed', error)
+    }
+    setAssigning(false)
+  }
+
+  async function bulkDeletePhrases() {
+    const ids = [...selectedPhraseIds]
+    if (ids.length === 0) return
+    const confirmed = window.confirm(t('staff.guideBuilder.confirmBulkDeletePhrases', { count: ids.length }))
+    if (!confirmed) return
+    const { error } = await supabase.from('phrasebook_entries').delete().in('id', ids)
+    if (!error) {
+      setPhrases((prev) => prev.filter((p) => !selectedPhraseIds.has(p.id)))
+      exitSelectMode()
+    } else {
+      console.error('[GuideBuilder] bulk delete phrases failed', error)
+      loadPhrases()
+    }
   }
 
   // ----- Import คำศัพท์เป็นชุด (CSV/TSV) -----
   const [importSheetOpen, setImportSheetOpen] = useState(false)
-  const [importLanguagePair, setImportLanguagePair] = useState('')
   const [importText, setImportText] = useState('')
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState(null)
@@ -359,13 +607,22 @@ export default function GuideBuilder() {
 
   async function loadPhrases() {
     setLoadingPhrases(true)
-    const { data, error } = await supabase
-      .from('phrasebook_entries')
-      .select('id, category, phrase, translation, pronunciation, language_pair, sort_order')
-      .eq('tour_id', ACTIVE_TOUR_ID)
-      .order('sort_order', { ascending: true })
+    const [phrasesRes, itemsRes] = await Promise.all([
+      supabase
+        .from('phrasebook_entries')
+        .select('id, category_l1, category_l2, phrase, place_label, itinerary_item_id, translation_zh, pronunciation_zh, translation_en, sort_order')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('itinerary_items')
+        .select('id, day_number, scheduled_time, title, location_name')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .order('day_number', { ascending: true })
+        .order('sort_order', { ascending: true }),
+    ])
 
-    if (!error) setPhrases(data ?? [])
+    if (!phrasesRes.error) setPhrases(phrasesRes.data ?? [])
+    if (!itemsRes.error) setItineraryItems(itemsRes.data ?? [])
     setLoadingPhrases(false)
   }
 
@@ -386,72 +643,133 @@ export default function GuideBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
-  const languagePairs = useMemo(() => {
-    const seen = new Set()
-    const list = []
-    for (const p of phrases) {
-      const key = p.language_pair || ''
-      if (key && !seen.has(key)) {
-        seen.add(key)
-        list.push(key)
-      }
+  const [phraseSearch, setPhraseSearch] = useState('')
+  const [phraseFilter, setPhraseFilter] = useState('all') // 'all' | 'missing_en' | 'unlinked'
+
+  // ป้ายชื่อสถานที่ของคำ (จากกำหนดการ ถ้าผูก ไม่งั้นใช้ place_label)
+  function phrasePlaceLabel(p) {
+    if (p.itinerary_item_id && itineraryItemById[p.itinerary_item_id]) {
+      const it = itineraryItemById[p.itinerary_item_id]
+      return it.location_name || it.title || t('staff.guideBuilder.generalGroup')
     }
-    return list
+    return p.place_label || t('staff.guideBuilder.generalGroup')
+  }
+
+  // รายชื่อสถานที่ (place_label) ที่เคยใช้ — สำหรับ datalist
+  const knownPlaces = useMemo(() => {
+    const seen = new Set()
+    for (const p of phrases) if (p.place_label) seen.add(p.place_label)
+    return [...seen]
   }, [phrases])
 
-  const filteredPhrases = useMemo(() => {
-    if (pairFilter === 'all') return phrases
-    return phrases.filter((p) => (p.language_pair || '') === pairFilter)
-  }, [phrases, pairFilter])
+  const phraseCat1Options = useMemo(() => {
+    const seen = new Set(PHRASE_CAT1_PRESETS)
+    for (const p of phrases) if (p.category_l1) seen.add(p.category_l1)
+    return [...seen]
+  }, [phrases])
 
-  const phraseCategories = useMemo(() => {
-    const seen = new Set()
-    const list = []
-    for (const p of filteredPhrases) {
-      if (!seen.has(p.category)) {
-        seen.add(p.category)
-        list.push(p.category)
+  const phraseCat2Options = useMemo(() => {
+    const seen = new Set(PHRASE_CAT2_PRESETS)
+    for (const p of phrases) if (p.category_l2) seen.add(p.category_l2)
+    return [...seen]
+  }, [phrases])
+
+  // จัดกลุ่มตามสถานที่ + กรอง/ค้นหา + เก็บสถานะผูกกำหนดการ (เรียงกลุ่มในกำหนดการขึ้นบน)
+  const phraseGroups = useMemo(() => {
+    const q = phraseSearch.trim().toLowerCase()
+    const groups = new Map() // label -> { items, linked, day, time }
+    for (const p of phrases) {
+      if (phraseFilter === 'missing_en' && p.translation_en) continue
+      if (phraseFilter === 'unlinked' && p.itinerary_item_id) continue
+      if (q) {
+        const hay = [
+          p.phrase,
+          p.translation_zh,
+          p.pronunciation_zh,
+          p.translation_en,
+          p.place_label,
+          p.category_l1,
+          p.category_l2,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        if (!hay.includes(q)) continue
+      }
+      const label = phrasePlaceLabel(p)
+      const it = p.itinerary_item_id ? itineraryItemById[p.itinerary_item_id] : null
+      if (!groups.has(label)) {
+        groups.set(label, { items: [], linked: false, day: null, time: null })
+      }
+      const g = groups.get(label)
+      g.items.push(p)
+      if (it && !g.linked) {
+        g.linked = true
+        g.day = it.day_number ?? null
+        g.time = it.scheduled_time ?? null
       }
     }
-    return list
-  }, [filteredPhrases])
+    return [...groups.entries()]
+      .map(([label, g], i) => ({ label, ...g, _i: i }))
+      .sort((a, b) => {
+        if (a.linked !== b.linked) return a.linked ? -1 : 1
+        if (a.linked && b.linked) {
+          if ((a.day ?? 0) !== (b.day ?? 0)) return (a.day ?? 0) - (b.day ?? 0)
+          if ((a.time ?? '') !== (b.time ?? '')) return (a.time ?? '').localeCompare(b.time ?? '')
+        }
+        return a._i - b._i
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phrases, itineraryItemById, phraseSearch, phraseFilter])
 
-  const phrasesByCategory = useMemo(() => {
-    const groups = {}
-    for (const p of filteredPhrases) {
-      if (!groups[p.category]) groups[p.category] = []
-      groups[p.category].push(p)
-    }
-    return groups
-  }, [filteredPhrases])
+  function openNewPhrase(seed) {
+    setEditingPhraseId(null)
+    setPhraseDraft({ ...EMPTY_PHRASE, ...(seed || {}) })
+    setPhraseError(null)
+    setPhraseSheetOpen(true)
+  }
 
-  function openNewPhrase(category) {
+  function openEditPhrase(p) {
+    setEditingPhraseId(p.id)
     setPhraseDraft({
-      ...EMPTY_PHRASE,
-      category: category ?? '',
-      language_pair: pairFilter !== 'all' ? pairFilter : '',
+      phrase: p.phrase ?? '',
+      itinerary_item_id: p.itinerary_item_id ?? '',
+      place_label: p.place_label ?? '',
+      category_l1: p.category_l1 ?? '',
+      category_l2: p.category_l2 ?? '',
+      translation_zh: p.translation_zh ?? '',
+      pronunciation_zh: p.pronunciation_zh ?? '',
+      translation_en: p.translation_en ?? '',
     })
     setPhraseError(null)
     setPhraseSheetOpen(true)
   }
 
   async function savePhrase() {
-    if (!phraseDraft.category.trim() || !phraseDraft.phrase.trim() || !phraseDraft.translation.trim()) return
+    const hasTrans = phraseDraft.translation_zh.trim() || phraseDraft.translation_en.trim()
+    if (!phraseDraft.phrase.trim() || !hasTrans) return
     setSavingPhrase(true)
     setPhraseError(null)
 
-    const catItems = phrasesByCategory[phraseDraft.category.trim()] ?? []
-    const maxSort = catItems.reduce((max, p) => Math.max(max, p.sort_order ?? 0), 0)
-
-    const { error } = await supabase.from('phrasebook_entries').insert({
+    const payload = {
       tour_id: ACTIVE_TOUR_ID,
-      category: phraseDraft.category.trim(),
       phrase: phraseDraft.phrase.trim(),
-      translation: phraseDraft.translation.trim(),
-      pronunciation: phraseDraft.pronunciation.trim() || null,
-      language_pair: phraseDraft.language_pair.trim() || null,
-      sort_order: maxSort + 1,
-    })
+      itinerary_item_id: phraseDraft.itinerary_item_id || null,
+      place_label: phraseDraft.place_label.trim() || null,
+      category_l1: phraseDraft.category_l1.trim() || null,
+      category_l2: phraseDraft.category_l2.trim() || null,
+      translation_zh: phraseDraft.translation_zh.trim() || null,
+      pronunciation_zh: phraseDraft.pronunciation_zh.trim() || null,
+      translation_en: phraseDraft.translation_en.trim() || null,
+    }
+
+    let error
+    if (editingPhraseId) {
+      ;({ error } = await supabase.from('phrasebook_entries').update(payload).eq('id', editingPhraseId))
+    } else {
+      const maxSort = phrases.reduce((max, p) => Math.max(max, p.sort_order ?? 0), 0)
+      ;({ error } = await supabase.from('phrasebook_entries').insert({ ...payload, sort_order: maxSort + 1 }))
+    }
 
     if (error) {
       console.error('[GuideBuilder] save phrase failed', error)
@@ -472,7 +790,6 @@ export default function GuideBuilder() {
   }
 
   function openImportSheet() {
-    setImportLanguagePair(pairFilter !== 'all' ? pairFilter : '')
     setImportText('')
     setImportError(null)
     setImportResult(null)
@@ -491,22 +808,20 @@ export default function GuideBuilder() {
     setImportError(null)
     setImportResult(null)
 
-    // sort_order เดินต่อจากค่าสูงสุดที่มีอยู่แล้วต่อหมวด — กันชนกับของเดิม
-    const sortCounters = {}
-    for (const p of phrases) {
-      sortCounters[p.category] = Math.max(sortCounters[p.category] ?? 0, p.sort_order ?? 0)
-    }
+    let sortCounter = phrases.reduce((max, p) => Math.max(max, p.sort_order ?? 0), 0)
 
     const payload = rows.map((r) => {
-      sortCounters[r.category] = (sortCounters[r.category] ?? 0) + 1
+      sortCounter += 1
       return {
         tour_id: ACTIVE_TOUR_ID,
-        category: r.category,
         phrase: r.phrase,
-        translation: r.translation,
-        pronunciation: r.pronunciation,
-        language_pair: importLanguagePair.trim() || null,
-        sort_order: sortCounters[r.category],
+        place_label: r.place_label,
+        category_l1: r.category_l1,
+        category_l2: r.category_l2,
+        translation_zh: r.translation_zh,
+        pronunciation_zh: r.pronunciation_zh,
+        translation_en: r.translation_en,
+        sort_order: sortCounter,
       }
     })
 
@@ -552,146 +867,337 @@ export default function GuideBuilder() {
           <>
             {loadingArticles && <p className="text-gray-500">{t('common.loading')}</p>}
 
-            {!loadingArticles &&
-              ARTICLE_CATEGORIES.map((category) => (
-                <div key={category} className="mb-4">
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase text-gray-400">
-                      {t(`staff.guideBuilder.category.${category}`)}
-                    </p>
+            {/* จัดการหมวดหมู่ */}
+            {!loadingArticles && (
+              <div className="mb-4 rounded-xl border border-gray-200 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setManageCats((v) => !v)}
+                  aria-expanded={manageCats}
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-semibold text-gray-700"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Icon name="settings" size={16} />
+                    {t('staff.guideBuilder.manageCategories')}
+                    <span className="font-normal text-gray-400">({categories.length})</span>
+                  </span>
+                  <svg
+                    className={`h-4 w-4 transition-transform ${manageCats ? '' : '-rotate-90'}`}
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {manageCats && (
+                  <div className="border-t border-gray-100 p-3">
+                    <div className="flex flex-col gap-2">
+                      {categories.map((cat, idx) => {
+                        const col = catColor(cat.color)
+                        const count = (articlesByCategory[cat.id] ?? []).length
+                        return (
+                          <div
+                            key={cat.id}
+                            className="flex items-center gap-2 rounded-lg border border-gray-100 px-2.5 py-2"
+                            style={{ borderLeft: `3px solid ${col.border}`, opacity: cat.is_active ? 1 : 0.55 }}
+                          >
+                            <span
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                              style={{ background: col.tint, color: col.text }}
+                            >
+                              <Icon name={cat.icon} size={18} color={col.text} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-gray-800">{catLabel(cat, lang)}</p>
+                              <p className="text-xs text-gray-400">
+                                {t(`staff.guideBuilder.layout.${cat.layout}`)} · {count} {t('staff.guideBuilder.articlesUnit')}
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-0.5">
+                              <button
+                                onClick={() => moveCategory(cat, -1)}
+                                disabled={idx === 0}
+                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                aria-label={t('staff.guideBuilder.moveUp')}
+                              >▲</button>
+                              <button
+                                onClick={() => moveCategory(cat, 1)}
+                                disabled={idx === categories.length - 1}
+                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                aria-label={t('staff.guideBuilder.moveDown')}
+                              >▼</button>
+                              <button
+                                onClick={() => toggleCategoryActive(cat)}
+                                className="rounded p-1 text-gray-500"
+                                aria-label={t('staff.guideBuilder.toggleActive')}
+                              >
+                                <Icon name={cat.is_active ? 'check' : 'lock'} size={16} />
+                              </button>
+                              <button
+                                onClick={() => openEditCategory(cat)}
+                                className="rounded p-1 text-sky-600"
+                                aria-label={t('staff.itineraryBuilder.edit')}
+                              >
+                                <Icon name="edit" size={16} />
+                              </button>
+                              <button
+                                onClick={() => deleteCategory(cat)}
+                                className="rounded p-1 text-red-400"
+                                aria-label={t('staff.guideBuilder.deleteCategory')}
+                              >
+                                <Icon name="trash" size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                     <button
-                      onClick={() => openNewArticle(category)}
-                      className="text-xs font-semibold text-sky-600"
+                      onClick={openNewCategory}
+                      className="mt-2 w-full rounded-lg border border-dashed border-sky-300 px-3 py-2 text-sm font-semibold text-sky-600 hover:border-sky-400"
                     >
-                      + {t('staff.guideBuilder.addArticle')}
+                      + {t('staff.guideBuilder.addCategory')}
                     </button>
                   </div>
+                )}
+              </div>
+            )}
 
-                  {(articlesByCategory[category] ?? []).length === 0 && (
-                    <p className="text-sm text-gray-400">{t('staff.guideBuilder.noArticles')}</p>
-                  )}
+            {!loadingArticles &&
+              [...categories, null].map((cat) => {
+                const key = cat ? cat.id : '__uncat__'
+                const items = articlesByCategory[key] ?? []
+                if (!cat && items.length === 0) return null
+                const col = cat ? catColor(cat.color) : catColor('gray')
+                return (
+                  <div key={key} className="mb-4">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase" style={{ color: col.text }}>
+                        {cat ? <Icon name={cat.icon} size={15} color={col.text} /> : null}
+                        {cat ? catLabel(cat, lang) : t('staff.guideBuilder.uncategorized')}
+                        <span className="font-normal text-gray-300">({items.length})</span>
+                      </p>
+                      {cat && (
+                        <button
+                          onClick={() => openNewArticle(cat.id)}
+                          className="text-xs font-semibold text-sky-600"
+                        >
+                          + {t('staff.guideBuilder.addArticle')}
+                        </button>
+                      )}
+                    </div>
 
-                  <div className="flex flex-col gap-2">
-                    {(articlesByCategory[category] ?? []).map((article) => (
-                      <Card key={article.id} className="p-3">
-                        <div className="flex items-start gap-3">
-                          {article.image_url ? (
-                            <img
-                              src={article.image_url}
-                              alt={article.title}
-                              className="h-12 w-12 shrink-0 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
-                              📄
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-gray-900">{article.title}</p>
-                            {article.itinerary_item_id && itineraryItemById[article.itinerary_item_id] && (
-                              <p className="truncate text-xs text-sky-600">
-                                {itineraryItemLabel(itineraryItemById[article.itinerary_item_id])}
-                              </p>
+                    {items.length === 0 && (
+                      <p className="text-sm text-gray-400">{t('staff.guideBuilder.noArticles')}</p>
+                    )}
+
+                    <div className="flex flex-col gap-2">
+                      {items.map((article) => (
+                        <Card key={article.id} className="p-3">
+                          <div className="flex items-start gap-3">
+                            {article.image_url ? (
+                              <img
+                                src={article.image_url}
+                                alt={article.title}
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                                📄
+                              </div>
                             )}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-semibold text-gray-900">
+                                {article.is_featured && <span className="mr-1 text-amber-500">★</span>}
+                                {article.title}
+                              </p>
+                              {article.itinerary_item_id && itineraryItemById[article.itinerary_item_id] && (
+                                <p className="truncate text-xs text-sky-600">
+                                  {itineraryItemLabel(itineraryItemById[article.itinerary_item_id])}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => togglePublish(article)}
+                              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                article.is_published
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}
+                            >
+                              {article.is_published
+                                ? t('staff.guideBuilder.published')
+                                : t('staff.guideBuilder.unpublished')}
+                            </button>
                           </div>
-                          <button
-                            onClick={() => togglePublish(article)}
-                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                              article.is_published
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-500'
-                            }`}
-                          >
-                            {article.is_published
-                              ? t('staff.guideBuilder.published')
-                              : t('staff.guideBuilder.unpublished')}
-                          </button>
-                        </div>
-                        <div className="mt-2 flex gap-3 border-t border-gray-100 pt-2">
-                          <button
-                            onClick={() => openEditArticle(article)}
-                            className="text-sm font-medium text-sky-600"
-                          >
-                            {t('staff.itineraryBuilder.edit')}
-                          </button>
-                          <button
-                            onClick={() => deleteArticle(article)}
-                            className="text-sm font-medium text-red-500"
-                          >
-                            {t('staff.guideBuilder.deleteArticle')}
-                          </button>
-                        </div>
-                      </Card>
-                    ))}
+                          <div className="mt-2 flex gap-3 border-t border-gray-100 pt-2">
+                            <button
+                              onClick={() => openEditArticle(article)}
+                              className="text-sm font-medium text-sky-600"
+                            >
+                              {t('staff.itineraryBuilder.edit')}
+                            </button>
+                            <button
+                              onClick={() => deleteArticle(article)}
+                              className="text-sm font-medium text-red-500"
+                            >
+                              {t('staff.guideBuilder.deleteArticle')}
+                            </button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
           </>
         )}
 
         {tab === 'phrasebook' && (
           <>
-            <div className="mb-3 flex gap-2">
-              <button
-                onClick={() => openNewPhrase()}
-                className="flex-1 rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
-              >
-                + {t('staff.guideBuilder.addPhrase')}
-              </button>
-              <button
-                onClick={openImportSheet}
-                className="flex-1 rounded-xl border border-dashed border-sky-300 px-4 py-2.5 text-sm font-semibold text-sky-600 hover:border-sky-400"
-              >
-                ⇪ {t('staff.guideBuilder.importPhrases')}
-              </button>
-            </div>
-
-            {languagePairs.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
+            {!phraseSelectMode ? (
+              <div className="mb-3 flex gap-2">
                 <button
-                  onClick={() => setPairFilter('all')}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                    pairFilter === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
-                  }`}
+                  onClick={() => openNewPhrase()}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-accent bg-accent-bg px-4 py-2.5 text-sm font-semibold text-accent-text"
                 >
-                  {t('staff.guideBuilder.allLanguagePairs')}
+                  <span aria-hidden="true">＋</span> {t('staff.guideBuilder.addPhrase')}
                 </button>
-                {languagePairs.map((pair) => (
+                <button
+                  onClick={openImportSheet}
+                  className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300"
+                >
+                  {t('staff.guideBuilder.importPhrases')}
+                </button>
+                {phrases.length > 0 && (
                   <button
-                    key={pair}
-                    onClick={() => setPairFilter(pair)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                      pairFilter === pair ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
-                    }`}
+                    onClick={() => setPhraseSelectMode(true)}
+                    className="flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-gray-500 hover:border-gray-300"
+                    title={t('staff.guideBuilder.selectToDelete')}
+                    aria-label={t('staff.guideBuilder.selectToDelete')}
                   >
-                    {pair}
+                    <Icon name="check" size={18} />
                   </button>
-                ))}
+                )}
               </div>
+            ) : (
+              <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 shadow-sm">
+                <span className="text-sm font-semibold text-sky-800">
+                  {t('staff.guideBuilder.selectedCount', { count: selectedPhraseIds.size })}
+                </span>
+                <button
+                  onClick={() => setSelectedPhraseIds(new Set(phrases.map((p) => p.id)))}
+                  className="ml-auto text-xs font-semibold text-sky-600"
+                >
+                  {t('staff.guideBuilder.selectAll')}
+                </button>
+                <button
+                  onClick={openAssignPlace}
+                  disabled={selectedPhraseIds.size === 0}
+                  className="rounded-lg border border-sky-400 px-3 py-1.5 text-xs font-semibold text-sky-700 disabled:opacity-40"
+                >
+                  📍 {t('staff.guideBuilder.assignPlace')}
+                </button>
+                <button
+                  onClick={bulkDeletePhrases}
+                  disabled={selectedPhraseIds.size === 0}
+                  className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                >
+                  {t('staff.guideBuilder.deleteSelected')}
+                </button>
+                <button onClick={exitSelectMode} className="text-xs font-medium text-gray-500">
+                  {t('common.cancel')}
+                </button>
+              </div>
+            )}
+
+            {/* ค้นหา + ตัวกรอง */}
+            {!phraseSelectMode && phrases.length > 0 && (
+              <>
+                <input
+                  type="text"
+                  value={phraseSearch}
+                  onChange={(e) => setPhraseSearch(e.target.value)}
+                  placeholder={t('staff.guideBuilder.searchPhrases')}
+                  className="mb-2.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-sky-400 focus:outline-none"
+                />
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {[
+                    ['all', t('staff.guideBuilder.filterAllPhrases')],
+                    ['missing_en', t('staff.guideBuilder.filterMissingEn')],
+                    ['unlinked', t('staff.guideBuilder.filterUnlinked')],
+                  ].map(([key, labelText]) => (
+                    <button
+                      key={key}
+                      onClick={() => setPhraseFilter(key)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                        phraseFilter === key
+                          ? key === 'all'
+                            ? 'bg-sky-600 text-white'
+                            : 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {labelText}
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
 
             {loadingPhrases && <p className="text-gray-500">{t('common.loading')}</p>}
 
-            {!loadingPhrases && phraseCategories.length === 0 && (
+            {!loadingPhrases && phraseGroups.length === 0 && (
               <p className="text-sm text-gray-400">{t('staff.guideBuilder.noPhrases')}</p>
             )}
 
             {!loadingPhrases &&
-              phraseCategories.map((category) => {
-                const isCollapsed = collapsedPhraseCategories[category]
-                const items = phrasesByCategory[category] ?? []
+              phraseGroups.map((group) => {
+                const { label, items, linked, day, time } = group
+                const isOpen = expandedPhraseGroups.has(label)
+                const timeText = linked
+                  ? [day ? t('guest.tripGuide.dayShort', { day }) : null, time ? time.slice(0, 5) : null]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : null
                 return (
-                  <div key={category} className="mb-4">
-                    <div className="mb-1.5 flex items-center justify-between">
+                  <div
+                    key={label}
+                    className={`mb-2.5 overflow-hidden rounded-xl border ${
+                      linked ? 'border-sky-200' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 px-2.5 py-2.5">
                       <button
                         type="button"
-                        onClick={() => togglePhraseCategory(category)}
-                        aria-expanded={!isCollapsed}
-                        className="flex items-center gap-1.5 text-xs font-semibold uppercase text-gray-400"
+                        onClick={() => togglePhraseGroup(label)}
+                        aria-expanded={isOpen}
+                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
                       >
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                            linked ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
+                          <Icon name={linked ? 'calendar' : 'location'} size={16} color="currentColor" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className="truncate text-sm font-semibold text-gray-800">{label}</span>
+                            <span className="shrink-0 text-xs font-normal text-gray-400">({items.length})</span>
+                          </span>
+                          <span
+                            className={`mt-0.5 block text-[11px] font-medium ${
+                              linked ? 'text-sky-600' : 'text-amber-600'
+                            }`}
+                          >
+                            {linked ? timeText : t('staff.guideBuilder.notLinkedYet')}
+                          </span>
+                        </span>
                         <svg
-                          className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-                            isCollapsed ? '-rotate-90' : ''
+                          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${
+                            isOpen ? '' : '-rotate-90'
                           }`}
                           viewBox="0 0 24 24"
                           fill="none"
@@ -702,57 +1208,91 @@ export default function GuideBuilder() {
                         >
                           <polyline points="6 9 12 15 18 9" />
                         </svg>
-                        {category}
-                        <span className="font-normal text-gray-300">({items.length})</span>
                       </button>
-                      <button
-                        onClick={() => openNewPhrase(category)}
-                        className="text-xs font-semibold text-sky-600"
-                      >
-                        + {t('staff.guideBuilder.addPhrase')}
-                      </button>
+                      {phraseSelectMode && (
+                        <button
+                          onClick={() =>
+                            setSelectedPhraseIds((prev) => {
+                              const next = new Set(prev)
+                              const allSel = items.every((p) => next.has(p.id))
+                              items.forEach((p) => (allSel ? next.delete(p.id) : next.add(p.id)))
+                              return next
+                            })
+                          }
+                          className="shrink-0 text-xs font-semibold text-sky-600"
+                        >
+                          {t('staff.guideBuilder.selectGroup')}
+                        </button>
+                      )}
                     </div>
-                    {!isCollapsed && (
-                      <div className="overflow-x-auto rounded-xl border border-gray-100">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-gray-50 text-xs uppercase text-gray-400">
-                            <tr>
-                              <th className="px-3 py-2 font-semibold">{t('staff.guideBuilder.phraseText')}</th>
-                              <th className="px-3 py-2 font-semibold">{t('staff.guideBuilder.translation')}</th>
-                              <th className="px-3 py-2 font-semibold">{t('staff.guideBuilder.pronunciation')}</th>
-                              <th className="px-3 py-2 font-semibold">{t('staff.guideBuilder.languagePair')}</th>
-                              <th className="px-3 py-2" />
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 bg-white">
-                            {items.map((phrase) => (
-                              <tr key={phrase.id}>
-                                <td className="px-3 py-2 font-medium text-gray-900">{phrase.phrase}</td>
-                                <td className="px-3 py-2 text-gray-700">{phrase.translation}</td>
-                                <td className="px-3 py-2 text-gray-400">{phrase.pronunciation || '—'}</td>
-                                <td className="px-3 py-2">
-                                  {phrase.language_pair ? (
-                                    <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
-                                      {phrase.language_pair}
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-300">—</span>
+
+                    {isOpen &&
+                      items.map((phrase) => {
+                        const selected = selectedPhraseIds.has(phrase.id)
+                        const chipText = [phrase.category_l1, phrase.category_l2].filter(Boolean).join(' › ')
+                        const chip = chipText ? tagColor(phrase.category_l1 || phrase.category_l2) : null
+                        return (
+                          <div
+                            key={phrase.id}
+                            onClick={phraseSelectMode ? () => togglePhraseSelect(phrase.id) : undefined}
+                            className={`flex items-start gap-2 border-t border-gray-100 px-3 py-2.5 ${
+                              phraseSelectMode ? 'cursor-pointer' : ''
+                            } ${selected ? 'bg-sky-50' : ''}`}
+                          >
+                            {phraseSelectMode && (
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => togglePhraseSelect(phrase.id)}
+                                className="mt-0.5 h-5 w-5 shrink-0 rounded border-gray-300 text-sky-600"
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900">{phrase.phrase}</p>
+                              {phrase.translation_zh && (
+                                <p className="mt-0.5 text-xs">
+                                  <span className="font-medium text-sky-700">{phrase.translation_zh}</span>
+                                  {phrase.pronunciation_zh && (
+                                    <span className="text-gray-400"> · {phrase.pronunciation_zh}</span>
                                   )}
-                                </td>
-                                <td className="px-3 py-2 text-right">
+                                </p>
+                              )}
+                              {phrase.translation_en ? (
+                                <p className="mt-0.5 text-xs text-gray-600">{phrase.translation_en}</p>
+                              ) : (
+                                !phraseSelectMode && (
                                   <button
-                                    onClick={() => deletePhrase(phrase)}
-                                    className="text-sm font-medium text-red-500"
+                                    onClick={() => openEditPhrase(phrase)}
+                                    className="mt-0.5 text-xs italic text-gray-400 hover:text-sky-600"
                                   >
-                                    {t('staff.guideBuilder.deletePhrase')}
+                                    + {t('staff.guideBuilder.addEnglish')}
                                   </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                                )
+                              )}
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1.5">
+                              {chip && (
+                                <span
+                                  className="rounded-full px-2 py-0.5 text-[9px] font-semibold"
+                                  style={{ background: chip.tint, color: chip.text }}
+                                >
+                                  {chipText}
+                                </span>
+                              )}
+                              {!phraseSelectMode && (
+                                <span className="flex gap-2.5">
+                                  <button onClick={() => openEditPhrase(phrase)} aria-label={t('staff.itineraryBuilder.edit')}>
+                                    <Icon name="edit" size={16} color="#0891b2" />
+                                  </button>
+                                  <button onClick={() => deletePhrase(phrase)} aria-label={t('staff.guideBuilder.deletePhrase')}>
+                                    <Icon name="trash" size={16} color="#dc2626" />
+                                  </button>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                   </div>
                 )
               })}
@@ -768,9 +1308,9 @@ export default function GuideBuilder() {
         <div className="flex flex-col gap-3">
           <SelectField
             label={t('staff.guideBuilder.articleCategory')}
-            options={ARTICLE_CATEGORIES.map((c) => ({ value: c, label: t(`staff.guideBuilder.category.${c}`) }))}
-            value={articleDraft.category}
-            onChange={(e) => setArticleDraft((prev) => ({ ...prev, category: e.target.value }))}
+            options={categories.map((c) => ({ value: c.id, label: catLabel(c, lang) }))}
+            value={articleDraft.category_id}
+            onChange={(e) => setArticleDraft((prev) => ({ ...prev, category_id: e.target.value }))}
           />
           <TextField
             label={t('staff.guideBuilder.articleTitle')}
@@ -863,6 +1403,19 @@ export default function GuideBuilder() {
           <label className="flex items-center gap-2.5">
             <input
               type="checkbox"
+              checked={articleDraft.is_featured}
+              onChange={(e) => setArticleDraft((prev) => ({ ...prev, is_featured: e.target.checked }))}
+              className="h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand-light"
+            />
+            <span className="text-sm font-medium text-neutral-text">
+              ★ {t('staff.guideBuilder.featuredArticle')}
+            </span>
+          </label>
+          <p className="-mt-1.5 text-xs text-gray-400">{t('staff.guideBuilder.featuredHint')}</p>
+
+          <label className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
               checked={articleDraft.is_published}
               onChange={(e) => setArticleDraft((prev) => ({ ...prev, is_published: e.target.checked }))}
               className="h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand-light"
@@ -882,53 +1435,229 @@ export default function GuideBuilder() {
       </BottomSheet>
 
       <BottomSheet
-        open={phraseSheetOpen}
-        onClose={() => setPhraseSheetOpen(false)}
-        title={t('staff.guideBuilder.addPhrase')}
+        open={catSheetOpen}
+        onClose={() => setCatSheetOpen(false)}
+        title={editingCatId ? t('staff.guideBuilder.editCategory') : t('staff.guideBuilder.addCategory')}
       >
         <div className="flex flex-col gap-3">
           <TextField
-            label={t('staff.guideBuilder.languagePair')}
-            list="language-pairs"
-            placeholder={t('staff.guideBuilder.languagePairPlaceholder')}
-            value={phraseDraft.language_pair}
-            onChange={(e) => setPhraseDraft((prev) => ({ ...prev, language_pair: e.target.value }))}
-          />
-          <datalist id="language-pairs">
-            {[...new Set([...LANGUAGE_PAIR_PRESETS, ...languagePairs])].map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
-          <TextField
-            label={t('staff.guideBuilder.phraseCategory')}
+            label={t('staff.guideBuilder.catLabelTh')}
             required
-            list="phrase-categories"
-            placeholder={t('staff.guideBuilder.phraseCategoryPlaceholder')}
-            value={phraseDraft.category}
-            onChange={(e) => setPhraseDraft((prev) => ({ ...prev, category: e.target.value }))}
+            value={catDraft.label_th}
+            onChange={(e) => setCatDraft((prev) => ({ ...prev, label_th: e.target.value }))}
           />
-          <datalist id="phrase-categories">
-            {phraseCategories.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
+          <TextField
+            label={t('staff.guideBuilder.catLabelEn')}
+            value={catDraft.label_en}
+            onChange={(e) => setCatDraft((prev) => ({ ...prev, label_en: e.target.value }))}
+          />
+          <TextField
+            label={t('staff.guideBuilder.catLabelZh')}
+            value={catDraft.label_zh}
+            onChange={(e) => setCatDraft((prev) => ({ ...prev, label_zh: e.target.value }))}
+          />
+
+          <div>
+            <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.guideBuilder.catIcon')}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORY_ICON_CHOICES.map((ic) => {
+                const active = catDraft.icon === ic
+                const col = catColor(catDraft.color)
+                return (
+                  <button
+                    key={ic}
+                    type="button"
+                    onClick={() => setCatDraft((prev) => ({ ...prev, icon: ic }))}
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg border ${
+                      active ? 'border-2' : 'border-gray-200'
+                    }`}
+                    style={active ? { borderColor: col.border, background: col.tint } : {}}
+                    aria-label={ic}
+                  >
+                    <Icon name={ic} size={20} color={active ? col.text : '#6b7280'} />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.guideBuilder.catColor')}</p>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_COLOR_KEYS.map((ck) => {
+                const col = catColor(ck)
+                const active = catDraft.color === ck
+                return (
+                  <button
+                    key={ck}
+                    type="button"
+                    onClick={() => setCatDraft((prev) => ({ ...prev, color: ck }))}
+                    className={`h-8 w-8 rounded-full border-2 ${active ? '' : 'border-transparent'}`}
+                    style={{ background: col.border, boxShadow: active ? `0 0 0 2px #fff, 0 0 0 4px ${col.border}` : 'none' }}
+                    aria-label={ck}
+                  />
+                )
+              })}
+            </div>
+          </div>
+
+          <SelectField
+            label={t('staff.guideBuilder.catLayout')}
+            options={CATEGORY_LAYOUTS.map((l) => ({ value: l, label: t(`staff.guideBuilder.layout.${l}`) }))}
+            value={catDraft.layout}
+            onChange={(e) => setCatDraft((prev) => ({ ...prev, layout: e.target.value }))}
+          />
+
+          {catError && <p className="text-sm text-red-500">{catError}</p>}
+
+          <Button onClick={saveCategory} disabled={savingCat || !catDraft.label_th.trim()}>
+            {savingCat ? t('common.loading') : t('common.save')}
+          </Button>
+          <Button variant="secondary" onClick={() => setCatSheetOpen(false)} disabled={savingCat}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={assignSheetOpen}
+        onClose={() => setAssignSheetOpen(false)}
+        title={t('staff.guideBuilder.assignPlace')}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-gray-500">
+            {t('staff.guideBuilder.assignPlaceHint', { count: selectedPhraseIds.size })}
+          </p>
+          <SelectField
+            label={t('staff.guideBuilder.phrasePlaceLink')}
+            options={[
+              { value: '', label: t('staff.guideBuilder.phraseNoPlaceLink') },
+              ...itineraryItems.map((it) => ({ value: it.id, label: itineraryItemLabel(it) })),
+            ]}
+            value={assignItineraryId}
+            onChange={(e) => setAssignItineraryId(e.target.value)}
+          />
+          {!assignItineraryId && (
+            <>
+              <TextField
+                label={t('staff.guideBuilder.phrasePlaceLabel')}
+                list="assign-places"
+                placeholder={t('staff.guideBuilder.phrasePlacePlaceholder')}
+                value={assignPlaceLabel}
+                onChange={(e) => setAssignPlaceLabel(e.target.value)}
+              />
+              <datalist id="assign-places">
+                {knownPlaces.map((p) => (
+                  <option key={p} value={p} />
+                ))}
+              </datalist>
+            </>
+          )}
+          <Button onClick={applyAssignPlace} disabled={assigning}>
+            {assigning ? t('common.loading') : t('common.save')}
+          </Button>
+          <Button variant="secondary" onClick={() => setAssignSheetOpen(false)} disabled={assigning}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={phraseSheetOpen}
+        onClose={() => setPhraseSheetOpen(false)}
+        title={editingPhraseId ? t('staff.itineraryBuilder.edit') : t('staff.guideBuilder.addPhrase')}
+      >
+        <div className="flex flex-col gap-3">
           <TextField
             label={t('staff.guideBuilder.phraseText')}
             required
             value={phraseDraft.phrase}
             onChange={(e) => setPhraseDraft((prev) => ({ ...prev, phrase: e.target.value }))}
           />
-          <TextField
-            label={t('staff.guideBuilder.translation')}
-            required
-            value={phraseDraft.translation}
-            onChange={(e) => setPhraseDraft((prev) => ({ ...prev, translation: e.target.value }))}
+
+          <SelectField
+            label={t('staff.guideBuilder.phrasePlaceLink')}
+            options={[
+              { value: '', label: t('staff.guideBuilder.phraseNoPlaceLink') },
+              ...itineraryItems.map((it) => ({ value: it.id, label: itineraryItemLabel(it) })),
+            ]}
+            value={phraseDraft.itinerary_item_id}
+            onChange={(e) => setPhraseDraft((prev) => ({ ...prev, itinerary_item_id: e.target.value }))}
           />
-          <TextField
-            label={t('staff.guideBuilder.pronunciation')}
-            value={phraseDraft.pronunciation}
-            onChange={(e) => setPhraseDraft((prev) => ({ ...prev, pronunciation: e.target.value }))}
-          />
+          {!phraseDraft.itinerary_item_id && (
+            <>
+              <TextField
+                label={t('staff.guideBuilder.phrasePlaceLabel')}
+                list="phrase-places"
+                placeholder={t('staff.guideBuilder.phrasePlacePlaceholder')}
+                value={phraseDraft.place_label}
+                onChange={(e) => setPhraseDraft((prev) => ({ ...prev, place_label: e.target.value }))}
+              />
+              <datalist id="phrase-places">
+                {knownPlaces.map((p) => (
+                  <option key={p} value={p} />
+                ))}
+              </datalist>
+            </>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <TextField
+                label={t('staff.guideBuilder.phraseCat1')}
+                list="phrase-cat1"
+                placeholder={t('staff.guideBuilder.phraseCat1Placeholder')}
+                value={phraseDraft.category_l1}
+                onChange={(e) => setPhraseDraft((prev) => ({ ...prev, category_l1: e.target.value }))}
+              />
+              <datalist id="phrase-cat1">
+                {phraseCat1Options.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <TextField
+                label={t('staff.guideBuilder.phraseCat2')}
+                list="phrase-cat2"
+                placeholder={t('staff.guideBuilder.phraseCat2Placeholder')}
+                value={phraseDraft.category_l2}
+                onChange={(e) => setPhraseDraft((prev) => ({ ...prev, category_l2: e.target.value }))}
+              />
+              <datalist id="phrase-cat2">
+                {phraseCat2Options.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-100 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-gray-400">{t('staff.guideBuilder.lang.zh')}</p>
+            <div className="flex flex-col gap-2">
+              <TextField
+                label={t('staff.guideBuilder.translation')}
+                value={phraseDraft.translation_zh}
+                onChange={(e) => setPhraseDraft((prev) => ({ ...prev, translation_zh: e.target.value }))}
+              />
+              <TextField
+                label={t('staff.guideBuilder.pronunciation')}
+                value={phraseDraft.pronunciation_zh}
+                onChange={(e) => setPhraseDraft((prev) => ({ ...prev, pronunciation_zh: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-100 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-gray-400">{t('staff.guideBuilder.lang.en')}</p>
+            <TextField
+              label={t('staff.guideBuilder.translation')}
+              value={phraseDraft.translation_en}
+              onChange={(e) => setPhraseDraft((prev) => ({ ...prev, translation_en: e.target.value }))}
+            />
+          </div>
+
+          <p className="text-xs text-gray-400">{t('staff.guideBuilder.phraseTransHint')}</p>
 
           {phraseError && <p className="text-sm text-red-500">{phraseError}</p>}
 
@@ -936,9 +1665,8 @@ export default function GuideBuilder() {
             onClick={savePhrase}
             disabled={
               savingPhrase ||
-              !phraseDraft.category.trim() ||
               !phraseDraft.phrase.trim() ||
-              !phraseDraft.translation.trim()
+              !(phraseDraft.translation_zh.trim() || phraseDraft.translation_en.trim())
             }
           >
             {savingPhrase ? t('common.loading') : t('common.save')}
@@ -956,26 +1684,19 @@ export default function GuideBuilder() {
       >
         <div className="flex flex-col gap-3">
           <p className="text-sm text-gray-500">{t('staff.guideBuilder.importInstructions')}</p>
-
-          <TextField
-            label={t('staff.guideBuilder.languagePair')}
-            list="language-pairs-import"
-            placeholder={t('staff.guideBuilder.languagePairPlaceholder')}
-            value={importLanguagePair}
-            onChange={(e) => setImportLanguagePair(e.target.value)}
-          />
-          <datalist id="language-pairs-import">
-            {[...new Set([...LANGUAGE_PAIR_PRESETS, ...languagePairs])].map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
+          <div className="rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500">
+            <p className="mb-1 font-semibold text-gray-600">{t('staff.guideBuilder.importColumns')}</p>
+            <code className="block whitespace-pre-wrap break-words text-[11px] leading-relaxed text-gray-700">
+              สถานที่ ⇥ คำไทย ⇥ จีน ⇥ พินอิน ⇥ อังกฤษ ⇥ หมวด L1 ⇥ หมวด L2
+            </code>
+          </div>
 
           <TextAreaField
             label={t('staff.guideBuilder.importTextareaLabel')}
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
             rows={8}
-            placeholder={'ทักทาย\tสวัสดี\t你好\tหนี่ห่าว\nอาหาร\tน้ำ\t水\tสุ่ย'}
+            placeholder={'วัดพระแก้ว\tพระแก้วมรกต\t玉佛\tYùfó\tEmerald Buddha\tสถานที่\tวัด\nวัดพระแก้ว\tพระบรมมหาราชวัง\t大皇宫\tDà Huánggōng\tGrand Palace\tสถานที่\tพระราชวัง/วัง'}
           />
 
           {importText.trim() && (

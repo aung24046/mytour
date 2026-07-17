@@ -212,7 +212,16 @@ export default function GuestHome({ guest, isNew = false }) {
             <p className="text-sm text-white/80">
               {isNew ? t('guest.register.successTitle') : t(`guest.home.${greetingKey()}`)}
             </p>
-            <h1 className="truncate text-2xl font-extrabold">{displayName}</h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate text-2xl font-extrabold">{displayName}</h1>
+              <button
+                onClick={() => navigate('/edit-profile')}
+                aria-label={t('guest.home.editProfile')}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition active:scale-90"
+              >
+                <Icon name="edit" size={14} />
+              </button>
+            </div>
           </div>
           <span
             className={`flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-semibold ${

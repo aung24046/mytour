@@ -6,9 +6,8 @@ import { supabase } from '../../lib/supabase'
 import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { getGuestId, saveGuestId, clearGuestId } from '../../lib/guestSession'
 import { findFieldByPurpose } from '../../lib/guestFields'
-import { groupFieldsByCategory } from '../../lib/formFieldGroups'
+import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
-import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
 import BottomSheet from '../../components/common/BottomSheet'
@@ -319,39 +318,49 @@ export default function Register() {
             <h1 className="text-2xl font-extrabold text-ink">
               {t('guest.register.title')}
             </h1>
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-muted">
+              <Icon name="lock" size={13} />
+              {t('guest.register.subtitle')}
+            </p>
           </div>
 
-          <Card className="shadow-card-hover">
-            {loadingFields && <p className="text-gray-500">{t('common.loading')}</p>}
-            {loadError && <p className="text-red-500">{loadError}</p>}
+          {loadingFields && <p className="text-gray-500">{t('common.loading')}</p>}
+          {loadError && <p className="text-red-500">{loadError}</p>}
 
-            {!loadingFields && !loadError && (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                {groupFieldsByCategory(fields).map(({ category, fields: groupFields }) => (
-                  <div key={category} className="flex flex-col gap-4">
-                    <h2 className="border-b border-neutral-bg pb-1.5 text-sm font-bold uppercase tracking-wide text-brand">
-                      {t(`guest.register.category.${category}`)}
-                    </h2>
-                    {groupFields.map((f) => (
-                      <DynamicField
-                        key={f.id}
-                        field={f}
-                        value={values[f.id]}
-                        onChange={(v) => setFieldValue(f.id, v)}
-                        error={errors[f.id]}
-                      />
-                    ))}
+          {!loadingFields && !loadError && (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+              {groupFieldsByCategory(fields).map(({ category, fields: groupFields }) => {
+                const st = CATEGORY_STYLE[category] || CATEGORY_STYLE.other
+                return (
+                  <div key={category} className="overflow-hidden rounded-2xl border border-neutral-bg bg-surface shadow-card">
+                    <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: st.tint }}>
+                      <Icon name={st.icon} size={18} color={st.iconColor} />
+                      <span className="text-sm font-bold" style={{ color: st.text }}>
+                        {t(`guest.register.category.${category}`)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-4 p-4">
+                      {groupFields.map((f) => (
+                        <DynamicField
+                          key={f.id}
+                          field={f}
+                          value={values[f.id]}
+                          onChange={(v) => setFieldValue(f.id, v)}
+                          error={errors[f.id]}
+                        />
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )
+              })}
 
-                {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+              {submitError && <p className="text-sm text-red-500">{submitError}</p>}
 
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? t('guest.register.submitting') : t('guest.register.submit')}
-                </Button>
-              </form>
-            )}
-          </Card>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? t('guest.register.submitting') : t('guest.register.submit')}
+              </Button>
+            </form>
+          )}
 
           <button
             onClick={openRecoverySheet}
