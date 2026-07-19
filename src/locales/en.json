@@ -785,6 +785,7 @@
       "formatUnderlineHint": "Note: standard Markdown doesn't support underline, so only bold, italic, and bullet list are available.",
       "sourceUrl": "Reference source (URL)",
       "sourceUrlPlaceholder": "https://...",
+      "articleMapsUrl": "Google Maps link (for navigation)",
       "addPhrase": "Add phrase",
       "phraseCategory": "Phrase category",
       "phraseCategoryPlaceholder": "e.g. Greetings, Food, Emergency",

@@ -71,7 +71,7 @@ export default function TripGuide() {
           .order('sort_order', { ascending: true }),
         supabase
           .from('guide_articles')
-          .select('id, category_id, title, body, source_url, image_url, itinerary_item_id, sort_order, is_featured')
+          .select('id, category_id, title, body, source_url, maps_url, image_url, itinerary_item_id, sort_order, is_featured')
           .eq('tour_id', ACTIVE_TOUR_ID)
           .eq('is_published', true)
           .order('sort_order', { ascending: true }),
@@ -590,15 +590,29 @@ export default function TripGuide() {
                 className="mb-3 h-44 w-full rounded-xl object-cover"
               />
             )}
-            {openArticle.source_url && (
-              <a
-                href={openArticle.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1.5 text-sm font-semibold text-brand-deep underline"
-              >
-                🔗 {t('guest.tripGuide.sourceLink')}
-              </a>
+            {(openArticle.source_url || openArticle.maps_url) && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {openArticle.maps_url && (
+                  <a
+                    href={openArticle.maps_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-gradient px-3 py-1.5 text-sm font-semibold text-white shadow-brand"
+                  >
+                    <Icon name="navigation" size={14} /> {t('guest.itinerary.navigate')}
+                  </a>
+                )}
+                {openArticle.source_url && (
+                  <a
+                    href={openArticle.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3 py-1.5 text-sm font-semibold text-brand-deep underline"
+                  >
+                    🔗 {t('guest.tripGuide.sourceLink')}
+                  </a>
+                )}
+              </div>
             )}
             {openArticle.body && (
               <div className="max-w-none text-ink [&_a]:text-brand [&_a]:underline [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-1">

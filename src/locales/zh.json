@@ -785,6 +785,7 @@
       "formatUnderlineHint": "提示：标准 Markdown 不支持下划线，因此仅提供粗体、斜体和项目符号列表",
       "sourceUrl": "参考资料来源（URL）",
       "sourceUrlPlaceholder": "https://...",
+      "articleMapsUrl": "谷歌地图链接（用于导航）",
       "addPhrase": "添加词汇",
       "phraseCategory": "词汇分类",
       "phraseCategoryPlaceholder": "例如：问候语、食物、紧急情况",

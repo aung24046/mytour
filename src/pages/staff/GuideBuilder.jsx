@@ -24,6 +24,7 @@ const EMPTY_ARTICLE = {
   title: '',
   body: '',
   source_url: '',
+  maps_url: '',
   itinerary_item_id: '',
   is_published: true,
   is_featured: false,
@@ -204,7 +205,7 @@ export default function GuideBuilder() {
     const [articlesRes, itemsRes, catsRes] = await Promise.all([
       supabase
         .from('guide_articles')
-        .select('id, category_id, title, body, source_url, image_url, itinerary_item_id, sort_order, is_published, is_featured')
+        .select('id, category_id, title, body, source_url, maps_url, image_url, itinerary_item_id, sort_order, is_published, is_featured')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('sort_order', { ascending: true }),
       supabase
@@ -283,6 +284,7 @@ export default function GuideBuilder() {
       title: article.title,
       body: article.body ?? '',
       source_url: article.source_url ?? '',
+      maps_url: article.maps_url ?? '',
       itinerary_item_id: article.itinerary_item_id ?? '',
       is_published: article.is_published,
       is_featured: article.is_featured ?? false,
@@ -371,6 +373,7 @@ export default function GuideBuilder() {
         title: articleDraft.title.trim(),
         body: articleDraft.body.trim() || null,
         source_url: articleDraft.source_url.trim() || null,
+        maps_url: articleDraft.maps_url.trim() || null,
         image_url: imageUrl,
         itinerary_item_id: articleDraft.itinerary_item_id || null,
         is_published: articleDraft.is_published,
@@ -418,6 +421,28 @@ export default function GuideBuilder() {
 
     const { error } = await supabase.from('guide_articles').delete().eq('id', article.id)
     if (!error) setArticles((prev) => prev.filter((a) => a.id !== article.id))
+  }
+
+  // สลับลำดับบทความภายในหมวดเดียวกัน (สลับ sort_order กับตัวข้างเคียง) — เหมือน moveCategory
+  async function moveArticle(article, dir) {
+    const key = article.category_id ?? '__uncat__'
+    const group = articlesByCategory[key] ?? []
+    const idx = group.findIndex((a) => a.id === article.id)
+    const swapWith = group[idx + dir]
+    if (!swapWith) return
+
+    setArticles((prev) =>
+      prev.map((a) => {
+        if (a.id === article.id) return { ...a, sort_order: swapWith.sort_order }
+        if (a.id === swapWith.id) return { ...a, sort_order: article.sort_order }
+        return a
+      })
+    )
+    await Promise.all([
+      supabase.from('guide_articles').update({ sort_order: swapWith.sort_order }).eq('id', article.id),
+      supabase.from('guide_articles').update({ sort_order: article.sort_order }).eq('id', swapWith.id),
+    ])
+    loadArticles()
   }
 
   // ----- Category management -----
@@ -993,7 +1018,7 @@ export default function GuideBuilder() {
                     )}
 
                     <div className="flex flex-col gap-2">
-                      {items.map((article) => (
+                      {items.map((article, idx) => (
                         <Card key={article.id} className="p-3">
                           <div className="flex items-start gap-3">
                             {article.image_url ? (
@@ -1017,6 +1042,11 @@ export default function GuideBuilder() {
                                   {itineraryItemLabel(itineraryItemById[article.itinerary_item_id])}
                                 </p>
                               )}
+                              {article.maps_url && (
+                                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-emerald-600">
+                                  <Icon name="navigation" size={12} /> {t('staff.guideBuilder.articleMapsUrl')}
+                                </p>
+                              )}
                             </div>
                             <button
                               onClick={() => togglePublish(article)}
@@ -1031,19 +1061,35 @@ export default function GuideBuilder() {
                                 : t('staff.guideBuilder.unpublished')}
                             </button>
                           </div>
-                          <div className="mt-2 flex gap-3 border-t border-gray-100 pt-2">
-                            <button
-                              onClick={() => openEditArticle(article)}
-                              className="text-sm font-medium text-sky-600"
-                            >
-                              {t('staff.itineraryBuilder.edit')}
-                            </button>
-                            <button
-                              onClick={() => deleteArticle(article)}
-                              className="text-sm font-medium text-red-500"
-                            >
-                              {t('staff.guideBuilder.deleteArticle')}
-                            </button>
+                          <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                onClick={() => moveArticle(article, -1)}
+                                disabled={idx === 0}
+                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                aria-label={t('staff.guideBuilder.moveUp')}
+                              >▲</button>
+                              <button
+                                onClick={() => moveArticle(article, 1)}
+                                disabled={idx === items.length - 1}
+                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                aria-label={t('staff.guideBuilder.moveDown')}
+                              >▼</button>
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => openEditArticle(article)}
+                                className="text-sm font-medium text-sky-600"
+                              >
+                                {t('staff.itineraryBuilder.edit')}
+                              </button>
+                              <button
+                                onClick={() => deleteArticle(article)}
+                                className="text-sm font-medium text-red-500"
+                              >
+                                {t('staff.guideBuilder.deleteArticle')}
+                              </button>
+                            </div>
                           </div>
                         </Card>
                       ))}
@@ -1363,6 +1409,14 @@ export default function GuideBuilder() {
             placeholder={t('staff.guideBuilder.sourceUrlPlaceholder')}
             value={articleDraft.source_url}
             onChange={(e) => setArticleDraft((prev) => ({ ...prev, source_url: e.target.value }))}
+          />
+
+          <TextField
+            label={t('staff.guideBuilder.articleMapsUrl')}
+            type="url"
+            placeholder="https://maps.google.com/..."
+            value={articleDraft.maps_url}
+            onChange={(e) => setArticleDraft((prev) => ({ ...prev, maps_url: e.target.value }))}
           />
 
           <div>

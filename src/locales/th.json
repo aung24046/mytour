@@ -785,6 +785,7 @@
       "formatUnderlineHint": "หมายเหตุ: Markdown มาตรฐานไม่รองรับขีดเส้นใต้ จึงมีให้แค่ตัวหนา ตัวเอียง และ bullet",
       "sourceUrl": "แหล่งข้อมูลอ้างอิง (URL)",
       "sourceUrlPlaceholder": "https://...",
+      "articleMapsUrl": "ลิงก์ Google Maps (สำหรับนำทาง)",
       "addPhrase": "เพิ่มคำศัพท์",
       "phraseCategory": "หมวดคำศัพท์",
       "phraseCategoryPlaceholder": "เช่น ทักทาย, อาหาร, ฉุกเฉิน",
