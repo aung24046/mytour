@@ -71,7 +71,7 @@ export default function TripGuide() {
           .order('sort_order', { ascending: true }),
         supabase
           .from('guide_articles')
-          .select('id, category_id, title, body, source_url, maps_url, image_url, itinerary_item_id, sort_order, is_featured')
+          .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_featured')
           .eq('tour_id', ACTIVE_TOUR_ID)
           .eq('is_published', true)
           .order('sort_order', { ascending: true }),
@@ -583,6 +583,11 @@ export default function TripGuide() {
       <BottomSheet open={!!openArticle} onClose={() => setOpenArticle(null)} title={openArticle?.title}>
         {openArticle && (
           <div>
+            {openArticle.province && (
+              <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-brand-light/60 px-2.5 py-1 text-xs font-semibold text-brand-deep">
+                <Icon name="location" size={11} /> {openArticle.province}
+              </span>
+            )}
             {openArticle.image_url && (
               <img
                 src={openArticle.image_url}
@@ -689,20 +694,27 @@ function ListCard({ article, col, badge, onOpen, t }) {
         </div>
       )}
       <div className="min-w-0 flex-1">
-        {badge && (
-          <span
-            className="mb-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-            style={
-              badge.kind === 'stop'
-                ? { background: '#E1F5EE', color: '#0F6E56' }
-                : { background: '#F1EFE8', color: '#444441' }
-            }
-          >
-            {badge.kind === 'stop'
-              ? `${t('guest.tripGuide.stopBadge')}${badge.time ? ' · ' + badge.time : ''}`
-              : t('guest.tripGuide.passBadge')}
-          </span>
-        )}
+        <div className="mb-0.5 flex flex-wrap items-center gap-1">
+          {badge && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+              style={
+                badge.kind === 'stop'
+                  ? { background: '#E1F5EE', color: '#0F6E56' }
+                  : { background: '#F1EFE8', color: '#444441' }
+              }
+            >
+              {badge.kind === 'stop'
+                ? `${t('guest.tripGuide.stopBadge')}${badge.time ? ' · ' + badge.time : ''}`
+                : t('guest.tripGuide.passBadge')}
+            </span>
+          )}
+          {article.province && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-light/60 px-2 py-0.5 text-[10px] font-semibold text-brand-deep">
+              <Icon name="location" size={9} /> {article.province}
+            </span>
+          )}
+        </div>
         <p className="truncate font-bold text-ink">{article.title}</p>
         {article.body && <p className="truncate text-sm text-ink-muted">{excerpt(article.body)}</p>}
       </div>

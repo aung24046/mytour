@@ -11,6 +11,8 @@ import {
   CATEGORY_ICON_CHOICES,
   CATEGORY_LAYOUTS,
 } from '../../lib/guideCategoryStyle'
+import { parseLatLngFromMapsUrl, nearestNeighborOrder } from '../../lib/geo'
+import { THAI_PROVINCES, guessProvinceFromText } from '../../lib/thaiProvinces'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
@@ -25,6 +27,7 @@ const EMPTY_ARTICLE = {
   body: '',
   source_url: '',
   maps_url: '',
+  province: '',
   itinerary_item_id: '',
   is_published: true,
   is_featured: false,
@@ -205,7 +208,7 @@ export default function GuideBuilder() {
     const [articlesRes, itemsRes, catsRes] = await Promise.all([
       supabase
         .from('guide_articles')
-        .select('id, category_id, title, body, source_url, maps_url, image_url, itinerary_item_id, sort_order, is_published, is_featured')
+        .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_published, is_featured')
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('sort_order', { ascending: true }),
       supabase
@@ -279,12 +282,14 @@ export default function GuideBuilder() {
 
   function openEditArticle(article) {
     setEditingArticleId(article.id)
+    const linkedLocation = itineraryItemById[article.itinerary_item_id]?.location_name ?? ''
     setArticleDraft({
       category_id: article.category_id ?? '',
       title: article.title,
       body: article.body ?? '',
       source_url: article.source_url ?? '',
       maps_url: article.maps_url ?? '',
+      province: article.province ?? guessProvinceFromText(`${article.title} ${linkedLocation}`) ?? '',
       itinerary_item_id: article.itinerary_item_id ?? '',
       is_published: article.is_published,
       is_featured: article.is_featured ?? false,
@@ -374,6 +379,7 @@ export default function GuideBuilder() {
         body: articleDraft.body.trim() || null,
         source_url: articleDraft.source_url.trim() || null,
         maps_url: articleDraft.maps_url.trim() || null,
+        province: articleDraft.province.trim() || null,
         image_url: imageUrl,
         itinerary_item_id: articleDraft.itinerary_item_id || null,
         is_published: articleDraft.is_published,
@@ -442,6 +448,41 @@ export default function GuideBuilder() {
       supabase.from('guide_articles').update({ sort_order: swapWith.sort_order }).eq('id', article.id),
       supabase.from('guide_articles').update({ sort_order: article.sort_order }).eq('id', swapWith.id),
     ])
+    loadArticles()
+  }
+
+  // จัดเรียงบทความในหมวดเดียวกันอัตโนมัติ ตามพิกัดที่แกะได้จากลิงก์ Google Maps (nearest-neighbor)
+  // บทความที่ไม่มีพิกัด (ไม่มีลิงก์ หรือลิงก์แบบย่อที่แกะพิกัดไม่ได้) จะถูกเลื่อนไปต่อท้าย โดยคงลำดับเดิมของกันเอง
+  async function autoArrangeCategory(categoryKey) {
+    const items = articlesByCategory[categoryKey] ?? []
+    const withCoords = []
+    const withoutCoords = []
+    for (const a of items) {
+      const point = parseLatLngFromMapsUrl(a.maps_url)
+      if (point) withCoords.push({ ...a, _point: point })
+      else withoutCoords.push(a)
+    }
+
+    if (withCoords.length < 2) {
+      window.alert(t('staff.guideBuilder.autoArrangeNeedCoords'))
+      return
+    }
+
+    const ordered = nearestNeighborOrder(withCoords, (a) => a._point)
+    const finalOrder = [...ordered, ...withoutCoords]
+    const baseSort = Math.min(...items.map((a) => a.sort_order ?? 0))
+    const updates = finalOrder.map((a, i) => ({ id: a.id, sort_order: baseSort + i }))
+
+    setArticles((prev) => {
+      const nextSortById = new Map(updates.map((u) => [u.id, u.sort_order]))
+      return prev.map((a) => (nextSortById.has(a.id) ? { ...a, sort_order: nextSortById.get(a.id) } : a))
+    })
+
+    await Promise.all(
+      updates.map((u) =>
+        supabase.from('guide_articles').update({ sort_order: u.sort_order }).eq('id', u.id)
+      )
+    )
     loadArticles()
   }
 
@@ -1003,14 +1044,25 @@ export default function GuideBuilder() {
                         {cat ? catLabel(cat, lang) : t('staff.guideBuilder.uncategorized')}
                         <span className="font-normal text-gray-300">({items.length})</span>
                       </p>
-                      {cat && (
-                        <button
-                          onClick={() => openNewArticle(cat.id)}
-                          className="text-xs font-semibold text-sky-600"
-                        >
-                          + {t('staff.guideBuilder.addArticle')}
-                        </button>
-                      )}
+                      <div className="flex shrink-0 items-center gap-3">
+                        {items.length >= 2 && (
+                          <button
+                            onClick={() => autoArrangeCategory(key)}
+                            title={t('staff.guideBuilder.autoArrangeHint')}
+                            className="text-xs font-semibold text-emerald-600"
+                          >
+                            📍 {t('staff.guideBuilder.autoArrange')}
+                          </button>
+                        )}
+                        {cat && (
+                          <button
+                            onClick={() => openNewArticle(cat.id)}
+                            className="text-xs font-semibold text-sky-600"
+                          >
+                            + {t('staff.guideBuilder.addArticle')}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {items.length === 0 && (
@@ -1037,6 +1089,11 @@ export default function GuideBuilder() {
                                 {article.is_featured && <span className="mr-1 text-amber-500">★</span>}
                                 {article.title}
                               </p>
+                              {article.province && (
+                                <span className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                  <Icon name="location" size={9} /> {article.province}
+                                </span>
+                              )}
                               {article.itinerary_item_id && itineraryItemById[article.itinerary_item_id] && (
                                 <p className="truncate text-xs text-sky-600">
                                   {itineraryItemLabel(itineraryItemById[article.itinerary_item_id])}
@@ -1420,6 +1477,21 @@ export default function GuideBuilder() {
           />
 
           <div>
+            <TextField
+              label={t('staff.guideBuilder.articleProvince')}
+              list="province-options"
+              placeholder={t('staff.guideBuilder.articleProvincePlaceholder')}
+              value={articleDraft.province}
+              onChange={(e) => setArticleDraft((prev) => ({ ...prev, province: e.target.value }))}
+            />
+            <datalist id="province-options">
+              {THAI_PROVINCES.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
             <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.guideBuilder.articleImage')}</p>
             <input
               ref={fileInputRef}
@@ -1451,7 +1523,15 @@ export default function GuideBuilder() {
             label={t('staff.guideBuilder.linkItinerary')}
             options={itineraryItems.map((it) => ({ value: it.id, label: itineraryItemLabel(it) }))}
             value={articleDraft.itinerary_item_id}
-            onChange={(e) => setArticleDraft((prev) => ({ ...prev, itinerary_item_id: e.target.value }))}
+            onChange={(e) => {
+              const val = e.target.value
+              setArticleDraft((prev) => {
+                if (prev.province) return { ...prev, itinerary_item_id: val }
+                const linkedLocation = itineraryItemById[val]?.location_name ?? ''
+                const guessed = guessProvinceFromText(`${prev.title} ${linkedLocation}`)
+                return { ...prev, itinerary_item_id: val, province: guessed ?? prev.province }
+              })
+            }}
           />
 
           <label className="flex items-center gap-2.5">
