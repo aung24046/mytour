@@ -438,8 +438,8 @@ export default function GuestManager() {
                         {guestInitials(guest)}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                             {guest.nickname || guest.name}
                           </p>
                           {isBirthdayThisMonth(guest) && (

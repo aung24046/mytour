@@ -622,9 +622,9 @@ export default function CheckIn() {
                 } ${togglingId === guest.id ? 'opacity-60' : ''}`}
                 onClick={() => handleToggle(guest)}
               >
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <p className={`font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                    <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                       {guest.name}
                     </p>
                     {staffGuestIdSet.has(guest.id) && (
@@ -647,7 +647,7 @@ export default function CheckIn() {
                   )}
                 </div>
                 <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                  className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${
                     checkedIn
                       ? 'bg-green-500 text-white'
                       : 'bg-red-400 text-white'
