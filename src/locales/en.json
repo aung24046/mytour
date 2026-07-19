@@ -76,7 +76,11 @@
       "recoveryNoMatch": "No registration found with this phone number",
       "recoverySelectYou": "Found a match — select your name",
       "recoveryQrHint": "Scan the QR code you received when you first registered",
-      "recoveryQrNotFound": "No registration matches this QR code"
+      "recoveryQrNotFound": "No registration matches this QR code",
+      "duplicatePhoneTitle": "This phone number is already registered",
+      "duplicatePhoneMessage": "This phone number is already registered under {{name}}. Would you like to log in with that account?",
+      "duplicatePhoneConfirm": "Log in",
+      "duplicatePhoneCancel": "Edit phone number"
     },
     "itinerary": {
       "title": "Itinerary",
@@ -326,6 +330,8 @@
       "healthWarning": "Needs attention",
       "filterAllGenders": "All genders",
       "filterNoBus": "Not assigned",
+      "filterBirthdayMonth": "Birthdays this month ({{count}})",
+      "birthdayBadge": "Birthday {{date}}",
       "staffBadge": "Staff",
       "editGuest": "Edit info",
       "deleteGuest": "Delete this guest",

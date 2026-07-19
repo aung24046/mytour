@@ -76,7 +76,11 @@
       "recoveryNoMatch": "未找到与此号码匹配的报名信息",
       "recoverySelectYou": "找到匹配信息 — 请选择您的姓名",
       "recoveryQrHint": "扫描您首次报名时收到的二维码",
-      "recoveryQrNotFound": "未找到与此二维码匹配的报名信息"
+      "recoveryQrNotFound": "未找到与此二维码匹配的报名信息",
+      "duplicatePhoneTitle": "此号码已被注册",
+      "duplicatePhoneMessage": "此号码已由 {{name}} 注册。是否要登录该账户？",
+      "duplicatePhoneConfirm": "登录",
+      "duplicatePhoneCancel": "修改号码"
     },
     "itinerary": {
       "title": "行程安排",
@@ -326,6 +330,8 @@
       "healthWarning": "需注意",
       "filterAllGenders": "全部性别",
       "filterNoBus": "尚未安排",
+      "filterBirthdayMonth": "本月生日 ({{count}})",
+      "birthdayBadge": "生日 {{date}}",
       "staffBadge": "工作人员",
       "editGuest": "编辑信息",
       "deleteGuest": "删除此客人",

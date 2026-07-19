@@ -38,7 +38,7 @@ function avatarClasses(gender) {
 }
 
 export default function GuestManager() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const [guests, setGuests] = useState([])
   const [fields, setFields] = useState([])
@@ -52,6 +52,7 @@ export default function GuestManager() {
   const [search, setSearch] = useState('')
   const [filterGender, setFilterGender] = useState('all')
   const [filterBus, setFilterBus] = useState('all')
+  const [filterBirthdayMonth, setFilterBirthdayMonth] = useState(false)
   const [expandedId, setExpandedId] = useState(null)
 
   // แก้ไขข้อมูลลูกทัวร์ — รองรับกรณีฟอร์มมีคำถามเพิ่ม/เปลี่ยนแปลงหลังลูกทัวร์คนนี้ลงทะเบียนไปแล้ว
@@ -162,6 +163,31 @@ export default function GuestManager() {
 
   const staffGuestIdSet = useMemo(() => new Set(staffGuestIds), [staffGuestIds])
 
+  // ฟิลด์วันเกิดเป็นฟิลด์ไดนามิก (custom_birthdate, type date) เก็บใน guest_form_responses รูปแบบ YYYY-MM-DD
+  const birthdayFieldId = useMemo(
+    () => fields.find((f) => f.field_key === 'custom_birthdate')?.id ?? null,
+    [fields]
+  )
+  const currentMonth = useMemo(() => new Date().getMonth() + 1, [])
+
+  function getBirthday(guest) {
+    if (!birthdayFieldId) return ''
+    return responsesByGuestId[guest.id]?.[birthdayFieldId] ?? ''
+  }
+
+  function isBirthdayThisMonth(guest) {
+    const raw = getBirthday(guest)
+    if (!raw) return false
+    const month = Number(raw.slice(5, 7))
+    return month === currentMonth
+  }
+
+  function formatBirthdayShort(raw) {
+    const date = new Date(`${raw}T00:00:00`)
+    if (Number.isNaN(date.getTime())) return raw
+    return new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' }).format(date)
+  }
+
   function getFieldValue(guest, field) {
     if (field.is_core && CORE_FIELD_KEYS.includes(field.field_key)) {
       return guest[field.field_key] ?? ''
@@ -242,7 +268,8 @@ export default function GuestManager() {
     }
   }
 
-  const filteredGuests = useMemo(() => {
+  // ฟิลเตอร์ค้นหา/เพศ/รถบัส — ยังไม่รวมฟิลเตอร์วันเกิด เผื่อต้องใช้นับจำนวนสำหรับปุ่มด้วย
+  const preBirthdayGuests = useMemo(() => {
     const q = search.trim().toLowerCase()
     let list = guests
 
@@ -266,12 +293,28 @@ export default function GuestManager() {
       )
     }
 
+    return list
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guests, search, activeFields, responsesByGuestId, filterGender, filterBus, busIdByGuestId])
+
+  // จำนวนคนเกิดเดือนนี้ในผลลัพธ์ปัจจุบัน (ก่อนกรองวันเกิด) — ใช้โชว์ตัวเลขบนปุ่มฟิลเตอร์
+  const birthdayCount = useMemo(
+    () => preBirthdayGuests.filter((g) => isBirthdayThisMonth(g)).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [preBirthdayGuests, birthdayFieldId, responsesByGuestId, currentMonth]
+  )
+
+  const filteredGuests = useMemo(() => {
+    const list = filterBirthdayMonth
+      ? preBirthdayGuests.filter((g) => isBirthdayThisMonth(g))
+      : preBirthdayGuests
+
     // เรียงตามชื่อเล่น (ถ้าไม่มีใช้ชื่อจริงแทน) — ใช้ locale ไทยให้เรียงตัวอักษรถูกต้อง
     return [...list].sort((a, b) =>
       (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '', 'th')
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [guests, search, activeFields, responsesByGuestId, filterGender, filterBus, busIdByGuestId])
+  }, [preBirthdayGuests, filterBirthdayMonth, birthdayFieldId, responsesByGuestId, currentMonth])
 
   async function deleteGuest(guest) {
     const confirmed = window.confirm(
@@ -307,6 +350,17 @@ export default function GuestManager() {
               onChange={(e) => setSearch(e.target.value)}
               className="mb-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
             />
+
+            <div className="mb-1.5 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setFilterBirthdayMonth((prev) => !prev)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  filterBirthdayMonth ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                🎂 {t('staff.guestManager.filterBirthdayMonth', { count: birthdayCount })}
+              </button>
+            </div>
 
             <div className="mb-1.5 flex flex-wrap gap-1.5">
               <button
@@ -388,6 +442,11 @@ export default function GuestManager() {
                           <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
                             {guest.nickname || guest.name}
                           </p>
+                          {isBirthdayThisMonth(guest) && (
+                            <span className="shrink-0 rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-semibold text-pink-700">
+                              {t('staff.guestManager.birthdayBadge', { date: formatBirthdayShort(getBirthday(guest)) })}
+                            </span>
+                          )}
                           {staffGuestIdSet.has(guest.id) && (
                             <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                               {t('staff.guestManager.staffBadge')}

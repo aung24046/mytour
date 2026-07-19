@@ -43,10 +43,48 @@ export default function Register() {
   const [phoneSearchError, setPhoneSearchError] = useState(null)
   const [qrScanError, setQrScanError] = useState(null)
 
+  // ป้องกันลงทะเบียนซ้ำด้วยเบอร์เดิม — เจอเบอร์ซ้ำระหว่างส่งฟอร์ม ให้ถามก่อนว่าจะเข้าสู่ระบบด้วยบัญชีเดิมเลยไหม
+  const [duplicateGuest, setDuplicateGuest] = useState(null)
+
   function restoreGuestSession(guest) {
     saveGuestId(guest.id)
     setExistingGuest(guest)
     setRecoverySheetOpen(false)
+    setDuplicateGuest(null)
+  }
+
+  async function findGuestByPhone(phoneField, phone) {
+    if (phoneField.is_core) {
+      const { data, error } = await supabase
+        .from('guests')
+        .select('id, name, nickname, qr_token')
+        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq(phoneField.field_key, phone)
+        .limit(1)
+
+      if (error) throw error
+      return data?.[0] ?? null
+    }
+
+    const { data: responseRows, error: responseError } = await supabase
+      .from('guest_form_responses')
+      .select('guest_id')
+      .eq('field_id', phoneField.id)
+      .eq('value', phone)
+      .limit(1)
+
+    if (responseError) throw responseError
+    const guestId = responseRows?.[0]?.guest_id
+    if (!guestId) return null
+
+    const { data, error } = await supabase
+      .from('guests')
+      .select('id, name, nickname, qr_token')
+      .eq('id', guestId)
+      .maybeSingle()
+
+    if (error) throw error
+    return data
   }
 
   async function searchByPhone(e) {
@@ -235,6 +273,19 @@ export default function Register() {
 
     setSubmitting(true)
     try {
+      // เช็คเบอร์ซ้ำก่อนสร้างลูกทัวร์ใหม่ — เจอเบอร์เดิมในทริปนี้แล้วให้ถามก่อนว่าจะเข้าสู่ระบบด้วยบัญชีเดิมเลยไหม
+      const phoneField = findFieldByPurpose(fields, 'phone')
+      const phoneValue = phoneField ? (values[phoneField.id] ?? '').toString().trim() : ''
+
+      if (phoneField && phoneValue) {
+        const existing = await findGuestByPhone(phoneField, phoneValue)
+        if (existing) {
+          setDuplicateGuest(existing)
+          setSubmitting(false)
+          return
+        }
+      }
+
       // Core fields go straight onto the guests row; custom fields go to guest_form_responses.
       const corePayload = { tour_id: ACTIVE_TOUR_ID }
       const customAnswers = []
@@ -453,6 +504,25 @@ export default function Register() {
           onClick={() => setRecoverySheetOpen(false)}
         >
           {t('common.cancel')}
+        </Button>
+      </BottomSheet>
+
+      <BottomSheet
+        open={!!duplicateGuest}
+        onClose={() => setDuplicateGuest(null)}
+        title={t('guest.register.duplicatePhoneTitle')}
+      >
+        <p className="text-sm text-ink-muted">
+          {t('guest.register.duplicatePhoneMessage', {
+            name: duplicateGuest?.nickname || duplicateGuest?.name,
+          })}
+        </p>
+
+        <Button className="mt-4" onClick={() => restoreGuestSession(duplicateGuest)}>
+          {t('guest.register.duplicatePhoneConfirm')}
+        </Button>
+        <Button variant="secondary" className="mt-2" onClick={() => setDuplicateGuest(null)}>
+          {t('guest.register.duplicatePhoneCancel')}
         </Button>
       </BottomSheet>
     </div>

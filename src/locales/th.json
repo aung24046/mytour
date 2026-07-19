@@ -76,7 +76,11 @@
       "recoveryNoMatch": "ไม่พบข้อมูลที่ตรงกับเบอร์นี้",
       "recoverySelectYou": "พบข้อมูลที่ตรงกัน — เลือกชื่อของคุณ",
       "recoveryQrHint": "สแกน QR ที่คุณเคยได้รับตอนลงทะเบียนครั้งแรก",
-      "recoveryQrNotFound": "ไม่พบข้อมูลที่ตรงกับ QR นี้"
+      "recoveryQrNotFound": "ไม่พบข้อมูลที่ตรงกับ QR นี้",
+      "duplicatePhoneTitle": "เบอร์นี้ลงทะเบียนแล้ว",
+      "duplicatePhoneMessage": "เบอร์นี้ได้ถูกลงทะเบียนเรียบร้อยแล้ว ชื่อ {{name}} ต้องการเข้าสู่ระบบเลยหรือไม่?",
+      "duplicatePhoneConfirm": "เข้าสู่ระบบ",
+      "duplicatePhoneCancel": "แก้ไขเบอร์ใหม่"
     },
     "itinerary": {
       "title": "แผนการเดินทาง",
@@ -326,6 +330,8 @@
       "healthWarning": "มีข้อควรระวัง",
       "filterAllGenders": "ทุกเพศ",
       "filterNoBus": "ยังไม่จัดรถ",
+      "filterBirthdayMonth": "เกิดเดือนนี้ ({{count}})",
+      "birthdayBadge": "เกิด {{date}}",
       "staffBadge": "ทีมงาน",
       "editGuest": "แก้ไขข้อมูล",
       "deleteGuest": "ลบลูกทัวร์คนนี้",
