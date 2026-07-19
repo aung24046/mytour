@@ -43,10 +43,15 @@ export default function GuestManager() {
   const [guests, setGuests] = useState([])
   const [fields, setFields] = useState([])
   const [responses, setResponses] = useState([])
+  const [buses, setBuses] = useState([])
+  const [busSeats, setBusSeats] = useState([])
+  const [staffGuestIds, setStaffGuestIds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const [search, setSearch] = useState('')
+  const [filterGender, setFilterGender] = useState('all')
+  const [filterBus, setFilterBus] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
 
   // แก้ไขข้อมูลลูกทัวร์ — รองรับกรณีฟอร์มมีคำถามเพิ่ม/เปลี่ยนแปลงหลังลูกทัวร์คนนี้ลงทะเบียนไปแล้ว
@@ -59,7 +64,7 @@ export default function GuestManager() {
     setLoading(true)
     setError(null)
 
-    const [guestsRes, fieldsRes, responsesRes] = await Promise.all([
+    const [guestsRes, fieldsRes, responsesRes, busesRes, busSeatsRes, staffRes] = await Promise.all([
       supabase
         .from('guests')
         .select(
@@ -73,6 +78,9 @@ export default function GuestManager() {
         .eq('tour_id', ACTIVE_TOUR_ID)
         .order('sort_order', { ascending: true }),
       supabase.from('guest_form_responses').select('guest_id, field_id, value'),
+      supabase.from('buses').select('id, name').eq('tour_id', ACTIVE_TOUR_ID).order('name', { ascending: true }),
+      supabase.from('bus_seats').select('bus_id, guest_id').eq('tour_id', ACTIVE_TOUR_ID).not('guest_id', 'is', null),
+      supabase.from('staff').select('id, guest_id').eq('tour_id', ACTIVE_TOUR_ID).not('guest_id', 'is', null),
     ])
 
     if (guestsRes.error || fieldsRes.error || responsesRes.error) {
@@ -90,6 +98,9 @@ export default function GuestManager() {
     setGuests(guestsRes.data ?? [])
     setFields(fieldsRes.data ?? [])
     setResponses(responsesRes.data ?? [])
+    if (!busesRes.error) setBuses(busesRes.data ?? [])
+    if (!busSeatsRes.error) setBusSeats(busSeatsRes.data ?? [])
+    if (!staffRes.error) setStaffGuestIds((staffRes.data ?? []).map((s) => s.guest_id))
     setLoading(false)
   }
 
@@ -128,6 +139,28 @@ export default function GuestManager() {
     () => fields.filter((f) => f.is_active).sort((a, b) => a.sort_order - b.sort_order),
     [fields]
   )
+
+  // ตัวเลือกเพศสำหรับฟิลเตอร์ — ดึงจาก options ของฟิลด์ gender จริง (ตั้งค่าได้ผ่าน FormBuilder)
+  // เผื่อไม่มีฟิลด์นี้ (ถูกลบ/ปิดไว้) fallback เป็นชาย/หญิงตามค่าเริ่มต้นของระบบ
+  const genderOptions = useMemo(() => {
+    const genderField = fields.find((f) => f.field_key === 'gender')
+    if (genderField?.options?.length) return genderField.options
+    return [
+      { label: 'ชาย', value: 'ชาย' },
+      { label: 'หญิง', value: 'หญิง' },
+    ]
+  }, [fields])
+
+  // บัสที่แต่ละลูกทัวร์ถูกจัดที่นั่งไว้ (guest_id -> bus_id) — คนหนึ่งควรอยู่บัสเดียว เอาอันแรกที่เจอ
+  const busIdByGuestId = useMemo(() => {
+    const map = {}
+    for (const s of busSeats) {
+      if (s.guest_id && !map[s.guest_id]) map[s.guest_id] = s.bus_id
+    }
+    return map
+  }, [busSeats])
+
+  const staffGuestIdSet = useMemo(() => new Set(staffGuestIds), [staffGuestIds])
 
   function getFieldValue(guest, field) {
     if (field.is_core && CORE_FIELD_KEYS.includes(field.field_key)) {
@@ -211,16 +244,34 @@ export default function GuestManager() {
 
   const filteredGuests = useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return guests
-    return guests.filter((g) => {
-      const haystack = activeFields
-        .map((f) => getFieldValue(g, f))
-        .join(' ')
-        .toLowerCase()
-      return haystack.includes(q)
-    })
+    let list = guests
+
+    if (q) {
+      list = list.filter((g) => {
+        const haystack = activeFields
+          .map((f) => getFieldValue(g, f))
+          .join(' ')
+          .toLowerCase()
+        return haystack.includes(q)
+      })
+    }
+
+    if (filterGender !== 'all') {
+      list = list.filter((g) => g.gender === filterGender)
+    }
+
+    if (filterBus !== 'all') {
+      list = list.filter((g) =>
+        filterBus === '__none__' ? !busIdByGuestId[g.id] : busIdByGuestId[g.id] === filterBus
+      )
+    }
+
+    // เรียงตามชื่อเล่น (ถ้าไม่มีใช้ชื่อจริงแทน) — ใช้ locale ไทยให้เรียงตัวอักษรถูกต้อง
+    return [...list].sort((a, b) =>
+      (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '', 'th')
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [guests, search, activeFields, responsesByGuestId])
+  }, [guests, search, activeFields, responsesByGuestId, filterGender, filterBus, busIdByGuestId])
 
   async function deleteGuest(guest) {
     const confirmed = window.confirm(
@@ -254,8 +305,62 @@ export default function GuestManager() {
               placeholder={t('staff.guestManager.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="mb-3 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="mb-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
             />
+
+            <div className="mb-1.5 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setFilterGender('all')}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  filterGender === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {t('staff.guestManager.filterAllGenders')}
+              </button>
+              {genderOptions.map((g) => (
+                <button
+                  key={g.value}
+                  onClick={() => setFilterGender(g.value)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                    filterGender === g.value ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+
+            {buses.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setFilterBus('all')}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                    filterBus === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {t('staff.checkIn.allBuses')}
+                </button>
+                {buses.map((bus) => (
+                  <button
+                    key={bus.id}
+                    onClick={() => setFilterBus(bus.id)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                      filterBus === bus.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    🚌 {bus.name}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setFilterBus('__none__')}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                    filterBus === '__none__' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {t('staff.guestManager.filterNoBus')}
+                </button>
+              </div>
+            )}
 
             {filteredGuests.length === 0 && (
               <p className="text-sm text-gray-400">{t('staff.guestManager.noResults')}</p>
@@ -279,9 +384,16 @@ export default function GuestManager() {
                         {guestInitials(guest)}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
-                          {guest.nickname || guest.name}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                            {guest.nickname || guest.name}
+                          </p>
+                          {staffGuestIdSet.has(guest.id) && (
+                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                              {t('staff.guestManager.staffBadge')}
+                            </span>
+                          )}
+                        </div>
                         {guest.nickname && (
                           <p className="truncate text-xs text-gray-400">{guest.name}</p>
                         )}

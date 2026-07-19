@@ -25,6 +25,7 @@ export default function CheckIn() {
   const [responses, setResponses] = useState([])
   const [buses, setBuses] = useState([])
   const [busSeats, setBusSeats] = useState([])
+  const [staffGuestIds, setStaffGuestIds] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [usingCache, setUsingCache] = useState(false)
@@ -91,7 +92,7 @@ export default function CheckIn() {
       setLoading(true)
       setLoadError(null)
 
-      const [guestsRes, fieldsRes, busesRes, busSeatsRes] = await Promise.all([
+      const [guestsRes, fieldsRes, busesRes, busSeatsRes, staffRes] = await Promise.all([
         supabase
           .from('guests')
           .select('id, name, nickname, gender, phone, qr_token, check_in_status, check_in_time')
@@ -105,6 +106,11 @@ export default function CheckIn() {
         supabase
           .from('bus_seats')
           .select('bus_id, guest_id')
+          .eq('tour_id', ACTIVE_TOUR_ID)
+          .not('guest_id', 'is', null),
+        supabase
+          .from('staff')
+          .select('id, guest_id')
           .eq('tour_id', ACTIVE_TOUR_ID)
           .not('guest_id', 'is', null),
       ])
@@ -125,6 +131,7 @@ export default function CheckIn() {
           setFields(cached.fields ?? [])
           setBuses(cached.buses ?? [])
           setBusSeats(cached.busSeats ?? [])
+          setStaffGuestIds(cached.staffGuestIds ?? [])
           setUsingCache(true)
         } else {
           setLoadError(t('staff.checkIn.loadError'))
@@ -137,6 +144,7 @@ export default function CheckIn() {
       setFields(fieldsRes.data ?? [])
       setBuses(busesRes.data ?? [])
       setBusSeats(busSeatsRes.data ?? [])
+      setStaffGuestIds(staffRes.error ? [] : (staffRes.data ?? []).map((s) => s.guest_id))
       setUsingCache(false)
 
       let responsesData = []
@@ -158,6 +166,7 @@ export default function CheckIn() {
         fields: fieldsRes.data ?? [],
         buses: busesRes.data ?? [],
         busSeats: busSeatsRes.data ?? [],
+        staffGuestIds: staffRes.error ? [] : (staffRes.data ?? []).map((s) => s.guest_id),
         responses: responsesData,
       })
 
@@ -447,6 +456,8 @@ export default function CheckIn() {
     return map
   }, [busSeats])
 
+  const staffGuestIdSet = useMemo(() => new Set(staffGuestIds), [staffGuestIds])
+
   const filteredGuests = useMemo(() => {
     const q = search.trim().toLowerCase()
     return guests.filter((g) => {
@@ -612,9 +623,16 @@ export default function CheckIn() {
                 onClick={() => handleToggle(guest)}
               >
                 <div>
-                  <p className={`font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
-                    {guest.name}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className={`font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                      {guest.name}
+                    </p>
+                    {staffGuestIdSet.has(guest.id) && (
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                        {t('staff.checkIn.staffBadge')}
+                      </span>
+                    )}
+                  </div>
                   {guest.nickname && (
                     <p className="text-sm text-gray-500">{guest.nickname}</p>
                   )}

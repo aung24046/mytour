@@ -324,6 +324,9 @@
       "callGuest": "โทร {{phone}}",
       "call": "โทร",
       "healthWarning": "มีข้อควรระวัง",
+      "filterAllGenders": "ทุกเพศ",
+      "filterNoBus": "ยังไม่จัดรถ",
+      "staffBadge": "ทีมงาน",
       "editGuest": "แก้ไขข้อมูล",
       "deleteGuest": "ลบลูกทัวร์คนนี้",
       "confirmDelete": "ต้องการลบข้อมูลลงทะเบียนของ \"{{name}}\" ใช่ไหม? ข้อมูลจะหายถาวร"
@@ -457,7 +460,8 @@
       "noItineraryItems": "ยังไม่มีรายการในแผนการเดินทาง",
       "eventTitleLabel": "ชื่อรอบเช็คชื่อ",
       "eventTitlePlaceholder": "เช่น ลงรถที่วัดพระแก้ว",
-      "dayLabel": "วันที่ {{day}}"
+      "dayLabel": "วันที่ {{day}}",
+      "staffBadge": "ทีมงาน"
     },
     "broadcast": {
       "title": "ประกาศด่วน",

@@ -324,6 +324,9 @@
       "callGuest": "Call {{phone}}",
       "call": "Call",
       "healthWarning": "Needs attention",
+      "filterAllGenders": "All genders",
+      "filterNoBus": "Not assigned",
+      "staffBadge": "Staff",
       "editGuest": "Edit info",
       "deleteGuest": "Delete this guest",
       "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone."
@@ -457,7 +460,8 @@
       "noItineraryItems": "No itinerary items yet",
       "eventTitleLabel": "Round title",
       "eventTitlePlaceholder": "e.g. Getting off the bus at the Grand Palace",
-      "dayLabel": "Day {{day}}"
+      "dayLabel": "Day {{day}}",
+      "staffBadge": "Staff"
     },
     "broadcast": {
       "title": "Broadcast",

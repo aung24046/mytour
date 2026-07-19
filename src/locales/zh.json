@@ -324,6 +324,9 @@
       "callGuest": "拨打 {{phone}}",
       "call": "拨打",
       "healthWarning": "需注意",
+      "filterAllGenders": "全部性别",
+      "filterNoBus": "尚未安排",
+      "staffBadge": "工作人员",
       "editGuest": "编辑信息",
       "deleteGuest": "删除此客人",
       "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。"
@@ -457,7 +460,8 @@
       "noItineraryItems": "行程中还没有项目",
       "eventTitleLabel": "轮次名称",
       "eventTitlePlaceholder": "例如：在大皇宫下车",
-      "dayLabel": "第 {{day}} 天"
+      "dayLabel": "第 {{day}} 天",
+      "staffBadge": "工作人员"
     },
     "broadcast": {
       "title": "紧急公告",
