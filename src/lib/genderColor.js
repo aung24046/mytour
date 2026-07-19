@@ -12,3 +12,10 @@ export function genderBgClass(gender, fallback = 'bg-sky-500 text-white') {
   if (gender === 'หญิง') return 'bg-pink-500 text-white'
   return fallback
 }
+
+// เวอร์ชันโครงร่าง (พื้นอ่อน + ตัวอักษรสีตามเพศ) ใช้กับชิปคนที่ยังไม่จับลงคัน
+export function genderBorderClass(gender) {
+  if (gender === 'ชาย') return 'bg-blue-50 text-blue-700 border-blue-200'
+  if (gender === 'หญิง') return 'bg-pink-50 text-pink-700 border-pink-200'
+  return 'bg-surface-sunken text-ink-muted border-black/10'
+}

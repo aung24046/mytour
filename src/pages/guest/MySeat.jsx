@@ -47,17 +47,22 @@ export default function MySeat() {
       setLoading(true)
       setError(null)
 
-      // 1) หาที่นั่งของฉันก่อน — ไม่ระบุ tour_id ผ่าน bus เพราะ bus_seats มี tour_id ตรงอยู่แล้ว
-      const { data: mySeatRow, error: mySeatError } = await supabase
-        .from('bus_seats')
-        .select('id, bus_id, row_number, seat_position')
-        .eq('tour_id', ACTIVE_TOUR_ID)
-        .eq('guest_id', guestId)
-        .maybeSingle()
+      // 1) หาคันของฉัน — จาก bus_seats (ถ้ามีที่นั่ง) หรือจาก guests.bus_id (จับลงคันแล้วยังไม่เลือกที่นั่ง)
+      const [{ data: meRow }, { data: mySeatRow }] = await Promise.all([
+        supabase.from('guests').select('bus_id').eq('id', guestId).maybeSingle(),
+        supabase
+          .from('bus_seats')
+          .select('id, bus_id, row_number, seat_position')
+          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('guest_id', guestId)
+          .maybeSingle(),
+      ])
 
       if (!isMounted) return
 
-      if (mySeatError || !mySeatRow) {
+      const myBusId = mySeatRow?.bus_id || meRow?.bus_id || null
+
+      if (!myBusId) {
         const cached = loadCache(CACHE_KEY)
         if (cached) {
           setBus(cached.bus)
@@ -77,12 +82,12 @@ export default function MySeat() {
         supabase
           .from('buses')
           .select('id, name, license_plate, total_rows, seats_per_row')
-          .eq('id', mySeatRow.bus_id)
+          .eq('id', myBusId)
           .single(),
         supabase
           .from('bus_seats')
           .select('id, bus_id, row_number, seat_position, guest_id, is_available, is_seat, seat_type')
-          .eq('bus_id', mySeatRow.bus_id),
+          .eq('bus_id', myBusId),
       ])
 
       if (!isMounted) return
@@ -128,6 +133,11 @@ export default function MySeat() {
         { event: '*', schema: 'public', table: 'buses', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
         () => loadMySeat()
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'guests', filter: `id=eq.${guestId}` },
+        () => loadMySeat()
+      )
       .subscribe()
 
     return () => {
@@ -164,10 +174,17 @@ export default function MySeat() {
               <Icon name="seat" size={26} filled />
               {t('guest.mySeat.title')}
             </h1>
-            {mySeatLabel && (
+            {mySeatLabel ? (
               <span className="inline-flex shrink-0 items-center rounded-pill bg-brand px-3.5 py-1.5 text-sm font-semibold text-white shadow-brand">
                 {t('guest.mySeat.seatPill', { seat: mySeatLabel })}
               </span>
+            ) : (
+              bus && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-ink px-3.5 py-1.5 text-sm font-semibold text-white">
+                  <Icon name="bus" size={15} color="#fff" />
+                  {bus.name}
+                </span>
+              )
             )}
           </div>
 
@@ -190,8 +207,9 @@ export default function MySeat() {
           {guestId && !loading && error && <p className="text-danger">{error}</p>}
 
           {guestId && !loading && !error && notAssigned && (
-            <Card className="py-8 text-center">
-              <p className="text-sm text-ink-muted">{t('guest.mySeat.noSeatYet')}</p>
+            <Card className="flex flex-col items-center gap-2 py-8 text-center">
+              <Icon name="bus" size={30} />
+              <p className="text-sm text-ink-muted">{t('guest.mySeat.waitingBus')}</p>
             </Card>
           )}
 
@@ -212,6 +230,17 @@ export default function MySeat() {
                   </span>
                 )}
               </div>
+
+              {/* สถานะ 2: อยู่คันแล้ว แต่ยังไม่ได้เลือกที่นั่ง */}
+              {!mySeat && (
+                <div className="mb-3 flex items-center gap-3 rounded-card border border-warning/30 bg-warning-bg p-3">
+                  <Icon name="location" size={22} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-warning-text">{t('guest.mySeat.chooseOnBoard')}</p>
+                    <p className="mt-0.5 text-xs text-warning-text/85">{t('guest.mySeat.chooseOnBoardHint')}</p>
+                  </div>
+                </div>
+              )}
 
               {/* ผังรถ */}
               <div className="rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
