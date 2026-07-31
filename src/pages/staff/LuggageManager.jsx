@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -58,6 +58,7 @@ function compressImage(file) {
 }
 
 export default function LuggageManager() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [luggage, setLuggage] = useState([])
@@ -99,12 +100,12 @@ export default function LuggageManager() {
       supabase
         .from('luggage')
         .select('id, tag_code, guest_id, photo_url, status, last_scanned_at, last_location_note, created_at')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('created_at', { ascending: true }),
       supabase
         .from('guests')
         .select('id, name, nickname, gender')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('name'),
     ])
 
@@ -124,10 +125,10 @@ export default function LuggageManager() {
     loadAll()
 
     const channel = supabase
-      .channel(`luggage-manager-${ACTIVE_TOUR_ID}`)
+      .channel(`luggage-manager-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'luggage', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'luggage', filter: `tour_id=eq.${tourId}` },
         () => loadAll()
       )
       .subscribe()
@@ -162,7 +163,7 @@ export default function LuggageManager() {
         let code = generateTagCode()
         while (usedCodes.has(code)) code = generateTagCode()
         usedCodes.add(code)
-        rows.push({ tour_id: ACTIVE_TOUR_ID, tag_code: code, status: 'unassigned' })
+        rows.push({ tour_id: tourId, tag_code: code, status: 'unassigned' })
       }
 
       const { error: insertError } = await supabase.from('luggage').insert(rows)
@@ -219,7 +220,7 @@ export default function LuggageManager() {
 
       if (assignPhotoFile) {
         const compressed = await compressImage(assignPhotoFile)
-        const path = `${ACTIVE_TOUR_ID}/${assignTag.tag_code}-${Date.now()}.jpg`
+        const path = `${tourId}/${assignTag.tag_code}-${Date.now()}.jpg`
         const { error: uploadError } = await supabase.storage
           .from('luggage-photos')
           .upload(path, compressed, { contentType: 'image/jpeg', upsert: true })

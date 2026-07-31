@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
@@ -12,9 +12,11 @@ import DynamicField from '../../components/common/DynamicField'
 import GuestNav from '../../components/common/GuestNav'
 
 export default function Feedback() {
+  const tp = useTourPath()
+  const tourId = useTourId()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [fields, setFields] = useState([])
   const [existingResponses, setExistingResponses] = useState([]) // [{ id, field_id, value }]
@@ -39,8 +41,9 @@ export default function Feedback() {
       setLoadError(null)
 
       const { data: staffMatch } = await supabase
-        .from('staff')
+        .from('v_tour_staff')
         .select('id')
+        .eq('tour_id', tourId)
         .eq('guest_id', guestId)
         .maybeSingle()
 
@@ -55,7 +58,7 @@ export default function Feedback() {
       const { data: fieldsData, error: fieldsError } = await supabase
         .from('form_fields')
         .select('id, field_key, label, field_type, options, is_required, sort_order')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('form_type', 'feedback')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
@@ -175,7 +178,7 @@ export default function Feedback() {
           {!guestId && (
             <Card className="flex flex-col items-center gap-3 py-8 text-center">
               <p className="text-sm text-ink-muted">{t('guest.feedback.notRegistered')}</p>
-              <Button onClick={() => navigate('/')} fullWidth={false} className="px-6">
+              <Button onClick={() => navigate(tp())} fullWidth={false} className="px-6">
                 {t('guest.feedback.goRegister')}
               </Button>
             </Card>

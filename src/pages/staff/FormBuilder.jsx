@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -76,6 +76,7 @@ function optionsToText(options) {
 const NEEDS_OPTIONS = ['select', 'checkbox', 'radio']
 
 export default function FormBuilder() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [formType, setFormType] = useState('registration') // 'registration' | 'feedback'
@@ -97,7 +98,7 @@ export default function FormBuilder() {
     const { data, error: fetchError } = await supabase
       .from('form_fields')
       .select('*')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .eq('form_type', type)
       .order('sort_order', { ascending: true })
 
@@ -190,7 +191,7 @@ export default function FormBuilder() {
     if (sheetMode === 'new') {
       const maxSort = fields.reduce((max, f) => Math.max(max, f.sort_order), 0)
       const { error: insertError } = await supabase.from('form_fields').insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         form_type: formType,
         field_key: `custom_${Date.now()}`,
         label: draft.label.trim(),

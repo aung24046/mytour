@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 
@@ -37,6 +37,7 @@ function downloadCsv(filename, rows) {
 }
 
 export default function PrintExport() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [mode, setMode] = useState('luggage')
@@ -57,12 +58,12 @@ export default function PrintExport() {
       supabase
         .from('luggage')
         .select('id, tag_code, guest_id, status')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('created_at', { ascending: true }),
       supabase
         .from('guests')
         .select('id, name, nickname, qr_token')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('name'),
     ])
 

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import GuestNav from '../../components/common/GuestNav'
@@ -19,6 +19,7 @@ function formatTime(timeStr) {
 }
 
 export default function Itinerary() {
+  const tourId = useTourId()
   const { t } = useTranslation()
 
   const [items, setItems] = useState([])
@@ -48,13 +49,13 @@ export default function Itinerary() {
         supabase
           .from('itinerary_items')
           .select('id, day_number, scheduled_time, title, description, location_name, maps_url, status, sort_order')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .order('day_number', { ascending: true })
           .order('sort_order', { ascending: true }),
         supabase
           .from('guide_articles')
           .select('id, title, body, source_url, image_url, itinerary_item_id')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('is_published', true)
           .not('itinerary_item_id', 'is', null),
       ])
@@ -86,14 +87,14 @@ export default function Itinerary() {
 
     // Realtime: staff อาจอัปเดต status (upcoming/current/completed) ระหว่างทริป
     const channel = supabase
-      .channel(`itinerary-${ACTIVE_TOUR_ID}`)
+      .channel(`itinerary-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'itinerary_items',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         () => loadItinerary()
       )

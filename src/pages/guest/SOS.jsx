@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
@@ -19,8 +19,10 @@ const CATEGORY_ORDER = ['guide', 'staff', 'government', 'hospital', 'other']
 const CIRCUMFERENCE = 2 * Math.PI * 45
 
 export default function SOS() {
+  const tp = useTourPath()
+  const tourId = useTourId()
   const { t } = useTranslation()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [contacts, setContacts] = useState([])
   const [loadingContacts, setLoadingContacts] = useState(true)
@@ -44,15 +46,15 @@ export default function SOS() {
       supabase
         .from('emergency_contacts')
         .select('id, label, phone, category, sort_order')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('is_active', true)
         .order('sort_order', { ascending: true }),
       supabase
-        .from('staff')
+        .from('v_tour_staff')
         // เบอร์/ชื่อดึงสดจากลูกทัวร์ที่ลงทะเบียน (guest_id) ถ้าทีมงานคนนั้นถูกเพิ่มด้วยระบบผูกชื่อ
         // ทีมงานเก่าที่ยังไม่มี guest_id จะ fallback ไปใช้ name/phone ที่กรอกไว้ตรง ๆ
-        .select('id, name, phone, guests(name, nickname, phone)')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .select('id, name, phone, guest_name, guest_nickname, guest_phone')
+        .eq('tour_id', tourId)
         .eq('show_to_guest', true),
     ])
 
@@ -69,12 +71,16 @@ export default function SOS() {
 
     const guideContacts = (guideRes.data ?? [])
       .map((s) => {
-        const g = s.guests
-        const label = g ? (g.nickname ? `${g.name} (${g.nickname})` : g.name) : s.name
+        // v_tour_staff join guests มาให้เป็นคอลัมน์แล้ว (view ทำ embedded resource ไม่ได้)
+        const label = s.guest_name
+          ? s.guest_nickname
+            ? `${s.guest_name} (${s.guest_nickname})`
+            : s.guest_name
+          : s.name
         return {
           id: `staff-${s.id}`,
           label,
-          phone: g?.phone ?? s.phone,
+          phone: s.guest_phone ?? s.phone,
           category: 'guide',
         }
       })
@@ -95,7 +101,7 @@ export default function SOS() {
     const queue = getQueue().filter((a) => a.type === 'sos')
     for (const action of queue) {
       const { error } = await supabase.from('sos_alerts').insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         guest_id: action.guestId,
         lat: action.lat,
         lng: action.lng,
@@ -185,7 +191,7 @@ export default function SOS() {
     }
 
     const { error } = await supabase.from('sos_alerts').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       guest_id: payload.guestId,
       lat: payload.lat,
       lng: payload.lng,
@@ -248,7 +254,7 @@ export default function SOS() {
             <GuestNav active="sos" />
             <Card className="text-center">
               <p className="mb-3 text-ink-muted">{t('guest.sos.noSession')}</p>
-              <Link to="/">
+              <Link to={tp()}>
                 <Button>{t('guest.register.title')}</Button>
               </Link>
             </Card>

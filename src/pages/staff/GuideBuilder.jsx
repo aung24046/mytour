@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import {
   catLabel,
   catColor,
@@ -167,6 +167,7 @@ function itineraryItemLabel(item) {
 }
 
 export default function GuideBuilder() {
+  const tourId = useActiveTourId()
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [tab, setTab] = useState('articles') // 'articles' | 'phrasebook'
@@ -198,7 +199,7 @@ export default function GuideBuilder() {
     const { data, error } = await supabase
       .from('guide_categories')
       .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('sort_order', { ascending: true })
     if (!error) setCategories(data ?? [])
   }
@@ -209,18 +210,18 @@ export default function GuideBuilder() {
       supabase
         .from('guide_articles')
         .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_published, is_featured')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase
         .from('itinerary_items')
         .select('id, day_number, scheduled_time, title')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true }),
       supabase
         .from('guide_categories')
         .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
     ])
 
@@ -235,15 +236,15 @@ export default function GuideBuilder() {
     loadArticles()
 
     const channel = supabase
-      .channel(`guide-articles-${ACTIVE_TOUR_ID}`)
+      .channel(`guide-articles-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'guide_articles', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'guide_articles', filter: `tour_id=eq.${tourId}` },
         () => loadArticles()
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'guide_categories', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'guide_categories', filter: `tour_id=eq.${tourId}` },
         () => loadCategories()
       )
       .subscribe()
@@ -362,7 +363,7 @@ export default function GuideBuilder() {
 
       if (articlePhotoFile) {
         const compressed = await compressImage(articlePhotoFile)
-        const path = `${ACTIVE_TOUR_ID}/${Date.now()}.jpg`
+        const path = `${tourId}/${Date.now()}.jpg`
         const { error: uploadError } = await supabase.storage
           .from('guide-images')
           .upload(path, compressed, { contentType: 'image/jpeg', upsert: true })
@@ -373,7 +374,7 @@ export default function GuideBuilder() {
       }
 
       const payload = {
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         category_id: articleDraft.category_id || null,
         title: articleDraft.title.trim(),
         body: articleDraft.body.trim() || null,
@@ -514,7 +515,7 @@ export default function GuideBuilder() {
     setCatError(null)
 
     const payload = {
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       label_th: catDraft.label_th.trim(),
       label_en: catDraft.label_en.trim() || null,
       label_zh: catDraft.label_zh.trim() || null,
@@ -677,12 +678,12 @@ export default function GuideBuilder() {
       supabase
         .from('phrasebook_entries')
         .select('id, category_l1, category_l2, phrase, place_label, itinerary_item_id, translation_zh, pronunciation_zh, translation_en, sort_order')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase
         .from('itinerary_items')
         .select('id, day_number, scheduled_time, title, location_name')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true }),
     ])
@@ -697,10 +698,10 @@ export default function GuideBuilder() {
     loadPhrases()
 
     const channel = supabase
-      .channel(`phrasebook-${ACTIVE_TOUR_ID}`)
+      .channel(`phrasebook-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'phrasebook_entries', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'phrasebook_entries', filter: `tour_id=eq.${tourId}` },
         () => loadPhrases()
       )
       .subscribe()
@@ -818,7 +819,7 @@ export default function GuideBuilder() {
     setPhraseError(null)
 
     const payload = {
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       phrase: phraseDraft.phrase.trim(),
       itinerary_item_id: phraseDraft.itinerary_item_id || null,
       place_label: phraseDraft.place_label.trim() || null,
@@ -879,7 +880,7 @@ export default function GuideBuilder() {
     const payload = rows.map((r) => {
       sortCounter += 1
       return {
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         phrase: r.phrase,
         place_label: r.place_label,
         category_l1: r.category_l1,

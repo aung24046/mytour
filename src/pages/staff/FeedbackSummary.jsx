@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
@@ -29,6 +29,7 @@ function downloadCsv(filename, rows) {
 }
 
 export default function FeedbackSummary() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [fields, setFields] = useState([])
@@ -48,13 +49,13 @@ export default function FeedbackSummary() {
         supabase
           .from('form_fields')
           .select('id, label, field_type, is_active, sort_order')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('form_type', 'feedback')
           .order('sort_order', { ascending: true }),
         supabase
           .from('guests')
           .select('id, name, nickname')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .order('name'),
       ])
 

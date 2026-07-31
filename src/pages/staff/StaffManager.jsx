@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID, ACTIVE_ORG_ID } from '../../lib/constants'
-import { getStaffSession } from '../../lib/staffSession'
+import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 
@@ -14,6 +13,8 @@ const LEGACY_ROLE_KEYS = ['lead_guide', 'staff', 'driver', 'admin']
 const NEW_STAFF_TEMPLATE = { role: 'staff', pin: '' }
 
 export default function StaffManager() {
+  const tourId = useActiveTourId()
+  const orgId = useActiveOrgId()
   const { t } = useTranslation()
   const mySession = getStaffSession()
 
@@ -50,9 +51,9 @@ export default function StaffManager() {
     setError(null)
 
     const { data, error: fetchError } = await supabase
-      .from('staff')
+      .from('v_tour_staff')
       .select('id, name, role, phone, guest_id, show_to_guest, is_default')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('name')
 
     if (fetchError) {
@@ -70,7 +71,7 @@ export default function StaffManager() {
     const { data, error: fetchError } = await supabase
       .from('guests')
       .select('id, name, nickname, phone')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('name')
 
     if (fetchError) {
@@ -85,10 +86,10 @@ export default function StaffManager() {
     loadGuests()
 
     const channel = supabase
-      .channel(`staff-manager-${ACTIVE_TOUR_ID}`)
+      .channel(`staff-manager-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'staff', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'staff', filter: `tour_id=eq.${tourId}` },
         () => loadStaff()
       )
       .subscribe()
@@ -160,14 +161,14 @@ export default function StaffManager() {
     setCreating(true)
     setCreateError(null)
 
-    const { error: insertError } = await supabase.from('staff').insert({
-      org_id: ACTIVE_ORG_ID,
-      tour_id: ACTIVE_TOUR_ID,
-      guest_id: selectedGuest.id,
-      name: guestDisplayName(selectedGuest),
-      phone: selectedGuest.phone,
-      role: newStaff.role.trim() || 'staff',
-      auth_pin: newStaff.pin,
+    const { error: insertError } = await supabase.rpc('add_tour_staff_member', {
+      p_tour_id: tourId,
+      p_org_id: orgId,
+      p_name: guestDisplayName(selectedGuest),
+      p_phone: selectedGuest.phone,
+      p_role: newStaff.role.trim() || 'staff',
+      p_pin: newStaff.pin,
+      p_guest_id: selectedGuest.id,
     })
 
     if (insertError) {
@@ -190,9 +191,10 @@ export default function StaffManager() {
     )
 
     const { error } = await supabase
-      .from('staff')
+      .from('tour_staff')
       .update({ show_to_guest: next })
-      .eq('id', member.id)
+      .eq('staff_id', member.id)
+      .eq('tour_id', tourId)
 
     if (error) {
       console.error('[StaffManager] toggle show_to_guest failed', error)
@@ -211,7 +213,11 @@ export default function StaffManager() {
       return
     }
 
-    const { error } = await supabase.from('staff').update({ auth_pin: next }).eq('id', member.id)
+    const { error } = await supabase
+      .from('tour_staff')
+      .update({ auth_pin: next })
+      .eq('staff_id', member.id)
+      .eq('tour_id', tourId)
     if (error) {
       console.error('[StaffManager] change pin failed', error)
       window.alert(t('common.error'))
@@ -235,7 +241,11 @@ export default function StaffManager() {
     if (!next) return
 
     setSavingRole(true)
-    const { error } = await supabase.from('staff').update({ role: next }).eq('id', member.id)
+    const { error } = await supabase
+      .from('tour_staff')
+      .update({ role: next })
+      .eq('staff_id', member.id)
+      .eq('tour_id', tourId)
     setSavingRole(false)
 
     if (error) {
@@ -265,7 +275,12 @@ export default function StaffManager() {
     )
     if (!confirmed) return
 
-    const { error: deleteError } = await supabase.from('staff').delete().eq('id', member.id)
+    // ถอดออกจากทริปนี้เท่านั้น — ตัวคนยังอยู่ในคลัง ใช้กับทริปอื่นได้
+    const { error: deleteError } = await supabase
+      .from('tour_staff')
+      .delete()
+      .eq('staff_id', member.id)
+      .eq('tour_id', tourId)
     if (deleteError) {
       console.error('[StaffManager] delete staff failed', deleteError)
       window.alert(deleteError.message ?? t('common.error'))

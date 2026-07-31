@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
@@ -24,6 +24,7 @@ function toTimeInputValue(dbTime) {
 }
 
 export default function ItineraryBuilder() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [items, setItems] = useState([])
@@ -49,7 +50,7 @@ export default function ItineraryBuilder() {
     const { data, error: fetchError } = await supabase
       .from('itinerary_items')
       .select('*')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('day_number', { ascending: true })
       .order('sort_order', { ascending: true })
 
@@ -143,7 +144,7 @@ export default function ItineraryBuilder() {
     setSaveError(null)
 
     const payload = {
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       day_number: Number(draft.day_number) || 1,
       scheduled_time: draft.scheduled_time || null,
       title: draft.title.trim(),

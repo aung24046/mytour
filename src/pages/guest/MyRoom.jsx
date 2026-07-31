@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { genderTextClass } from '../../lib/genderColor'
@@ -37,8 +37,9 @@ function nightsBetween(checkIn, checkOut) {
 }
 
 export default function MyRoom() {
+  const tourId = useTourId()
   const { t } = useTranslation()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   // ลูกทัวร์คนเดียวสามารถมีห้องพักได้หลายห้อง (คนละโรงแรม/คนละคืน) — เก็บเป็น array ของ "stays"
   // แต่ละ stay คือ { room, hotel, roommates } หนึ่งชุด

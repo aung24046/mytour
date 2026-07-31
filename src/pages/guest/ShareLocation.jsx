@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
@@ -12,8 +12,9 @@ import GuestNav from '../../components/common/GuestNav'
 const SEND_INTERVAL_MS = 15000 // ส่งพิกัดทุก 15 วิ ระหว่างเปิดหน้าค้างไว้
 
 export default function ShareLocation() {
+  const tourId = useTourId()
   const { t } = useTranslation()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [activeSession, setActiveSession] = useState(null)
   const [loadingSession, setLoadingSession] = useState(true)
@@ -35,7 +36,7 @@ export default function ShareLocation() {
       const { data, error } = await supabase
         .from('location_sessions')
         .select('id, label, is_active, started_at')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('is_active', true)
         .order('started_at', { ascending: false })
         .limit(1)
@@ -49,14 +50,14 @@ export default function ShareLocation() {
     loadSession()
 
     const channel = supabase
-      .channel(`location-sessions-${ACTIVE_TOUR_ID}`)
+      .channel(`location-sessions-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'location_sessions',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         () => loadSession()
       )
@@ -86,7 +87,7 @@ export default function ShareLocation() {
     if (!pos || !guestId) return
 
     const { error } = await supabase.from('guest_locations').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       guest_id: guestId,
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,

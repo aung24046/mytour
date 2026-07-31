@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextAreaField from '../../components/common/TextAreaField'
 
 export default function Broadcast() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [message, setMessage] = useState('')
@@ -22,7 +23,7 @@ export default function Broadcast() {
     const { data, error } = await supabase
       .from('announcements')
       .select('id, message, is_active, created_at')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('created_at', { ascending: false })
       .limit(20)
 
@@ -38,14 +39,14 @@ export default function Broadcast() {
     loadHistory()
 
     const channel = supabase
-      .channel(`broadcast-staff-${ACTIVE_TOUR_ID}`)
+      .channel(`broadcast-staff-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'announcements',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         (payload) => {
           setHistory((prev) => [payload.new, ...prev])
@@ -64,7 +65,7 @@ export default function Broadcast() {
     setSendError(null)
 
     const { error } = await supabase.from('announcements').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       message: message.trim(),
       is_active: true,
     })

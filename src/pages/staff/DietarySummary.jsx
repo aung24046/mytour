@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Icon from '../../components/common/Icon'
 
@@ -49,6 +49,7 @@ function tallyWithNames(pairs) {
 }
 
 export default function DietarySummary() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [guests, setGuests] = useState([])
@@ -72,11 +73,11 @@ export default function DietarySummary() {
         supabase
           .from('guests')
           .select('id, name, nickname, gender, food_allergy, medical_condition')
-          .eq('tour_id', ACTIVE_TOUR_ID),
+          .eq('tour_id', tourId),
         supabase
           .from('form_fields')
           .select('id, field_purpose, is_core')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .in('field_purpose', ['dietary', 'medical']),
       ])
 

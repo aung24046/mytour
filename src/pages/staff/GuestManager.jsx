@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
@@ -38,6 +38,7 @@ function avatarClasses(gender) {
 }
 
 export default function GuestManager() {
+  const tourId = useActiveTourId()
   const { t, i18n } = useTranslation()
 
   const [guests, setGuests] = useState([])
@@ -69,19 +70,19 @@ export default function GuestManager() {
       supabase
         .from('guests')
         .select(
-          'id, name, nickname, gender, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token'
+          'id, name, nickname, gender, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token, bus_id'
         )
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('created_at', { ascending: false }),
       supabase
         .from('form_fields')
         .select('id, field_key, label, field_type, options, is_core, is_active, sort_order, category')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase.from('guest_form_responses').select('guest_id, field_id, value'),
-      supabase.from('buses').select('id, name').eq('tour_id', ACTIVE_TOUR_ID).order('name', { ascending: true }),
-      supabase.from('bus_seats').select('bus_id, guest_id').eq('tour_id', ACTIVE_TOUR_ID).not('guest_id', 'is', null),
-      supabase.from('staff').select('id, guest_id').eq('tour_id', ACTIVE_TOUR_ID).not('guest_id', 'is', null),
+      supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name', { ascending: true }),
+      supabase.from('bus_seats').select('bus_id, guest_id').eq('tour_id', tourId).not('guest_id', 'is', null),
+      supabase.from('v_tour_staff').select('id, guest_id').eq('tour_id', tourId).not('guest_id', 'is', null),
     ])
 
     if (guestsRes.error || fieldsRes.error || responsesRes.error) {
@@ -109,10 +110,10 @@ export default function GuestManager() {
     loadAll()
 
     const channel = supabase
-      .channel(`guest-manager-${ACTIVE_TOUR_ID}`)
+      .channel(`guest-manager-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'guests', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'guests', filter: `tour_id=eq.${tourId}` },
         () => loadAll()
       )
       .on(
@@ -153,13 +154,18 @@ export default function GuestManager() {
   }, [fields])
 
   // บัสที่แต่ละลูกทัวร์ถูกจัดที่นั่งไว้ (guest_id -> bus_id) — คนหนึ่งควรอยู่บัสเดียว เอาอันแรกที่เจอ
+  // ถ้ายังไม่ได้เลือกที่นั่ง (ไม่มีแถวใน bus_seats ที่ผูก guest_id) แต่จับลงคันแล้ว ให้ fallback ไปใช้ guests.bus_id
+  // (เหมือนที่ MySeat.jsx ฝั่งลูกทัวร์ใช้ตรวจสอบ)
   const busIdByGuestId = useMemo(() => {
     const map = {}
     for (const s of busSeats) {
       if (s.guest_id && !map[s.guest_id]) map[s.guest_id] = s.bus_id
     }
+    for (const g of guests) {
+      if (g.bus_id && !map[g.id]) map[g.id] = g.bus_id
+    }
     return map
-  }, [busSeats])
+  }, [busSeats, guests])
 
   const staffGuestIdSet = useMemo(() => new Set(staffGuestIds), [staffGuestIds])
 

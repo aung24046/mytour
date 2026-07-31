@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -12,6 +12,7 @@ import StatusBadge from '../../components/common/StatusBadge'
 const MAX_NUMBER = 75
 
 export default function BingoHost() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [games, setGames] = useState([])
@@ -34,7 +35,7 @@ export default function BingoHost() {
     const { data } = await supabase
       .from('bingo_games')
       .select('id, name, status, called_numbers, created_at')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .in('status', ['waiting', 'playing'])
       .order('created_at', { ascending: true })
 
@@ -53,7 +54,7 @@ export default function BingoHost() {
         .from('bingo_cards')
         .select('id, guest_id, marked_numbers, has_bingo, bingo_claimed_at, is_confirmed')
         .eq('game_id', gameId),
-      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', tourId),
     ])
     setCards(cardsRes.data ?? [])
     setGuests(guestsRes.data ?? [])
@@ -63,10 +64,10 @@ export default function BingoHost() {
     loadGames()
 
     const channel = supabase
-      .channel(`bingo-games-host-${ACTIVE_TOUR_ID}`)
+      .channel(`bingo-games-host-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bingo_games', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'bingo_games', filter: `tour_id=eq.${tourId}` },
         () => loadGames()
       )
       .subscribe()
@@ -104,7 +105,7 @@ export default function BingoHost() {
     const { data, error } = await supabase
       .from('bingo_games')
       .insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         name: newRoomName.trim(),
         status: 'playing',
         called_numbers: [],

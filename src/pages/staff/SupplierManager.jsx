@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID, ACTIVE_ORG_ID } from '../../lib/constants'
+import { useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -25,6 +25,8 @@ const EMPTY_DRAFT = {
 }
 
 export default function SupplierManager() {
+  const tourId = useActiveTourId()
+  const orgId = useActiveOrgId()
   const { t } = useTranslation()
 
   const [suppliers, setSuppliers] = useState([])
@@ -49,10 +51,10 @@ export default function SupplierManager() {
       supabase
         .from('suppliers')
         .select('id, name, category, contact_person, phone, line_id, address, notes, rating, is_active')
-        .eq('org_id', ACTIVE_ORG_ID)
+        .eq('org_id', orgId)
         .eq('is_active', true)
         .order('name', { ascending: true }),
-      supabase.from('tour_suppliers').select('supplier_id').eq('tour_id', ACTIVE_TOUR_ID),
+      supabase.from('tour_suppliers').select('supplier_id').eq('tour_id', tourId),
     ])
 
     if (suppliersRes.error) {
@@ -124,7 +126,7 @@ export default function SupplierManager() {
 
     try {
       const payload = {
-        org_id: ACTIVE_ORG_ID,
+        org_id: orgId,
         name: draft.name.trim(),
         category: draft.category,
         contact_person: draft.contact_person.trim() || null,
@@ -161,7 +163,7 @@ export default function SupplierManager() {
     if (linked && !isLinked) {
       const { error } = await supabase
         .from('tour_suppliers')
-        .insert({ tour_id: ACTIVE_TOUR_ID, supplier_id: supplierId })
+        .insert({ tour_id: tourId, supplier_id: supplierId })
       if (!error) {
         setTourSupplierIds((prev) => new Set(prev).add(supplierId))
       }
@@ -169,7 +171,7 @@ export default function SupplierManager() {
       const { error } = await supabase
         .from('tour_suppliers')
         .delete()
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('supplier_id', supplierId)
       if (!error) {
         setTourSupplierIds((prev) => {

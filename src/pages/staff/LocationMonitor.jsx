@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -19,6 +19,7 @@ function timeAgoLabel(t, dateStr) {
 }
 
 export default function LocationMonitor() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [session, setSession] = useState(null)
@@ -35,7 +36,7 @@ export default function LocationMonitor() {
     const { data } = await supabase
       .from('location_sessions')
       .select('id, label, is_active, started_at, ends_at')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .eq('is_active', true)
       .order('started_at', { ascending: false })
       .limit(1)
@@ -49,11 +50,11 @@ export default function LocationMonitor() {
     setLoadingLocations(true)
 
     const [guestsRes, locationsRes] = await Promise.all([
-      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', tourId).order('name'),
       supabase
         .from('guest_locations')
         .select('id, guest_id, latitude, longitude, accuracy, recorded_at')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('recorded_at', { ascending: false }),
     ])
 
@@ -73,28 +74,28 @@ export default function LocationMonitor() {
     loadLocations()
 
     const sessionChannel = supabase
-      .channel(`location-sessions-monitor-${ACTIVE_TOUR_ID}`)
+      .channel(`location-sessions-monitor-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'location_sessions',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         () => loadSession()
       )
       .subscribe()
 
     const locationChannel = supabase
-      .channel(`guest-locations-${ACTIVE_TOUR_ID}`)
+      .channel(`guest-locations-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'guest_locations',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         () => loadLocations()
       )
@@ -114,7 +115,7 @@ export default function LocationMonitor() {
   async function startSession() {
     setStarting(true)
     const { error } = await supabase.from('location_sessions').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       label: sessionLabel.trim() || null,
       is_active: true,
       started_at: new Date().toISOString(),

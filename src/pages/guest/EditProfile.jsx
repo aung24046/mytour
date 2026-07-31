@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
@@ -17,9 +17,11 @@ import GuestNav from '../../components/common/GuestNav'
 // ใช้ฟิลด์ชุดเดียวกับตอนลงทะเบียน (form_fields ของทริปนี้) — core field เขียนลง guests โดยตรง
 // ส่วน custom field เขียนลง guest_form_responses เหมือนตอน Register.jsx / GuestManager.jsx
 export default function EditProfile() {
+  const tp = useTourPath()
+  const tourId = useTourId()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [fields, setFields] = useState([])
   const [guest, setGuest] = useState(null)
@@ -46,7 +48,7 @@ export default function EditProfile() {
         supabase
           .from('form_fields')
           .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('is_active', true)
           .order('sort_order', { ascending: true }),
         supabase.from('guests').select('*').eq('id', guestId).maybeSingle(),
@@ -170,7 +172,7 @@ export default function EditProfile() {
           {!guestId && (
             <Card className="flex flex-col items-center gap-3 py-8 text-center">
               <p className="text-sm text-ink-muted">{t('guest.editProfile.notRegistered')}</p>
-              <Button onClick={() => navigate('/')} fullWidth={false} className="px-6">
+              <Button onClick={() => navigate(tp())} fullWidth={false} className="px-6">
                 {t('guest.editProfile.goRegister')}
               </Button>
             </Card>

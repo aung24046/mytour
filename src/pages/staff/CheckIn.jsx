@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
@@ -17,6 +17,7 @@ const FILTERS = ['all', 'arrived', 'not_arrived']
 const CACHE_KEY = 'checkin_guests'
 
 export default function CheckIn() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -95,23 +96,23 @@ export default function CheckIn() {
       const [guestsRes, fieldsRes, busesRes, busSeatsRes, staffRes] = await Promise.all([
         supabase
           .from('guests')
-          .select('id, name, nickname, gender, phone, qr_token, check_in_status, check_in_time')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .select('id, name, nickname, gender, phone, qr_token, check_in_status, check_in_time, bus_id')
+          .eq('tour_id', tourId)
           .order('name', { ascending: true }),
         supabase
           .from('form_fields')
           .select('id, field_key, field_purpose, is_core')
-          .eq('tour_id', ACTIVE_TOUR_ID),
-        supabase.from('buses').select('id, name').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+          .eq('tour_id', tourId),
+        supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name'),
         supabase
           .from('bus_seats')
           .select('bus_id, guest_id')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .not('guest_id', 'is', null),
         supabase
-          .from('staff')
+          .from('v_tour_staff')
           .select('id, guest_id')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .not('guest_id', 'is', null),
       ])
 
@@ -179,14 +180,14 @@ export default function CheckIn() {
 
     // Realtime: sync check-in status if another staff member checks someone in
     const channel = supabase
-      .channel(`checkin-${ACTIVE_TOUR_ID}`)
+      .channel(`checkin-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'guests',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         (payload) => {
           setGuests((prev) =>
@@ -227,12 +228,12 @@ export default function CheckIn() {
       supabase
         .from('checkin_events')
         .select('id, title, is_core, itinerary_item_id, sort_order')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase
         .from('itinerary_items')
         .select('id, day_number, scheduled_time, title, location_name')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true }),
     ])
@@ -248,10 +249,10 @@ export default function CheckIn() {
     loadEvents()
 
     const channel = supabase
-      .channel(`checkin-events-${ACTIVE_TOUR_ID}`)
+      .channel(`checkin-events-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'checkin_events', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'checkin_events', filter: `tour_id=eq.${tourId}` },
         () => loadEvents()
       )
       .subscribe()
@@ -360,7 +361,7 @@ export default function CheckIn() {
     const { data, error } = await supabase
       .from('checkin_events')
       .insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         itinerary_item_id: itineraryItemId,
         title,
         is_core: false,
@@ -450,11 +451,13 @@ export default function CheckIn() {
     setScanFeedback({ type: 'camera_error' })
   }
 
+  // ถ้ายังไม่ได้เลือกที่นั่ง (ไม่มีแถวใน bus_seats ที่ผูก guest_id) แต่จับลงคันแล้ว ให้ fallback ไปใช้ guests.bus_id
   const guestBusId = useMemo(() => {
     const map = {}
-    for (const s of busSeats) map[s.guest_id] = s.bus_id
+    for (const s of busSeats) if (s.guest_id) map[s.guest_id] = s.bus_id
+    for (const g of guests) if (g.bus_id && !map[g.id]) map[g.id] = g.bus_id
     return map
-  }, [busSeats])
+  }, [busSeats, guests])
 
   const staffGuestIdSet = useMemo(() => new Set(staffGuestIds), [staffGuestIds])
 

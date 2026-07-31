@@ -524,7 +524,10 @@
       "allAssigned": "จับลงคันครบทุกคนแล้ว 🎉",
       "chooseBus": "เลือกคันรถ",
       "hasSeatWarning": "มีที่นั่ง {{seat}} อยู่แล้ว — ถ้าย้ายคัน ที่นั่งนี้จะถูกล้าง",
-      "removeFromBus": "เอาออกจากคัน"
+      "removeFromBus": "เอาออกจากคัน",
+      "pickGuest": "เลือกคนลงที่นั่งนี้",
+      "noSeatCount": "ยังไม่มีที่นั่ง · {{count}}",
+      "noSeatableGuests": "ยังไม่มีคนในคันนี้ที่รอที่นั่ง"
     },
     "roomMap": {
       "title": "ผังห้องพัก",

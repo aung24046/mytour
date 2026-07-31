@@ -6,30 +6,38 @@ import Icon from './Icon'
 // - ฝั่ง staff (หน้าย่อย) → กลับไป /staff
 // - ฝั่งลูกทัวร์ (หน้าที่ไม่มีแถบเมนูล่าง เช่น หน้ากระเป๋า) → กลับไป /
 // หน้าที่ซ่อนปุ่ม: หน้าหลักอยู่แล้ว, หน้า login, และหน้าที่มีแถบเมนูล่าง (มีปุ่มหน้าหลักในนั้นแล้ว)
-const HIDE_ON = [
-  '/',
-  '/itinerary',
-  '/my-qr',
-  '/my-room',
-  '/my-seat',
-  '/bingo',
-  '/share-location',
-  '/trip-guide',
-  '/feedback',
-  '/edit-profile',
-  '/sos',
-  '/staff',
-  '/staff/login',
+// เทียบเป็น "หน้าอะไร" ไม่ใช่ path เต็ม เพราะหน้า guest มี prefix /t/:code แล้ว
+const HIDE_GUEST_PAGES = [
+  '', // หน้าแรกของทริป
+  'itinerary',
+  'my-qr',
+  'my-room',
+  'my-seat',
+  'bingo',
+  'share-location',
+  'trip-guide',
+  'feedback',
+  'edit-profile',
+  'sos',
 ]
+const HIDE_EXACT = ['/', '/join', '/staff', '/staff/login']
 
 export default function HomeButton() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  if (HIDE_ON.includes(pathname)) return null
+  if (HIDE_EXACT.includes(pathname)) return null
 
-  const target = pathname.startsWith('/staff') ? '/staff' : '/'
+  // /t/:code/<sub> → เอา <sub> มาเทียบ
+  const tourMatch = /^\/t\/([^/]+)(?:\/(.*))?$/.exec(pathname)
+  if (tourMatch && HIDE_GUEST_PAGES.includes(tourMatch[2] ?? '')) return null
+
+  const target = pathname.startsWith('/staff')
+    ? '/staff'
+    : tourMatch
+      ? `/t/${tourMatch[1]}`
+      : '/'
 
   return (
     <button

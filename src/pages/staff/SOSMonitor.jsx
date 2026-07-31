@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
-import { getStaffSession } from '../../lib/staffSession'
+import { getStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
@@ -31,6 +30,7 @@ const STATUS_STYLES = {
 }
 
 export default function SOSMonitor() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
   const staffSession = getStaffSession()
 
@@ -49,7 +49,7 @@ export default function SOSMonitor() {
     const { data, error } = await supabase
       .from('sos_alerts')
       .select('id, guest_id, lat, lng, accuracy, note, status, created_at, resolved_by')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('created_at', { ascending: false })
 
     if (!error) setAlerts(data ?? [])
@@ -61,12 +61,12 @@ export default function SOSMonitor() {
       supabase
         .from('guests')
         .select('id, name, nickname, gender, phone')
-        .eq('tour_id', ACTIVE_TOUR_ID),
+        .eq('tour_id', tourId),
       supabase
         .from('form_fields')
         .select('id, field_key, field_purpose, is_core')
-        .eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('staff').select('id, name').eq('tour_id', ACTIVE_TOUR_ID),
+        .eq('tour_id', tourId),
+      supabase.from('v_tour_staff').select('id, name').eq('tour_id', tourId),
     ])
 
     setGuests(guestsRes.data ?? [])
@@ -91,10 +91,10 @@ export default function SOSMonitor() {
     loadGuestsAndFields()
 
     const channel = supabase
-      .channel(`sos-alerts-${ACTIVE_TOUR_ID}`)
+      .channel(`sos-alerts-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'sos_alerts', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'sos_alerts', filter: `tour_id=eq.${tourId}` },
         () => loadAlerts()
       )
       .subscribe()
@@ -140,12 +140,12 @@ export default function SOSMonitor() {
       supabase
         .from('emergency_contacts')
         .select('id, label, phone, category, sort_order, is_active')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase
-        .from('staff')
+        .from('v_tour_staff')
         .select('id, name, phone, show_to_guest')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('show_to_guest', true),
     ])
 
@@ -159,10 +159,10 @@ export default function SOSMonitor() {
     loadContacts()
 
     const channel = supabase
-      .channel(`emergency-contacts-${ACTIVE_TOUR_ID}`)
+      .channel(`emergency-contacts-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'emergency_contacts', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'emergency_contacts', filter: `tour_id=eq.${tourId}` },
         () => loadContacts()
       )
       .subscribe()
@@ -179,7 +179,7 @@ export default function SOSMonitor() {
     const maxSort = contacts.reduce((max, c) => Math.max(max, c.sort_order ?? 0), 0)
 
     const { error } = await supabase.from('emergency_contacts').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       label: newContact.label.trim(),
       phone: newContact.phone.trim(),
       category: newContact.category,

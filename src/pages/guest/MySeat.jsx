@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { genderBgClass } from '../../lib/genderColor'
@@ -23,9 +23,11 @@ function seatTypeBgClass(type, gender) {
 }
 
 export default function MySeat() {
+  const tp = useTourPath()
+  const tourId = useTourId()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [bus, setBus] = useState(null)
   const [seats, setSeats] = useState([])
@@ -53,7 +55,7 @@ export default function MySeat() {
         supabase
           .from('bus_seats')
           .select('id, bus_id, row_number, seat_position')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('guest_id', guestId)
           .maybeSingle(),
       ])
@@ -125,12 +127,12 @@ export default function MySeat() {
       .channel(`my-seat-${guestId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bus_seats', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'bus_seats', filter: `tour_id=eq.${tourId}` },
         () => loadMySeat()
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'buses', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'buses', filter: `tour_id=eq.${tourId}` },
         () => loadMySeat()
       )
       .on(
@@ -191,7 +193,7 @@ export default function MySeat() {
           {!guestId && (
             <Card className="flex flex-col items-center gap-3 py-8 text-center">
               <p className="text-sm text-ink-muted">{t('guest.mySeat.notRegistered')}</p>
-              <Button onClick={() => navigate('/')} fullWidth={false} className="px-6">
+              <Button onClick={() => navigate(tp())} fullWidth={false} className="px-6">
                 {t('guest.mySeat.goRegister')}
               </Button>
             </Card>

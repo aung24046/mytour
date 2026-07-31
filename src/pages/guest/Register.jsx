@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { getGuestId, saveGuestId, clearGuestId } from '../../lib/guestSession'
 import { findFieldByPurpose } from '../../lib/guestFields'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
@@ -17,6 +17,7 @@ import GuestNav from '../../components/common/GuestNav'
 import GuestHome from '../../components/common/GuestHome'
 
 export default function Register() {
+  const tourId = useTourId()
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -47,7 +48,7 @@ export default function Register() {
   const [duplicateGuest, setDuplicateGuest] = useState(null)
 
   function restoreGuestSession(guest) {
-    saveGuestId(guest.id)
+    saveGuestId(tourId, guest.id)
     setExistingGuest(guest)
     setRecoverySheetOpen(false)
     setDuplicateGuest(null)
@@ -58,7 +59,7 @@ export default function Register() {
       const { data, error } = await supabase
         .from('guests')
         .select('id, name, nickname, qr_token')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq(phoneField.field_key, phone)
         .limit(1)
 
@@ -100,7 +101,7 @@ export default function Register() {
       const { data: fieldsData, error: fieldsError } = await supabase
         .from('form_fields')
         .select('id, field_key, field_purpose, is_core')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
 
       if (fieldsError) throw fieldsError
 
@@ -112,7 +113,7 @@ export default function Register() {
         const { data, error } = await supabase
           .from('guests')
           .select('id, name, nickname, qr_token')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq(coreKey, phone)
 
         if (error) throw error
@@ -131,7 +132,7 @@ export default function Register() {
           const { data, error } = await supabase
             .from('guests')
             .select('id, name, nickname, qr_token')
-            .eq('tour_id', ACTIVE_TOUR_ID)
+            .eq('tour_id', tourId)
             .in('id', guestIds)
 
           if (error) throw error
@@ -153,7 +154,7 @@ export default function Register() {
     const { data, error } = await supabase
       .from('guests')
       .select('id, name, nickname')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .eq('qr_token', decodedText)
       .maybeSingle()
 
@@ -182,7 +183,7 @@ export default function Register() {
     let isMounted = true
 
     async function checkExisting() {
-      const guestId = getGuestId()
+      const guestId = getGuestId(tourId)
       if (!guestId) {
         setCheckingExisting(false)
         return
@@ -198,7 +199,7 @@ export default function Register() {
 
       if (error || !data) {
         // guest_id ในเครื่องไม่ตรงกับข้อมูลจริงแล้ว (เช่นถูกลบไปฝั่ง staff) — เคลียร์แล้วให้ลงทะเบียนใหม่
-        clearGuestId()
+        clearGuestId(tourId)
       } else {
         setExistingGuest(data)
       }
@@ -221,7 +222,7 @@ export default function Register() {
       const { data, error } = await supabase
         .from('form_fields')
         .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
 
@@ -287,7 +288,7 @@ export default function Register() {
       }
 
       // Core fields go straight onto the guests row; custom fields go to guest_form_responses.
-      const corePayload = { tour_id: ACTIVE_TOUR_ID }
+      const corePayload = { tour_id: tourId }
       const customAnswers = []
 
       for (const f of fields) {
@@ -320,7 +321,7 @@ export default function Register() {
         if (responsesError) throw responsesError
       }
 
-      saveGuestId(guest.id)
+      saveGuestId(tourId, guest.id)
       setSavedGuest(guest)
     } catch (err) {
       console.error('[Register] submit failed', err)

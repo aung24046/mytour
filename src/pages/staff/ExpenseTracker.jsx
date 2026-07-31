@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
-import { getStaffSession } from '../../lib/staffSession'
+import { getStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -84,7 +83,7 @@ function dataUrlToBlob(dataUrl) {
 }
 
 async function uploadReceipt(blob) {
-  const path = `${ACTIVE_TOUR_ID}/${Date.now()}.jpg`
+  const path = `${tourId}/${Date.now()}.jpg`
   const { error } = await supabase.storage
     .from('receipt-photos')
     .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
@@ -100,6 +99,7 @@ function makeId() {
 }
 
 export default function ExpenseTracker() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
   const staffSession = getStaffSession()
 
@@ -130,10 +130,10 @@ export default function ExpenseTracker() {
       supabase
         .from('expenses')
         .select('id, amount, category, description, receipt_url, paid_by, expense_date, created_by, created_at')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('expense_date', { ascending: false })
         .order('created_at', { ascending: false }),
-      supabase.from('staff').select('id, name').eq('tour_id', ACTIVE_TOUR_ID),
+      supabase.from('v_tour_staff').select('id, name').eq('tour_id', tourId),
     ])
 
     if (expensesRes.error) {
@@ -260,7 +260,7 @@ export default function ExpenseTracker() {
     setSaving(true)
 
     const basePayload = {
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       amount: amountNum,
       category: draft.category,
       description: draft.description.trim() || null,

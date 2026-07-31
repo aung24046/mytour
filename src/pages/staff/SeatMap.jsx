@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass, genderBgClass, genderBorderClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
@@ -21,6 +21,13 @@ const NEW_BUS_TEMPLATE = {
 
 const SEAT_TYPES = ['guest', 'staff', 'vip']
 
+// เรียงรายชื่อตามชื่อเล่น (ไม่มีชื่อเล่นใช้ชื่อจริงแทน) — ใช้ทั่วหน้านี้
+function byNickname(a, b) {
+  const an = (a.nickname || a.name || '').trim()
+  const bn = (b.nickname || b.name || '').trim()
+  return an.localeCompare(bn, 'th')
+}
+
 // สีปุ่มเลือกประเภท (active state)
 const TYPE_ACTIVE_CLASS = {
   guest: 'bg-sky-500 text-white',
@@ -36,6 +43,7 @@ function seatTypeBgClass(type, gender) {
 }
 
 export default function SeatMap() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [mode, setMode] = useState('assign') // 'assign' = จับลงคัน, 'seats' = จัดที่นั่ง
@@ -47,7 +55,6 @@ export default function SeatMap() {
   const [error, setError] = useState(null)
 
   const [selectedSeat, setSelectedSeat] = useState(null) // seat row object
-  const [search, setSearch] = useState('')
   const [assigning, setAssigning] = useState(false)
   const [assignType, setAssignType] = useState('guest') // ประเภทที่จะใช้ตอนจัดคนลงที่นั่งใหม่
 
@@ -73,13 +80,13 @@ export default function SeatMap() {
       supabase
         .from('buses')
         .select('id, name, total_rows, seats_per_row, license_plate, driver_name, driver_phone')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('name'),
       supabase
         .from('bus_seats')
         .select('id, bus_id, row_number, seat_position, guest_id, is_available, is_seat, seat_type')
-        .eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('guests').select('id, name, nickname, gender, bus_id').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+        .eq('tour_id', tourId),
+      supabase.from('guests').select('id, name, nickname, gender, bus_id').eq('tour_id', tourId).order('name'),
     ])
 
     if (busesRes.error || seatsRes.error || guestsRes.error) {
@@ -91,7 +98,7 @@ export default function SeatMap() {
 
     setBuses(busesRes.data ?? [])
     setSeats(seatsRes.data ?? [])
-    setGuests(guestsRes.data ?? [])
+    setGuests((guestsRes.data ?? []).slice().sort(byNickname))
     setActiveBusId((prev) => prev ?? busesRes.data?.[0]?.id ?? null)
     setLoading(false)
   }
@@ -100,10 +107,10 @@ export default function SeatMap() {
     loadAll()
 
     const channel = supabase
-      .channel(`seatmap-${ACTIVE_TOUR_ID}`)
+      .channel(`seatmap-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bus_seats', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'bus_seats', filter: `tour_id=eq.${tourId}` },
         (payload) => {
           setSeats((prev) => {
             if (payload.eventType === 'DELETE') return prev.filter((s) => s.id !== payload.old.id)
@@ -142,14 +149,11 @@ export default function SeatMap() {
     return map
   }, [guests])
 
-  const searchResults = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return []
-    return guests
-      .filter((g) => !occupiedGuestIds.has(g.id) || g.id === selectedSeat?.guest_id)
-      .filter((g) => g.name?.toLowerCase().includes(q) || g.nickname?.toLowerCase().includes(q))
-      .slice(0, 20)
-  }, [guests, search, occupiedGuestIds, selectedSeat])
+  // คนในคันของที่นั่งที่เลือก ที่ยังไม่มีที่นั่ง — สำหรับกดเลือกลงที่นั่ง
+  const sheetSeatableGuests = useMemo(() => {
+    if (!selectedSeat) return []
+    return guests.filter((g) => g.bus_id === selectedSeat.bus_id && !occupiedGuestIds.has(g.id))
+  }, [guests, selectedSeat, occupiedGuestIds])
 
   // ----- โหมดจับลงคัน -----
   // seat ที่ลูกทัวร์แต่ละคนนั่งอยู่ (ใช้เตือนก่อนย้ายคัน)
@@ -248,13 +252,11 @@ export default function SeatMap() {
 
   function openSeat(seat) {
     setSelectedSeat(seat)
-    setSearch('')
     setAssignType(seat.seat_type || 'guest')
   }
 
   function closeSheet() {
     setSelectedSeat(null)
-    setSearch('')
   }
 
   async function assignGuest(guestId) {
@@ -391,7 +393,7 @@ export default function SeatMap() {
     const { data: bus, error: busError } = await supabase
       .from('buses')
       .insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         name: newBus.name.trim(),
         total_rows: totalRows,
         seats_per_row: seatsPerRow,
@@ -414,7 +416,7 @@ export default function SeatMap() {
       for (const pos of positions) {
         seatRows.push({
           bus_id: bus.id,
-          tour_id: ACTIVE_TOUR_ID,
+          tour_id: tourId,
           row_number: row,
           seat_position: pos,
           is_available: true,
@@ -492,7 +494,7 @@ export default function SeatMap() {
         if (!existing.some((s) => s.row_number === row && s.seat_position === pos)) {
           toInsert.push({
             bus_id: busId,
-            tour_id: ACTIVE_TOUR_ID,
+            tour_id: tourId,
             row_number: row,
             seat_position: pos,
             is_available: true,
@@ -1107,30 +1109,33 @@ export default function SeatMap() {
             </p>
             <TypeSelector value={assignType} onChange={setAssignType} t={t} />
 
-            <input
-              type="text"
-              placeholder={t('staff.checkIn.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="mt-3 w-full rounded-control border border-black/10 px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
-            />
-
-            <div className="mt-3 flex flex-col gap-1.5">
-              {search.trim() && searchResults.length === 0 && (
-                <p className="text-sm text-ink-faint">{t('staff.checkIn.noResults')}</p>
-              )}
-              {searchResults.map((g) => (
-                <button
-                  key={g.id}
-                  onClick={() => assignGuest(g.id)}
-                  disabled={assigning}
-                  className="rounded-control border border-black/10 px-3 py-2.5 text-left hover:bg-surface-muted"
-                >
-                  <span className={`font-medium ${genderTextClass(g.gender) || 'text-ink'}`}>{g.nickname || g.name}</span>
-                  {g.nickname && <span className="ml-1 text-sm text-ink-faint">{g.name}</span>}
-                </button>
-              ))}
+            <div className="mt-3 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                {t('staff.seatMap.pickGuest')}
+              </p>
+              <span className="text-[11px] text-ink-faint">
+                {t('staff.seatMap.noSeatCount', { count: sheetSeatableGuests.length })}
+              </span>
             </div>
+
+            {sheetSeatableGuests.length === 0 ? (
+              <p className="mt-2 rounded-control bg-surface-sunken px-3 py-4 text-center text-sm text-ink-faint">
+                {t('staff.seatMap.noSeatableGuests')}
+              </p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {sheetSeatableGuests.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => assignGuest(g.id)}
+                    disabled={assigning}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold ${genderBgClass(g.gender)}`}
+                  >
+                    {g.nickname || g.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <button
               onClick={disableSeat}

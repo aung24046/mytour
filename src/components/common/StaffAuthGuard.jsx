@@ -1,15 +1,9 @@
-import { Navigate } from 'react-router-dom'
+import RequireRole from './RequireRole'
 
-import { getStaffSession } from '../../lib/staffSession'
-
-// Gate หน้าจอฝั่ง staff — เช็ค session ที่เก็บใน localStorage หลัง login ด้วย PIN
-// หมายเหตุ: นี่คือการกันหน้าจอระดับ UI เท่านั้น ไม่ใช่การป้องกันระดับฐานข้อมูล (ดู staffSession.js)
+// เหลือไว้เพื่อ backward compat — เท่ากับ RequireRole ที่ไม่ระบุ capability
+// (เช็คแค่ว่ามี session) โค้ดใหม่ให้ใช้ <RequireRole capability="..."> แทน
+//
+// @deprecated
 export default function StaffAuthGuard({ children }) {
-  const session = getStaffSession()
-
-  if (!session) {
-    return <Navigate to="/staff/login" replace />
-  }
-
-  return children
+  return <RequireRole>{children}</RequireRole>
 }

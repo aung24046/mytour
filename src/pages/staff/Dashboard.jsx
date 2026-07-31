@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
-import { getStaffSession, clearStaffSession } from '../../lib/staffSession'
+import { getStaffSession, clearStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Icon from '../../components/common/Icon'
+import TourSwitcher from '../../components/common/TourSwitcher'
 
 // เมนูจัดเป็นหมวด — หาง่ายกว่ารายการยาวๆ
 const GROUPS = [
@@ -59,6 +59,7 @@ function formatTime(dbTime) {
 }
 
 export default function Dashboard() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const staffSession = getStaffSession()
@@ -93,7 +94,7 @@ export default function Dashboard() {
     const { count } = await supabase
       .from('sos_alerts')
       .select('id', { count: 'exact', head: true })
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .eq('status', 'open')
 
     setOpenSosCount(count ?? 0)
@@ -107,12 +108,12 @@ export default function Dashboard() {
       supabase
         .from('guests')
         .select('id, name, nickname, gender, phone, check_in_status')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('name'),
       supabase
         .from('form_fields')
         .select('id, field_key, field_purpose, is_core')
-        .eq('tour_id', ACTIVE_TOUR_ID),
+        .eq('tour_id', tourId),
     ])
 
     if (guestsRes.error || fieldsRes.error) {
@@ -143,7 +144,7 @@ export default function Dashboard() {
     const { data: eventsData, error: eventsError } = await supabase
       .from('checkin_events')
       .select('id, title, is_core, itinerary_item_id, sort_order')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('sort_order', { ascending: true })
 
     if (eventsError) {
@@ -173,7 +174,7 @@ export default function Dashboard() {
     const { data } = await supabase
       .from('itinerary_items')
       .select('id, day_number, sort_order, scheduled_time, title, location_name, status')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .order('day_number', { ascending: true })
       .order('sort_order', { ascending: true })
 
@@ -182,8 +183,8 @@ export default function Dashboard() {
 
   async function loadLogistics() {
     const [luggageRes, roomsRes] = await Promise.all([
-      supabase.from('luggage').select('status').eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('room_assignments').select('guest_id').eq('tour_id', ACTIVE_TOUR_ID),
+      supabase.from('luggage').select('status').eq('tour_id', tourId),
+      supabase.from('room_assignments').select('guest_id').eq('tour_id', tourId),
     ])
 
     const luggage = luggageRes.data ?? []
@@ -204,10 +205,10 @@ export default function Dashboard() {
     loadLogistics()
 
     const channel = supabase
-      .channel(`dashboard-${ACTIVE_TOUR_ID}`)
+      .channel(`dashboard-${tourId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'guests', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: 'UPDATE', schema: 'public', table: 'guests', filter: `tour_id=eq.${tourId}` },
         (payload) => {
           setGuests((prev) =>
             prev.map((g) => (g.id === payload.new.id ? { ...g, ...payload.new } : g))
@@ -217,19 +218,19 @@ export default function Dashboard() {
       .subscribe()
 
     const sosChannel = supabase
-      .channel(`dashboard-sos-${ACTIVE_TOUR_ID}`)
+      .channel(`dashboard-sos-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'sos_alerts', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'sos_alerts', filter: `tour_id=eq.${tourId}` },
         () => loadOpenSosCount()
       )
       .subscribe()
 
     const opsChannel = supabase
-      .channel(`dashboard-ops-${ACTIVE_TOUR_ID}`)
+      .channel(`dashboard-ops-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'itinerary_items', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'itinerary_items', filter: `tour_id=eq.${tourId}` },
         () => loadItinerary()
       )
       .on(
@@ -239,12 +240,12 @@ export default function Dashboard() {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'luggage', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'luggage', filter: `tour_id=eq.${tourId}` },
         () => loadLogistics()
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'room_assignments', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'room_assignments', filter: `tour_id=eq.${tourId}` },
         () => loadLogistics()
       )
       .subscribe()
@@ -381,6 +382,11 @@ export default function Dashboard() {
           >
             {t('staff.dashboard.logout')}
           </button>
+        </div>
+
+        {/* ทำงานอยู่ทริปไหน — แอดมินกดสลับได้ตรงนี้ */}
+        <div className="mb-3">
+          <TourSwitcher />
         </div>
 
         {!loading && openSosCount > 0 && (

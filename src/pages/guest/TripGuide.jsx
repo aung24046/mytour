@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { catColor, catLabel, tagColor } from '../../lib/guideCategoryStyle'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
@@ -26,6 +26,7 @@ function excerpt(body, len = 70) {
 }
 
 export default function TripGuide() {
+  const tourId = useTourId()
   const { t, i18n } = useTranslation()
   const lang = i18n.language
 
@@ -66,24 +67,24 @@ export default function TripGuide() {
         supabase
           .from('guide_categories')
           .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('is_active', true)
           .order('sort_order', { ascending: true }),
         supabase
           .from('guide_articles')
           .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_featured')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .eq('is_published', true)
           .order('sort_order', { ascending: true }),
         supabase
           .from('phrasebook_entries')
           .select('id, category_l1, category_l2, phrase, place_label, itinerary_item_id, translation_zh, pronunciation_zh, translation_en, sort_order')
-          .eq('tour_id', ACTIVE_TOUR_ID)
+          .eq('tour_id', tourId)
           .order('sort_order', { ascending: true }),
         supabase
           .from('itinerary_items')
           .select('id, day_number, scheduled_time, title, location_name')
-          .eq('tour_id', ACTIVE_TOUR_ID),
+          .eq('tour_id', tourId),
       ])
 
       if (!isMounted) return

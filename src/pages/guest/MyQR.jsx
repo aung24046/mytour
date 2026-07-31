@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
 import { supabase } from '../../lib/supabase'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
@@ -11,6 +12,8 @@ import Button from '../../components/common/Button'
 import GuestNav from '../../components/common/GuestNav'
 
 export default function MyQR() {
+  const tp = useTourPath()
+  const tourId = useTourId()
   const { t } = useTranslation()
 
   const [guest, setGuest] = useState(null)
@@ -24,7 +27,7 @@ export default function MyQR() {
       setLoading(true)
       setError(null)
 
-      const guestId = getGuestId()
+      const guestId = getGuestId(tourId)
       if (!guestId) {
         setError('no-session')
         setLoading(false)
@@ -72,7 +75,7 @@ export default function MyQR() {
           {error === 'no-session' && (
             <div className="flex flex-col items-center gap-3">
               <p className="text-gray-600">{t('guest.myQr.noSession')}</p>
-              <Link to="/" className="w-full">
+              <Link to={tp()} className="w-full">
                 <Button>{t('guest.register.title')}</Button>
               </Link>
             </div>

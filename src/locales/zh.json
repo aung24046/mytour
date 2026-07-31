@@ -524,7 +524,10 @@
       "allAssigned": "所有人都已分车 🎉",
       "chooseBus": "选择车辆",
       "hasSeatWarning": "已有座位 {{seat}}，换车将清除该座位",
-      "removeFromBus": "移出车辆"
+      "removeFromBus": "移出车辆",
+      "pickGuest": "选择乘客坐此座位",
+      "noSeatCount": "尚无座位 · {{count}}",
+      "noSeatableGuests": "此车暂无等待安排座位的乘客"
     },
     "roomMap": {
       "title": "房间图",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import AnnouncementBanner from './AnnouncementBanner'
 import BottomSheet from './BottomSheet'
 import Icon from './Icon'
@@ -35,6 +35,8 @@ function pickStay(stays) {
 }
 
 export default function GuestHome({ guest, isNew = false }) {
+  const tourId = useTourId()
+  const tp = useTourPath()
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -90,7 +92,7 @@ export default function GuestHome({ guest, isNew = false }) {
       const { data: seatRows } = await supabase
         .from('bus_seats')
         .select('row_number, seat_position, bus_id')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('guest_id', guestId)
         .limit(1)
       const mySeat = seatRows?.[0]
@@ -123,7 +125,7 @@ export default function GuestHome({ guest, isNew = false }) {
       const { data } = await supabase
         .from('itinerary_items')
         .select('id, day_number, sort_order, scheduled_time, title, location_name, status')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true })
       if (isMounted) setItems(data ?? [])
@@ -134,7 +136,7 @@ export default function GuestHome({ guest, isNew = false }) {
       const { data } = await supabase
         .from('guide_articles')
         .select('id, category, title, body, source_url, image_url, itinerary_item_id')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('is_published', true)
         .not('itinerary_item_id', 'is', null)
       const map = {}
@@ -152,7 +154,7 @@ export default function GuestHome({ guest, isNew = false }) {
       .channel(`guest-home-${guestId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'itinerary_items', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'itinerary_items', filter: `tour_id=eq.${tourId}` },
         () => loadItinerary()
       )
       .on(
@@ -215,7 +217,7 @@ export default function GuestHome({ guest, isNew = false }) {
             <div className="flex items-center gap-1.5">
               <h1 className="truncate text-2xl font-extrabold">{displayName}</h1>
               <button
-                onClick={() => navigate('/edit-profile')}
+                onClick={() => navigate(tp('edit-profile'))}
                 aria-label={t('guest.home.editProfile')}
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition active:scale-90"
               >
@@ -246,7 +248,7 @@ export default function GuestHome({ guest, isNew = false }) {
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">{t('guest.home.todaySchedule')}</span>
             <button
-              onClick={() => navigate('/itinerary')}
+              onClick={() => navigate(tp('itinerary'))}
               className="text-xs font-semibold text-brand"
             >
               {t('guest.home.viewAll')} ›
@@ -306,7 +308,7 @@ export default function GuestHome({ guest, isNew = false }) {
       {/* ห้องพัก + ที่นั่ง — การ์ดกะทัดรัด */}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <button
-          onClick={() => navigate('/my-room')}
+          onClick={() => navigate(tp('my-room'))}
           className="rounded-control border-[1.5px] border-brand-light bg-surface p-3 text-left shadow-card transition active:scale-[0.98]"
         >
           <div className="flex items-center gap-2">
@@ -328,7 +330,7 @@ export default function GuestHome({ guest, isNew = false }) {
         </button>
 
         <button
-          onClick={() => navigate('/my-seat')}
+          onClick={() => navigate(tp('my-seat'))}
           className="rounded-control border-[1.5px] border-brand-light bg-surface p-3 text-left shadow-card transition active:scale-[0.98]"
         >
           <div className="flex items-center gap-2">
@@ -350,10 +352,10 @@ export default function GuestHome({ guest, isNew = false }) {
 
       {/* เมนูลัด (QR ย้ายไปปุ่มกลางแถบล่างแล้ว) */}
       <div className="mt-4 grid grid-cols-4 gap-2">
-        <NavTile icon="book" label={t('guest.nav.tripGuide')} onClick={() => navigate('/trip-guide')} />
-        <NavTile icon="target" label={t('guest.nav.bingo')} onClick={() => navigate('/bingo')} />
-        <NavTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate('/share-location')} />
-        <NavTile icon="alert" label={t('guest.nav.sos')} onClick={() => navigate('/sos')} danger />
+        <NavTile icon="book" label={t('guest.nav.tripGuide')} onClick={() => navigate(tp('trip-guide'))} />
+        <NavTile icon="target" label={t('guest.nav.bingo')} onClick={() => navigate(tp('bingo'))} />
+        <NavTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate(tp('share-location'))} />
+        <NavTile icon="alert" label={t('guest.nav.sos')} onClick={() => navigate(tp('sos'))} danger />
       </div>
 
       {/* คู่มือสถานที่ — เด้งขึ้นเมื่อกดชื่อกิจกรรมที่มีคู่มือ */}

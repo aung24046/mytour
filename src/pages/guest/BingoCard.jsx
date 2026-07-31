@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
@@ -50,8 +50,9 @@ function checkBingo(numbers, markedSet) {
 }
 
 export default function BingoCard() {
+  const tourId = useTourId()
   const { t } = useTranslation()
-  const guestId = getGuestId()
+  const guestId = getGuestId(tourId)
 
   const [games, setGames] = useState([])
   const [activeGameId, setActiveGameId] = useState(null)
@@ -72,7 +73,7 @@ export default function BingoCard() {
     const { data } = await supabase
       .from('bingo_games')
       .select('id, name, status, called_numbers')
-      .eq('tour_id', ACTIVE_TOUR_ID)
+      .eq('tour_id', tourId)
       .in('status', ['waiting', 'playing'])
       .order('created_at', { ascending: true })
 
@@ -126,10 +127,10 @@ export default function BingoCard() {
     loadGames()
 
     const channel = supabase
-      .channel(`bingo-games-guest-${ACTIVE_TOUR_ID}`)
+      .channel(`bingo-games-guest-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bingo_games', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'bingo_games', filter: `tour_id=eq.${tourId}` },
         () => loadGames()
       )
       .subscribe()

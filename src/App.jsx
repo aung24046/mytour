@@ -1,6 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Outlet } from 'react-router-dom'
 
 // Guest pages
+import TourEntry from './pages/guest/TourEntry.jsx'
 import Register from './pages/guest/Register.jsx'
 import Itinerary from './pages/guest/Itinerary.jsx'
 import MyQR from './pages/guest/MyQR.jsx'
@@ -35,183 +36,178 @@ import GuideBuilder from './pages/staff/GuideBuilder.jsx'
 import FeedbackSummary from './pages/staff/FeedbackSummary.jsx'
 import ExpenseTracker from './pages/staff/ExpenseTracker.jsx'
 import SupplierManager from './pages/staff/SupplierManager.jsx'
-import StaffAuthGuard from './components/common/StaffAuthGuard.jsx'
+import TourManager from './pages/staff/TourManager.jsx'
+
+import RequireRole from './components/common/RequireRole.jsx'
+import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
 import HomeButton from './components/common/HomeButton.jsx'
+import { TourProvider, useTour, TOUR_STATUS } from './lib/TourContext.jsx'
+import { getActiveTourId } from './lib/staffSession.js'
+
+// ---------------------------------------------------------------------
+// Layout ฝั่งลูกทัวร์ — resolve /t/:code เป็น tour_id ให้ทุกหน้าลูกใต้มัน
+// ---------------------------------------------------------------------
+function TourGate() {
+  const { status, tour } = useTour()
+
+  if (status === TOUR_STATUS.LOADING) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+      </div>
+    )
+  }
+
+  if (status === TOUR_STATUS.NOT_FOUND) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-slate-800">ไม่พบทริปนี้</p>
+        <p className="mt-2 text-sm text-slate-500">
+          รหัสทริปอาจพิมพ์ผิด หรือทริปถูกลบไปแล้ว — ตรวจสอบกับทีมงานอีกครั้ง
+        </p>
+        <a
+          href="/join"
+          className="mt-6 inline-block rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-medium text-white"
+        >
+          กรอกรหัสทริปใหม่
+        </a>
+      </div>
+    )
+  }
+
+  if (status === TOUR_STATUS.ERROR) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-slate-800">เชื่อมต่อไม่ได้</p>
+        <p className="mt-2 text-sm text-slate-500">ตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {tour?.status === 'archived' && (
+        <div className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-800">
+          ทริปนี้จบแล้ว — ดูข้อมูลย้อนหลังได้ แต่แก้ไขไม่ได้
+        </div>
+      )}
+      <Outlet />
+    </>
+  )
+}
+
+function GuestTourLayout() {
+  return (
+    <TourProvider>
+      <TourGate />
+    </TourProvider>
+  )
+}
+
+// ---------------------------------------------------------------------
+// Layout ฝั่งทีมงาน — tour_id มาจาก staffSession ไม่ใช่ URL
+// ---------------------------------------------------------------------
+function StaffTourLayout({ children }) {
+  return <TourProvider tourId={getActiveTourId()}>{children}</TourProvider>
+}
+
+/** ย่อ boilerplate ของ staff route */
+function staffRoute(capability, element) {
+  return (
+    <RequireRole capability={capability}>
+      <StaffTourLayout>{element}</StaffTourLayout>
+    </RequireRole>
+  )
+}
 
 function App() {
   return (
     <>
-    <Routes>
-      {/* Guest routes — เข้าผ่านลิงก์/QR เฉพาะทริป */}
-      <Route path="/" element={<Register />} />
-      <Route path="/itinerary" element={<Itinerary />} />
-      <Route path="/my-qr" element={<MyQR />} />
-      <Route path="/my-room" element={<MyRoom />} />
-      <Route path="/my-seat" element={<MySeat />} />
-      <Route path="/bingo" element={<BingoCard />} />
-      <Route path="/share-location" element={<ShareLocation />} />
-      <Route path="/bag/:tagCode" element={<BagLookup />} />
-      <Route path="/sos" element={<SOS />} />
-      <Route path="/trip-guide" element={<TripGuide />} />
-      <Route path="/feedback" element={<Feedback />} />
-      <Route path="/edit-profile" element={<EditProfile />} />
+      <Routes>
+        {/* ── หน้าแรก / เลือกทริป ───────────────────────────────── */}
+        <Route path="/" element={<TourEntry />} />
+        <Route path="/join" element={<TourEntry />} />
 
-      {/* Staff routes — เข้าได้เฉพาะหลัง login ด้วย PIN (ยกเว้นหน้า login เอง) */}
-      <Route path="/staff/login" element={<Login />} />
-      <Route
-        path="/staff"
-        element={
-          <StaffAuthGuard>
-            <Dashboard />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/check-in"
-        element={
-          <StaffAuthGuard>
-            <CheckIn />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/broadcast"
-        element={
-          <StaffAuthGuard>
-            <Broadcast />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/seat-map"
-        element={
-          <StaffAuthGuard>
-            <SeatMap />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/room-map"
-        element={
-          <StaffAuthGuard>
-            <RoomMap />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/location-monitor"
-        element={
-          <StaffAuthGuard>
-            <LocationMonitor />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/bingo-host"
-        element={
-          <StaffAuthGuard>
-            <BingoHost />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/form-builder"
-        element={
-          <StaffAuthGuard>
-            <FormBuilder />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/itinerary-builder"
-        element={
-          <StaffAuthGuard>
-            <ItineraryBuilder />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/dietary-summary"
-        element={
-          <StaffAuthGuard>
-            <DietarySummary />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/staff-manager"
-        element={
-          <StaffAuthGuard>
-            <StaffManager />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/guest-manager"
-        element={
-          <StaffAuthGuard>
-            <GuestManager />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/luggage-manager"
-        element={
-          <StaffAuthGuard>
-            <LuggageManager />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/print"
-        element={
-          <StaffAuthGuard>
-            <PrintExport />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/sos-monitor"
-        element={
-          <StaffAuthGuard>
-            <SOSMonitor />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/guide-builder"
-        element={
-          <StaffAuthGuard>
-            <GuideBuilder />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/feedback-summary"
-        element={
-          <StaffAuthGuard>
-            <FeedbackSummary />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/expense-tracker"
-        element={
-          <StaffAuthGuard>
-            <ExpenseTracker />
-          </StaffAuthGuard>
-        }
-      />
-      <Route
-        path="/staff/supplier-manager"
-        element={
-          <StaffAuthGuard>
-            <SupplierManager />
-          </StaffAuthGuard>
-        }
-      />
-    </Routes>
-    <HomeButton />
+        {/* ── Guest: ทุกหน้าอยู่ใต้ /t/:code ─────────────────────── */}
+        <Route path="/t/:code" element={<GuestTourLayout />}>
+          <Route index element={<Register />} />
+          <Route path="itinerary" element={<Itinerary />} />
+          <Route path="my-qr" element={<MyQR />} />
+          <Route path="my-room" element={<MyRoom />} />
+          <Route path="my-seat" element={<MySeat />} />
+          <Route path="bingo" element={<BingoCard />} />
+          <Route path="share-location" element={<ShareLocation />} />
+          <Route path="sos" element={<SOS />} />
+          <Route path="trip-guide" element={<TripGuide />} />
+          <Route path="feedback" element={<Feedback />} />
+          <Route path="edit-profile" element={<EditProfile />} />
+        </Route>
+
+        {/* ── Legacy: QR/ลิงก์ที่แจกไปแล้วยังใช้ได้ ────────────────
+            ห้ามลบจนกว่าจะแน่ใจว่าไม่มี QR เก่าหมุนเวียนอยู่ */}
+        <Route path="/itinerary" element={<LegacyTourRedirect to="itinerary" />} />
+        <Route path="/my-qr" element={<LegacyTourRedirect to="my-qr" />} />
+        <Route path="/my-room" element={<LegacyTourRedirect to="my-room" />} />
+        <Route path="/my-seat" element={<LegacyTourRedirect to="my-seat" />} />
+        <Route path="/bingo" element={<LegacyTourRedirect to="bingo" />} />
+        <Route path="/share-location" element={<LegacyTourRedirect to="share-location" />} />
+        <Route path="/sos" element={<LegacyTourRedirect to="sos" />} />
+        <Route path="/trip-guide" element={<LegacyTourRedirect to="trip-guide" />} />
+        <Route path="/feedback" element={<LegacyTourRedirect to="feedback" />} />
+        <Route path="/edit-profile" element={<LegacyTourRedirect to="edit-profile" />} />
+
+        {/* ป้ายกระเป๋าหา tour_id เองจาก tag_code — ไม่ต้องมี :code */}
+        <Route path="/bag/:tagCode" element={<BagLookup />} />
+
+        {/* ── Staff ─────────────────────────────────────────────── */}
+        <Route path="/staff/login" element={<Login />} />
+
+        <Route path="/staff" element={staffRoute('dashboard.view', <Dashboard />)} />
+        <Route path="/staff/admin" element={staffRoute('tour.create', <TourManager />)} />
+        <Route path="/staff/check-in" element={staffRoute('checkin.use', <CheckIn />)} />
+        <Route path="/staff/broadcast" element={staffRoute('broadcast.send', <Broadcast />)} />
+        <Route path="/staff/seat-map" element={staffRoute('seat.edit', <SeatMap />)} />
+        <Route path="/staff/room-map" element={staffRoute('room.edit', <RoomMap />)} />
+        <Route
+          path="/staff/location-monitor"
+          element={staffRoute('location.monitor', <LocationMonitor />)}
+        />
+        <Route path="/staff/bingo-host" element={staffRoute('bingo.host', <BingoHost />)} />
+        <Route path="/staff/form-builder" element={staffRoute('form.assign', <FormBuilder />)} />
+        <Route
+          path="/staff/itinerary-builder"
+          element={staffRoute('itinerary.edit', <ItineraryBuilder />)}
+        />
+        <Route
+          path="/staff/dietary-summary"
+          element={staffRoute('guest.view', <DietarySummary />)}
+        />
+        <Route
+          path="/staff/staff-manager"
+          element={staffRoute('tourstaff.manage', <StaffManager />)}
+        />
+        <Route path="/staff/guest-manager" element={staffRoute('guest.view', <GuestManager />)} />
+        <Route
+          path="/staff/luggage-manager"
+          element={staffRoute('luggage.use', <LuggageManager />)}
+        />
+        <Route path="/staff/print" element={staffRoute('print.export', <PrintExport />)} />
+        <Route path="/staff/sos-monitor" element={staffRoute('sos.monitor', <SOSMonitor />)} />
+        <Route path="/staff/guide-builder" element={staffRoute('guide.assign', <GuideBuilder />)} />
+        <Route
+          path="/staff/feedback-summary"
+          element={staffRoute('feedback.view', <FeedbackSummary />)}
+        />
+        <Route
+          path="/staff/expense-tracker"
+          element={staffRoute('expense.edit', <ExpenseTracker />)}
+        />
+        <Route
+          path="/staff/supplier-manager"
+          element={staffRoute('supplier.assign', <SupplierManager />)}
+        />
+      </Routes>
+      <HomeButton />
     </>
   )
 }

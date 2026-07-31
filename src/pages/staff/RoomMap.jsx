@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
@@ -44,6 +44,7 @@ const NEW_HOTEL_TEMPLATE = { name: '', check_in_date: '', check_out_date: '', ge
 const NEW_ROOM_BATCH_TEMPLATE = { room_type: 'twin', count: 5 }
 
 export default function RoomMap() {
+  const tourId = useActiveTourId()
   const { t } = useTranslation()
 
   const [hotels, setHotels] = useState([])
@@ -97,12 +98,12 @@ export default function RoomMap() {
       supabase
         .from('hotels')
         .select('id, name, check_in_date, check_out_date, general_info, wifi_name, wifi_password, breakfast_time, breakfast_location, checkout_time')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .order('check_in_date', { ascending: true }),
       supabase
         .from('hotel_rooms')
         .select('id, hotel_id, room_number, floor, room_type, max_guests')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         // เรียงตาม created_at เป็นหลัก + id เป็นตัวตัดสินสำรอง เพราะห้องที่สร้างพร้อมกันเป็นชุด (bulk insert)
         // จะมี created_at เท่ากันเป๊ะ ถ้าไม่มี tiebreaker ลำดับอาจไม่นิ่งข้าม query
         .order('created_at', { ascending: true })
@@ -110,8 +111,8 @@ export default function RoomMap() {
       supabase
         .from('room_assignments')
         .select('id, room_id, guest_id')
-        .eq('tour_id', ACTIVE_TOUR_ID),
-      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', ACTIVE_TOUR_ID).order('name'),
+        .eq('tour_id', tourId),
+      supabase.from('guests').select('id, name, nickname, gender').eq('tour_id', tourId).order('name'),
     ])
 
     if (hotelsRes.error || roomsRes.error || assignmentsRes.error || guestsRes.error) {
@@ -139,15 +140,15 @@ export default function RoomMap() {
     loadAll()
 
     const channel = supabase
-      .channel(`roommap-${ACTIVE_TOUR_ID}`)
+      .channel(`roommap-${tourId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'room_assignments', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'room_assignments', filter: `tour_id=eq.${tourId}` },
         () => loadAll()
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'hotel_rooms', filter: `tour_id=eq.${ACTIVE_TOUR_ID}` },
+        { event: '*', schema: 'public', table: 'hotel_rooms', filter: `tour_id=eq.${tourId}` },
         (payload) => {
           // แก้บั๊ก "ห้องเด้งลงล่างตอนกำลังพิมพ์" — เดิม full reload ทุกครั้งที่มีการแก้ไข
           // ทำให้ลำดับห้องสลับใหม่ทุกครั้ง (Postgres ไม่การันตีลำดับถ้าไม่มี ORDER BY ที่ query ตรง)
@@ -270,7 +271,7 @@ export default function RoomMap() {
     const { data: insertedHotel, error: insertError } = await supabase
       .from('hotels')
       .insert({
-        tour_id: ACTIVE_TOUR_ID,
+        tour_id: tourId,
         name: newHotel.name.trim(),
         check_in_date: newHotel.check_in_date || null,
         check_out_date: newHotel.check_out_date || null,
@@ -370,7 +371,7 @@ export default function RoomMap() {
     const maxGuests = maxGuestsFor(newRoomBatch.room_type)
 
     const roomRows = Array.from({ length: count }, () => ({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       hotel_id: activeHotelId,
       room_type: newRoomBatch.room_type,
       max_guests: maxGuests,
@@ -430,7 +431,7 @@ export default function RoomMap() {
     setAssigning(true)
 
     const { error: insertError } = await supabase.from('room_assignments').insert({
-      tour_id: ACTIVE_TOUR_ID,
+      tour_id: tourId,
       room_id: selectedRoom.id,
       guest_id: guestId,
     })

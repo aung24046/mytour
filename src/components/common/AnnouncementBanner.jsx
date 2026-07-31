@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { ACTIVE_TOUR_ID } from '../../lib/constants'
+import { useTourId } from '../../lib/TourContext'
 import Icon from './Icon'
 
 // แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่ — อัปเดตแบบ real-time ผ่าน Supabase Realtime ไม่ต้อง refresh หน้า
 // variant "strip" (ค่าเริ่มต้น) = แถบ sticky บนสุดของหน้า ใช้กับหน้าลูกทัวร์ทั่วไป
 // variant "box" = กล่องเด่นแทรกในเนื้อหา — ใช้ที่หน้า Home เหนือปุ่ม QR เพราะ sticky strip เดิมมองข้ามง่าย
 export default function AnnouncementBanner({ variant = 'strip' }) {
+  const tourId = useTourId()
   const { t } = useTranslation()
   const [announcement, setAnnouncement] = useState(null)
   const [dismissed, setDismissed] = useState(false)
@@ -20,7 +21,7 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
       const { data, error } = await supabase
         .from('announcements')
         .select('id, message, is_active, created_at')
-        .eq('tour_id', ACTIVE_TOUR_ID)
+        .eq('tour_id', tourId)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -36,14 +37,14 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
     loadLatest()
 
     const channel = supabase
-      .channel(`broadcast-guest-${ACTIVE_TOUR_ID}`)
+      .channel(`broadcast-guest-${tourId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'announcements',
-          filter: `tour_id=eq.${ACTIVE_TOUR_ID}`,
+          filter: `tour_id=eq.${tourId}`,
         },
         (payload) => {
           if (payload.eventType === 'DELETE') return

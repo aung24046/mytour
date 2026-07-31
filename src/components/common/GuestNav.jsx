@@ -1,25 +1,27 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Icon from './Icon'
+import { useTourPath } from '../../lib/TourContext'
 
 // แถบเมนูล่าง — QR ย้ายมาเป็นปุ่มวงกลม/สี่เหลี่ยมมนยกลอยกลางแถบ (สไตล์แอปเป๋าตัง)
+// เก็บเป็น sub-path ล้วน — prefix /t/:code เติมตอน render ผ่าน tp()
 const SIDE_ITEMS = {
   left: [
-    { to: '/', key: 'home', icon: 'home', labelKey: 'guest.nav.home' },
-    { to: '/itinerary', key: 'itinerary', icon: 'map', labelKey: 'guest.nav.itinerary' },
+    { sub: '', key: 'home', icon: 'home', labelKey: 'guest.nav.home' },
+    { sub: 'itinerary', key: 'itinerary', icon: 'map', labelKey: 'guest.nav.itinerary' },
   ],
   right: [
-    { to: '/my-room', key: 'myRoom', icon: 'bed', labelKey: 'guest.nav.myRoom' },
-    { to: '/my-seat', key: 'mySeat', icon: 'seat', labelKey: 'guest.nav.mySeat' },
+    { sub: 'my-room', key: 'myRoom', icon: 'bed', labelKey: 'guest.nav.myRoom' },
+    { sub: 'my-seat', key: 'mySeat', icon: 'seat', labelKey: 'guest.nav.mySeat' },
   ],
 }
 
-function NavItem({ item, active }) {
+function NavItem({ item, active, tp }) {
   const { t } = useTranslation()
   const isActive = active === item.key
   return (
     <Link
-      to={item.to}
+      to={tp(item.sub)}
       aria-current={isActive ? 'page' : undefined}
       className="group flex flex-1 flex-col items-center gap-0.5 px-1 pb-1.5 pt-2"
     >
@@ -44,6 +46,7 @@ function NavItem({ item, active }) {
 }
 
 export default function GuestNav({ active }) {
+  const tp = useTourPath()
   const { t } = useTranslation()
 
   return (
@@ -54,12 +57,12 @@ export default function GuestNav({ active }) {
     >
       <div className="mx-auto flex max-w-md items-end">
         {SIDE_ITEMS.left.map((item) => (
-          <NavItem key={item.key} item={item} active={active} />
+          <NavItem key={item.key} item={item} active={active} tp={tp} />
         ))}
 
         {/* ปุ่ม QR เด่นตรงกลาง */}
         <Link
-          to="/my-qr"
+          to={tp('my-qr')}
           aria-current={active === 'myQr' ? 'page' : undefined}
           className="flex flex-1 flex-col items-center"
         >
@@ -72,7 +75,7 @@ export default function GuestNav({ active }) {
         </Link>
 
         {SIDE_ITEMS.right.map((item) => (
-          <NavItem key={item.key} item={item} active={active} />
+          <NavItem key={item.key} item={item} active={active} tp={tp} />
         ))}
       </div>
     </nav>

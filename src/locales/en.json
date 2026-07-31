@@ -524,7 +524,10 @@
       "allAssigned": "Everyone is on a bus 🎉",
       "chooseBus": "Choose bus",
       "hasSeatWarning": "Already has seat {{seat}} — moving bus will clear it",
-      "removeFromBus": "Remove from bus"
+      "removeFromBus": "Remove from bus",
+      "pickGuest": "Pick a guest for this seat",
+      "noSeatCount": "No seat yet · {{count}}",
+      "noSeatableGuests": "No one on this bus is waiting for a seat"
     },
     "roomMap": {
       "title": "Room map",
