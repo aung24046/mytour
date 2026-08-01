@@ -47,7 +47,7 @@ export default function FeedbackSummary() {
 
       const [fieldsRes, guestsRes] = await Promise.all([
         supabase
-          .from('form_fields')
+          .from('v_tour_form_fields')
           .select('id, label, field_type, is_active, sort_order')
           .eq('tour_id', tourId)
           .eq('form_type', 'feedback')

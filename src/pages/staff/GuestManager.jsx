@@ -75,7 +75,7 @@ export default function GuestManager() {
         .eq('tour_id', tourId)
         .order('created_at', { ascending: false }),
       supabase
-        .from('form_fields')
+        .from('v_tour_form_fields')
         .select('id, field_key, label, field_type, options, is_core, is_active, sort_order, category')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),

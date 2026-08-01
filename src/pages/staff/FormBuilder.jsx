@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
+import { saveContent, saveAssignment, detachContent } from '../../lib/tourContent'
 import { useActiveTourId } from '../../lib/staffSession'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import Button from '../../components/common/Button'
@@ -96,7 +97,7 @@ export default function FormBuilder() {
     setLoading(true)
     setError(null)
     const { data, error: fetchError } = await supabase
-      .from('form_fields')
+      .from('v_tour_form_fields')
       .select('*')
       .eq('tour_id', tourId)
       .eq('form_type', type)
@@ -119,7 +120,8 @@ export default function FormBuilder() {
 
   async function updateField(id, patch) {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))
-    const { error: updateError } = await supabase.from('form_fields').update(patch).eq('id', id)
+    // เนื้อหาลงตารางฐาน (ทุกทริปเห็นเหมือนกัน) · เปิด/ปิด+ลำดับลง junction (ต่อทริป)
+    const { error: updateError } = await saveContent('form_fields', id, tourId, patch)
     if (updateError) {
       console.error('[FormBuilder] update failed', updateError)
       loadFields(formType)
@@ -140,8 +142,8 @@ export default function FormBuilder() {
     setFields(reordered)
 
     await Promise.all([
-      supabase.from('form_fields').update({ sort_order: b.sort_order }).eq('id', a.id),
-      supabase.from('form_fields').update({ sort_order: a.sort_order }).eq('id', b.id),
+      saveAssignment('form_fields', a.id, tourId, { sort_order: b.sort_order }),
+      saveAssignment('form_fields', b.id, tourId, { sort_order: a.sort_order }),
     ])
   }
 
@@ -152,7 +154,8 @@ export default function FormBuilder() {
       return
     }
     setFields((prev) => prev.filter((f) => f.id !== field.id))
-    const { error: deleteError } = await supabase.from('form_fields').delete().eq('id', field.id)
+    // ถอดออกจากทริปนี้เท่านั้น — ถ้าไม่มีทริปไหนใช้แล้ว ฝั่ง DB จะลบต้นฉบับให้เอง
+    const { error: deleteError } = await detachContent('form_fields', field.id, tourId)
     if (deleteError) {
       console.error('[FormBuilder] delete failed', deleteError)
       loadFields(formType)

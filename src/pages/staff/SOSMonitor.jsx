@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
+import { detachContent } from '../../lib/tourContent'
 import { getStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { genderTextClass } from '../../lib/genderColor'
@@ -63,7 +64,7 @@ export default function SOSMonitor() {
         .select('id, name, nickname, gender, phone')
         .eq('tour_id', tourId),
       supabase
-        .from('form_fields')
+        .from('v_tour_form_fields')
         .select('id, field_key, field_purpose, is_core')
         .eq('tour_id', tourId),
       supabase.from('v_tour_staff').select('id, name').eq('tour_id', tourId),
@@ -138,7 +139,7 @@ export default function SOSMonitor() {
     setLoadingContacts(true)
     const [contactsRes, guideRes] = await Promise.all([
       supabase
-        .from('emergency_contacts')
+        .from('v_tour_emergency_contacts')
         .select('id, label, phone, category, sort_order, is_active')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
@@ -200,7 +201,8 @@ export default function SOSMonitor() {
     const confirmed = window.confirm(t('staff.sosMonitor.confirmDeleteContact', { label: contact.label }))
     if (!confirmed) return
 
-    const { error } = await supabase.from('emergency_contacts').delete().eq('id', contact.id)
+    // ถอดออกจากทริปนี้ — ทริปอื่นที่ใช้เบอร์เดียวกันไม่กระทบ
+    const { error } = await detachContent('emergency_contacts', contact.id, tourId)
     if (!error) setContacts((prev) => prev.filter((c) => c.id !== contact.id))
   }
 

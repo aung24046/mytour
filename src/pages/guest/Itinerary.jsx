@@ -53,7 +53,7 @@ export default function Itinerary() {
           .order('day_number', { ascending: true })
           .order('sort_order', { ascending: true }),
         supabase
-          .from('guide_articles')
+          .from('v_tour_guide_articles')
           .select('id, title, body, source_url, image_url, itinerary_item_id')
           .eq('tour_id', tourId)
           .eq('is_published', true)

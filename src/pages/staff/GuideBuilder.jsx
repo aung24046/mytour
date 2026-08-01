@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
+import { saveContent, saveAssignment, detachContent } from '../../lib/tourContent'
 import { useActiveTourId } from '../../lib/staffSession'
 import {
   catLabel,
@@ -197,7 +198,7 @@ export default function GuideBuilder() {
 
   async function loadCategories() {
     const { data, error } = await supabase
-      .from('guide_categories')
+      .from('v_tour_guide_categories')
       .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
       .eq('tour_id', tourId)
       .order('sort_order', { ascending: true })
@@ -208,7 +209,7 @@ export default function GuideBuilder() {
     setLoadingArticles(true)
     const [articlesRes, itemsRes, catsRes] = await Promise.all([
       supabase
-        .from('guide_articles')
+        .from('v_tour_guide_articles')
         .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_published, is_featured')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
@@ -219,7 +220,7 @@ export default function GuideBuilder() {
         .order('day_number', { ascending: true })
         .order('sort_order', { ascending: true }),
       supabase
-        .from('guide_categories')
+        .from('v_tour_guide_categories')
         .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
@@ -389,7 +390,7 @@ export default function GuideBuilder() {
 
       let saveResult
       if (editingArticleId) {
-        saveResult = await supabase.from('guide_articles').update(payload).eq('id', editingArticleId)
+        saveResult = await saveContent('guide_articles', editingArticleId, tourId, payload)
       } else {
         const catItems = articlesByCategory[payload.category_id ?? '__uncat__'] ?? []
         const maxSort = catItems.reduce((max, a) => Math.max(max, a.sort_order ?? 0), 0)
@@ -412,10 +413,9 @@ export default function GuideBuilder() {
     setArticles((prev) =>
       prev.map((a) => (a.id === article.id ? { ...a, is_published: !a.is_published } : a))
     )
-    const { error } = await supabase
-      .from('guide_articles')
-      .update({ is_published: !article.is_published })
-      .eq('id', article.id)
+    const { error } = await saveAssignment('guide_articles', article.id, tourId, {
+      is_published: !article.is_published,
+    })
     if (error) {
       console.error('[GuideBuilder] toggle publish failed', error)
       loadArticles()
@@ -426,7 +426,8 @@ export default function GuideBuilder() {
     const confirmed = window.confirm(t('staff.guideBuilder.confirmDeleteArticle', { title: article.title }))
     if (!confirmed) return
 
-    const { error } = await supabase.from('guide_articles').delete().eq('id', article.id)
+    // ถอดออกจากทริปนี้ — ทริปอื่นที่ใช้บทความเดียวกันไม่กระทบ
+    const { error } = await detachContent('guide_articles', article.id, tourId)
     if (!error) setArticles((prev) => prev.filter((a) => a.id !== article.id))
   }
 
@@ -446,8 +447,8 @@ export default function GuideBuilder() {
       })
     )
     await Promise.all([
-      supabase.from('guide_articles').update({ sort_order: swapWith.sort_order }).eq('id', article.id),
-      supabase.from('guide_articles').update({ sort_order: article.sort_order }).eq('id', swapWith.id),
+      saveAssignment('guide_articles', article.id, tourId, { sort_order: swapWith.sort_order }),
+      saveAssignment('guide_articles', swapWith.id, tourId, { sort_order: article.sort_order }),
     ])
     loadArticles()
   }
@@ -481,7 +482,7 @@ export default function GuideBuilder() {
 
     await Promise.all(
       updates.map((u) =>
-        supabase.from('guide_articles').update({ sort_order: u.sort_order }).eq('id', u.id)
+        saveAssignment('guide_articles', u.id, tourId, { sort_order: u.sort_order })
       )
     )
     loadArticles()
@@ -526,7 +527,7 @@ export default function GuideBuilder() {
 
     let result
     if (editingCatId) {
-      result = await supabase.from('guide_categories').update(payload).eq('id', editingCatId)
+      result = await saveContent('guide_categories', editingCatId, tourId, payload)
     } else {
       const maxSort = categories.reduce((max, c) => Math.max(max, c.sort_order ?? 0), 0)
       result = await supabase.from('guide_categories').insert({ ...payload, sort_order: maxSort + 1 })
@@ -544,10 +545,9 @@ export default function GuideBuilder() {
 
   async function toggleCategoryActive(cat) {
     setCategories((prev) => prev.map((c) => (c.id === cat.id ? { ...c, is_active: !c.is_active } : c)))
-    const { error } = await supabase
-      .from('guide_categories')
-      .update({ is_active: !cat.is_active })
-      .eq('id', cat.id)
+    const { error } = await saveAssignment('guide_categories', cat.id, tourId, {
+      is_active: !cat.is_active,
+    })
     if (error) loadCategories()
   }
 
@@ -565,8 +565,8 @@ export default function GuideBuilder() {
       return next.sort((x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0))
     })
     await Promise.all([
-      supabase.from('guide_categories').update({ sort_order: swapWith.sort_order }).eq('id', cat.id),
-      supabase.from('guide_categories').update({ sort_order: cat.sort_order }).eq('id', swapWith.id),
+      saveAssignment('guide_categories', cat.id, tourId, { sort_order: swapWith.sort_order }),
+      saveAssignment('guide_categories', swapWith.id, tourId, { sort_order: cat.sort_order }),
     ])
     loadCategories()
   }
@@ -581,7 +581,7 @@ export default function GuideBuilder() {
       t('staff.guideBuilder.confirmDeleteCategory', { title: catLabel(cat, lang) })
     )
     if (!confirmed) return
-    const { error } = await supabase.from('guide_categories').delete().eq('id', cat.id)
+    const { error } = await detachContent('guide_categories', cat.id, tourId)
     if (!error) setCategories((prev) => prev.filter((c) => c.id !== cat.id))
   }
 
@@ -639,7 +639,12 @@ export default function GuideBuilder() {
     const patch = assignItineraryId
       ? { itinerary_item_id: assignItineraryId, place_label: null }
       : { itinerary_item_id: null, place_label: assignPlaceLabel.trim() || null }
-    const { error } = await supabase.from('phrasebook_entries').update(patch).in('id', ids)
+    // itinerary_item_id ผูกกับกำหนดการของทริปนี้ → ลง junction
+    // place_label เป็นเนื้อหา → ลงตารางฐาน
+    const results = await Promise.all(
+      ids.map((id) => saveContent('phrasebook_entries', id, tourId, patch))
+    )
+    const { error } = results.find((r) => r.error) ?? { error: null }
     if (!error) {
       setAssignSheetOpen(false)
       exitSelectMode()
@@ -655,7 +660,10 @@ export default function GuideBuilder() {
     if (ids.length === 0) return
     const confirmed = window.confirm(t('staff.guideBuilder.confirmBulkDeletePhrases', { count: ids.length }))
     if (!confirmed) return
-    const { error } = await supabase.from('phrasebook_entries').delete().in('id', ids)
+    const results = await Promise.all(
+      ids.map((id) => detachContent('phrasebook_entries', id, tourId))
+    )
+    const { error } = results.find((r) => r.error) ?? { error: null }
     if (!error) {
       setPhrases((prev) => prev.filter((p) => !selectedPhraseIds.has(p.id)))
       exitSelectMode()
@@ -676,7 +684,7 @@ export default function GuideBuilder() {
     setLoadingPhrases(true)
     const [phrasesRes, itemsRes] = await Promise.all([
       supabase
-        .from('phrasebook_entries')
+        .from('v_tour_phrasebook')
         .select('id, category_l1, category_l2, phrase, place_label, itinerary_item_id, translation_zh, pronunciation_zh, translation_en, sort_order')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
@@ -832,7 +840,7 @@ export default function GuideBuilder() {
 
     let error
     if (editingPhraseId) {
-      ;({ error } = await supabase.from('phrasebook_entries').update(payload).eq('id', editingPhraseId))
+      ;({ error } = await saveContent('phrasebook_entries', editingPhraseId, tourId, payload))
     } else {
       const maxSort = phrases.reduce((max, p) => Math.max(max, p.sort_order ?? 0), 0)
       ;({ error } = await supabase.from('phrasebook_entries').insert({ ...payload, sort_order: maxSort + 1 }))
@@ -852,7 +860,7 @@ export default function GuideBuilder() {
     const confirmed = window.confirm(t('staff.guideBuilder.confirmDeletePhrase', { phrase: phrase.phrase }))
     if (!confirmed) return
 
-    const { error } = await supabase.from('phrasebook_entries').delete().eq('id', phrase.id)
+    const { error } = await detachContent('phrasebook_entries', phrase.id, tourId)
     if (!error) setPhrases((prev) => prev.filter((p) => p.id !== phrase.id))
   }
 

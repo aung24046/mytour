@@ -100,7 +100,7 @@ export default function CheckIn() {
           .eq('tour_id', tourId)
           .order('name', { ascending: true }),
         supabase
-          .from('form_fields')
+          .from('v_tour_form_fields')
           .select('id, field_key, field_purpose, is_core')
           .eq('tour_id', tourId),
         supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name'),

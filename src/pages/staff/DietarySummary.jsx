@@ -75,7 +75,7 @@ export default function DietarySummary() {
           .select('id, name, nickname, gender, food_allergy, medical_condition')
           .eq('tour_id', tourId),
         supabase
-          .from('form_fields')
+          .from('v_tour_form_fields')
           .select('id, field_purpose, is_core')
           .eq('tour_id', tourId)
           .in('field_purpose', ['dietary', 'medical']),

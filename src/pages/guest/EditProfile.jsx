@@ -46,7 +46,7 @@ export default function EditProfile() {
 
       const [fieldsRes, guestRes] = await Promise.all([
         supabase
-          .from('form_fields')
+          .from('v_tour_form_fields')
           .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
           .eq('tour_id', tourId)
           .eq('is_active', true)

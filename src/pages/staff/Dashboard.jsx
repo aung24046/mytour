@@ -111,7 +111,7 @@ export default function Dashboard() {
         .eq('tour_id', tourId)
         .order('name'),
       supabase
-        .from('form_fields')
+        .from('v_tour_form_fields')
         .select('id, field_key, field_purpose, is_core')
         .eq('tour_id', tourId),
     ])

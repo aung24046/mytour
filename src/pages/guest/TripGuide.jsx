@@ -65,19 +65,19 @@ export default function TripGuide() {
       setLoading(true)
       const [catsRes, articlesRes, phrasesRes, itemsRes] = await Promise.all([
         supabase
-          .from('guide_categories')
+          .from('v_tour_guide_categories')
           .select('id, label_th, label_en, label_zh, icon, color, layout, sort_order, is_active')
           .eq('tour_id', tourId)
           .eq('is_active', true)
           .order('sort_order', { ascending: true }),
         supabase
-          .from('guide_articles')
+          .from('v_tour_guide_articles')
           .select('id, category_id, title, body, source_url, maps_url, province, image_url, itinerary_item_id, sort_order, is_featured')
           .eq('tour_id', tourId)
           .eq('is_published', true)
           .order('sort_order', { ascending: true }),
         supabase
-          .from('phrasebook_entries')
+          .from('v_tour_phrasebook')
           .select('id, category_l1, category_l2, phrase, place_label, itinerary_item_id, translation_zh, pronunciation_zh, translation_en, sort_order')
           .eq('tour_id', tourId)
           .order('sort_order', { ascending: true }),

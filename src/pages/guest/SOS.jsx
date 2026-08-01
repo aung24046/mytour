@@ -44,7 +44,7 @@ export default function SOS() {
 
     const [contactsRes, guideRes] = await Promise.all([
       supabase
-        .from('emergency_contacts')
+        .from('v_tour_emergency_contacts')
         .select('id, label, phone, category, sort_order')
         .eq('tour_id', tourId)
         .eq('is_active', true)

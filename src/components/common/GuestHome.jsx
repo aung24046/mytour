@@ -134,7 +134,7 @@ export default function GuestHome({ guest, isNew = false }) {
     // คู่มือที่ผูกกับจุดในแผนการเดินทาง (เฉพาะที่เผยแพร่แล้ว) — ทำ map itinerary_item_id -> บทความ
     async function loadGuideArticles() {
       const { data } = await supabase
-        .from('guide_articles')
+        .from('v_tour_guide_articles')
         .select('id, category, title, body, source_url, image_url, itinerary_item_id')
         .eq('tour_id', tourId)
         .eq('is_published', true)

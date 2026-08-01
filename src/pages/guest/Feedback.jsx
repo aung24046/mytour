@@ -56,7 +56,7 @@ export default function Feedback() {
       }
 
       const { data: fieldsData, error: fieldsError } = await supabase
-        .from('form_fields')
+        .from('v_tour_form_fields')
         .select('id, field_key, label, field_type, options, is_required, sort_order')
         .eq('tour_id', tourId)
         .eq('form_type', 'feedback')
