@@ -6,11 +6,21 @@ import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staf
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 
-// role เดิมเคยเป็น enum ปิดตาย (lead_guide/staff/driver) — ตอนนี้เป็นข้อความอิสระแล้ว
-// เก็บ key เดิมไว้แค่สำหรับแปลป้ายชื่อของ role ที่มีอยู่ก่อนแล้วเท่านั้น
-const LEGACY_ROLE_KEYS = ['lead_guide', 'staff', 'driver', 'admin']
+// แยกเป็น 2 อย่าง:
+//   role      = คุมสิทธิ์ ค่าตายตัว 4 ค่า (ตรงกับ CHECK constraint ของ tour_staff)
+//   job_title = ชื่อตำแหน่งไว้แสดง/จัดกลุ่ม พิมพ์อิสระ เช่น Bus1
+const ROLE_OPTIONS = [
+  { value: 'lead', label: 'หัวหน้าทัวร์ (lead)', hint: 'จัดการทุกอย่างในทริปนี้ได้' },
+  { value: 'staff', label: 'ทีมงาน (staff)', hint: 'ใช้งานหน้างานได้ แก้ตั้งค่าไม่ได้' },
+  { value: 'guide', label: 'ไกด์ (guide)', hint: 'ดูข้อมูล + คู่มือทริป' },
+  { value: 'driver', label: 'คนขับ (driver)', hint: 'ดูข้อมูล + ผังรถ' },
+]
 
-const NEW_STAFF_TEMPLATE = { role: 'staff', pin: '' }
+function roleLabelOf(role) {
+  return ROLE_OPTIONS.find((r) => r.value === role)?.label ?? role ?? '—'
+}
+
+const NEW_STAFF_TEMPLATE = { role: 'staff', job_title: '', pin: '' }
 
 export default function StaffManager() {
   const tourId = useActiveTourId()
@@ -32,14 +42,13 @@ export default function StaffManager() {
 
   const [editingRoleId, setEditingRoleId] = useState(null)
   const [editRoleValue, setEditRoleValue] = useState('')
+  const [editJobTitle, setEditJobTitle] = useState('')
   const [savingRole, setSavingRole] = useState(false)
 
   const [nameFilter, setNameFilter] = useState('')
 
   function roleLabel(role) {
-    return LEGACY_ROLE_KEYS.includes(role)
-      ? t(`staff.staffManager.roleLabel.${role}`, { defaultValue: role })
-      : role
+    return roleLabelOf(role)
   }
 
   function guestDisplayName(g) {
@@ -52,7 +61,7 @@ export default function StaffManager() {
 
     const { data, error: fetchError } = await supabase
       .from('v_tour_staff')
-      .select('id, name, role, phone, guest_id, show_to_guest, is_default')
+      .select('id, name, role, job_title, phone, guest_id, show_to_guest, is_default')
       .eq('tour_id', tourId)
       .order('name')
 
@@ -118,8 +127,9 @@ export default function StaffManager() {
       .slice(0, 8)
   }, [guests, guestQuery, staffGuestIds])
 
-  const roleOptions = useMemo(
-    () => [...new Set(staffList.map((s) => s.role).filter(Boolean))],
+  // ชื่อตำแหน่งที่เคยใช้ในทริปนี้ — ใช้เป็น datalist ให้พิมพ์ซ้ำง่าย
+  const jobTitleOptions = useMemo(
+    () => [...new Set(staffList.map((s) => s.job_title).filter(Boolean))].sort(),
     [staffList]
   )
 
@@ -132,14 +142,19 @@ export default function StaffManager() {
 
     const groups = {}
     for (const s of filtered) {
-      const key = s.role || ''
+      const key = s.job_title || ''
       if (!groups[key]) groups[key] = []
       groups[key].push(s)
     }
 
+    // กลุ่มที่ไม่มีชื่อตำแหน่งไปอยู่ท้ายสุด
     return Object.entries(groups)
-      .map(([role, members]) => ({ role, members }))
-      .sort((a, b) => roleLabel(a.role).localeCompare(roleLabel(b.role), 'th'))
+      .map(([jobTitle, members]) => ({ jobTitle, members }))
+      .sort((a, b) => {
+        if (!a.jobTitle) return 1
+        if (!b.jobTitle) return -1
+        return a.jobTitle.localeCompare(b.jobTitle, 'th')
+      })
   }, [staffList, nameFilter])
 
   function resetNewForm() {
@@ -166,7 +181,8 @@ export default function StaffManager() {
       p_org_id: orgId,
       p_name: guestDisplayName(selectedGuest),
       p_phone: selectedGuest.phone,
-      p_role: newStaff.role.trim() || 'staff',
+      p_role: newStaff.role || 'staff',
+      p_job_title: newStaff.job_title.trim() || null,
       p_pin: newStaff.pin,
       p_guest_id: selectedGuest.id,
     })
@@ -228,22 +244,26 @@ export default function StaffManager() {
 
   function startEditRole(member) {
     setEditingRoleId(member.id)
-    setEditRoleValue(member.role ?? '')
+    setEditRoleValue(member.role ?? 'staff')
+    setEditJobTitle(member.job_title ?? '')
   }
 
   function cancelEditRole() {
     setEditingRoleId(null)
     setEditRoleValue('')
+    setEditJobTitle('')
   }
 
   async function saveRole(member) {
-    const next = editRoleValue.trim()
-    if (!next) return
+    const nextRole = editRoleValue
+    const nextTitle = editJobTitle.trim() || null
+    if (!nextRole) return
 
     setSavingRole(true)
+    // role + ชื่อตำแหน่ง เป็นของ "ต่อทริป" ทั้งคู่ → ลง tour_staff
     const { error } = await supabase
       .from('tour_staff')
-      .update({ role: next })
+      .update({ role: nextRole, job_title: nextTitle })
       .eq('staff_id', member.id)
       .eq('tour_id', tourId)
     setSavingRole(false)
@@ -254,9 +274,10 @@ export default function StaffManager() {
       return
     }
 
-    setStaffList((prev) => prev.map((s) => (s.id === member.id ? { ...s, role: next } : s)))
-    setEditingRoleId(null)
-    setEditRoleValue('')
+    setStaffList((prev) =>
+      prev.map((s) => (s.id === member.id ? { ...s, role: nextRole, job_title: nextTitle } : s))
+    )
+    cancelEditRole()
   }
 
   async function deleteStaff(member) {
@@ -376,16 +397,41 @@ export default function StaffManager() {
 
                   <label className="block">
                     <span className="mb-1.5 block text-sm font-semibold text-neutral-text">
-                      {t('staff.staffManager.role')}
+                      สิทธิ์การใช้งาน (role)
                       <span className="text-accent"> *</span>
                     </span>
-                    <input
-                      list="staff-role-options"
+                    <select
                       value={newStaff.role}
                       onChange={(e) => setNewStaff((prev) => ({ ...prev, role: e.target.value }))}
-                      placeholder={t('staff.staffManager.rolePlaceholder')}
+                      className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                    >
+                      {ROLE_OPTIONS.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      {ROLE_OPTIONS.find((r) => r.value === newStaff.role)?.hint}
+                    </span>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm font-semibold text-neutral-text">
+                      ชื่อตำแหน่ง
+                    </span>
+                    <input
+                      list="staff-job-title-options"
+                      value={newStaff.job_title}
+                      onChange={(e) =>
+                        setNewStaff((prev) => ({ ...prev, job_title: e.target.value }))
+                      }
+                      placeholder="เช่น Bus1"
                       className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                     />
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      ใช้แสดงผลและจัดกลุ่มเท่านั้น ไม่มีผลกับสิทธิ์ — เว้นว่างได้
+                    </span>
                   </label>
 
                   <label className="block">
@@ -434,11 +480,9 @@ export default function StaffManager() {
               </Card>
             )}
 
-            <datalist id="staff-role-options">
-              {roleOptions.map((r) => (
-                <option key={r} value={r}>
-                  {roleLabel(r)}
-                </option>
+            <datalist id="staff-job-title-options">
+              {jobTitleOptions.map((jt) => (
+                <option key={jt} value={jt} />
               ))}
             </datalist>
 
@@ -456,10 +500,10 @@ export default function StaffManager() {
             )}
 
             <div className="flex flex-col gap-4">
-              {groupedStaff.map(({ role, members }) => (
-                <div key={role || 'unassigned'}>
+              {groupedStaff.map(({ jobTitle, members }) => (
+                <div key={jobTitle || 'unassigned'}>
                   <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    {roleLabel(role) || t('staff.staffManager.noRole')}
+                    {jobTitle || 'ไม่ระบุตำแหน่ง'}
                     <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold normal-case text-gray-500">
                       {members.length}
                     </span>
@@ -482,21 +526,33 @@ export default function StaffManager() {
                             )}
                           </p>
                           {editingRoleId === member.id ? (
-                            <div className="mt-1 flex items-center gap-1.5">
-                              <input
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <select
                                 autoFocus
-                                list="staff-role-options"
                                 value={editRoleValue}
                                 onChange={(e) => setEditRoleValue(e.target.value)}
+                                className="rounded-lg border border-sky-300 px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-sky-200"
+                              >
+                                {ROLE_OPTIONS.map((r) => (
+                                  <option key={r.value} value={r.value}>
+                                    {r.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                list="staff-job-title-options"
+                                value={editJobTitle}
+                                onChange={(e) => setEditJobTitle(e.target.value)}
+                                placeholder="ชื่อตำแหน่ง"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') saveRole(member)
                                   if (e.key === 'Escape') cancelEditRole()
                                 }}
-                                className="w-32 rounded-lg border border-sky-300 px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="w-24 rounded-lg border border-sky-300 px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-sky-200"
                               />
                               <button
                                 onClick={() => saveRole(member)}
-                                disabled={savingRole || !editRoleValue.trim()}
+                                disabled={savingRole || !editRoleValue}
                                 className="text-xs font-semibold text-sky-600 disabled:opacity-50"
                               >
                                 {t('common.save')}
@@ -507,7 +563,8 @@ export default function StaffManager() {
                             </div>
                           ) : (
                             <p className="text-xs text-gray-400">
-                              {roleLabel(member.role)}{' '}
+                              {roleLabel(member.role)}
+                              {member.job_title ? ` · ${member.job_title}` : ''}{' '}
                               <button
                                 onClick={() => startEditRole(member)}
                                 className="font-medium text-sky-600"
