@@ -26,8 +26,9 @@ export default function TourSwitcher() {
 
     async function load() {
       // แอดมินเห็นทุกทริปที่เปิดอยู่ · ทีมงานเห็นเฉพาะที่ถูกมอบหมาย
+      // แอดมินต้องเห็นทริปร่างด้วย จะได้เข้าไปเตรียมข้อมูลก่อนเปิดใช้งาน
       const { data, error } = isAdmin
-        ? await supabase.rpc('list_active_tours')
+        ? await supabase.rpc('list_active_tours', { p_include_draft: true })
         : await supabase.rpc('get_staff_assignments', { p_staff_id: session.staff.id })
 
       if (!alive) return
@@ -41,6 +42,7 @@ export default function TourSwitcher() {
           id: t.id ?? t.tour_id,
           name: t.name ?? t.tour_name,
           join_code: t.join_code ?? null,
+          status: t.status ?? null,
         }))
       )
     }
@@ -88,6 +90,7 @@ export default function TourSwitcher() {
           {current?.join_code && (
             <span className="block font-mono text-[11px] text-ink-faint">
               {current.join_code}
+              {current.status === 'draft' && ' · ร่าง (ลูกทัวร์ยังเข้าไม่ได้)'}
             </span>
           )}
         </span>
@@ -107,7 +110,14 @@ export default function TourSwitcher() {
                   t.id === activeTourId ? 'bg-brand-light font-semibold text-brand-hover' : 'text-ink'
                 }`}
               >
-                <span className="truncate">{t.name}</span>
+                <span className="truncate">
+                  {t.name}
+                  {t.status === 'draft' && (
+                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-px text-[10px] font-semibold text-amber-800">
+                      ร่าง
+                    </span>
+                  )}
+                </span>
                 {t.join_code && (
                   <span className="shrink-0 font-mono text-[11px] text-ink-faint">
                     {t.join_code}

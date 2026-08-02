@@ -213,7 +213,10 @@ export default function Login() {
     value: t2.id,
     label: t2.join_code ? `${t2.name} (${t2.join_code})` : t2.name,
   }))
-  const staffOptions = staffList.map((s) => ({ value: s.staff_id, label: s.name }))
+  const staffOptions = staffList.map((s) => ({
+    value: s.staff_id,
+    label: s.job_title ? `${s.name} · ${s.job_title}` : s.name,
+  }))
 
   function switchMode(next) {
     setMode(next)

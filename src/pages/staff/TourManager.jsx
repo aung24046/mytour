@@ -211,6 +211,8 @@ export default function TourManager() {
           p_new_name: draft.name.trim(),
           p_start_date: draft.start_date || null,
           p_end_date: draft.end_date || null,
+          // ใส่คนที่กดสร้างเป็น lead ให้อัตโนมัติ ไม่งั้นทริปใหม่จะไม่มีใครเข้าได้เลย
+          p_created_by: session?.staff?.id ?? null,
           ...flags,
         })
         if (e) throw e
@@ -223,6 +225,7 @@ export default function TourManager() {
           p_end_date: draft.end_date || null,
           p_destination_id: draft.destination_id || null,
           p_pull_library: true,
+          p_created_by: session?.staff?.id ?? null,
         })
         if (e) throw e
         newId = data
