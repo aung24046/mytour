@@ -130,7 +130,16 @@ export default function TripGuide() {
     return map
   }, [itineraryItems])
 
-  const featured = useMemo(() => articles.filter((a) => a.is_featured), [articles])
+  // บทความ 1 ชิ้นอยู่ได้หลายหมวดต่อทริป (many-to-many) — ทำให้ view คืนหลายแถวต่อ 1 บทความ
+  // (แถวเดียวกันซ้ำ id แค่ category_id ต่างกัน) การจัดกลุ่มตามหมวด (groups) ใช้ประโยชน์จากแถวซ้ำนี้ได้เลย
+  // แต่รายการที่ต้องนับบทความแบบ "ไม่ซ้ำ" เช่น ค้นหา/การ์ดแนะนำ ต้อง dedupe ด้วย id ก่อนเสมอ
+  const uniqueArticles = useMemo(() => {
+    const seen = new Map()
+    for (const a of articles) if (!seen.has(a.id)) seen.set(a.id, a)
+    return [...seen.values()]
+  }, [articles])
+
+  const featured = useMemo(() => uniqueArticles.filter((a) => a.is_featured), [uniqueArticles])
 
   // จัดกลุ่มบทความ (ไม่รวม featured) ตามหมวด + เรียงในหมวด: "แวะ" (มี itinerary) ก่อน "ผ่าน"
   const groups = useMemo(() => {
@@ -174,10 +183,10 @@ export default function TripGuide() {
   const searchResults = useMemo(() => {
     const q = articleSearch.trim().toLowerCase()
     if (!q) return null
-    return articles.filter(
+    return uniqueArticles.filter(
       (a) => a.title.toLowerCase().includes(q) || (a.body ?? '').toLowerCase().includes(q)
     )
-  }, [articles, articleSearch])
+  }, [uniqueArticles, articleSearch])
 
   // ----- phrasebook (multi-language) -----
   // ภาษาเป้าหมายที่มีข้อมูลจริง (จีน/อังกฤษ)

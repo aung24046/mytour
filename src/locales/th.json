@@ -798,6 +798,7 @@
       "articleTitle": "หัวข้อ",
       "articleBody": "เนื้อหา (รองรับ Markdown)",
       "articleCategory": "หมวดหมู่",
+      "articleCategoryHint": "เลือกได้มากกว่า 1 หมวด — บทความจะไปโผล่ในทุกหมวดที่เลือก",
       "articleImage": "รูปภาพ",
       "takePhoto": "ถ่ายรูป / เลือกรูป",
       "linkItinerary": "ผูกกับรายการในกำหนดการ (ถ้ามี)",

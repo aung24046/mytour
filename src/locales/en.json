@@ -798,6 +798,7 @@
       "articleTitle": "Title",
       "articleBody": "Body (Markdown supported)",
       "articleCategory": "Category",
+      "articleCategoryHint": "You can pick more than one — the article will show up in every category selected",
       "articleImage": "Image",
       "takePhoto": "Take / choose photo",
       "linkItinerary": "Link to an itinerary item (optional)",

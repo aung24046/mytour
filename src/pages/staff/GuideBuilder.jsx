@@ -23,7 +23,7 @@ import SelectField from '../../components/common/SelectField'
 import BottomSheet from '../../components/common/BottomSheet'
 
 const EMPTY_ARTICLE = {
-  category_id: '',
+  category_ids: [], // บทความ 1 ชิ้นอยู่ได้หลายหมวดต่อทริป — เก็บเป็น array แล้ว sync เข้า tour_guide_article_categories ตอนบันทึก
   title: '',
   body: '',
   source_url: '',
@@ -274,7 +274,7 @@ export default function GuideBuilder() {
     setEditingArticleId(null)
     setArticleDraft({
       ...EMPTY_ARTICLE,
-      category_id: categoryId ?? categories[0]?.id ?? '',
+      category_ids: categoryId ? [categoryId] : (categories[0]?.id ? [categories[0].id] : []),
     })
     setArticlePhotoFile(null)
     setArticlePhotoPreview(null)
@@ -285,8 +285,12 @@ export default function GuideBuilder() {
   function openEditArticle(article) {
     setEditingArticleId(article.id)
     const linkedLocation = itineraryItemById[article.itinerary_item_id]?.location_name ?? ''
+    // view คืนหลายแถวถ้าบทความนี้อยู่หลายหมวด — รวบรวมทุก category_id ที่ผูกกับบทความ id นี้จาก state ปัจจุบัน
+    const currentCategoryIds = [...new Set(
+      articles.filter((a) => a.id === article.id).map((a) => a.category_id).filter(Boolean)
+    )]
     setArticleDraft({
-      category_id: article.category_id ?? '',
+      category_ids: currentCategoryIds,
       title: article.title,
       body: article.body ?? '',
       source_url: article.source_url ?? '',
@@ -376,7 +380,6 @@ export default function GuideBuilder() {
 
       const payload = {
         tour_id: tourId,
-        category_id: articleDraft.category_id || null,
         title: articleDraft.title.trim(),
         body: articleDraft.body.trim() || null,
         source_url: articleDraft.source_url.trim() || null,
@@ -388,16 +391,40 @@ export default function GuideBuilder() {
         is_featured: articleDraft.is_featured,
       }
 
+      let articleId = editingArticleId
       let saveResult
       if (editingArticleId) {
         saveResult = await saveContent('guide_articles', editingArticleId, tourId, payload)
       } else {
-        const catItems = articlesByCategory[payload.category_id ?? '__uncat__'] ?? []
+        const firstCat = articleDraft.category_ids[0] ?? '__uncat__'
+        const catItems = articlesByCategory[firstCat] ?? []
         const maxSort = catItems.reduce((max, a) => Math.max(max, a.sort_order ?? 0), 0)
-        saveResult = await supabase.from('guide_articles').insert({ ...payload, sort_order: maxSort + 1 })
+        const insertRes = await supabase
+          .from('guide_articles')
+          .insert({ ...payload, sort_order: maxSort + 1 })
+          .select('id')
+          .single()
+        saveResult = insertRes
+        articleId = insertRes.data?.id ?? null
       }
 
       if (saveResult.error) throw saveResult.error
+
+      // sync หมวดที่เลือกไว้เข้า tour_guide_article_categories — ลบของเดิมทั้งหมดของบทความนี้ในทริปนี้แล้วใส่ใหม่ตามที่ติ๊กไว้
+      if (articleId) {
+        const { error: clearErr } = await supabase
+          .from('tour_guide_article_categories')
+          .delete()
+          .eq('tour_id', tourId)
+          .eq('article_id', articleId)
+        if (clearErr) throw clearErr
+
+        const catRows = (articleDraft.category_ids.length ? articleDraft.category_ids : [null]).map(
+          (categoryId) => ({ tour_id: tourId, article_id: articleId, category_id: categoryId })
+        )
+        const { error: catInsertErr } = await supabase.from('tour_guide_article_categories').insert(catRows)
+        if (catInsertErr) throw catInsertErr
+      }
 
       setArticleSheetOpen(false)
       loadArticles()
@@ -428,7 +455,15 @@ export default function GuideBuilder() {
 
     // ถอดออกจากทริปนี้ — ทริปอื่นที่ใช้บทความเดียวกันไม่กระทบ
     const { error } = await detachContent('guide_articles', article.id, tourId)
-    if (!error) setArticles((prev) => prev.filter((a) => a.id !== article.id))
+    if (!error) {
+      // เก็บกวาดหมวดที่เคยปักไว้สำหรับทริปนี้ (ถ้าบทความยังใช้อยู่ในทริปอื่น จะไม่กระทบของทริปอื่น)
+      await supabase
+        .from('tour_guide_article_categories')
+        .delete()
+        .eq('tour_id', tourId)
+        .eq('article_id', article.id)
+      setArticles((prev) => prev.filter((a) => a.id !== article.id))
+    }
   }
 
   // สลับลำดับบทความภายในหมวดเดียวกัน (สลับ sort_order กับตัวข้างเคียง) — เหมือน moveCategory
@@ -1418,12 +1453,39 @@ export default function GuideBuilder() {
         title={editingArticleId ? t('staff.itineraryBuilder.edit') : t('staff.guideBuilder.addArticle')}
       >
         <div className="flex flex-col gap-3">
-          <SelectField
-            label={t('staff.guideBuilder.articleCategory')}
-            options={categories.map((c) => ({ value: c.id, label: catLabel(c, lang) }))}
-            value={articleDraft.category_id}
-            onChange={(e) => setArticleDraft((prev) => ({ ...prev, category_id: e.target.value }))}
-          />
+          <div>
+            <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.guideBuilder.articleCategory')}</p>
+            <p className="mb-1.5 text-xs text-gray-400">{t('staff.guideBuilder.articleCategoryHint')}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((c) => {
+                const active = articleDraft.category_ids.includes(c.id)
+                const col = catColor(c.color)
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() =>
+                      setArticleDraft((prev) => ({
+                        ...prev,
+                        category_ids: active
+                          ? prev.category_ids.filter((id) => id !== c.id)
+                          : [...prev.category_ids, c.id],
+                      }))
+                    }
+                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
+                    style={
+                      active
+                        ? { background: col.tint, borderColor: col.border, color: col.text }
+                        : { borderColor: '#e5e7eb', color: '#6b7280' }
+                    }
+                  >
+                    <Icon name={c.icon} size={13} color={active ? col.text : '#9ca3af'} />
+                    {catLabel(c, lang)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <TextField
             label={t('staff.guideBuilder.articleTitle')}
             required

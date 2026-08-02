@@ -798,6 +798,7 @@
       "articleTitle": "标题",
       "articleBody": "内容（支持 Markdown）",
       "articleCategory": "分类",
+      "articleCategoryHint": "可以选择多个分类 — 文章会同时出现在选中的每个分类里",
       "articleImage": "图片",
       "takePhoto": "拍照 / 选择照片",
       "linkItinerary": "关联行程项目（可选）",
