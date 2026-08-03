@@ -18,6 +18,7 @@ export const DOC_TYPES = {
   EMERGENCY_CARD: 'emergency_card',
   EXPENSE_REPORT: 'expense_report',
   FEEDBACK_REPORT: 'feedback_report',
+  FEEDBACK_FORM: 'feedback_form',
 }
 
 export const DOC_TITLES = {
@@ -29,6 +30,8 @@ export const DOC_TITLES = {
   emergency_card: { title: 'บัตรฉุกเฉิน', subtitle: 'Emergency card' },
   expense_report: { title: 'รายงานค่าใช้จ่าย', subtitle: 'Expense report' },
   feedback_report: { title: 'รายงานความพึงพอใจ', subtitle: 'Feedback report' },
+  // ⚠️ คนละใบกับ feedback_report — ใบนี้คือฟอร์มเปล่าไว้แจก ชื่อจึงต้องต่างกันให้ชัด
+  feedback_form: { title: 'แบบประเมิน (ฉบับกระดาษ)', subtitle: 'Feedback form — blank' },
 }
 
 /** ป้ายชื่อคอลัมน์กลาง — ใช้ทั้งในเอกสารและหน้าเลือกคอลัมน์ */

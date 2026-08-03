@@ -47,6 +47,7 @@ import ItineraryBooklet from './pages/staff/docs/ItineraryBooklet.jsx'
 import EmergencyCard from './pages/staff/docs/EmergencyCard.jsx'
 import ExpenseReport from './pages/staff/docs/ExpenseReport.jsx'
 import FeedbackReport from './pages/staff/docs/FeedbackReport.jsx'
+import FeedbackFormPrint from './pages/staff/docs/FeedbackFormPrint.jsx'
 
 import RequireRole from './components/common/RequireRole.jsx'
 import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
@@ -214,6 +215,7 @@ function App() {
         <Route path="/staff/documents/emergency-card" element={staffRoute('document.print', <EmergencyCard />)} />
         <Route path="/staff/documents/expense-report" element={staffRoute('expense.edit', <ExpenseReport />)} />
         <Route path="/staff/documents/feedback-report" element={staffRoute('feedback.view', <FeedbackReport />)} />
+        <Route path="/staff/documents/feedback-form" element={staffRoute('document.print', <FeedbackFormPrint />)} />
         <Route path="/staff/sos-monitor" element={staffRoute('sos.monitor', <SOSMonitor />)} />
         <Route path="/staff/guide-builder" element={staffRoute('guide.assign', <GuideBuilder />)} />
         <Route

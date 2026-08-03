@@ -7,6 +7,11 @@ import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
+import {
+  FEEDBACK_TEXT_DEFAULTS,
+  FEEDBACK_TEXT_KEYS,
+  FEEDBACK_TEXT_LABELS,
+} from '../../lib/feedbackFormText'
 
 // ข้อมูลบริษัทสำหรับหัวกระดาษเอกสารทุกใบ (DataSpec §0)
 // กรอกครั้งเดียว ใช้กับทุกทริป — ต่างจากข้อมูลทริปที่ดึงจาก tours อัตโนมัติ
@@ -27,6 +32,9 @@ const EMPTY_FORM = {
   email: '',
   website: '',
   doc_footer_note: '',
+  // ข้อความบนแบบประเมินกระดาษ — ปล่อยว่างได้ ระบบจะใช้ค่าตั้งต้นตอนพิมพ์
+  ...Object.fromEntries(FEEDBACK_TEXT_KEYS.map((k) => [k, ''])),
+  feedback_show_consent: true,
 }
 
 export default function CompanyProfile() {
@@ -79,6 +87,8 @@ export default function CompanyProfile() {
         email: data?.email ?? '',
         website: data?.website ?? '',
         doc_footer_note: data?.doc_footer_note ?? '',
+        ...Object.fromEntries(FEEDBACK_TEXT_KEYS.map((k) => [k, data?.[k] ?? ''])),
+        feedback_show_consent: data?.feedback_show_consent !== false,
       })
       setLoading(false)
     }
@@ -286,6 +296,67 @@ export default function CompanyProfile() {
             placeholder="เอกสารภายใน — ห้ามเผยแพร่"
           />
           <p className="mt-1.5 text-xs text-ink-faint">แสดงท้ายทุกหน้าของเอกสารทุกใบ</p>
+        </Card>
+
+        {/* ข้อความบนแบบประเมินฉบับกระดาษ — ตัวคำถามไม่ได้อยู่ตรงนี้ อยู่ที่หน้าจัดการฟอร์ม
+            ตรงนี้คือข้อความรอบ ๆ คำถามที่เป็นน้ำเสียงของบริษัท ใช้ร่วมกันทุกทริป */}
+        <Card className="mb-4 space-y-3">
+          <div>
+            <p className="font-semibold text-ink">ข้อความบนแบบประเมิน (ฉบับกระดาษ)</p>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              เว้นว่างไว้ = ใช้ข้อความมาตรฐาน · ตัวคำถามแก้ที่หน้าจัดการฟอร์ม
+            </p>
+          </div>
+
+          <label className="flex items-start gap-2 rounded-control bg-surface-sunken px-3 py-2">
+            <input
+              type="checkbox"
+              checked={form.feedback_show_consent}
+              onChange={(e) => set('feedback_show_consent', e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0"
+            />
+            <span className="text-sm text-ink">
+              แสดงกล่องขอความยินยอมเผยแพร่ + หมายเหตุ PDPA บนฟอร์ม
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                ปิดได้ถ้าบริษัทเก็บความยินยอมทางอื่นอยู่แล้ว เช่น ในสัญญาตอนจอง
+              </span>
+            </span>
+          </label>
+
+          {FEEDBACK_TEXT_KEYS.map((key) =>
+            key === 'feedback_form_title' ? (
+              <TextField
+                key={key}
+                label={FEEDBACK_TEXT_LABELS[key]}
+                value={form[key]}
+                onChange={(e) => set(key, e.target.value)}
+                placeholder={FEEDBACK_TEXT_DEFAULTS[key]}
+              />
+            ) : (
+              <TextAreaField
+                key={key}
+                label={FEEDBACK_TEXT_LABELS[key]}
+                rows={2}
+                value={form[key]}
+                onChange={(e) => set(key, e.target.value)}
+                placeholder={FEEDBACK_TEXT_DEFAULTS[key]}
+              />
+            )
+          )}
+
+          <div className="rounded-control bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {form.feedback_show_consent
+              ? 'เมื่อเปิดไว้ ข้อความสองข้อนี้เว้นว่างไม่ได้ — ถ้าเว้น ระบบจะพิมพ์ข้อความมาตรฐานแทน เพราะถ้าไม่มี ความเห็นที่เก็บมาจะนำไปเผยแพร่ไม่ได้ตามกฎหมาย'
+              : 'ปิดกล่องยินยอมไว้ — ความเห็นที่เก็บจากฟอร์มนี้จะนำไปใช้ประชาสัมพันธ์ไม่ได้ เว้นแต่มีความยินยอมจากช่องทางอื่นแล้ว'}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => FEEDBACK_TEXT_KEYS.forEach((k) => set(k, ''))}
+            className="text-sm font-semibold text-ink-muted underline"
+          >
+            คืนค่าข้อความมาตรฐานทั้งหมด
+          </button>
         </Card>
 
         <Button onClick={handleSave} disabled={saving || uploading}>

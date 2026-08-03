@@ -48,6 +48,8 @@ const GROUPS = [
     docs: [
       { to: 'itinerary-booklet', name: 'เล่มโปรแกรมทัวร์', icon: 'book', tint: '#993556', meta: 'A5 เล่ม', cap: 'document.print' },
       { to: 'emergency-card', name: 'บัตรฉุกเฉิน', icon: 'alert', tint: '#a32d2d', meta: 'A5 พับ', cap: 'document.print' },
+      // ฟอร์มเปล่าไว้แจกคนที่กรอกในมือถือไม่ไหว — คนละใบกับ "รายงานความพึงพอใจ" ในกลุ่มปิดทริป
+      { to: 'feedback-form', name: 'แบบประเมิน (ฉบับกระดาษ)', icon: 'star', tint: '#854f0b', meta: 'A4 ตั้ง', cap: 'document.print' },
     ],
   },
   {
