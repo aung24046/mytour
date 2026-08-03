@@ -17,6 +17,7 @@ import {
   useGuestCustomFields,
 } from '../../../lib/documentData'
 import { decideOrientation } from '../../../lib/printProfiles'
+import { downloadXlsx, tableToSheetRows } from '../../../lib/exportXlsx'
 import DocumentHeader from '../../../components/document/DocumentHeader'
 import DocumentTable from '../../../components/document/DocumentTable'
 import DocumentFooter from '../../../components/document/DocumentFooter'
@@ -81,7 +82,6 @@ export default function GuestManifest() {
   const rows = useMemo(
     () =>
       guests.map((g, i) => {
-        const age = calcAge(g.birthdate)
         const r = (key) => custom.resolve(g, key)
         return {
           _id: g.id,
@@ -91,9 +91,7 @@ export default function GuestManifest() {
           nickname: g.nickname,
           name_en: g.name_en,
           gender: formatGender(g.gender),
-          birthdate: g.birthdate
-            ? `${formatThaiDate(g.birthdate)}${age != null ? ` · ${age} ปี` : ''}`
-            : '',
+          birthdate: formatThaiDate(g.birthdate),
           national_id: formatNationalId(r('national_id')),
           passport_no: g.passport_no,
           passport_expiry: formatThaiDate(g.passport_expiry),
@@ -133,6 +131,17 @@ export default function GuestManifest() {
       : `รวม ${guests.length} ท่าน`
   }, [guests])
 
+  // Excel ได้ทุกคอลัมน์ที่เลือก รวมคอลัมน์ที่บนกระดาษถูกย้ายไปแถวย่อย/เชิงอรรถ
+  function handleExport() {
+    downloadXlsx(`บัญชีรายชื่อผู้เดินทาง-${ctx.tour?.name ?? 'tour'}`, [
+      {
+        name: 'รายชื่อผู้เดินทาง',
+        rows: tableToSheetRows(columns, rows),
+        colWidths: columns.map((c) => (c.key === 'index' ? 6 : c.key === 'name' ? 28 : 20)),
+      },
+    ])
+  }
+
   if (loading || ctx.loading) {
     return <p className="p-8 text-center text-ink-muted">กำลังโหลด…</p>
   }
@@ -146,6 +155,7 @@ export default function GuestManifest() {
       paper={orientation.paper}
       orientationNote={orientation.switched ? orientation.reason : null}
       onPrint={defaultPrint}
+      onExportXlsx={handleExport}
       printDisabled={rows.length === 0}
       toolbar={
         <ColumnPicker

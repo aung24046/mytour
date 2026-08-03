@@ -8,10 +8,10 @@
 
 /** ขนาดกระดาษ (มม.) */
 export const PAPER = {
-  a4_portrait: { id: 'a4_portrait', widthMm: 210, heightMm: 297, label: 'A4 แนวตั้ง' },
-  a4_landscape: { id: 'a4_landscape', widthMm: 297, heightMm: 210, label: 'A4 แนวนอน' },
-  a5_portrait: { id: 'a5_portrait', widthMm: 148, heightMm: 210, label: 'A5 แนวตั้ง' },
-  a5_landscape: { id: 'a5_landscape', widthMm: 210, heightMm: 148, label: 'A5 แนวนอน' },
+  a4_portrait: { id: 'a4_portrait', widthMm: 210, heightMm: 297, label: 'A4 แนวตั้ง', cssSize: 'A4 portrait' },
+  a4_landscape: { id: 'a4_landscape', widthMm: 297, heightMm: 210, label: 'A4 แนวนอน', cssSize: 'A4 landscape' },
+  a5_portrait: { id: 'a5_portrait', widthMm: 148, heightMm: 210, label: 'A5 แนวตั้ง', cssSize: 'A5 portrait' },
+  a5_landscape: { id: 'a5_landscape', widthMm: 210, heightMm: 148, label: 'A5 แนวนอน', cssSize: 'A5 landscape' },
   // ป้ายสติกเกอร์เดิมของ PrintExport.jsx — ยกมาไว้ที่เดียวกัน
   label_50x30: { id: 'label_50x30', widthMm: 50, heightMm: 30, label: 'ป้าย 50×30mm' },
   label_60x40: { id: 'label_60x40', widthMm: 60, heightMm: 40, label: 'ป้าย 60×40mm' },
@@ -148,7 +148,10 @@ export const TYPE_SCALE = {
 export function buildPrintCss(paper) {
   return `
 @page {
-  size: ${paper.widthMm}mm ${paper.heightMm}mm;
+  /* ใช้ชื่อขนาดมาตรฐาน (A4/A5) แทนตัวเลขมิลลิเมตร เพื่อให้ไดรเวอร์เครื่องพิมพ์
+     เลือกถาดกระดาษถูกต้อง — ระบุเป็น mm ล้วนบางเครื่องจะตีเป็น custom size
+     แล้วย่อ-ขยายเอง ทำให้ระยะขอบกับการแบ่งหน้าเพี้ยน */
+  size: ${paper.cssSize ?? `${paper.widthMm}mm ${paper.heightMm}mm`};
   margin: ${MARGIN_MM.top}mm ${MARGIN_MM.right}mm ${MARGIN_MM.bottom}mm ${MARGIN_MM.left}mm;
 }
 
@@ -174,7 +177,15 @@ export function buildPrintCss(paper) {
   /* แถวย่อยต้องไม่หลุดจากแถวหลัก */
   .doc-row-group { page-break-inside: avoid; }
 
-  .doc-page-break { page-break-after: always; }
+  /* ⚠️ ใช้ break-before เป็นหลัก — เดิมใช้ break-after บน section ที่ 2 เป็นต้นไป
+     ซึ่งสั่งให้ขึ้นหน้าใหม่ "หลัง" section นั้น ผลคือหัวกระดาษของชุดถัดไป
+     ไปโผล่ต่อท้ายหน้าเดิม (อาการที่เจอตอนทดสอบพิมพ์ 2026-08-03) */
+  .doc-page-break-before { page-break-before: always; break-before: page; }
+  .doc-page-break { page-break-after: always; break-after: page; }
+
+  /* กันหัวกระดาษหลุดไปอยู่ท้ายหน้าโดยไม่มีเนื้อหาตาม */
+  .doc-header { page-break-after: avoid; break-after: avoid; }
+  .doc-section { page-break-inside: auto; }
 
   /* ตัวเลขให้หลักตรงกันทุกแถว */
   .doc-num { font-variant-numeric: tabular-nums; }

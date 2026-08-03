@@ -88,7 +88,7 @@ export default function SeatManifest() {
         const rows = groupByRow(busSeats)
 
         return (
-          <section key={bus.id} className={i > 0 ? 'doc-page-break pt-6' : ''}>
+          <section key={bus.id} className={`doc-section ${i > 0 ? 'doc-page-break-before pt-6' : ''}`}>
             <DocumentHeader
               org={ctx.org}
               tour={ctx.tour}

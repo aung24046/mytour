@@ -133,9 +133,7 @@ export default function EmergencyCard() {
             </div>
           )}
 
-          <p className="mt-2 text-[7pt] text-gray-500">
-            {ctx.tour?.name} · {ctx.tour?.join_code}
-          </p>
+          <p className="mt-2 text-[7pt] text-gray-500">{ctx.tour?.name}</p>
         </div>
 
         {/* ด้านหลัง */}

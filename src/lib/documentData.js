@@ -213,6 +213,30 @@ export function useDocumentContext(docType) {
  * จับคู่ด้วย field_purpose เป็นหลัก (ไม่ hardcode field_key เพราะแต่ละทริปตั้งชื่อเอง)
  * ส่วนเลขบัตรประชาชนไม่มี purpose รองรับ จึงเดาจากข้อความใน label
  */
+/**
+ * ตัดคำตอบที่แปลว่า "ไม่มี" ออกจากค่าที่จะขึ้นเอกสาร
+ *
+ * ฟอร์มลงทะเบียนเป็น checkbox ที่มีตัวเลือก "ไม่มีอาการแพ้อาหาร (No food allergies)"
+ * ถ้าไม่ตัดออก ใบสรุปส่งร้านอาหารจะมี 95 บรรทัดที่เขียนว่าไม่แพ้อะไร ซึ่งไร้ประโยชน์
+ * และแย่กว่านั้นคือคนที่แพ้จริงจะจมหายไปในกอง
+ *
+ * ระวัง: ค่าจาก checkbox คั่นด้วย ", " แต่ตัวเลือกเองก็มีวงเล็บที่มีคอมมาข้างใน
+ * (เช่น "อื่นๆ โปรดระบุ (Other, please specify): ...") จึงตัดด้วย regex ทีละวลี
+ * แทนการ split ด้วยคอมมา
+ */
+export function stripNoneAnswers(value) {
+  if (!value) return ''
+  const cleaned = String(value)
+    .replace(
+      /(ไม่มีอาการแพ้อาหาร\s*\([^)]*\)|ไม่มีข้อจำกัด\s*\([^)]*\)|ไม่มี\s*\(None\)|ไม่มี(?=\s*(,|$))|None|N\/A|-)/gi,
+      ''
+    )
+    .replace(/\s*,\s*,\s*/g, ', ')
+    .replace(/^\s*,\s*|\s*,\s*$/g, '')
+    .trim()
+  return cleaned
+}
+
 export function useGuestCustomFields(tourId) {
   const [state, setState] = useState({ fields: [], responses: [] })
 
@@ -268,13 +292,12 @@ export function useGuestCustomFields(tourId) {
     /** อ่านค่าของคอลัมน์หนึ่งจาก guest — core ก่อน ถ้าว่างค่อยรวมค่าจาก custom field */
     function resolve(guest, key) {
       const core = guest?.[key]
-      if (core != null && String(core).trim() !== '') return String(core).trim()
+      if (core != null && String(core).trim() !== '') return stripNoneAnswers(String(core))
 
       const answers = byGuest[guest?.id] ?? {}
       const parts = (sources[key] ?? [])
-        .map((f) => answers[f.id])
-        .filter((v) => v != null && String(v).trim() !== '')
-        .map((v) => String(v).trim())
+        .map((f) => stripNoneAnswers(answers[f.id] ?? ''))
+        .filter((v) => v !== '')
 
       return [...new Set(parts)].join(' · ')
     }

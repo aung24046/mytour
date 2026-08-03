@@ -2,8 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { supabase } from '../../../lib/supabase'
 import { useActiveTourId } from '../../../lib/staffSession'
-import { DOC_TITLES, DOC_TYPES, formatGender, useDocumentContext } from '../../../lib/documentData'
+import {
+  DOC_TITLES,
+  DOC_TYPES,
+  formatGender,
+  useDocumentContext,
+  useGuestCustomFields,
+} from '../../../lib/documentData'
 import { PAPER } from '../../../lib/printProfiles'
+import { downloadXlsx } from '../../../lib/exportXlsx'
 import DocumentHeader from '../../../components/document/DocumentHeader'
 import DocumentFooter from '../../../components/document/DocumentFooter'
 import DocumentShell, { defaultPrint } from '../../../components/document/DocumentShell'
@@ -13,9 +20,11 @@ import DocumentShell, { defaultPrint } from '../../../components/document/Docume
 export default function DietarySheet() {
   const tourId = useActiveTourId()
   const ctx = useDocumentContext(DOC_TYPES.DIETARY_SHEET)
+  // ทริปจริงเก็บ "อาหารที่แพ้" กับ "ข้อจำกัดด้านอาหาร" ไว้คนละ custom field
+  // ตัว resolver แยกสองอย่างนี้ออกจากกันให้แล้ว (ดู sources ใน documentData.js)
+  const custom = useGuestCustomFields(tourId)
 
   const [guests, setGuests] = useState([])
-  const [dietaryByGuest, setDietaryByGuest] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,45 +32,21 @@ export default function DietarySheet() {
     let cancelled = false
 
     async function load() {
-      const [guestsRes, fieldsRes] = await Promise.all([
-        supabase
-          .from('guests')
-          .select('id, name, nickname, gender, food_allergy, medical_condition')
-          .eq('tour_id', tourId)
-          .order('name'),
-        // หาฟิลด์ที่ทำหน้าที่ "ข้อจำกัดด้านอาหาร" โดยไม่ hardcode field_key
-        supabase
-          .from('v_tour_form_fields')
-          .select('id, field_purpose, is_active')
-          .eq('tour_id', tourId)
-          .eq('field_purpose', 'dietary'),
-      ])
+      const { data, error: loadError } = await supabase
+        .from('guests')
+        .select('id, name, nickname, gender, food_allergy, medical_condition')
+        .eq('tour_id', tourId)
+        .order('name')
 
       if (cancelled) return
-      if (guestsRes.error) {
-        console.error('[DietarySheet] load failed', guestsRes.error)
+      if (loadError) {
+        console.error('[DietarySheet] load failed', loadError)
         setError('โหลดข้อมูลไม่สำเร็จ')
         setLoading(false)
         return
       }
 
-      const dietaryFieldIds = (fieldsRes.data ?? []).filter((f) => f.is_active).map((f) => f.id)
-
-      let byGuest = {}
-      if (dietaryFieldIds.length > 0) {
-        const { data: responses } = await supabase
-          .from('guest_form_responses')
-          .select('guest_id, value')
-          .in('field_id', dietaryFieldIds)
-
-        for (const r of responses ?? []) {
-          if (!r.value?.trim()) continue
-          byGuest[r.guest_id] = [byGuest[r.guest_id], r.value].filter(Boolean).join(' · ')
-        }
-      }
-
-      setGuests(guestsRes.data ?? [])
-      setDietaryByGuest(byGuest)
+      setGuests(data ?? [])
       setLoading(false)
     }
 
@@ -79,12 +64,13 @@ export default function DietarySheet() {
           id: g.id,
           name: `${g.nickname || g.name}${g.nickname ? ` (${g.name})` : ''}`,
           gender: formatGender(g.gender),
-          allergy: g.food_allergy?.trim() ?? '',
-          dietary: dietaryByGuest[g.id] ?? '',
-          medical: g.medical_condition?.trim() ?? '',
+          allergy: custom.resolve(g, 'food_allergy'),
+          dietary: custom.resolve(g, 'dietary'),
+          medical: custom.resolve(g, 'medical_condition'),
         }))
+        // resolver ตัดคำตอบ "ไม่มี" ออกให้แล้ว เหลือว่าง = คนนี้กินได้ทุกอย่าง
         .filter((r) => r.allergy || r.dietary),
-    [guests, dietaryByGuest]
+    [guests, custom]
   )
 
   const counts = useMemo(() => {
@@ -100,11 +86,29 @@ export default function DietarySheet() {
 
   const meta = DOC_TITLES.dietary_sheet
 
+  function handleExport() {
+    downloadXlsx(`สรุปข้อจำกัดด้านอาหาร-${ctx.tour?.name ?? 'tour'}`, [
+      {
+        name: 'ข้อจำกัดด้านอาหาร',
+        rows: [
+          ['ชื่อ', 'เพศ', 'แพ้อาหาร', 'ข้อจำกัด', 'โรคประจำตัว'],
+          ...rows.map((r) => [r.name, r.gender, r.allergy, r.dietary, r.medical]),
+        ],
+        colWidths: [30, 8, 34, 34, 34],
+      },
+    ])
+  }
+
   if (loading || ctx.loading) return <p className="p-8 text-center text-ink-muted">กำลังโหลด…</p>
   if (error || ctx.error) return <p className="p-8 text-center text-danger">{error ?? ctx.error}</p>
 
   return (
-    <DocumentShell title={meta.title} paper={PAPER.a4_portrait} onPrint={defaultPrint}>
+    <DocumentShell
+      title={meta.title}
+      paper={PAPER.a4_portrait}
+      onPrint={defaultPrint}
+      onExportXlsx={handleExport}
+    >
       <DocumentHeader
         org={ctx.org}
         tour={ctx.tour}

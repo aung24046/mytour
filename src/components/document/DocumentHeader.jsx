@@ -82,7 +82,8 @@ export default function DocumentHeader({
         style={{ fontSize: `${TYPE_SCALE.orgMeta.sizePt}pt` }}
       >
         <span className="min-w-0 truncate">
-          {[tour?.join_code, tour?.name].filter(Boolean).join(' · ')}
+          {/* ไม่แสดง join_code — เป็นรหัสเข้าทริปของลูกทัวร์ ไม่ควรหลุดไปกับเอกสารที่ส่งคู่ค้า */}
+          {tour?.name}
         </span>
         <span className="shrink-0">
           {[tripRange, leader && `หัวหน้าทัวร์ ${leader.name}`, pageLabel]

@@ -16,6 +16,7 @@ import {
   useGuestCustomFields,
 } from '../../../lib/documentData'
 import { decideOrientation } from '../../../lib/printProfiles'
+import { downloadXlsx, tableToSheetRows } from '../../../lib/exportXlsx'
 import DocumentHeader from '../../../components/document/DocumentHeader'
 import DocumentTable from '../../../components/document/DocumentTable'
 import DocumentShell, { defaultPrint } from '../../../components/document/DocumentShell'
@@ -174,6 +175,17 @@ export default function RoomingList() {
   const orientation = useMemo(() => decideOrientation(columns), [columns])
   const meta = DOC_TITLES.rooming_list
 
+  // แยกชีตต่อโรงแรม — ตรงกับที่พิมพ์ออกมาแยกหน้า
+  function handleExport() {
+    downloadXlsx(`ใบจัดห้องพัก-${ctx.tour?.name ?? 'tour'}`,
+      hotels.map((h) => ({
+        name: h.name,
+        rows: tableToSheetRows(columns, rowsByHotel[h.id] ?? []),
+        colWidths: columns.map((c) => (c.key === 'name' ? 28 : 18)),
+      }))
+    )
+  }
+
   if (loading || ctx.loading) {
     return <p className="p-8 text-center text-ink-muted">กำลังโหลด…</p>
   }
@@ -187,6 +199,7 @@ export default function RoomingList() {
       paper={orientation.paper}
       orientationNote={orientation.switched ? orientation.reason : null}
       onPrint={defaultPrint}
+      onExportXlsx={handleExport}
       printDisabled={allRows.length === 0}
       toolbar={
         <ColumnPicker
@@ -206,7 +219,7 @@ export default function RoomingList() {
       )}
 
       {hotels.map((hotel, i) => (
-        <section key={hotel.id} className={i > 0 ? 'doc-page-break pt-6' : ''}>
+        <section key={hotel.id} className={`doc-section ${i > 0 ? 'doc-page-break-before pt-6' : ''}`}>
           <DocumentHeader
             org={ctx.org}
             tour={ctx.tour}

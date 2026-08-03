@@ -102,7 +102,7 @@ export default function ItineraryBooklet() {
       printDisabled={items.length === 0}
     >
       {/* ปกหน้า */}
-      <section className="doc-page-break flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
+      <section className="doc-section flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
         {ctx.org?.logo_url ? (
           <img src={ctx.org.logo_url} alt="" className="h-14 object-contain" />
         ) : (
@@ -115,9 +115,7 @@ export default function ItineraryBooklet() {
         {joinUrl && (
           <>
             <QRCodeSVG value={joinUrl} size={92} />
-            <p className="text-[7.5pt] text-gray-500">
-              สแกนเข้าแอป · รหัสทริป {ctx.tour.join_code}
-            </p>
+            <p className="text-[7.5pt] text-gray-500">สแกนเข้าแอป</p>
           </>
         )}
         <p className="mt-4 text-[8pt] text-gray-500">{ctx.org?.name}</p>
@@ -128,7 +126,7 @@ export default function ItineraryBooklet() {
       {days.map(([dayNumber, dayItems], i) => {
         const hotel = hotelForDay(dayNumber)
         return (
-          <section key={dayNumber} className={i < days.length - 1 ? 'doc-page-break pt-4' : 'pt-4'}>
+          <section key={dayNumber} className="doc-section doc-page-break-before pt-4">
             <h3 className="border-b border-gray-800 pb-1 text-[11pt] font-medium">
               วันที่ {dayNumber}
               {ctx.tour?.start_date && (
@@ -182,7 +180,7 @@ export default function ItineraryBooklet() {
 
       {/* หน้าสุดท้าย — เบอร์ฉุกเฉิน */}
       {contacts.length > 0 && (
-        <section className="doc-page-break pt-4">
+        <section className="doc-section doc-page-break-before pt-4">
           <h3 className="border-b border-gray-800 pb-1 text-[11pt] font-medium">เบอร์ติดต่อฉุกเฉิน</h3>
           <table className="mt-2 w-full text-[9pt]">
             <tbody>

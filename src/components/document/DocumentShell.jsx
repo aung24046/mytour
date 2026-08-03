@@ -14,6 +14,7 @@ export default function DocumentShell({
   toolbar,
   children,
   onPrint,
+  onExportXlsx,
   printDisabled = false,
   title,
 }) {
@@ -37,11 +38,24 @@ export default function DocumentShell({
 
         {toolbar}
 
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-2">
           <div className="flex-1 text-xs text-ink-muted">
             <span className="font-semibold text-ink">{paper.label}</span>
             {orientationNote && <span> · {orientationNote}</span>}
           </div>
+
+          {onExportXlsx && (
+            <Button
+              variant="secondary"
+              onClick={onExportXlsx}
+              disabled={printDisabled}
+              fullWidth={false}
+              className="px-4"
+            >
+              Excel
+            </Button>
+          )}
+
           <Button onClick={onPrint} disabled={printDisabled} fullWidth={false} className="px-6">
             <Icon name="print" size={20} color="currentColor" />
             พิมพ์
