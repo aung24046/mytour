@@ -8,7 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/favicon.ico', 'icons/apple-touch-icon.png'],
+      // ฟอนต์เอกสารต้อง precache ด้วย — หัวหน้าทัวร์อาจสั่งพิมพ์ตอนไม่มีเน็ต
+      includeAssets: ['icons/favicon.ico', 'icons/apple-touch-icon.png', 'fonts/*.woff2'],
       manifest: {
         name: 'MyTour',
         short_name: 'MyTour',
@@ -49,7 +50,7 @@ export default defineConfig({
         // App shell + static assets precached for offline load.
         // Supabase API calls are NOT cached here — CheckIn/Itinerary/MyRoom
         // already handle their own offline fallback via localStorage (offlineCache.js).
-        globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
         navigateFallbackDenylist: [/^\/staff/], // staff routes need fresh data, don't serve stale app-shell fallback for deep links
       },
     }),

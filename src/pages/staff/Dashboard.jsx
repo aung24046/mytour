@@ -48,6 +48,7 @@ const GROUPS = [
       { to: '/staff/feedback-summary', key: 'feedbackSummary', icon: 'star' },
       { to: '/staff/form-builder', key: 'formBuilder', icon: 'form' },
       { to: '/staff/print', key: 'printExport', icon: 'print' },
+      { to: '/staff/documents', key: 'documentHub', icon: 'form' },
     ],
   },
 ]

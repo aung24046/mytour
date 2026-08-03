@@ -1,5 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 
+/* ── ฟอนต์เอกสาร export — self-host เพื่อให้พิมพ์ได้ตอนออฟไลน์ ────────────
+   ไฟล์ woff2 ต้องวางเองใน public/fonts/ (ดู public/fonts/README.md)
+   ถ้ายังไม่มีไฟล์ จะตกไปใช้ Noto Sans Thai จาก CDN ข้างบนแทน เอกสารยังพิมพ์ได้
+   font-display: block — ยอมรอฟอนต์ ดีกว่าพิมพ์ออกมาด้วยฟอนต์ผิดแล้วคอลัมน์เพี้ยน */
+@font-face {
+  font-family: 'Noto Sans Thai Looped';
+  src: url('/fonts/NotoSansThaiLooped-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Thai Looped';
+  src: url('/fonts/NotoSansThaiLooped-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/GoogleSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

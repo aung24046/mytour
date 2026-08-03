@@ -21,6 +21,17 @@ const CORE_FIELD_KEYS = [
   'emergency_contact_name',
   'emergency_contact_phone',
   'note',
+  // เพิ่ม 2026-08-03 — ข้อมูลประจำตัวสำหรับเอกสาร export (DataSpec §B)
+  // ยกขึ้นเป็น core column เพราะ rooming list / manifest / ประกันภัย / ตม. ใช้ชุดเดียวกัน
+  // ถ้าเป็น custom field เอกสารจะพังทันทีที่แอดมินลบฟิลด์ทิ้ง
+  'title',
+  'name_en',
+  'birthdate',
+  'national_id',
+  'passport_no',
+  'passport_expiry',
+  'nationality',
+  'insurance_no',
 ]
 
 // หัวการ์ดหมวดสุขภาพจะเปลี่ยนเป็นสีเตือนเมื่อมีข้อมูล (แพ้อาหาร/โรค) — staff เห็นชัดตอนดูแลหน้างาน
@@ -70,7 +81,7 @@ export default function GuestManager() {
       supabase
         .from('guests')
         .select(
-          'id, name, nickname, gender, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token, bus_id'
+          'id, name, nickname, gender, phone, food_allergy, medical_condition, emergency_contact_name, emergency_contact_phone, note, check_in_status, created_at, qr_token, bus_id, title, name_en, birthdate, national_id, passport_no, passport_expiry, nationality, insurance_no'
         )
         .eq('tour_id', tourId)
         .order('created_at', { ascending: false }),
@@ -176,7 +187,10 @@ export default function GuestManager() {
   )
   const currentMonth = useMemo(() => new Date().getMonth() + 1, [])
 
+  // วันเกิดย้ายมาเป็น core column แล้ว (guests.birthdate) แต่ทริปเก่าอาจยังมีค่าค้าง
+  // ใน custom field 'custom_birthdate' ที่ migration ย้ายไม่ได้ (เช่นรูปแบบวันที่ไม่ตรง) → อ่านสำรอง
   function getBirthday(guest) {
+    if (guest.birthdate) return guest.birthdate
     if (!birthdayFieldId) return ''
     return responsesByGuestId[guest.id]?.[birthdayFieldId] ?? ''
   }

@@ -54,6 +54,7 @@ export const CAPABILITIES = {
   'dashboard.view': 'guide',
   'guide.read': 'guide',
   'print.export': 'staff',
+  'document.print': 'staff', // พิมพ์เอกสาร A4 (rooming list, manifest ฯลฯ)
 
   // ── แก้ config ของทริป (หัวหน้าทัวร์ขึ้นไป) ──────────────────
   'guest.edit': 'lead',
@@ -81,6 +82,7 @@ export const CAPABILITIES = {
   'destination.manage': 'admin',
   'supplier.manage': 'admin',
   'person.create': 'admin', // สร้างคนใหม่เข้าคลังทีมงาน
+  'document.preset': 'admin', // สร้าง/แก้ชุดคอลัมน์ของเอกสาร (กระทบทุกทริปในบริษัท)
   'orgrole.grant': 'admin', // ตั้ง org_role ให้คนอื่น (ตั้ง owner ไม่ได้ ดู canGrantRole)
 
   // ── เจ้าของบริษัทเท่านั้น ────────────────────────────────────
@@ -88,6 +90,7 @@ export const CAPABILITIES = {
   'tour.purge': 'owner', // ลบข้อมูลส่วนบุคคล (PDPA) — ย้อนกลับไม่ได้
   'owner.grant': 'owner',
   'billing.manage': 'owner',
+  'org.profile': 'owner', // แก้ข้อมูลบริษัทบนหัวกระดาษทุกใบ — ผูกกับตัวตนทางกฎหมาย
 }
 
 // ---------------------------------------------------------------------

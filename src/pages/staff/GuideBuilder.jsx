@@ -196,6 +196,11 @@ export default function GuideBuilder() {
   const fileInputRef = useRef(null)
   const articleBodyRef = useRef(null)
 
+  // จัดเรียงอัตโนมัติ — ให้ staff เลือกจุดเริ่มต้นก่อนรัน nearest-neighbor
+  const [arrangeSheetOpen, setArrangeSheetOpen] = useState(false)
+  const [arrangeCategoryKey, setArrangeCategoryKey] = useState(null)
+  const [arrangeStartId, setArrangeStartId] = useState(null)
+
   async function loadCategories() {
     const { data, error } = await supabase
       .from('v_tour_guide_categories')
@@ -488,9 +493,30 @@ export default function GuideBuilder() {
     loadArticles()
   }
 
+  // เปิดชีทให้เลือก "จุดเริ่มต้น" ก่อนจัดเรียง — nearest-neighbor ไวต่อจุดเริ่มมาก
+  // ถ้าปล่อยให้ระบบเดาเอง (ใช้ sort_order เดิม) อาจได้เส้นทางย้อนจากปลายทางมาต้นทางแทน
+  function openArrangeSheet(categoryKey) {
+    const items = articlesByCategory[categoryKey] ?? []
+    const withCoords = items.filter((a) => parseLatLngFromMapsUrl(a.maps_url))
+    if (withCoords.length < 2) {
+      window.alert(t('staff.guideBuilder.autoArrangeNeedCoords'))
+      return
+    }
+    setArrangeCategoryKey(categoryKey)
+    setArrangeStartId(withCoords[0].id)
+    setArrangeSheetOpen(true)
+  }
+
+  const arrangeCandidates = useMemo(() => {
+    if (!arrangeCategoryKey) return []
+    const items = articlesByCategory[arrangeCategoryKey] ?? []
+    return items.filter((a) => parseLatLngFromMapsUrl(a.maps_url))
+  }, [arrangeCategoryKey, articlesByCategory])
+
   // จัดเรียงบทความในหมวดเดียวกันอัตโนมัติ ตามพิกัดที่แกะได้จากลิงก์ Google Maps (nearest-neighbor)
+  // เริ่มจากบทความที่ staff เลือกไว้ (startId) เสมอ แล้วไล่หาจุดที่ใกล้ที่สุดถัดไปเรื่อย ๆ
   // บทความที่ไม่มีพิกัด (ไม่มีลิงก์ หรือลิงก์แบบย่อที่แกะพิกัดไม่ได้) จะถูกเลื่อนไปต่อท้าย โดยคงลำดับเดิมของกันเอง
-  async function autoArrangeCategory(categoryKey) {
+  async function autoArrangeCategory(categoryKey, startId) {
     const items = articlesByCategory[categoryKey] ?? []
     const withCoords = []
     const withoutCoords = []
@@ -505,7 +531,14 @@ export default function GuideBuilder() {
       return
     }
 
-    const ordered = nearestNeighborOrder(withCoords, (a) => a._point)
+    // ย้ายบทความที่เลือกเป็นจุดเริ่มต้นไปไว้หน้าสุด — nearestNeighborOrder เริ่มจากตัวแรกในลิสต์เสมอ
+    const startIdx = startId ? withCoords.findIndex((a) => a.id === startId) : -1
+    const seeded =
+      startIdx > 0
+        ? [withCoords[startIdx], ...withCoords.slice(0, startIdx), ...withCoords.slice(startIdx + 1)]
+        : withCoords
+
+    const ordered = nearestNeighborOrder(seeded, (a) => a._point)
     const finalOrder = [...ordered, ...withoutCoords]
     const baseSort = Math.min(...items.map((a) => a.sort_order ?? 0))
     const updates = finalOrder.map((a, i) => ({ id: a.id, sort_order: baseSort + i }))
@@ -520,6 +553,8 @@ export default function GuideBuilder() {
         saveAssignment('guide_articles', u.id, tourId, { sort_order: u.sort_order })
       )
     )
+    setArrangeSheetOpen(false)
+    setArrangeCategoryKey(null)
     loadArticles()
   }
 
@@ -1091,7 +1126,7 @@ export default function GuideBuilder() {
                       <div className="flex shrink-0 items-center gap-3">
                         {items.length >= 2 && (
                           <button
-                            onClick={() => autoArrangeCategory(key)}
+                            onClick={() => openArrangeSheet(key)}
                             title={t('staff.guideBuilder.autoArrangeHint')}
                             className="text-xs font-semibold text-emerald-600"
                           >
@@ -1634,6 +1669,40 @@ export default function GuideBuilder() {
             {savingArticle ? t('common.loading') : t('common.save')}
           </Button>
           <Button variant="secondary" onClick={() => setArticleSheetOpen(false)} disabled={savingArticle}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={arrangeSheetOpen}
+        onClose={() => setArrangeSheetOpen(false)}
+        title={t('staff.guideBuilder.autoArrangeChooseStart')}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-gray-400">{t('staff.guideBuilder.autoArrangeChooseStartHint')}</p>
+          <div className="flex flex-col gap-1.5">
+            {arrangeCandidates.map((a) => (
+              <label
+                key={a.id}
+                className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm ${
+                  arrangeStartId === a.id ? 'border-sky-400 bg-sky-50' : 'border-gray-200'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="arrange-start"
+                  checked={arrangeStartId === a.id}
+                  onChange={() => setArrangeStartId(a.id)}
+                />
+                <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{a.title}</span>
+              </label>
+            ))}
+          </div>
+          <Button onClick={() => autoArrangeCategory(arrangeCategoryKey, arrangeStartId)} disabled={!arrangeStartId}>
+            {t('staff.guideBuilder.autoArrangeConfirm')}
+          </Button>
+          <Button variant="secondary" onClick={() => setArrangeSheetOpen(false)}>
             {t('common.cancel')}
           </Button>
         </div>

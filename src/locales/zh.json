@@ -818,6 +818,9 @@
       "autoArrange": "自动排序",
       "autoArrangeHint": "根据每篇文章 Google 地图链接中解析出的坐标，按距离对该分类下的文章排序（goo.gl/maps 等短链接可能无法解析出坐标）",
       "autoArrangeNeedCoords": "至少需要 2 篇文章的 Google 地图链接包含坐标，才能自动排序",
+      "autoArrangeChooseStart": "选择起点",
+      "autoArrangeChooseStartHint": "系统会从这一点开始，依序按距离排列其余文章 — 请选择路线真正的起点",
+      "autoArrangeConfirm": "开始排序",
       "articleProvince": "府/省",
       "articleProvincePlaceholder": "例如：清迈（输入后可选择）",
       "addPhrase": "添加词汇",
@@ -901,6 +904,10 @@
         "culture": "文化",
         "tips": "小贴士"
       }
+    },
+    "documentHub": {
+      "title": "文件",
+      "subtitle": "打印 A4 / A5 文件，供合作方与存档使用"
     }
   }
 }
