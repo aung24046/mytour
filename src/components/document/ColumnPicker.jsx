@@ -38,7 +38,17 @@ export default function ColumnPicker({
     if (selectedKeys.has(col.key)) {
       onChange(selected.filter((c) => c.key !== col.key))
     } else {
-      onChange([...selected, { ...col, sensitive: SENSITIVE_KEYS.has(col.key) }])
+      // ⚠️ ต้องเติม label เองตรงนี้ — AVAILABLE_COLUMNS เก็บแค่ key กับนโยบาย
+      // ส่วน hydrateColumns() ที่เติม label ให้นั้นทำงานตอนโหลด preset เท่านั้น
+      // ถ้าไม่เติม คอลัมน์ที่เพิ่งติ๊กจะได้หัวตารางว่างเปล่า
+      onChange([
+        ...selected,
+        {
+          ...col,
+          label: col.label ?? COLUMN_LABELS[col.key] ?? col.key,
+          sensitive: SENSITIVE_KEYS.has(col.key),
+        },
+      ])
     }
   }
 

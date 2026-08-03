@@ -1,6 +1,7 @@
 import { Fragment, useMemo } from 'react'
 
 import { OVERFLOW, COLUMN_WIDTH_MM, TYPE_SCALE } from '../../lib/printProfiles'
+import { COLUMN_LABELS } from '../../lib/documentData'
 
 // ตารางเอกสารที่บังคับใช้นโยบายข้อความยาวรายคอลัมน์ (DataSpec §10)
 //
@@ -79,7 +80,9 @@ export default function DocumentTable({
                 className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left align-bottom font-medium"
                 style={{ textAlign: col.align ?? 'left' }}
               >
-                {col.label}
+                {/* fallback เป็น key — หัวตารางว่างทำให้อ่านเอกสารไม่รู้เรื่องเลย
+                    ยอมโชว์ชื่อฟิลด์ดิบดีกว่าปล่อยว่าง */}
+                {col.label ?? COLUMN_LABELS[col.key] ?? col.key}
               </th>
             ))}
             {showNoteColumn && (
