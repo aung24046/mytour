@@ -76,41 +76,43 @@ export const SENSITIVE_KEYS = new Set([
   'birthdate',
 ])
 
-/** คอลัมน์ที่เลือกได้ของแต่ละเอกสาร พร้อมนโยบายข้อความยาวที่แนะนำ */
+/** คอลัมน์ที่เลือกได้ของแต่ละเอกสาร พร้อมนโยบายข้อความยาวที่แนะนำ
+ *  ทุกคอลัมน์แสดงเต็มเสมอ — ที่ยาวมากใช้ subrow หรือ footnote แทนการตัดข้อความ */
 export const AVAILABLE_COLUMNS = {
   rooming_list: [
     { key: 'room_number', overflow: OVERFLOW.NOWRAP, locked: true },
     { key: 'floor', overflow: OVERFLOW.NOWRAP },
-    { key: 'room_type', overflow: OVERFLOW.NOWRAP },
-    { key: 'name', overflow: OVERFLOW.STACK, stackWith: 'nickname', locked: true },
-    { key: 'nickname', overflow: OVERFLOW.NOWRAP },
-    { key: 'name_en', overflow: OVERFLOW.NOWRAP },
-    { key: 'gender', overflow: OVERFLOW.STACK, stackWith: 'birthdate' },
+    { key: 'room_type', overflow: OVERFLOW.WRAP },
+    { key: 'name', overflow: OVERFLOW.WRAP, locked: true },
+    { key: 'nickname', overflow: OVERFLOW.WRAP },
+    { key: 'name_en', overflow: OVERFLOW.WRAP },
+    { key: 'gender', overflow: OVERFLOW.NOWRAP },
     { key: 'birthdate', overflow: OVERFLOW.NOWRAP },
     { key: 'national_id', overflow: OVERFLOW.NOWRAP },
-    { key: 'passport_no', overflow: OVERFLOW.STACK, stackWith: 'passport_expiry' },
+    { key: 'passport_no', overflow: OVERFLOW.NOWRAP },
     { key: 'passport_expiry', overflow: OVERFLOW.NOWRAP },
-    { key: 'nationality', overflow: OVERFLOW.NOWRAP },
+    { key: 'nationality', overflow: OVERFLOW.WRAP },
     { key: 'phone', overflow: OVERFLOW.NOWRAP },
     { key: 'note', overflow: OVERFLOW.FOOTNOTE },
   ],
   guest_manifest: [
     { key: 'index', overflow: OVERFLOW.NOWRAP, locked: true },
-    { key: 'name', overflow: OVERFLOW.STACK, stackWith: 'name_en', locked: true },
-    { key: 'nickname', overflow: OVERFLOW.NOWRAP },
-    { key: 'name_en', overflow: OVERFLOW.NOWRAP },
-    { key: 'title', overflow: OVERFLOW.NOWRAP },
-    { key: 'gender', overflow: OVERFLOW.STACK, stackWith: 'birthdate' },
+    { key: 'title', overflow: OVERFLOW.WRAP },
+    { key: 'name', overflow: OVERFLOW.WRAP, locked: true },
+    { key: 'nickname', overflow: OVERFLOW.WRAP },
+    { key: 'name_en', overflow: OVERFLOW.WRAP },
+    { key: 'gender', overflow: OVERFLOW.NOWRAP },
     { key: 'birthdate', overflow: OVERFLOW.NOWRAP },
     { key: 'national_id', overflow: OVERFLOW.NOWRAP },
-    { key: 'passport_no', overflow: OVERFLOW.STACK, stackWith: 'passport_expiry' },
+    { key: 'passport_no', overflow: OVERFLOW.NOWRAP },
     { key: 'passport_expiry', overflow: OVERFLOW.NOWRAP },
-    { key: 'nationality', overflow: OVERFLOW.NOWRAP },
+    { key: 'nationality', overflow: OVERFLOW.WRAP },
     { key: 'insurance_no', overflow: OVERFLOW.NOWRAP },
-    { key: 'phone', overflow: OVERFLOW.STACK, stackWith: 'emergency_contact_phone' },
-    { key: 'emergency_contact_name', overflow: OVERFLOW.NOWRAP },
+    { key: 'phone', overflow: OVERFLOW.NOWRAP },
+    { key: 'emergency_contact_name', overflow: OVERFLOW.WRAP },
     { key: 'emergency_contact_phone', overflow: OVERFLOW.NOWRAP },
-    { key: 'food_allergy', overflow: OVERFLOW.CLAMP, lines: 2 },
+    { key: 'food_allergy', overflow: OVERFLOW.WRAP },
+    { key: 'dietary', overflow: OVERFLOW.WRAP },
     { key: 'medical_condition', overflow: OVERFLOW.SUBROW },
     { key: 'note', overflow: OVERFLOW.FOOTNOTE },
   ],
@@ -198,6 +200,87 @@ export function useDocumentContext(docType) {
   }, [tourId, orgId, docType])
 
   return state
+}
+
+/**
+ * โหลด custom field + คำตอบของทริป แล้วคืนตัวช่วยอ่านค่าแบบ "core ก่อน ไม่มีค่อยไป custom"
+ *
+ * ทำไมต้องมี: ระบบนี้ให้แอดมินสร้างคำถามเองได้ ข้อมูลสำคัญหลายอย่างจึงไม่ได้อยู่ใน
+ * คอลัมน์ core แต่กระจายอยู่ใน guest_form_responses เช่นทริปจริงของ KBU12 เก็บ
+ * เลขบัตรประชาชนไว้ที่ custom_1784284645523 และอาหารที่แพ้ไว้ที่ custom_food_allergies
+ * ถ้าอ่านแค่ guests.national_id / guests.food_allergy เอกสารจะว่างทั้งที่มีข้อมูลอยู่
+ *
+ * จับคู่ด้วย field_purpose เป็นหลัก (ไม่ hardcode field_key เพราะแต่ละทริปตั้งชื่อเอง)
+ * ส่วนเลขบัตรประชาชนไม่มี purpose รองรับ จึงเดาจากข้อความใน label
+ */
+export function useGuestCustomFields(tourId) {
+  const [state, setState] = useState({ fields: [], responses: [] })
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const { data: fields, error } = await supabase
+        .from('v_tour_form_fields')
+        .select('id, field_key, label, field_purpose, field_type, is_active')
+        .eq('tour_id', tourId)
+
+      if (cancelled || error || !fields?.length) {
+        if (error) console.warn('[documentData] custom fields load failed', error)
+        return
+      }
+
+      const active = fields.filter((f) => f.is_active !== false)
+      const { data: responses } = await supabase
+        .from('guest_form_responses')
+        .select('guest_id, field_id, value')
+        .in('field_id', active.map((f) => f.id))
+
+      if (!cancelled) setState({ fields: active, responses: responses ?? [] })
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [tourId])
+
+  return useMemo(() => {
+    const byGuest = {}
+    for (const r of state.responses) {
+      if (!byGuest[r.guest_id]) byGuest[r.guest_id] = {}
+      byGuest[r.guest_id][r.field_id] = r.value
+    }
+
+    const byPurpose = (purpose) => state.fields.filter((f) => f.field_purpose === purpose)
+    const byLabel = (re) => state.fields.filter((f) => re.test(f.label ?? ''))
+
+    // คอลัมน์เอกสาร → รายการ field ที่ใช้เติมเมื่อ core ว่าง
+    const sources = {
+      food_allergy: byLabel(/แพ้.*อาหาร|อาหาร.*แพ้|food.*allerg/i),
+      dietary: byPurpose('dietary').filter((f) => !/แพ้/.test(f.label ?? '')),
+      medical_condition: byPurpose('medical'),
+      national_id: byLabel(/บัตรประชาชน|ประจำตัวประชาชน|national\s*id/i),
+      phone: byPurpose('phone'),
+      emergency_contact_phone: byPurpose('emergency_contact'),
+    }
+
+    /** อ่านค่าของคอลัมน์หนึ่งจาก guest — core ก่อน ถ้าว่างค่อยรวมค่าจาก custom field */
+    function resolve(guest, key) {
+      const core = guest?.[key]
+      if (core != null && String(core).trim() !== '') return String(core).trim()
+
+      const answers = byGuest[guest?.id] ?? {}
+      const parts = (sources[key] ?? [])
+        .map((f) => answers[f.id])
+        .filter((v) => v != null && String(v).trim() !== '')
+        .map((v) => String(v).trim())
+
+      return [...new Set(parts)].join(' · ')
+    }
+
+    return { resolve, ready: state.fields.length > 0 }
+  }, [state])
 }
 
 /**

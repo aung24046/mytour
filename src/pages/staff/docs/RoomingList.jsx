@@ -13,6 +13,7 @@ import {
   hydrateColumns,
   useColumnFillCounts,
   useDocumentContext,
+  useGuestCustomFields,
 } from '../../../lib/documentData'
 import { decideOrientation } from '../../../lib/printProfiles'
 import DocumentHeader from '../../../components/document/DocumentHeader'
@@ -27,6 +28,7 @@ export default function RoomingList() {
   const tourId = useActiveTourId()
   const ctx = useDocumentContext(DOC_TYPES.ROOMING_LIST)
   const session = getStaffSession()
+  const custom = useGuestCustomFields(tourId)
 
   const [hotels, setHotels] = useState([])
   const [rooms, setRooms] = useState([])
@@ -143,11 +145,11 @@ export default function RoomingList() {
             name_en: g.name_en,
             gender: formatGender(g.gender),
             birthdate: formatThaiDate(g.birthdate),
-            national_id: formatNationalId(g.national_id),
+            national_id: formatNationalId(custom.resolve(g, 'national_id')),
             passport_no: g.passport_no,
             passport_expiry: formatThaiDate(g.passport_expiry),
             nationality: g.nationality,
-            phone: g.phone,
+            phone: custom.resolve(g, 'phone'),
             note: g.note,
           })
         })
@@ -155,7 +157,7 @@ export default function RoomingList() {
       byHotel[hotel.id] = out
     }
     return byHotel
-  }, [hotels, rooms, assignments, guestById])
+  }, [hotels, rooms, assignments, guestById, custom])
 
   const allRows = useMemo(() => Object.values(rowsByHotel).flat(), [rowsByHotel])
 

@@ -14,6 +14,7 @@ import {
   hydrateColumns,
   useColumnFillCounts,
   useDocumentContext,
+  useGuestCustomFields,
 } from '../../../lib/documentData'
 import { decideOrientation } from '../../../lib/printProfiles'
 import DocumentHeader from '../../../components/document/DocumentHeader'
@@ -28,6 +29,8 @@ export default function GuestManifest() {
   const tourId = useActiveTourId()
   const ctx = useDocumentContext(DOC_TYPES.GUEST_MANIFEST)
   const session = getStaffSession()
+  // ข้อมูลสำคัญหลายอย่างของทริปจริงอยู่ใน custom field ไม่ใช่คอลัมน์ core
+  const custom = useGuestCustomFields(tourId)
 
   const [guests, setGuests] = useState([])
   const [loading, setLoading] = useState(true)
@@ -79,6 +82,7 @@ export default function GuestManifest() {
     () =>
       guests.map((g, i) => {
         const age = calcAge(g.birthdate)
+        const r = (key) => custom.resolve(g, key)
         return {
           _id: g.id,
           index: String(i + 1),
@@ -90,22 +94,21 @@ export default function GuestManifest() {
           birthdate: g.birthdate
             ? `${formatThaiDate(g.birthdate)}${age != null ? ` · ${age} ปี` : ''}`
             : '',
-          national_id: formatNationalId(g.national_id),
+          national_id: formatNationalId(r('national_id')),
           passport_no: g.passport_no,
           passport_expiry: formatThaiDate(g.passport_expiry),
           nationality: g.nationality,
           insurance_no: g.insurance_no,
-          phone: g.phone,
+          phone: r('phone'),
           emergency_contact_name: g.emergency_contact_name,
-          emergency_contact_phone: g.emergency_contact_phone
-            ? `${g.emergency_contact_phone}${g.emergency_contact_name ? ` (${g.emergency_contact_name})` : ''}`
-            : '',
-          food_allergy: g.food_allergy,
-          medical_condition: g.medical_condition,
+          emergency_contact_phone: r('emergency_contact_phone'),
+          food_allergy: r('food_allergy'),
+          dietary: r('dietary'),
+          medical_condition: r('medical_condition'),
           note: g.note,
         }
       }),
-    [guests]
+    [guests, custom]
   )
 
   const availableKeys = useMemo(() => AVAILABLE_COLUMNS.guest_manifest.map((c) => c.key), [])

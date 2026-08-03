@@ -36,14 +36,7 @@ export default function ColumnPicker({
   function toggle(col) {
     if (col.locked) return
     if (selectedKeys.has(col.key)) {
-      // ถอดคอลัมน์ที่ถูกใช้เป็นคู่ซ้อนอยู่ → ต้องปลด stackWith ของอีกฝั่งด้วย
-      onChange(
-        selected
-          .filter((c) => c.key !== col.key)
-          .map((c) =>
-            c.stackWith === col.key ? { ...c, stackWith: undefined, overflow: OVERFLOW.NOWRAP } : c
-          )
-      )
+      onChange(selected.filter((c) => c.key !== col.key))
     } else {
       onChange([...selected, { ...col, sensitive: SENSITIVE_KEYS.has(col.key) }])
     }
@@ -69,9 +62,7 @@ export default function ColumnPicker({
     // เก็บเฉพาะ key + นโยบาย — label มาจาก COLUMN_LABELS ตอนอ่านกลับ
     const columns = selected.map((c) => ({
       key: c.key,
-      overflow: c.overflow ?? OVERFLOW.NOWRAP,
-      ...(c.stackWith ? { stackWith: c.stackWith } : {}),
-      ...(c.lines ? { lines: c.lines } : {}),
+      overflow: c.overflow ?? OVERFLOW.WRAP,
       ...(c.sensitive ? { sensitive: true } : {}),
     }))
 

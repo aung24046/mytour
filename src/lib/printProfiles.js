@@ -27,16 +27,20 @@ export function usableWidthMm(paper) {
 
 /**
  * นโยบายข้อความยาว (§10.2)
- * - nowrap   บรรทัดเดียว ไม่ตัดคำ — ชื่อ เลขบัตร เบอร์ วันที่ จำนวนเงิน
- * - stack    ซ้อน 2 บรรทัดในช่องเดียว — จับคู่ฟิลด์ที่ไปด้วยกัน ลดจำนวนคอลัมน์
- * - clamp    ตัดที่ n บรรทัดด้วย … — ข้อความอิสระสั้น
+ *
+ * ⚠️ หลักการที่แก้เมื่อ 2026-08-03 หลังทดสอบพิมพ์จริง:
+ *    เอกสารพิมพ์ต้องเห็นข้อมูล "ครบ" เสมอ — ห้ามตัดด้วย … เด็ดขาด
+ *    ความสวยงามของแถวที่สูงเท่ากันสำคัญน้อยกว่าความครบถ้วนของข้อมูล
+ *    นโยบาย stack (ซ้อน 2 ฟิลด์ในช่องเดียว) และ clamp (ตัด n บรรทัด) จึงถูกถอดออก
+ *
+ * - wrap     ขึ้นบรรทัดใหม่ได้ แสดงเต็มเสมอ — ค่าตั้งต้นของทุกคอลัมน์
+ * - nowrap   พยายามไม่ขึ้นบรรทัดใหม่ — เลขบัตร เบอร์ วันที่ จำนวนเงิน (สั้นอยู่แล้ว)
  * - subrow   ยกลงแถวย่อยเต็มความกว้างใต้แถวหลัก — เอกสารใช้ภายใน
  * - footnote ใส่เลขกำกับแล้วรวมท้ายหน้า — เอกสารส่งภายนอก
  */
 export const OVERFLOW = {
+  WRAP: 'wrap',
   NOWRAP: 'nowrap',
-  STACK: 'stack',
-  CLAMP: 'clamp',
   SUBROW: 'subrow',
   FOOTNOTE: 'footnote',
 }
@@ -86,27 +90,13 @@ export const COLUMN_WIDTH_MM = {
 
 const DEFAULT_COLUMN_WIDTH_MM = 26
 
-/** คอลัมน์ที่ซ้อนอยู่ในช่องเดียวกัน (stack) ไม่กินความกว้างเพิ่ม — คิดค่าที่กว้างกว่า */
+/** ความกว้างรวมของคอลัมน์ที่อยู่ในตารางจริง (subrow/footnote ไม่กินความกว้าง) */
 export function estimateTableWidthMm(columns) {
-  const stacked = new Set()
-  for (const col of columns) {
-    if (col.overflow === OVERFLOW.STACK && col.stackWith) stacked.add(col.stackWith)
-  }
-
   let total = 0
   for (const col of columns) {
-    // footnote ไม่ได้อยู่ในตาราง และคอลัมน์ที่ถูกซ้อนทับไปแล้วไม่นับซ้ำ
     if (col.overflow === OVERFLOW.FOOTNOTE) continue
     if (col.overflow === OVERFLOW.SUBROW) continue
-    if (stacked.has(col.key)) continue
-
-    const own = COLUMN_WIDTH_MM[col.key] ?? DEFAULT_COLUMN_WIDTH_MM
-    if (col.overflow === OVERFLOW.STACK && col.stackWith) {
-      const pair = COLUMN_WIDTH_MM[col.stackWith] ?? DEFAULT_COLUMN_WIDTH_MM
-      total += Math.max(own, pair)
-    } else {
-      total += own
-    }
+    total += COLUMN_WIDTH_MM[col.key] ?? DEFAULT_COLUMN_WIDTH_MM
   }
   return total
 }
