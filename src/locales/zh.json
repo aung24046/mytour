@@ -80,7 +80,8 @@
       "duplicatePhoneTitle": "此号码已被注册",
       "duplicatePhoneMessage": "此号码已由 {{name}} 注册。是否要登录该账户？",
       "duplicatePhoneConfirm": "登录",
-      "duplicatePhoneCancel": "修改号码"
+      "duplicatePhoneCancel": "修改号码",
+      "duplicatePhone": "该手机号已在本次行程登记过。如果是您本人，请使用手机号找回资料。"
     },
     "itinerary": {
       "title": "行程安排",
@@ -338,7 +339,8 @@
       "staffBadge": "工作人员",
       "editGuest": "编辑信息",
       "deleteGuest": "删除此客人",
-      "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。"
+      "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。",
+      "duplicatePhone": "本次行程已有其他客人使用该手机号。"
     },
     "luggageManager": {
       "title": "行李管理",

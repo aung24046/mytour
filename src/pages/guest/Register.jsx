@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { useTourId } from '../../lib/TourContext'
 import { getGuestId, saveGuestId, clearGuestId } from '../../lib/guestSession'
-import { findFieldByPurpose } from '../../lib/guestFields'
+import { findFieldByPurpose, normalizePhone } from '../../lib/guestFields'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Button from '../../components/common/Button'
@@ -54,38 +54,49 @@ export default function Register() {
     setDuplicateGuest(null)
   }
 
+  // หาลูกทัวร์ในทริปนี้ที่ใช้เบอร์เดียวกัน
+  //
+  // ⚠️ เทียบด้วยเลขล้วน ไม่ใช่สตริงดิบ — เดิมใช้ .eq() ตรงตัว ทำให้ "081-234-5678"
+  // กับ "0812345678" ถือเป็นคนละเบอร์ แล้วลงทะเบียนซ้ำได้ทั้งที่เป็นคนเดียวกัน
+  // Supabase ไม่มี operator เทียบแบบ normalize จึงต้องดึงมากรองฝั่ง client
   async function findGuestByPhone(phoneField, phone) {
+    const target = normalizePhone(phone)
+    if (!target) return null
+
     if (phoneField.is_core) {
       const { data, error } = await supabase
         .from('guests')
-        .select('id, name, nickname, qr_token')
+        .select(`id, name, nickname, qr_token, ${phoneField.field_key}`)
         .eq('tour_id', tourId)
-        .eq(phoneField.field_key, phone)
-        .limit(1)
 
       if (error) throw error
-      return data?.[0] ?? null
+      return (data ?? []).find((g) => normalizePhone(g[phoneField.field_key]) === target) ?? null
     }
 
+    // custom field: field_id เป็นของคลังกลางที่ใช้ร่วมหลายทริป
+    // ต้องกรองด้วย tour_id ของ guest เสมอ ไม่งั้นจะไปเจอคนของทริปอื่นแล้วบล็อกผิด
     const { data: responseRows, error: responseError } = await supabase
       .from('guest_form_responses')
-      .select('guest_id')
+      .select('guest_id, value')
       .eq('field_id', phoneField.id)
-      .eq('value', phone)
-      .limit(1)
 
     if (responseError) throw responseError
-    const guestId = responseRows?.[0]?.guest_id
-    if (!guestId) return null
+
+    const guestIds = (responseRows ?? [])
+      .filter((r) => normalizePhone(r.value) === target)
+      .map((r) => r.guest_id)
+
+    if (guestIds.length === 0) return null
 
     const { data, error } = await supabase
       .from('guests')
       .select('id, name, nickname, qr_token')
-      .eq('id', guestId)
-      .maybeSingle()
+      .eq('tour_id', tourId)
+      .in('id', guestIds)
+      .limit(1)
 
     if (error) throw error
-    return data
+    return data?.[0] ?? null
   }
 
   async function searchByPhone(e) {
@@ -107,27 +118,30 @@ export default function Register() {
 
       const phoneField = findFieldByPurpose(fieldsData ?? [], 'phone')
 
+      // เทียบด้วยเลขล้วนเหมือนตอนเช็คซ้ำ — ลูกทัวร์จำไม่ได้ว่าตอนสมัครพิมพ์มีขีดหรือไม่มี
+      const target = normalizePhone(phone)
+
       let matches = []
       if (!phoneField || phoneField.is_core) {
         const coreKey = phoneField?.field_key || 'phone'
         const { data, error } = await supabase
           .from('guests')
-          .select('id, name, nickname, qr_token')
+          .select(`id, name, nickname, qr_token, ${coreKey}`)
           .eq('tour_id', tourId)
-          .eq(coreKey, phone)
 
         if (error) throw error
-        matches = data ?? []
+        matches = (data ?? []).filter((g) => normalizePhone(g[coreKey]) === target)
       } else {
         const { data: responseRows, error: responseError } = await supabase
           .from('guest_form_responses')
           .select('guest_id, value')
           .eq('field_id', phoneField.id)
-          .eq('value', phone)
 
         if (responseError) throw responseError
 
-        const guestIds = (responseRows ?? []).map((r) => r.guest_id)
+        const guestIds = (responseRows ?? [])
+          .filter((r) => normalizePhone(r.value) === target)
+          .map((r) => r.guest_id)
         if (guestIds.length > 0) {
           const { data, error } = await supabase
             .from('guests')
@@ -311,6 +325,19 @@ export default function Register() {
         .select('id, qr_token')
         .single()
 
+      // ชนกับ unique index guests_unique_phone_per_tour_idx = มีคนใช้เบอร์นี้ในทริปนี้แล้ว
+      // เกิดได้แม้ผ่านการเช็คด้านบน เช่นกดส่งรัวสองครั้ง หรือเปิดสองแท็บพร้อมกัน
+      if (guestError?.code === '23505' && guestError.message?.includes('phone')) {
+        const existing = phoneField ? await findGuestByPhone(phoneField, phoneValue) : null
+        if (existing) {
+          setDuplicateGuest(existing)
+          setSubmitting(false)
+          return
+        }
+        setSubmitError(t('guest.register.duplicatePhone'))
+        setSubmitting(false)
+        return
+      }
       if (guestError) throw guestError
 
       if (customAnswers.length > 0) {

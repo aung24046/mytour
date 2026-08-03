@@ -51,7 +51,7 @@ export default function GuestNav({ active }) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white/90 backdrop-blur-lg"
+      className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white/90 backdrop-blur-lg"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="เมนูหลัก"
     >

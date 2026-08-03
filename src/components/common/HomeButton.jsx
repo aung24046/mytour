@@ -39,11 +39,14 @@ export default function HomeButton() {
       ? `/t/${tourMatch[1]}`
       : '/'
 
+  // no-print / print:hidden — ปุ่มลอยตัวนี้ถูกวางไว้ที่ App.jsx จึงอยู่นอก DocumentShell
+  // กฎซ่อนตอนพิมพ์ใน printProfiles.js เอื้อมไม่ถึง ถ้าไม่ซ่อนเองจะติดไอคอนหน้าหลัก
+  // ไปบนกระดาษทุกครั้งที่สั่งพิมพ์เอกสาร
   return (
     <button
       onClick={() => navigate(target)}
       aria-label={t('common.home')}
-      className="fixed bottom-4 left-4 z-40 flex items-center gap-1.5 rounded-pill bg-white/90 px-4 py-3 text-sm font-bold text-brand shadow-card-hover ring-1 ring-black/5 backdrop-blur transition active:scale-95 hover:bg-white"
+      className="no-print fixed bottom-4 left-4 z-40 flex items-center gap-1.5 rounded-pill bg-white/90 px-4 py-3 text-sm font-bold text-brand shadow-card-hover ring-1 ring-black/5 backdrop-blur transition active:scale-95 hover:bg-white print:hidden"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
       <Icon name="home" size={16} filled interactive />

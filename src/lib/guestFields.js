@@ -17,6 +17,20 @@ export function findFieldByPurpose(fields, purpose) {
   return fields.find((f) => f.field_purpose === purpose && f.is_active) ?? null
 }
 
+/**
+ * ตัดทุกอย่างที่ไม่ใช่ตัวเลขออกจากเบอร์โทร เพื่อใช้เทียบว่า "เบอร์เดียวกัน" หรือไม่
+ *
+ * ทำไมต้องมี: เดิมเช็คเบอร์ซ้ำด้วย .eq() ซึ่งเทียบสตริงตรงตัว
+ * "081-234-5678" กับ "0812345678" กับ " 0812345678 " จึงเล็ดลอดเป็นคนละเบอร์
+ * แล้วลงทะเบียนซ้ำได้ทั้งที่เป็นคนเดียวกัน
+ *
+ * ต้องตรงกับนิพจน์ที่ใช้ใน unique index ฝั่งฐานข้อมูล:
+ *   regexp_replace(phone, '\D', '', 'g')
+ */
+export function normalizePhone(value) {
+  return String(value ?? '').replace(/\D/g, '')
+}
+
 export function buildResponsesByGuestId(responses) {
   const map = {}
   for (const r of responses) {

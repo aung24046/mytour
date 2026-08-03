@@ -80,7 +80,8 @@
       "duplicatePhoneTitle": "This phone number is already registered",
       "duplicatePhoneMessage": "This phone number is already registered under {{name}}. Would you like to log in with that account?",
       "duplicatePhoneConfirm": "Log in",
-      "duplicatePhoneCancel": "Edit phone number"
+      "duplicatePhoneCancel": "Edit phone number",
+      "duplicatePhone": "This phone number is already registered for this trip. If it is yours, use phone recovery to restore your profile."
     },
     "itinerary": {
       "title": "Itinerary",
@@ -338,7 +339,8 @@
       "staffBadge": "Staff",
       "editGuest": "Edit info",
       "deleteGuest": "Delete this guest",
-      "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone."
+      "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone.",
+      "duplicatePhone": "Another guest on this trip already uses this phone number."
     },
     "luggageManager": {
       "title": "Manage luggage",

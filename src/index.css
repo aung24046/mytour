@@ -39,6 +39,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── ซ่อน UI ของแอปตอนสั่งพิมพ์ ─────────────────────────────────────────
+   printProfiles.js มีกฎ .no-print อยู่แล้ว แต่ฉีดผ่าน <style> ในหน้าเอกสาร
+   จึงคุมได้เฉพาะตอนที่ DocumentShell ถูก mount — องค์ประกอบลอยที่อยู่ระดับ App
+   (HomeButton, แถบเมนูล่าง) เลยหลุดไปติดบนกระดาษ
+   ประกาศไว้ตรงนี้อีกชั้นเพื่อให้คุมทั้งแอปเสมอ ไม่ว่าจะพิมพ์จากหน้าไหน */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
 html, body, #root {
   height: 100%;
 }

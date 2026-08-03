@@ -265,6 +265,13 @@ export default function GuestManager() {
           .update(corePayload)
           .eq('id', guest.id)
 
+        // ชนกับ unique index guests_unique_phone_per_tour_idx — แก้เบอร์ไปตรงกับคนอื่นในทริปนี้
+        // แสดงข้อความที่อ่านรู้เรื่องแทน error ดิบจาก Postgres
+        if (coreError?.code === '23505' && coreError.message?.includes('phone')) {
+          setSaveError(t('staff.guestManager.duplicatePhone'))
+          setSaving(false)
+          return
+        }
         if (coreError) throw coreError
       }
 
