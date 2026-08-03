@@ -41,6 +41,7 @@ export const COLUMN_LABELS = {
   floor: 'ชั้น',
   room_type: 'ประเภท',
   max_guests: 'พักได้',
+  room_note: 'หมายเหตุห้อง',
   title: 'คำนำหน้า',
   name: 'ชื่อ-นามสกุล',
   nickname: 'ชื่อเล่น',
@@ -86,6 +87,8 @@ export const AVAILABLE_COLUMNS = {
     { key: 'room_number', overflow: OVERFLOW.NOWRAP, locked: true },
     { key: 'floor', overflow: OVERFLOW.NOWRAP },
     { key: 'room_type', overflow: OVERFLOW.WRAP },
+    // หมายเหตุห้อง (connecting / non-smoking / ขอชั้นสูง) — โรงแรมต้องเห็นตอนรับใบนี้
+    { key: 'room_note', overflow: OVERFLOW.WRAP },
     { key: 'name', overflow: OVERFLOW.WRAP, locked: true },
     { key: 'nickname', overflow: OVERFLOW.WRAP },
     { key: 'name_en', overflow: OVERFLOW.WRAP },

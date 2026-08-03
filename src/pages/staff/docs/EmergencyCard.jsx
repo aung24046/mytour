@@ -31,9 +31,12 @@ export default function EmergencyCard() {
           .order('sort_order'),
         supabase
           .from('hotels')
-          .select('id, name, check_in_date, check_out_date, general_info')
+          // เพิ่มที่อยู่ + เบอร์โรงแรม — เป็นข้อมูลที่บัตรฉุกเฉินขาดไม่ได้
+          // (ที่อยู่ภาษาท้องถิ่นใช้ยื่นให้คนขับแท็กซี่/ตำรวจตอนลูกทัวร์หลง)
+          .select('id, name, check_in_date, check_out_date, general_info, address, address_local, phone, sort_order')
           .eq('tour_id', tourId)
-          .order('check_in_date'),
+          .order('sort_order', { ascending: true, nullsFirst: false })
+          .order('check_in_date', { ascending: true, nullsFirst: false }),
         supabase.from('v_tour_phrasebook').select('*').eq('tour_id', tourId).limit(60),
       ])
 
@@ -124,9 +127,18 @@ export default function EmergencyCard() {
               className="mt-2 rounded bg-gray-100 px-1.5 py-1 text-[7.5pt]"
               style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
             >
+              <p className="mb-0.5 font-medium">ที่พัก</p>
               {hotels.map((h) => (
                 <div key={h.id} className="mb-1 last:mb-0">
-                  <span className="font-medium">{h.name}</span>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium">{h.name}</span>
+                    {h.phone && <span className="doc-num shrink-0">{h.phone}</span>}
+                  </div>
+                  {h.address && <div className="text-gray-600">{h.address}</div>}
+                  {/* ที่อยู่ภาษาท้องถิ่นพิมพ์ตัวหนา ให้ยื่นชี้ได้ทันทีโดยไม่ต้องอ่านออก */}
+                  {h.address_local && (
+                    <div className="font-medium text-gray-800">{h.address_local}</div>
+                  )}
                   {h.general_info && <div className="text-gray-600">{h.general_info}</div>}
                 </div>
               ))}

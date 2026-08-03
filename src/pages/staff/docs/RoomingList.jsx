@@ -17,6 +17,7 @@ import {
 } from '../../../lib/documentData'
 import { decideOrientation } from '../../../lib/printProfiles'
 import { downloadXlsx, tableToSheetRows } from '../../../lib/exportXlsx'
+import { sortRoomsForDisplay } from '../../../lib/roomAssign'
 import DocumentHeader from '../../../components/document/DocumentHeader'
 import DocumentTable from '../../../components/document/DocumentTable'
 import DocumentShell, { defaultPrint } from '../../../components/document/DocumentShell'
@@ -47,12 +48,16 @@ export default function RoomingList() {
       const [hotelsRes, roomsRes, assignRes, guestsRes] = await Promise.all([
         supabase
           .from('hotels')
-          .select('id, name, check_in_date, check_out_date, checkout_time')
+          // ใบนี้ส่งให้โรงแรม — ต้องมีเลข booking, เบอร์ และที่อยู่ไว้ยืนยันปลายทาง
+          .select(
+            'id, name, check_in_date, check_out_date, check_in_time, checkout_time, address, phone, booking_ref, sort_order'
+          )
           .eq('tour_id', tourId)
-          .order('check_in_date', { ascending: true }),
+          .order('sort_order', { ascending: true, nullsFirst: false })
+          .order('check_in_date', { ascending: true, nullsFirst: false }),
         supabase
           .from('hotel_rooms')
-          .select('id, hotel_id, room_number, floor, room_type, max_guests'),
+          .select('id, hotel_id, room_number, floor, room_type, max_guests, note'),
         supabase.from('room_assignments').select('id, room_id, guest_id'),
         supabase
           .from('guests')
@@ -109,9 +114,9 @@ export default function RoomingList() {
     const byHotel = {}
 
     for (const hotel of hotels) {
-      const hotelRooms = rooms
-        .filter((r) => r.hotel_id === hotel.id)
-        .sort((a, b) => String(a.room_number).localeCompare(String(b.room_number), 'th', { numeric: true }))
+      // เดิมเรียงด้วย localeCompare ตรงๆ ห้องที่ยังไม่มีเลข (สตริงว่าง) จึงลอยขึ้นบนสุดของใบ
+      // ที่ส่งให้โรงแรม — ใช้ตัวเรียงกลางที่ดันห้องไม่มีเลขไปท้ายแทน
+      const hotelRooms = sortRoomsForDisplay(rooms.filter((r) => r.hotel_id === hotel.id))
 
       const out = []
       for (const room of hotelRooms) {
@@ -126,6 +131,7 @@ export default function RoomingList() {
             room_number: room.room_number,
             floor: room.floor,
             room_type: `${room.room_type ?? ''}${room.max_guests ? ` · ${room.max_guests} ท่าน` : ''}`,
+            room_note: room.note ?? '',
             name: '(ว่าง)',
           })
           continue
@@ -141,6 +147,7 @@ export default function RoomingList() {
               i === 0
                 ? `${room.room_type ?? ''}${room.max_guests ? ` · ${room.max_guests} ท่าน` : ''}`
                 : '',
+            room_note: i === 0 ? (room.note ?? '') : '',
             name: g.name,
             nickname: g.nickname,
             name_en: g.name_en,
@@ -230,12 +237,23 @@ export default function RoomingList() {
           />
 
           <div className="my-2 bg-gray-100 px-2 py-1 text-[10pt] font-medium">
-            {hotel.name}
-            <span className="ml-2 font-normal text-gray-600">
-              เช็คอิน {formatThaiDate(hotel.check_in_date)} · เช็คเอาต์{' '}
-              {formatThaiDate(hotel.check_out_date)}
-              {hotel.checkout_time && ` ${hotel.checkout_time}`}
-            </span>
+            <div>
+              {hotel.name}
+              <span className="ml-2 font-normal text-gray-600">
+                เช็คอิน {formatThaiDate(hotel.check_in_date)}
+                {hotel.check_in_time && ` ${hotel.check_in_time}`} · เช็คเอาต์{' '}
+                {formatThaiDate(hotel.check_out_date)}
+                {hotel.checkout_time && ` ${hotel.checkout_time}`}
+              </span>
+            </div>
+            {/* บรรทัดยืนยันปลายทาง — เลข booking + ที่อยู่/เบอร์ ให้โรงแรมตรวจสอบได้ทันที */}
+            {(hotel.booking_ref || hotel.phone || hotel.address) && (
+              <div className="mt-0.5 text-[8pt] font-normal text-gray-600">
+                {hotel.booking_ref && <span className="mr-2">Booking: {hotel.booking_ref}</span>}
+                {hotel.phone && <span className="mr-2">โทร {hotel.phone}</span>}
+                {hotel.address && <span>{hotel.address}</span>}
+              </div>
+            )}
           </div>
 
           <DocumentTable

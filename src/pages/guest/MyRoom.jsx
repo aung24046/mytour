@@ -6,6 +6,15 @@ import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { genderTextClass } from '../../lib/genderColor'
+import { formatTimeRange } from '../../lib/timeFormat'
+import { GUEST_HOTEL_COLUMNS } from '../../lib/hotelVisibility'
+import {
+  ALL_FACILITIES,
+  ROOM_AMENITIES,
+  amenityMeta,
+  facilityMeta,
+  sortByTaxonomy,
+} from '../../lib/hotelFacilities'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import GuestNav from '../../components/common/GuestNav'
 import Icon from '../../components/common/Icon'
@@ -15,7 +24,10 @@ const ROOM_TYPE_LABELS = {
   twin: 'roomTypeTwin',
   double: 'roomTypeDouble',
   triple: 'roomTypeTriple',
+  quad: 'roomTypeQuad',
+  family: 'roomTypeFamily',
 }
+
 
 const CACHE_KEY = 'my_room'
 
@@ -112,7 +124,7 @@ export default function MyRoom() {
       if (hotelIds.length > 0) {
         const { data: hotelsData } = await supabase
           .from('hotels')
-          .select('id, name, check_in_date, check_out_date, general_info, wifi_name, wifi_password, breakfast_time, breakfast_location, checkout_time')
+          .select(GUEST_HOTEL_COLUMNS)
           .in('id', hotelIds)
         for (const h of hotelsData ?? []) hotelsById[h.id] = h
       }
@@ -132,11 +144,13 @@ export default function MyRoom() {
             .map((a) => a.guests)
             .filter(Boolean),
         }))
-        // เรียงตามวันเข้าพักก่อน-หลัง ให้ลูกทัวร์เห็นลำดับทริปถูกต้อง
+        // เรียงตามลำดับที่ทีมงานจัดไว้ (sort_order) ก่อน แล้วค่อย fallback เป็นวันเข้าพัก
+        // เดิมใช้วันเข้าพักอย่างเดียว โรงแรมที่ยังไม่ได้ใส่วันที่จึงลอยขึ้นมาบนสุดเสมอ
         .sort((a, b) => {
-          const dateA = a.hotel?.check_in_date ?? ''
-          const dateB = b.hotel?.check_in_date ?? ''
-          return dateA.localeCompare(dateB)
+          const orderA = a.hotel?.sort_order ?? Number.MAX_SAFE_INTEGER
+          const orderB = b.hotel?.sort_order ?? Number.MAX_SAFE_INTEGER
+          if (orderA !== orderB) return orderA - orderB
+          return (a.hotel?.check_in_date ?? '').localeCompare(b.hotel?.check_in_date ?? '')
         })
 
       setStays(nextStays)
@@ -207,7 +221,21 @@ export default function MyRoom() {
                 const roomTypeLabel = t(`guest.myRoom.${ROOM_TYPE_LABELS[room.room_type] ?? 'roomTypeTwin'}`)
                 const hasWifi = hotel && (hotel.wifi_name || hotel.wifi_password)
                 const hasBreakfast = hotel && (hotel.breakfast_time || hotel.breakfast_location)
+                const hasDinner = hotel && (hotel.dinner_time || hotel.dinner_location)
+                const hasCheckIn = hotel && hotel.check_in_time
                 const hasCheckout = hotel && hotel.checkout_time
+                const hasMorningCall = hotel && hotel.morning_call
+                const hasLuggage = hotel && hotel.luggage_time
+                const hasMeetingPoint = hotel && hotel.meeting_point
+                const hasAmenityRows =
+                  hasWifi ||
+                  hasBreakfast ||
+                  hasDinner ||
+                  hasCheckIn ||
+                  hasCheckout ||
+                  hasMorningCall ||
+                  hasLuggage ||
+                  hasMeetingPoint
                 const hasNotes = hotel && hotel.general_info
                 return (
                   <div
@@ -290,8 +318,11 @@ export default function MyRoom() {
                             </div>
                           )}
 
+                          {/* ที่อยู่โรงแรม + ปุ่มลัด — สำคัญที่สุดเวลาลูกทัวร์แยกตัวไปเที่ยวเองแล้วต้องกลับ */}
+                          <HotelLocation hotel={hotel} />
+
                           {/* ข้อมูลโรงแรมเป็นแถวรายการ */}
-                          {(hasWifi || hasBreakfast || hasCheckout) && (
+                          {hasAmenityRows && (
                             <div className="mt-3 flex flex-col">
                               {hasWifi && (
                                 <AmenityRow icon="wifi" label={t('guest.myRoom.wifi')}>
@@ -307,13 +338,41 @@ export default function MyRoom() {
                                   {[hotel.breakfast_time, hotel.breakfast_location].filter(Boolean).join(' · ')}
                                 </AmenityRow>
                               )}
+                              {hasDinner && (
+                                <AmenityRow icon="bowl" label={t('guest.myRoom.dinner')}>
+                                  {[hotel.dinner_time, hotel.dinner_location].filter(Boolean).join(' · ')}
+                                </AmenityRow>
+                              )}
+                              {hasCheckIn && (
+                                <AmenityRow icon="ticket" label={t('guest.myRoom.checkIn')}>
+                                  {hotel.check_in_time}
+                                </AmenityRow>
+                              )}
                               {hasCheckout && (
                                 <AmenityRow icon="door" label={t('guest.myRoom.checkout')}>
                                   {hotel.checkout_time}
                                 </AmenityRow>
                               )}
+                              {hasMorningCall && (
+                                <AmenityRow icon="alert" label={t('guest.myRoom.morningCall')}>
+                                  {hotel.morning_call}
+                                </AmenityRow>
+                              )}
+                              {hasLuggage && (
+                                <AmenityRow icon="bag" label={t('guest.myRoom.luggageTime')}>
+                                  {hotel.luggage_time}
+                                </AmenityRow>
+                              )}
+                              {hasMeetingPoint && (
+                                <AmenityRow icon="bus" label={t('guest.myRoom.meetingPoint')}>
+                                  {hotel.meeting_point}
+                                </AmenityRow>
+                              )}
                             </div>
                           )}
+
+                          {/* สิ่งอำนวยความสะดวก + ของในห้อง */}
+                          <HotelFacilities hotel={hotel} />
 
                           {hasNotes && (
                             <div className="mt-3 flex items-start gap-2.5 rounded-control bg-surface-muted p-3">
@@ -340,6 +399,183 @@ export default function MyRoom() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ที่อยู่โรงแรม + ปุ่มโทร/แผนที่/คัดลอก และที่อยู่ภาษาท้องถิ่นแบบตัวใหญ่
+// สำหรับยื่นหน้าจอให้คนขับแท็กซี่ดูตอนอยู่ต่างประเทศ
+function HotelLocation({ hotel }) {
+  const { t } = useTranslation()
+  const [showLocal, setShowLocal] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  if (!hotel) return null
+  if (!hotel.address && !hotel.address_local && !hotel.phone && !hotel.map_url) return null
+
+  async function handleCopy() {
+    const text = [hotel.name, hotel.address, hotel.address_local].filter(Boolean).join('\n')
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch (clipboardError) {
+      console.error('[MyRoom] copy failed', clipboardError)
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-control bg-surface-muted p-3">
+      <div className="flex items-start gap-2.5">
+        <span className="mt-0.5 flex w-5 shrink-0 justify-center">
+          <Icon name="location" size={16} color="#0e7490" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+            {t('guest.myRoom.address')}
+          </p>
+          {hotel.address && (
+            <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink">{hotel.address}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {hotel.phone && (
+          <a
+            href={`tel:${hotel.phone}`}
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+          >
+            <Icon name="phone" size={13} /> {t('guest.myRoom.callHotel')}
+          </a>
+        )}
+        {hotel.map_url && (
+          <a
+            href={hotel.map_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+          >
+            <Icon name="map" size={13} /> {t('guest.myRoom.openMap')}
+          </a>
+        )}
+        {(hotel.address || hotel.address_local) && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted ring-1 ring-black/[0.04]"
+          >
+            <Icon name={copied ? 'checkCircle' : 'copy'} size={13} />
+            {copied ? t('guest.myRoom.copied') : t('guest.myRoom.copyAddress')}
+          </button>
+        )}
+        {hotel.address_local && (
+          <button
+            type="button"
+            onClick={() => setShowLocal((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+          >
+            <Icon name="language" size={13} /> {t('guest.myRoom.showLocalAddress')}
+          </button>
+        )}
+      </div>
+
+      {showLocal && hotel.address_local && (
+        <div className="mt-2.5 rounded-control bg-white p-3 ring-1 ring-black/[0.06]">
+          <p className="text-[11px] text-ink-faint">{t('guest.myRoom.localAddressHint')}</p>
+          <p className="mt-1 whitespace-pre-wrap text-lg font-bold leading-snug text-ink">
+            {hotel.address_local}
+          </p>
+          {hotel.phone && (
+            <p className="mt-1 font-mono text-sm text-ink-muted">{hotel.phone}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ชิปสิ่งอำนวยความสะดวกหนึ่งตัว — ป้ายฟรี/เสียเงินสำคัญที่สุด เพราะเป็นต้นเหตุ
+// ของการเข้าใจผิดหน้าเคาน์เตอร์มากที่สุด จึงแสดงเสมอเมื่อทีมงานระบุไว้
+function FacilityChip({ item, meta, label }) {
+  const { t } = useTranslation()
+  return (
+    <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2.5 py-1 text-xs ring-1 ring-black/[0.04]">
+      {meta?.icon && <Icon name={meta.icon} size={14} />}
+      <span className="font-medium text-ink">{label}</span>
+      {item.fee === 'free' && (
+        <span className="rounded-pill bg-success-bg px-1.5 text-[10px] font-semibold text-success-text">
+          {t('common.facility.feeFree')}
+        </span>
+      )}
+      {item.fee === 'paid' && (
+        <span className="rounded-pill bg-warning-bg px-1.5 text-[10px] font-semibold text-warning-text">
+          {t('common.facility.feePaid')}
+        </span>
+      )}
+      {formatTimeRange(item.from, item.to) && (
+        <span className="text-ink-muted">{formatTimeRange(item.from, item.to)}</span>
+      )}
+      {item.note && <span className="text-ink-faint">· {item.note}</span>}
+    </span>
+  )
+}
+
+// บล็อกสิ่งอำนวยความสะดวกของโรงแรม + ของใช้ในห้อง สำหรับฝั่งลูกทัวร์
+function HotelFacilities({ hotel }) {
+  const { t } = useTranslation()
+  if (!hotel) return null
+
+  const facilities = sortByTaxonomy(hotel.facilities, ALL_FACILITIES)
+  const amenities = sortByTaxonomy(hotel.room_amenities, ROOM_AMENITIES)
+  if (facilities.length === 0 && amenities.length === 0 && !hotel.power_plug) return null
+
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      {facilities.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+            {t('common.facility.hotelFacilities')}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {facilities.map((item) => (
+              <FacilityChip
+                key={item.key}
+                item={item}
+                meta={facilityMeta(item.key)}
+                label={t(`common.facility.${item.key}`)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {amenities.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
+            {t('common.facility.roomAmenities')}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {amenities.map((item) => (
+              <FacilityChip
+                key={item.key}
+                item={item}
+                meta={amenityMeta(item.key)}
+                label={t(`common.facility.${item.key}`)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hotel.power_plug && (
+        <p className="flex items-center gap-1 text-xs text-ink-muted">
+          <Icon name="plug" size={13} />
+          {t('common.facility.powerPlug')}:{' '}
+          <span className="font-medium text-ink">{hotel.power_plug}</span>
+        </p>
+      )}
     </div>
   )
 }

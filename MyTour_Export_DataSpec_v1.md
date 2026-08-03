@@ -334,7 +334,7 @@ insurance_no     text
 
 - `buses` — ไกด์ประจำรถ
 - `expenses` — สกุลเงินต่างประเทศ, เรทแลก, งบตั้งต้น
-- `hotels` — ที่อยู่ภาษาท้องถิ่น
+- ~~`hotels` — ที่อยู่ภาษาท้องถิ่น~~ ✅ ทำแล้ว (migration `20260803_hotel_info_expansion`) พร้อม `address`, `phone`, `map_url`, `check_in_time`, `morning_call`, `luggage_time`, `meeting_point`, `dinner_*`, `booking_ref`, `staff_notes`, `supplier_id`, `sort_order` และ `hotel_rooms.note`
 - `itinerary_items` — รูปประกอบ
 
 ---
