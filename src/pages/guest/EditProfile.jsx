@@ -49,6 +49,9 @@ export default function EditProfile() {
           .from('v_tour_form_fields')
           .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
           .eq('tour_id', tourId)
+          // ⚠️ ต้องกรอง form_type เสมอ — form_fields เก็บทั้งฟอร์มลงทะเบียนและฟอร์มประเมิน
+          // ไว้ตารางเดียวกัน ถ้าไม่กรอง คำถามประเมินหลังจบทริปจะโผล่มาให้กรอกตอนแก้ข้อมูลส่วนตัว
+          .eq('form_type', 'registration')
           .eq('is_active', true)
           .order('sort_order', { ascending: true }),
         supabase.from('guests').select('*').eq('id', guestId).maybeSingle(),

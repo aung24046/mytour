@@ -94,14 +94,28 @@ export default function DocumentHub() {
   const [query, setQuery] = useState('')
   const [recent, setRecent] = useState(() => readRecent())
 
+  // หัวหน้าทัวร์ที่จะขึ้นบนเอกสารทุกใบของทริปนี้
+  const [staff, setStaff] = useState([])
+  const [leaderId, setLeaderId] = useState('')
+  const [savingLeader, setSavingLeader] = useState(false)
+
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      const [orgRes, tourRes, guestsRes] = await Promise.all([
+      const [orgRes, tourRes, guestsRes, staffRes] = await Promise.all([
         supabase.from('organizations').select('name, logo_url').eq('id', orgId).maybeSingle(),
-        supabase.from('tours').select('name, start_date, end_date').eq('id', tourId).maybeSingle(),
+        supabase
+          .from('tours')
+          .select('name, start_date, end_date, doc_leader_staff_id')
+          .eq('id', tourId)
+          .maybeSingle(),
         supabase.from('guests').select('id', { count: 'exact', head: true }).eq('tour_id', tourId),
+        supabase
+          .from('v_tour_staff')
+          .select('id, name, role, job_title, is_active')
+          .eq('tour_id', tourId)
+          .order('name'),
       ])
 
       if (cancelled) return
@@ -110,6 +124,8 @@ export default function DocumentHub() {
       setOrgReady(Boolean(name) && !String(name).includes('ยังไม่ได้ตั้งชื่อ'))
       setTour(tourRes.data ?? null)
       setGuestCount(guestsRes.count ?? null)
+      setStaff((staffRes.data ?? []).filter((s) => s.is_active !== false))
+      setLeaderId(tourRes.data?.doc_leader_staff_id ?? '')
     }
 
     load()
@@ -143,6 +159,24 @@ export default function DocumentHub() {
   function open(to) {
     pushRecent(to)
     setRecent(readRecent())
+  }
+
+  // เรียงคนที่เป็น lead ขึ้นก่อน แต่ยังเลือกคนอื่นในทีมได้
+  // (บางทริปคนที่ยืนชื่อบนเอกสารไม่ใช่คนที่มี role lead ในระบบ)
+  const staffOptions = useMemo(() => {
+    const rank = (s) => (s.role === 'lead' ? 0 : 1)
+    return [...staff].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'th'))
+  }, [staff])
+
+  async function saveLeader(value) {
+    setLeaderId(value)
+    setSavingLeader(true)
+    const { error } = await supabase
+      .from('tours')
+      .update({ doc_leader_staff_id: value || null })
+      .eq('id', tourId)
+    setSavingLeader(false)
+    if (error) console.error('[DocumentHub] save doc leader failed', error)
   }
 
   return (
@@ -185,6 +219,34 @@ export default function DocumentHub() {
             <Icon name="alert" size={17} color="#b45309" />
             ยังไม่ได้ตั้งค่าข้อมูลบริษัท — เอกสารจะไม่มีหัวกระดาษ
           </Link>
+        )}
+
+        {/* หัวหน้าทัวร์บนเอกสาร — ใช้กับทุกใบของทริปนี้ ตั้งที่เดียวจบ */}
+        {can(session, 'tourstaff.manage') && staffOptions.length > 0 && (
+          <div className="mb-3 rounded-card bg-white px-3 py-2.5 shadow-card">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-xs font-semibold text-ink-faint">หัวหน้าทัวร์บนเอกสาร</span>
+              {savingLeader && <span className="text-[11px] text-ink-faint">กำลังบันทึก…</span>}
+            </div>
+            <select
+              value={leaderId}
+              onChange={(e) => saveLeader(e.target.value)}
+              className="w-full rounded-control bg-surface-sunken px-3 py-2 text-sm text-ink outline-none focus:bg-white focus:ring-2 focus:ring-brand-light"
+            >
+              <option value="">— ไม่แสดงชื่อหัวหน้าทัวร์ —</option>
+              {staffOptions.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                  {s.role === 'lead' ? ' (หัวหน้าทัวร์)' : s.job_title ? ` (${s.job_title})` : ''}
+                </option>
+              ))}
+            </select>
+            {!leaderId && (
+              <p className="mt-1 text-[11px] text-ink-muted">
+                ทริปนี้มีหัวหน้าทัวร์หลายคน ระบบไม่เดาให้ — เลือกเองว่าจะให้ชื่อใครขึ้นเอกสาร
+              </p>
+            )}
+          </div>
         )}
 
         {/* ค้นหา */}

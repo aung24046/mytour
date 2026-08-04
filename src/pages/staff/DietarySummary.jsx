@@ -78,6 +78,7 @@ export default function DietarySummary() {
           .from('v_tour_form_fields')
           .select('id, field_purpose, is_core')
           .eq('tour_id', tourId)
+          .eq('form_type', 'registration')
           .in('field_purpose', ['dietary', 'medical']),
       ])
 

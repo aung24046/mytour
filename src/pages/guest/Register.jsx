@@ -113,6 +113,8 @@ export default function Register() {
         .from('v_tour_form_fields')
         .select('id, field_key, field_purpose, is_core')
         .eq('tour_id', tourId)
+        // ฟอร์มลงทะเบียนเท่านั้น — ไม่งั้นคำถามประเมินหลังทริปจะมาโผล่ตอนสมัคร
+        .eq('form_type', 'registration')
 
       if (fieldsError) throw fieldsError
 
@@ -237,6 +239,7 @@ export default function Register() {
         .from('v_tour_form_fields')
         .select('id, field_key, label, field_type, options, is_required, is_core, sort_order, category')
         .eq('tour_id', tourId)
+        .eq('form_type', 'registration')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
 

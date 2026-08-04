@@ -89,6 +89,8 @@ export default function GuestManager() {
         .from('v_tour_form_fields')
         .select('id, field_key, label, field_type, options, is_core, is_active, sort_order, category')
         .eq('tour_id', tourId)
+        // เฉพาะฟอร์มลงทะเบียน — คำตอบแบบประเมินไม่ใช่ข้อมูลประจำตัวลูกทัวร์
+        .eq('form_type', 'registration')
         .order('sort_order', { ascending: true }),
       supabase.from('guest_form_responses').select('guest_id, field_id, value'),
       supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name', { ascending: true }),

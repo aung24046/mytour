@@ -147,6 +147,7 @@ export function useDocumentContext(docType) {
     org: null,
     tour: null,
     leader: null,
+    staff: [],
     presets: [],
   })
 
@@ -158,10 +159,13 @@ export function useDocumentContext(docType) {
         supabase.from('organizations').select('*').eq('id', orgId).maybeSingle(),
         supabase
           .from('tours')
-          .select('id, org_id, name, join_code, status, start_date, end_date')
+          .select('id, org_id, name, join_code, status, start_date, end_date, doc_leader_staff_id')
           .eq('id', tourId)
           .maybeSingle(),
-        supabase.from('v_tour_staff').select('name, phone, role').eq('tour_id', tourId),
+        supabase
+          .from('v_tour_staff')
+          .select('id, name, phone, role, job_title, is_active')
+          .eq('tour_id', tourId),
         supabase
           .from('document_presets')
           .select('id, name, columns, is_default')
@@ -182,12 +186,18 @@ export function useDocumentContext(docType) {
       if (orgRes.error) console.warn('[documentData] org load failed', orgRes.error)
       if (presetRes.error) console.warn('[documentData] preset load failed', presetRes.error)
 
-      const staff = staffRes.data ?? []
+      const staff = (staffRes.data ?? []).filter((s) => s.is_active !== false)
+
+      // ⚠️ หนึ่งทริปมีคน role='lead' ได้หลายคน — เดิมใช้ .find() หยิบคนแรกที่ฐานข้อมูล
+      // คืนมา (ไม่ได้เรียงอะไร) เอกสารเลยขึ้นชื่อ "Admin" แบบสุ่ม
+      //
+      // ลำดับใหม่: คนที่ผู้ใช้เลือกไว้ → ถ้ามี lead อยู่คนเดียวก็ใช้คนนั้น → ไม่งั้นปล่อยว่าง
+      // ไม่เดาเมื่อกำกวม เพราะพิมพ์ชื่อผิดคนลงเอกสารที่ส่งคู่ค้าแก้ทีหลังไม่ได้
+      const chosenId = tourRes.data?.doc_leader_staff_id
+      const leads = staff.filter((s) => s.role === 'lead')
       const leader =
-        staff.find((s) => s.role === 'leader') ??
-        staff.find((s) => s.role === 'lead') ??
-        staff[0] ??
-        null
+        (chosenId && staff.find((s) => s.id === chosenId)) ||
+        (leads.length === 1 ? leads[0] : null)
 
       setState({
         loading: false,
@@ -195,6 +205,7 @@ export function useDocumentContext(docType) {
         org: orgRes.data ?? null,
         tour: tourRes.data ?? null,
         leader,
+        staff,
         presets: presetRes.data ?? [],
       })
     }
@@ -254,6 +265,10 @@ export function useGuestCustomFields(tourId) {
         .from('v_tour_form_fields')
         .select('id, field_key, label, field_purpose, field_type, is_active')
         .eq('tour_id', tourId)
+        // เอกสารทุกใบเติมข้อมูลจากฟอร์มลงทะเบียนเท่านั้น
+        // ถ้าไม่กรอง คำตอบแบบประเมิน (เช่นคอมเมนต์ปลายเปิด) มีสิทธิ์หลุดไปโผล่ในช่อง
+        // "หมายเหตุ" หรือ "ข้อจำกัดอาหาร" ของใบที่ส่งให้โรงแรมและร้านอาหาร
+        .eq('form_type', 'registration')
 
       if (cancelled || error || !fields?.length) {
         if (error) console.warn('[documentData] custom fields load failed', error)

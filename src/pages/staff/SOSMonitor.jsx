@@ -66,7 +66,8 @@ export default function SOSMonitor() {
       supabase
         .from('v_tour_form_fields')
         .select('id, field_key, field_purpose, is_core')
-        .eq('tour_id', tourId),
+        .eq('tour_id', tourId)
+        .eq('form_type', 'registration'),
       supabase.from('v_tour_staff').select('id, name').eq('tour_id', tourId),
     ])
 
