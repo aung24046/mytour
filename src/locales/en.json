@@ -196,7 +196,11 @@
       "confirmCard": "Confirm card",
       "editHint": "Tap a number on your card to change it.",
       "editErrorRange": "Please enter a number 1-{{max}}",
-      "editErrorDuplicate": "This number is already on your card"
+      "editErrorDuplicate": "This number is already on your card",
+      "claimFailed": "Couldn't confirm bingo — check that your marked numbers complete a line and have all been called.",
+      "winPending": "Waiting for staff to verify",
+      "winConfirmed": "Verified by staff",
+      "winRejected": "Staff checked and the line is not complete yet — keep playing."
     },
     "shareLocation": {
       "title": "Share location",
@@ -775,7 +779,17 @@
       "participants": "Participants (ready {{ready}}/{{total}})",
       "noParticipantsYet": "No participants yet",
       "statusReady": "Ready",
-      "statusPreparing": "Preparing card"
+      "statusPreparing": "Preparing card",
+      "callFailed": "Could not call the number. Please try again.",
+      "newWinnerAlert": "{{count}} winner(s) waiting for review",
+      "winLinePrefix": "Winning line:",
+      "winLineRow": "row {{n}}",
+      "winLineCol": "column {{n}}",
+      "winLineDiag": "diagonal",
+      "approveWin": "Approve",
+      "rejectWin": "Reject",
+      "statusWinConfirmed": "Confirmed",
+      "statusWinPending": "Pending review"
     },
     "formBuilder": {
       "title": "Registration form builder",

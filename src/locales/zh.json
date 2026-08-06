@@ -196,7 +196,11 @@
       "confirmCard": "确认卡片",
       "editHint": "点击卡片上的数字即可修改",
       "editErrorRange": "请输入 1-{{max}} 之间的号码",
-      "editErrorDuplicate": "此号码已存在于卡片中"
+      "editErrorDuplicate": "此号码已存在于卡片中",
+      "claimFailed": "确认宾果失败 — 请检查已标记的号码是否连成一线且都已叫过。",
+      "winPending": "等待工作人员核实",
+      "winConfirmed": "工作人员已确认",
+      "winRejected": "工作人员核实后发现尚未连成一线，请继续游戏。"
     },
     "shareLocation": {
       "title": "分享位置",
@@ -775,7 +779,17 @@
       "participants": "参与者（已准备 {{ready}}/{{total}}）",
       "noParticipantsYet": "暂无参与者",
       "statusReady": "已准备",
-      "statusPreparing": "准备卡片中"
+      "statusPreparing": "准备卡片中",
+      "callFailed": "叫号失败，请重试。",
+      "newWinnerAlert": "有 {{count}} 位获胜者待核实",
+      "winLinePrefix": "获胜连线：",
+      "winLineRow": "第 {{n}} 横行",
+      "winLineCol": "第 {{n}} 竖列",
+      "winLineDiag": "对角线",
+      "approveWin": "确认获胜",
+      "rejectWin": "不通过",
+      "statusWinConfirmed": "已确认",
+      "statusWinPending": "待核实"
     },
     "formBuilder": {
       "title": "报名表单管理",

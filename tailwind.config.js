@@ -92,6 +92,17 @@ export default {
       spacing: {
         18: '4.5rem',
       },
+      keyframes: {
+        // แจ้งเตือนผู้ชนะบิงโก — กะพริบเรียกสายตาไม่กี่วินาทีแล้วหยุด
+        // ไม่ใช้ animate-pulse ของ Tailwind เพราะวนไม่จบ กวนตาระหว่างที่ staff ยังคุมเกมอยู่
+        'flash-once': {
+          '0%, 100%': { backgroundColor: 'rgb(255 251 235)' },
+          '50%': { backgroundColor: 'rgb(253 230 138)' },
+        },
+      },
+      animation: {
+        'flash-once': 'flash-once 0.9s ease-in-out 3',
+      },
     },
   },
   plugins: [],

@@ -196,7 +196,11 @@
       "confirmCard": "ยืนยันการ์ด",
       "editHint": "แตะตัวเลขในการ์ดเพื่อเปลี่ยนเป็นเลขที่ต้องการ",
       "editErrorRange": "กรุณากรอกเลข 1-{{max}}",
-      "editErrorDuplicate": "เลขนี้มีอยู่ในการ์ดแล้ว"
+      "editErrorDuplicate": "เลขนี้มีอยู่ในการ์ดแล้ว",
+      "claimFailed": "ยืนยันบิงโกไม่สำเร็จ — ตรวจสอบว่าเลขที่ติ๊กถูกประกาศครบแถวแล้ว",
+      "winPending": "รอทีมงานตรวจสอบ",
+      "winConfirmed": "ทีมงานยืนยันแล้ว",
+      "winRejected": "ทีมงานตรวจแล้วยังไม่ครบแถว เล่นต่อได้เลย"
     },
     "shareLocation": {
       "title": "แชร์ตำแหน่ง",
@@ -775,7 +779,17 @@
       "participants": "ผู้เข้าร่วม (พร้อม {{ready}}/{{total}})",
       "noParticipantsYet": "ยังไม่มีผู้เข้าร่วม",
       "statusReady": "พร้อมแล้ว",
-      "statusPreparing": "กำลังเตรียมการ์ด"
+      "statusPreparing": "กำลังเตรียมการ์ด",
+      "callFailed": "ประกาศเลขไม่สำเร็จ ลองใหม่อีกครั้ง",
+      "newWinnerAlert": "มีผู้ชนะรอตรวจสอบ {{count}} คน",
+      "winLinePrefix": "ชนะที่",
+      "winLineRow": "แถวนอนที่ {{n}}",
+      "winLineCol": "แถวตั้งที่ {{n}}",
+      "winLineDiag": "แนวทแยง",
+      "approveWin": "ยืนยันผู้ชนะ",
+      "rejectWin": "ไม่ผ่าน",
+      "statusWinConfirmed": "ยืนยันแล้ว",
+      "statusWinPending": "รอตรวจสอบ"
     },
     "formBuilder": {
       "title": "จัดการฟอร์มลงทะเบียน",
