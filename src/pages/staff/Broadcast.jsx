@@ -92,9 +92,9 @@ export default function Broadcast() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-4 text-xl font-bold text-gray-900">
+        <h1 className="mb-4 text-xl font-bold text-ink">
           {t('staff.broadcast.title')}
         </h1>
 
@@ -105,31 +105,31 @@ export default function Broadcast() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
-            {sendError && <p className="text-sm text-red-500">{sendError}</p>}
+            {sendError && <p className="text-sm text-danger">{sendError}</p>}
             <Button type="submit" disabled={sending || !message.trim()}>
               {sending ? t('guest.register.submitting') : t('staff.broadcast.send')}
             </Button>
           </form>
         </Card>
 
-        <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-ink-muted">
           {t('staff.broadcast.history')}
         </h2>
 
-        {loadingHistory && <p className="text-gray-500">{t('common.loading')}</p>}
+        {loadingHistory && <p className="text-ink-muted">{t('common.loading')}</p>}
 
         <div className="flex flex-col gap-2">
           {history.map((a) => (
             <Card key={a.id} className={a.is_active ? '' : 'opacity-50'}>
-              <p className="text-gray-900">{a.message}</p>
+              <p className="text-ink">{a.message}</p>
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-ink-faint">
                   {new Date(a.created_at).toLocaleString('th-TH')}
                 </span>
                 {a.is_active && (
                   <button
                     onClick={() => deactivate(a.id)}
-                    className="text-sm font-medium text-red-500"
+                    className="text-sm font-medium text-danger"
                   >
                     {t('staff.broadcast.deactivate')}
                   </button>

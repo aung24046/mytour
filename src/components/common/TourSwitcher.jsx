@@ -100,7 +100,7 @@ export default function TourSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className="absolute left-0 right-0 top-full z-40 mt-1 overflow-hidden rounded-control bg-white shadow-card-hover ring-1 ring-black/5">
+          <div className="absolute left-0 right-0 top-full z-40 mt-1 overflow-hidden rounded-control bg-surface shadow-card-hover ring-1 ring-line-subtle">
             {tours.map((t) => (
               <button
                 key={t.id}
@@ -113,7 +113,7 @@ export default function TourSwitcher() {
                 <span className="truncate">
                   {t.name}
                   {t.status === 'draft' && (
-                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-px text-[10px] font-semibold text-amber-800">
+                    <span className="ml-1.5 rounded-full bg-warning-bg px-1.5 py-px text-[10px] font-semibold text-warning-text">
                       ร่าง
                     </span>
                   )}
@@ -133,7 +133,7 @@ export default function TourSwitcher() {
                   setOpen(false)
                   navigate('/staff/admin')
                 }}
-                className="w-full border-t border-black/5 px-3 py-2.5 text-left text-sm font-semibold text-brand transition hover:bg-brand-lighter"
+                className="w-full border-t border-line-subtle px-3 py-2.5 text-left text-sm font-semibold text-brand transition hover:bg-brand-lighter"
               >
                 จัดการทริปทั้งหมด ›
               </button>

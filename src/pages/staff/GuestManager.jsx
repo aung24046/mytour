@@ -45,7 +45,7 @@ function guestInitials(g) {
 function avatarClasses(gender) {
   if (gender === 'ชาย') return 'bg-blue-100 text-blue-700'
   if (gender === 'หญิง') return 'bg-pink-100 text-pink-700'
-  return 'bg-gray-100 text-gray-600'
+  return 'bg-surface-sunken text-ink-muted'
 }
 
 export default function GuestManager() {
@@ -360,15 +360,15 @@ export default function GuestManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.guestManager.title')}</h1>
-        <p className="mb-3 text-sm text-gray-500">
+        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.guestManager.title')}</h1>
+        <p className="mb-3 text-sm text-ink-muted">
           {t('staff.guestManager.subtitle', { count: guests.length })}
         </p>
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
@@ -377,14 +377,14 @@ export default function GuestManager() {
               placeholder={t('staff.guestManager.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="mb-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="mb-2 w-full rounded-xl border border-line-strong px-3 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
             />
 
             <div className="mb-1.5 flex flex-wrap gap-1.5">
               <button
                 onClick={() => setFilterBirthdayMonth((prev) => !prev)}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                  filterBirthdayMonth ? 'bg-pink-600 text-white' : 'bg-gray-100 text-gray-700'
+                  filterBirthdayMonth ? 'bg-pink-600 text-white' : 'bg-surface-sunken text-neutral-text'
                 }`}
               >
                 🎂 {t('staff.guestManager.filterBirthdayMonth', { count: birthdayCount })}
@@ -395,7 +395,7 @@ export default function GuestManager() {
               <button
                 onClick={() => setFilterGender('all')}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                  filterGender === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                  filterGender === 'all' ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
                 }`}
               >
                 {t('staff.guestManager.filterAllGenders')}
@@ -405,7 +405,7 @@ export default function GuestManager() {
                   key={g.value}
                   onClick={() => setFilterGender(g.value)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    filterGender === g.value ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                    filterGender === g.value ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {g.label}
@@ -418,7 +418,7 @@ export default function GuestManager() {
                 <button
                   onClick={() => setFilterBus('all')}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    filterBus === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                    filterBus === 'all' ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {t('staff.checkIn.allBuses')}
@@ -428,7 +428,7 @@ export default function GuestManager() {
                     key={bus.id}
                     onClick={() => setFilterBus(bus.id)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                      filterBus === bus.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'
+                      filterBus === bus.id ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
                     }`}
                   >
                     🚌 {bus.name}
@@ -437,7 +437,7 @@ export default function GuestManager() {
                 <button
                   onClick={() => setFilterBus('__none__')}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    filterBus === '__none__' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700'
+                    filterBus === '__none__' ? 'bg-warning text-on-warning' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {t('staff.guestManager.filterNoBus')}
@@ -446,7 +446,7 @@ export default function GuestManager() {
             )}
 
             {filteredGuests.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.guestManager.noResults')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.guestManager.noResults')}</p>
             )}
 
             <div className="flex flex-col gap-2">
@@ -468,7 +468,7 @@ export default function GuestManager() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                          <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                          <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-ink'}`}>
                             {guest.nickname || guest.name}
                           </p>
                           {isBirthdayThisMonth(guest) && (
@@ -477,13 +477,13 @@ export default function GuestManager() {
                             </span>
                           )}
                           {staffGuestIdSet.has(guest.id) && (
-                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                            <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-[10px] font-semibold text-warning-text">
                               {t('staff.guestManager.staffBadge')}
                             </span>
                           )}
                         </div>
                         {guest.nickname && (
-                          <p className="truncate text-xs text-gray-400">{guest.name}</p>
+                          <p className="truncate text-xs text-ink-faint">{guest.name}</p>
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -492,18 +492,18 @@ export default function GuestManager() {
                             ? t('staff.checkIn.arrived')
                             : t('staff.checkIn.notArrived')}
                         </StatusBadge>
-                        <span className="text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+                        <span className="text-ink-faint">{isExpanded ? '▲' : '▼'}</span>
                       </div>
                     </button>
 
                     {isExpanded && editingId !== guest.id && (
-                      <div className="mt-3 flex flex-col gap-2.5 border-t border-gray-100 pt-3">
+                      <div className="mt-3 flex flex-col gap-2.5 border-t border-line-subtle pt-3">
                         {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
                           const hasData = groupFields.some((f) => String(getFieldValue(guest, f) || '').trim())
                           const warn = category === 'health' && hasData
                           const st = warn ? HEALTH_WARNING_STYLE : CATEGORY_STYLE[category] || CATEGORY_STYLE.other
                           return (
-                            <div key={category} className="overflow-hidden rounded-xl border border-gray-100">
+                            <div key={category} className="overflow-hidden rounded-xl border border-line-subtle">
                               <div className="flex items-center gap-2 px-3 py-2" style={{ background: st.tint }}>
                                 <Icon name={st.icon} size={15} color={st.iconColor} />
                                 <span className="text-xs font-bold" style={{ color: st.text }}>
@@ -517,14 +517,14 @@ export default function GuestManager() {
                                   const isWarnField = warn && String(value || '').trim()
                                   return (
                                     <div key={field.id} className="flex justify-between gap-3 py-1 text-sm">
-                                      <span className="shrink-0 text-gray-400">{field.label}</span>
+                                      <span className="shrink-0 text-ink-faint">{field.label}</span>
                                       <span
                                         className={`min-w-0 flex-1 text-right ${
-                                          isWarnField ? 'font-semibold text-amber-700' : 'text-gray-900'
+                                          isWarnField ? 'font-semibold text-warning-text' : 'text-ink'
                                         }`}
                                       >
                                         {value || (
-                                          <span className="text-gray-300">{t('staff.guestManager.noValue')}</span>
+                                          <span className="text-ink-faint">{t('staff.guestManager.noValue')}</span>
                                         )}
                                       </span>
                                     </div>
@@ -539,34 +539,34 @@ export default function GuestManager() {
                           {guest.phone && (
                             <a
                               href={`tel:${guest.phone}`}
-                              className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white"
+                              className="flex flex-[2] items-center justify-center gap-1.5 rounded-xl bg-brand px-3 py-2 text-sm font-semibold text-white"
                             >
-                              <Icon name="phone" size={15} color="#fff" /> {t('staff.guestManager.call')}
+                              <Icon name="phone" size={15} className="text-white" /> {t('staff.guestManager.call')}
                             </a>
                           )}
                           <button
                             onClick={() => startEditing(guest)}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700"
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium text-neutral-text"
                           >
                             <Icon name="edit" size={15} /> {t('staff.itineraryBuilder.edit')}
                           </button>
                           <button
                             onClick={() => deleteGuest(guest)}
-                            className="rounded-xl bg-red-50 px-3 py-2 text-red-600"
+                            className="rounded-xl bg-danger-bg px-3 py-2 text-danger"
                             aria-label={t('staff.guestManager.deleteGuest')}
                           >
-                            <Icon name="trash" size={16} color="#dc2626" />
+                            <Icon name="trash" size={16} className="text-danger" />
                           </button>
                         </div>
                       </div>
                     )}
 
                     {isExpanded && editingId === guest.id && (
-                      <div className="mt-3 flex flex-col gap-2.5 border-t border-gray-100 pt-3">
+                      <div className="mt-3 flex flex-col gap-2.5 border-t border-line-subtle pt-3">
                         {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
                           const st = CATEGORY_STYLE[category] || CATEGORY_STYLE.other
                           return (
-                            <div key={category} className="overflow-hidden rounded-xl border border-gray-100">
+                            <div key={category} className="overflow-hidden rounded-xl border border-line-subtle">
                               <div className="flex items-center gap-2 px-3 py-2" style={{ background: st.tint }}>
                                 <Icon name={st.icon} size={15} color={st.iconColor} />
                                 <span className="text-xs font-bold" style={{ color: st.text }}>
@@ -587,7 +587,7 @@ export default function GuestManager() {
                           )
                         })}
 
-                        {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+                        {saveError && <p className="text-sm text-danger">{saveError}</p>}
 
                         <Button onClick={() => saveEditing(guest)} disabled={saving}>
                           {saving ? t('common.loading') : t('common.save')}

@@ -311,13 +311,13 @@ export default function StaffManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.staffManager.title')}</h1>
-        <p className="mb-3 text-sm text-gray-500">{t('staff.staffManager.subtitle')}</p>
+        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.staffManager.title')}</h1>
+        <p className="mb-3 text-sm text-ink-muted">{t('staff.staffManager.subtitle')}</p>
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
@@ -326,7 +326,7 @@ export default function StaffManager() {
                 setShowNewForm((v) => !v)
                 if (showNewForm) resetNewForm()
               }}
-              className="mb-3 w-full rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+              className="mb-3 w-full rounded-xl border border-dashed border-line-strong px-4 py-2.5 text-sm font-medium text-ink-muted hover:border-brand hover:text-brand"
             >
               + {t('staff.staffManager.addStaff')}
             </button>
@@ -341,19 +341,19 @@ export default function StaffManager() {
                     </span>
 
                     {selectedGuest ? (
-                      <div className="flex items-center justify-between gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-3">
+                      <div className="flex items-center justify-between gap-2 rounded-xl border border-brand-light bg-brand-lighter px-3.5 py-3">
                         <div className="min-w-0">
-                          <p className="truncate font-medium text-gray-900">
+                          <p className="truncate font-medium text-ink">
                             {guestDisplayName(selectedGuest)}
                           </p>
                           {selectedGuest.phone && (
-                            <p className="text-xs text-gray-500">{selectedGuest.phone}</p>
+                            <p className="text-xs text-ink-muted">{selectedGuest.phone}</p>
                           )}
                         </div>
                         <button
                           type="button"
                           onClick={() => setSelectedGuest(null)}
-                          className="shrink-0 text-sm font-medium text-sky-600"
+                          className="shrink-0 text-sm font-medium text-brand"
                         >
                           {t('staff.staffManager.changeGuest')}
                         </button>
@@ -364,12 +364,12 @@ export default function StaffManager() {
                           value={guestQuery}
                           onChange={(e) => setGuestQuery(e.target.value)}
                           placeholder={t('staff.staffManager.searchGuestPlaceholder')}
-                          className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                          className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                         />
                         {guestQuery.trim() && (
-                          <div className="mt-1 max-h-52 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-md">
+                          <div className="mt-1 max-h-52 overflow-y-auto rounded-xl border border-line bg-surface shadow-md">
                             {guestSuggestions.length === 0 && (
-                              <p className="px-3.5 py-2.5 text-sm text-gray-400">
+                              <p className="px-3.5 py-2.5 text-sm text-ink-faint">
                                 {t('staff.staffManager.noGuestMatch')}
                               </p>
                             )}
@@ -381,12 +381,12 @@ export default function StaffManager() {
                                   setSelectedGuest(g)
                                   setGuestQuery('')
                                 }}
-                                className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left hover:bg-sky-50"
+                                className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left hover:bg-brand-lighter"
                               >
-                                <span className="truncate font-medium text-gray-900">
+                                <span className="truncate font-medium text-ink">
                                   {guestDisplayName(g)}
                                 </span>
-                                {g.phone && <span className="shrink-0 text-xs text-gray-400">{g.phone}</span>}
+                                {g.phone && <span className="shrink-0 text-xs text-ink-faint">{g.phone}</span>}
                               </button>
                             ))}
                           </div>
@@ -403,7 +403,7 @@ export default function StaffManager() {
                     <select
                       value={newStaff.role}
                       onChange={(e) => setNewStaff((prev) => ({ ...prev, role: e.target.value }))}
-                      className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                      className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                     >
                       {ROLE_OPTIONS.map((r) => (
                         <option key={r.value} value={r.value}>
@@ -427,7 +427,7 @@ export default function StaffManager() {
                         setNewStaff((prev) => ({ ...prev, job_title: e.target.value }))
                       }
                       placeholder="เช่น Bus1"
-                      className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                      className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                     />
                     <span className="mt-1 block text-xs text-ink-muted">
                       ใช้แสดงผลและจัดกลุ่มเท่านั้น ไม่มีผลกับสิทธิ์ — เว้นว่างได้
@@ -435,9 +435,9 @@ export default function StaffManager() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-1 block text-sm font-medium text-gray-700">
+                    <span className="mb-1 block text-sm font-medium text-neutral-text">
                       {t('staff.login.pin')}
-                      <span className="text-red-500"> *</span>
+                      <span className="text-danger"> *</span>
                     </span>
                     <input
                       type="password"
@@ -451,12 +451,12 @@ export default function StaffManager() {
                           pin: e.target.value.replace(/\D/g, ''),
                         }))
                       }
-                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-center text-2xl tracking-[0.5em] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                      className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-center text-2xl tracking-[0.5em] focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
                       placeholder="••••"
                     />
                   </label>
 
-                  {createError && <p className="text-sm text-red-500">{createError}</p>}
+                  {createError && <p className="text-sm text-danger">{createError}</p>}
 
                   <div className="flex gap-2">
                     <Button
@@ -486,25 +486,25 @@ export default function StaffManager() {
               ))}
             </datalist>
 
-            <p className="mb-2 text-xs text-gray-400">{t('staff.staffManager.showToGuestHint')}</p>
+            <p className="mb-2 text-xs text-ink-faint">{t('staff.staffManager.showToGuestHint')}</p>
 
             <input
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
               placeholder={t('staff.staffManager.filterByNamePlaceholder')}
-              className="mb-3 w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-2.5 text-sm text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+              className="mb-3 w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-2.5 text-sm text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
             />
 
             {groupedStaff.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.staffManager.noStaffMatch')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.staffManager.noStaffMatch')}</p>
             )}
 
             <div className="flex flex-col gap-4">
               {groupedStaff.map(({ jobTitle, members }) => (
                 <div key={jobTitle || 'unassigned'}>
-                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">
                     {jobTitle || 'ไม่ระบุตำแหน่ง'}
-                    <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold normal-case text-gray-500">
+                    <span className="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-semibold normal-case text-ink-muted">
                       {members.length}
                     </span>
                   </p>
@@ -512,15 +512,15 @@ export default function StaffManager() {
                     {members.map((member) => (
                       <Card key={member.id} className="flex items-center justify-between p-3 gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-ink">
                             {member.name}
                             {member.id === mySession?.id && (
-                              <span className="ml-1.5 text-xs font-normal text-sky-600">
+                              <span className="ml-1.5 text-xs font-normal text-brand">
                                 {t('staff.staffManager.you')}
                               </span>
                             )}
                             {member.is_default && (
-                              <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
+                              <span className="ml-1.5 rounded-full bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase text-warning-text">
                                 {t('staff.staffManager.defaultBadge')}
                               </span>
                             )}
@@ -531,7 +531,7 @@ export default function StaffManager() {
                                 autoFocus
                                 value={editRoleValue}
                                 onChange={(e) => setEditRoleValue(e.target.value)}
-                                className="rounded-lg border border-sky-300 px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="rounded-lg border border-brand-light px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand-light"
                               >
                                 {ROLE_OPTIONS.map((r) => (
                                   <option key={r.value} value={r.value}>
@@ -548,32 +548,32 @@ export default function StaffManager() {
                                   if (e.key === 'Enter') saveRole(member)
                                   if (e.key === 'Escape') cancelEditRole()
                                 }}
-                                className="w-24 rounded-lg border border-sky-300 px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="w-24 rounded-lg border border-brand-light px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand-light"
                               />
                               <button
                                 onClick={() => saveRole(member)}
                                 disabled={savingRole || !editRoleValue}
-                                className="text-xs font-semibold text-sky-600 disabled:opacity-50"
+                                className="text-xs font-semibold text-brand disabled:opacity-50"
                               >
                                 {t('common.save')}
                               </button>
-                              <button onClick={cancelEditRole} className="text-xs font-medium text-gray-400">
+                              <button onClick={cancelEditRole} className="text-xs font-medium text-ink-faint">
                                 {t('common.cancel')}
                               </button>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-ink-faint">
                               {roleLabel(member.role)}
                               {member.job_title ? ` · ${member.job_title}` : ''}{' '}
                               <button
                                 onClick={() => startEditRole(member)}
-                                className="font-medium text-sky-600"
+                                className="font-medium text-brand"
                               >
                                 {t('staff.staffManager.editRole')}
                               </button>
                             </p>
                           )}
-                          {member.phone && <p className="text-xs text-gray-400">{member.phone}</p>}
+                          {member.phone && <p className="text-xs text-ink-faint">{member.phone}</p>}
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
                           <div className="flex items-center gap-2.5">
@@ -581,8 +581,8 @@ export default function StaffManager() {
                               onClick={() => toggleShowToGuest(member)}
                               className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                                 member.show_to_guest
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-gray-100 text-gray-500'
+                                  ? 'bg-success-bg text-success-text'
+                                  : 'bg-surface-sunken text-ink-muted'
                               }`}
                             >
                               {member.show_to_guest
@@ -592,7 +592,7 @@ export default function StaffManager() {
                             {!member.is_default && (
                               <button
                                 onClick={() => deleteStaff(member)}
-                                className="text-sm font-medium text-red-500"
+                                className="text-sm font-medium text-danger"
                               >
                                 {t('staff.formBuilder.delete')}
                               </button>
@@ -600,7 +600,7 @@ export default function StaffManager() {
                           </div>
                           <button
                             onClick={() => changePin(member)}
-                            className="text-xs font-medium text-sky-600"
+                            className="text-xs font-medium text-brand"
                           >
                             {t('staff.staffManager.changePin')}
                           </button>

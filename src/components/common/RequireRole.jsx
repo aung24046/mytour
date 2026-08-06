@@ -21,15 +21,15 @@ export default function RequireRole({ capability, children, fallback = null }) {
     if (fallback) return fallback
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-slate-800">ไม่มีสิทธิ์เข้าหน้านี้</p>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="text-lg font-semibold text-ink">ไม่มีสิทธิ์เข้าหน้านี้</p>
+        <p className="mt-2 text-sm text-ink-muted">
           บทบาทของคุณ ({session.orgRole ?? session.tourRole ?? '—'}) เข้าถึงหน้านี้ไม่ได้
           <br />
           ติดต่อหัวหน้าทัวร์หรือแอดมินหากคิดว่าไม่ถูกต้อง
         </p>
         <a
           href="/staff"
-          className="mt-6 inline-block rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-medium text-white"
+          className="mt-6 inline-block rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-white"
         >
           กลับหน้าหลัก
         </a>

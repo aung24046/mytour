@@ -29,7 +29,7 @@ export default function StarRating({ label, required = false, value, onChange, s
               className="p-0.5 transition active:scale-90"
               aria-label={`${n} ดาว`}
             >
-              <Icon name="star" size={size} filled={filled} color={filled ? '#f59e0b' : '#d1d5db'} />
+              <Icon name="star" size={size} filled={filled} className={filled ? 'text-warning' : 'text-line-strong'} />
             </button>
           )
         })}

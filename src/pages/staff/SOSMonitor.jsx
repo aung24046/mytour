@@ -25,9 +25,9 @@ function timeAgoLabel(t, dateStr) {
 }
 
 const STATUS_STYLES = {
-  open: 'border-l-red-500 bg-red-50',
-  acknowledged: 'border-l-amber-500 bg-amber-50',
-  resolved: 'border-l-green-500 bg-green-50',
+  open: 'border-l-danger bg-danger-bg',
+  acknowledged: 'border-l-warning bg-warning-bg',
+  resolved: 'border-l-success bg-success-bg',
 }
 
 export default function SOSMonitor() {
@@ -217,9 +217,9 @@ export default function SOSMonitor() {
   }, [contacts])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-3 text-xl font-bold text-gray-900">{t('staff.sosMonitor.title')}</h1>
+        <h1 className="mb-3 text-xl font-bold text-ink">{t('staff.sosMonitor.title')}</h1>
 
         <div className="mb-3 flex gap-2">
           <button
@@ -230,7 +230,7 @@ export default function SOSMonitor() {
           >
             {t('staff.sosMonitor.tabAlerts')}
             {openCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">
+              <span className="ml-1.5 rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
                 {openCount}
               </span>
             )}
@@ -247,9 +247,9 @@ export default function SOSMonitor() {
 
         {tab === 'alerts' && (
           <>
-            {loadingAlerts && <p className="text-gray-500">{t('common.loading')}</p>}
+            {loadingAlerts && <p className="text-ink-muted">{t('common.loading')}</p>}
             {!loadingAlerts && alerts.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.sosMonitor.noAlerts')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.sosMonitor.noAlerts')}</p>
             )}
 
             <div className="flex flex-col gap-2">
@@ -265,18 +265,18 @@ export default function SOSMonitor() {
                   <Card key={alert.id} className={`border-l-4 ${STATUS_STYLES[alert.status] ?? ''}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className={`font-semibold ${genderTextClass(guest?.gender) || 'text-gray-900'}`}>
+                        <p className={`font-semibold ${genderTextClass(guest?.gender) || 'text-ink'}`}>
                           {guest ? guest.nickname || guest.name : t('staff.sosMonitor.unknownGuest')}
                         </p>
-                        <p className="text-xs text-gray-500">{timeAgoLabel(t, alert.created_at)}</p>
+                        <p className="text-xs text-ink-muted">{timeAgoLabel(t, alert.created_at)}</p>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                           alert.status === 'open'
-                            ? 'bg-red-600 text-white'
+                            ? 'bg-danger text-white'
                             : alert.status === 'acknowledged'
-                              ? 'bg-amber-500 text-white'
-                              : 'bg-green-600 text-white'
+                              ? 'bg-warning text-on-warning'
+                              : 'bg-success text-white'
                         }`}
                       >
                         {t(`staff.sosMonitor.status${alert.status[0].toUpperCase()}${alert.status.slice(1)}`)}
@@ -284,8 +284,8 @@ export default function SOSMonitor() {
                     </div>
 
                     {alert.note && (
-                      <p className="mt-2 rounded-lg bg-white/70 px-2.5 py-2 text-sm text-gray-700">
-                        <span className="font-medium text-gray-500">{t('staff.sosMonitor.noteLabel')}: </span>
+                      <p className="mt-2 rounded-lg bg-surface/70 px-2.5 py-2 text-sm text-neutral-text">
+                        <span className="font-medium text-ink-muted">{t('staff.sosMonitor.noteLabel')}: </span>
                         {alert.note}
                       </p>
                     )}
@@ -294,7 +294,7 @@ export default function SOSMonitor() {
                       {phone && (
                         <a
                           href={`tel:${phone}`}
-                          className="rounded-pill bg-white px-3 py-1.5 text-sm font-semibold text-brand shadow-sm ring-1 ring-black/5"
+                          className="rounded-pill bg-surface px-3 py-1.5 text-sm font-semibold text-brand shadow-sm ring-1 ring-line-subtle"
                         >
                           {t('staff.sosMonitor.callGuest')} {phone}
                         </a>
@@ -304,7 +304,7 @@ export default function SOSMonitor() {
                           href={mapsUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-pill bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white"
+                          className="rounded-pill bg-brand px-3 py-1.5 text-sm font-semibold text-white"
                         >
                           {t('staff.sosMonitor.viewOnMap')}
                         </a>
@@ -332,7 +332,7 @@ export default function SOSMonitor() {
                     </div>
 
                     {alert.status === 'resolved' && alert.resolved_by && staffById[alert.resolved_by] && (
-                      <p className="mt-2 text-xs text-gray-400">
+                      <p className="mt-2 text-xs text-ink-faint">
                         {t('staff.sosMonitor.resolvedBy', { name: staffById[alert.resolved_by] })}
                       </p>
                     )}
@@ -347,7 +347,7 @@ export default function SOSMonitor() {
           <>
             <button
               onClick={() => setShowNewForm((v) => !v)}
-              className="mb-3 w-full rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+              className="mb-3 w-full rounded-xl border border-dashed border-line-strong px-4 py-2.5 text-sm font-medium text-ink-muted hover:border-brand hover:text-brand"
             >
               + {t('staff.sosMonitor.addContact')}
             </button>
@@ -388,23 +388,23 @@ export default function SOSMonitor() {
               </Card>
             )}
 
-            {loadingContacts && <p className="text-gray-500">{t('common.loading')}</p>}
+            {loadingContacts && <p className="text-ink-muted">{t('common.loading')}</p>}
 
             {!loadingContacts && (
               <div className="flex flex-col gap-4">
                 <div>
-                  <p className="mb-1.5 text-xs font-semibold uppercase text-gray-400">
+                  <p className="mb-1.5 text-xs font-semibold uppercase text-ink-faint">
                     {t('staff.sosMonitor.guideNumbersTitle')}
                   </p>
-                  <p className="mb-2 text-xs text-gray-400">{t('staff.sosMonitor.guideNumbersHint')}</p>
+                  <p className="mb-2 text-xs text-ink-faint">{t('staff.sosMonitor.guideNumbersHint')}</p>
                   {guideStaff.length === 0 && (
-                    <p className="text-sm text-gray-400">{t('staff.sosMonitor.noContacts')}</p>
+                    <p className="text-sm text-ink-faint">{t('staff.sosMonitor.noContacts')}</p>
                   )}
                   <div className="flex flex-col gap-1.5">
                     {guideStaff.map((s) => (
                       <Card key={s.id} className="flex items-center justify-between p-3">
-                        <span className="font-medium text-gray-900">{s.name}</span>
-                        <span className="text-sm text-gray-500">{s.phone || '—'}</span>
+                        <span className="font-medium text-ink">{s.name}</span>
+                        <span className="text-sm text-ink-muted">{s.phone || '—'}</span>
                       </Card>
                     ))}
                   </div>
@@ -412,22 +412,22 @@ export default function SOSMonitor() {
 
                 {CATEGORIES.filter((c) => c !== 'guide').map((category) => (
                   <div key={category}>
-                    <p className="mb-1.5 text-xs font-semibold uppercase text-gray-400">
+                    <p className="mb-1.5 text-xs font-semibold uppercase text-ink-faint">
                       {t(`staff.sosMonitor.category.${category}`)}
                     </p>
                     {(contactsByCategory[category] ?? []).length === 0 && (
-                      <p className="text-sm text-gray-400">{t('staff.sosMonitor.noContacts')}</p>
+                      <p className="text-sm text-ink-faint">{t('staff.sosMonitor.noContacts')}</p>
                     )}
                     <div className="flex flex-col gap-1.5">
                       {(contactsByCategory[category] ?? []).map((contact) => (
                         <Card key={contact.id} className="flex items-center justify-between p-3">
                           <div>
-                            <p className="font-medium text-gray-900">{contact.label}</p>
-                            <p className="text-sm text-gray-500">{contact.phone}</p>
+                            <p className="font-medium text-ink">{contact.label}</p>
+                            <p className="text-sm text-ink-muted">{contact.phone}</p>
                           </div>
                           <button
                             onClick={() => deleteContact(contact)}
-                            className="shrink-0 text-sm font-medium text-red-500"
+                            className="shrink-0 text-sm font-medium text-danger"
                           >
                             {t('staff.sosMonitor.deleteContact')}
                           </button>

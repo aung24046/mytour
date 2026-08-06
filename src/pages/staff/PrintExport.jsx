@@ -151,25 +151,25 @@ export default function PrintExport() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 print:bg-white print:p-0">
+    <div className="min-h-screen bg-surface-muted p-4 print:bg-white print:p-0">
       {/* ตัวควบคุม — ซ่อนตอนพิมพ์ */}
       <div className="mx-auto max-w-md print:hidden">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.printExport.title')}</h1>
-        <p className="mb-3 text-sm text-gray-500">{t('staff.printExport.subtitle')}</p>
+        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.printExport.title')}</h1>
+        <p className="mb-3 text-sm text-ink-muted">{t('staff.printExport.subtitle')}</p>
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
-            <p className="mb-1 text-xs font-medium text-gray-400">{t('staff.printExport.modeLabel')}</p>
+            <p className="mb-1 text-xs font-medium text-ink-faint">{t('staff.printExport.modeLabel')}</p>
             <div className="mb-3 flex gap-2">
               {PRINT_MODES.map((m) => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
-                    mode === m ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                    mode === m ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {t(`staff.printExport.mode.${m}`)}
@@ -177,14 +177,14 @@ export default function PrintExport() {
               ))}
             </div>
 
-            <p className="mb-1 text-xs font-medium text-gray-400">{t('staff.printExport.sizeLabel')}</p>
+            <p className="mb-1 text-xs font-medium text-ink-faint">{t('staff.printExport.sizeLabel')}</p>
             <div className="mb-3 flex gap-2">
               {LABEL_SIZES.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setSizeId(s.id)}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${
-                    sizeId === s.id ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                    sizeId === s.id ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {s.widthMm}×{s.heightMm}mm
@@ -199,18 +199,18 @@ export default function PrintExport() {
 
             <Card className="mb-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
+                <span className="text-ink-muted">
                   {t('staff.printExport.selectedCount', {
                     selected: selectedIds.size > 0 ? selectedIds.size : labels.length,
                     total: labels.length,
                   })}
                 </span>
                 <div className="flex gap-3">
-                  <button onClick={selectAll} className="font-semibold text-sky-600">
+                  <button onClick={selectAll} className="font-semibold text-brand">
                     {t('staff.printExport.selectAll')}
                   </button>
                   {selectedIds.size > 0 && (
-                    <button onClick={clearSelection} className="font-semibold text-gray-500">
+                    <button onClick={clearSelection} className="font-semibold text-ink-muted">
                       {t('staff.printExport.clearSelection')}
                     </button>
                   )}
@@ -219,7 +219,7 @@ export default function PrintExport() {
             </Card>
 
             {labels.length === 0 && (
-              <p className="mb-3 text-sm text-gray-400">{t('staff.printExport.noLabels')}</p>
+              <p className="mb-3 text-sm text-ink-faint">{t('staff.printExport.noLabels')}</p>
             )}
 
             <div className="mb-3 flex flex-col gap-2">
@@ -229,12 +229,12 @@ export default function PrintExport() {
                   onClick={() => toggleSelect(l.id)}
                   className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm ${
                     selectedIds.has(l.id) || selectedIds.size === 0
-                      ? 'border-sky-200 bg-sky-50'
-                      : 'border-gray-200 bg-white opacity-50'
+                      ? 'border-brand-light bg-brand-lighter'
+                      : 'border-line bg-surface opacity-50'
                   }`}
                 >
                   <span className="font-mono">{l.topText}</span>
-                  <span className="text-gray-500">{l.bottomText}</span>
+                  <span className="text-ink-muted">{l.bottomText}</span>
                 </button>
               ))}
             </div>
@@ -248,7 +248,7 @@ export default function PrintExport() {
               </Button>
             </div>
 
-            <p className="mt-3 text-xs text-gray-400">{t('staff.printExport.sizeLockHint')}</p>
+            <p className="mt-3 text-xs text-ink-faint">{t('staff.printExport.sizeLockHint')}</p>
           </>
         )}
       </div>

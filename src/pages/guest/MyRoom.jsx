@@ -33,8 +33,8 @@ const CACHE_KEY = 'my_room'
 
 // จุดสีตามเพศ (พื้นทึบ) สำหรับชิปเพื่อนร่วมห้อง
 function genderDotClass(gender) {
-  if (gender === 'ชาย') return 'bg-blue-500'
-  if (gender === 'หญิง') return 'bg-pink-500'
+  if (gender === 'ชาย') return 'bg-blue-600'
+  if (gender === 'หญิง') return 'bg-pink-600'
   return 'bg-ink-faint'
 }
 
@@ -193,7 +193,7 @@ export default function MyRoom() {
       <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
           <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-            <Icon name="bed" size={24} color="#0e7490" />
+            <Icon name="bed" size={24} className="text-brand-hover" />
             {t('guest.myRoom.title')}
           </h1>
 
@@ -240,7 +240,7 @@ export default function MyRoom() {
                 return (
                   <div
                     key={room.id}
-                    className="overflow-hidden rounded-card border border-white/60 bg-surface shadow-card ring-1 ring-black/[0.02]"
+                    className="overflow-hidden rounded-card border border-line bg-surface shadow-card ring-1 ring-line-subtle"
                   >
                     {/* หัวบัตร กดย่อ/ขยายได้ */}
                     <button
@@ -293,7 +293,7 @@ export default function MyRoom() {
                     {!isCollapsed && (
                       <>
                         {/* รอยปรุแบบบัตร */}
-                        <div className="mx-4 border-t-2 border-dashed border-black/10" />
+                        <div className="mx-4 border-t-2 border-dashed border-line" />
 
                         <div className="p-4">
                           {/* เพื่อนร่วมห้อง */}
@@ -307,7 +307,7 @@ export default function MyRoom() {
                               {roommates.map((g) => (
                                 <span
                                   key={g.id}
-                                  className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-black/[0.04]"
+                                  className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-line-subtle"
                                 >
                                   <span className={`h-1.5 w-1.5 rounded-full ${genderDotClass(g.gender)}`} />
                                   <span className={`text-xs font-medium ${genderTextClass(g.gender) || 'text-ink'}`}>
@@ -377,7 +377,7 @@ export default function MyRoom() {
                           {hasNotes && (
                             <div className="mt-3 flex items-start gap-2.5 rounded-control bg-surface-muted p-3">
                               <span className="mt-0.5 flex w-5 shrink-0 justify-center">
-                                <Icon name="form" size={16} color="#0e7490" />
+                                <Icon name="form" size={16} className="text-brand-hover" />
                               </span>
                               <div className="min-w-0">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
@@ -429,7 +429,7 @@ function HotelLocation({ hotel }) {
     <div className="mt-3 rounded-control bg-surface-muted p-3">
       <div className="flex items-start gap-2.5">
         <span className="mt-0.5 flex w-5 shrink-0 justify-center">
-          <Icon name="location" size={16} color="#0e7490" />
+          <Icon name="location" size={16} className="text-brand-hover" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
@@ -445,7 +445,7 @@ function HotelLocation({ hotel }) {
         {hotel.phone && (
           <a
             href={`tel:${hotel.phone}`}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
           >
             <Icon name="phone" size={13} /> {t('guest.myRoom.callHotel')}
           </a>
@@ -455,7 +455,7 @@ function HotelLocation({ hotel }) {
             href={hotel.map_url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
           >
             <Icon name="map" size={13} /> {t('guest.myRoom.openMap')}
           </a>
@@ -464,7 +464,7 @@ function HotelLocation({ hotel }) {
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted ring-1 ring-black/[0.04]"
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted ring-1 ring-line-subtle"
           >
             <Icon name={copied ? 'checkCircle' : 'copy'} size={13} />
             {copied ? t('guest.myRoom.copied') : t('guest.myRoom.copyAddress')}
@@ -474,7 +474,7 @@ function HotelLocation({ hotel }) {
           <button
             type="button"
             onClick={() => setShowLocal((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-black/[0.04]"
+            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
           >
             <Icon name="language" size={13} /> {t('guest.myRoom.showLocalAddress')}
           </button>
@@ -482,7 +482,7 @@ function HotelLocation({ hotel }) {
       </div>
 
       {showLocal && hotel.address_local && (
-        <div className="mt-2.5 rounded-control bg-white p-3 ring-1 ring-black/[0.06]">
+        <div className="mt-2.5 rounded-control bg-surface p-3 ring-1 ring-line">
           <p className="text-[11px] text-ink-faint">{t('guest.myRoom.localAddressHint')}</p>
           <p className="mt-1 whitespace-pre-wrap text-lg font-bold leading-snug text-ink">
             {hotel.address_local}
@@ -501,7 +501,7 @@ function HotelLocation({ hotel }) {
 function FacilityChip({ item, meta, label }) {
   const { t } = useTranslation()
   return (
-    <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2.5 py-1 text-xs ring-1 ring-black/[0.04]">
+    <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2.5 py-1 text-xs ring-1 ring-line-subtle">
       {meta?.icon && <Icon name={meta.icon} size={14} />}
       <span className="font-medium text-ink">{label}</span>
       {item.fee === 'free' && (
@@ -583,9 +583,9 @@ function HotelFacilities({ hotel }) {
 // แถวข้อมูลโรงแรม: ไอคอน + หัวข้อ (ซ้าย) + ค่า (ขวา) แบบรายการในบัตร
 function AmenityRow({ icon, label, children }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-black/[0.06] py-2.5 last:border-0">
+    <div className="flex items-center gap-2.5 border-b border-line-subtle py-2.5 last:border-0">
       <span className="flex w-6 shrink-0 justify-center">
-        <Icon name={icon} size={18} color="#0e7490" />
+        <Icon name={icon} size={18} className="text-brand-hover" />
       </span>
       <span className="flex-1 text-sm text-ink-muted">{label}</span>
       <span className="min-w-0 text-right text-sm font-medium text-ink">{children}</span>

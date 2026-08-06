@@ -565,6 +565,10 @@ export default function Icon({
   const [hovered, setHovered] = useState(false)
   const renderFn = RENDER[name] || RENDER.compass
   const isFilled = filled || (interactive && hovered)
+  // ⚠️ เส้นรายละเอียดของไอคอนแบบทึบเป็นสีขาวตายตัว ไม่ตามธีม
+  //    ใช้ได้เพราะไอคอนทึบวางบนพื้นสีแบรนด์เสมอ ซึ่ง guard บังคับให้เข้มพอ
+  //    สำหรับตัวขาวอยู่แล้วทั้งโหมดสว่างและมืด (ดู ensureWhiteReadable)
+  //    ถ้าวันหนึ่งมีไอคอนทึบบนพื้นอ่อน ต้องเปลี่ยนมาใช้ token แทน
   const c = { color, body: isFilled ? color : 'none', detail: isFilled ? '#fff' : color }
   const handlers = interactive
     ? { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false) }

@@ -23,7 +23,7 @@ function PinInput({ value, onChange, label }) {
         pattern="[0-9]*"
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
-        className="w-full rounded-control border border-transparent bg-surface-sunken px-3 py-3.5 text-center text-2xl tracking-[0.5em] shadow-inner transition focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70"
+        className="w-full rounded-control border border-transparent bg-surface-sunken px-3 py-3.5 text-center text-2xl tracking-[0.5em] shadow-inner transition focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70"
         placeholder="••••"
       />
     </label>
@@ -245,7 +245,7 @@ export default function Login() {
               type="button"
               onClick={() => switchMode(tab.key)}
               className={`flex-1 rounded-[10px] py-2 text-sm font-semibold transition ${
-                mode === tab.key ? 'bg-white text-brand shadow-card' : 'text-ink-muted'
+                mode === tab.key ? 'bg-surface text-brand shadow-card' : 'text-ink-muted'
               }`}
             >
               {tab.label}
@@ -254,12 +254,12 @@ export default function Login() {
         </div>
 
         <Card className="shadow-card-hover">
-          {loadError && <p className="mb-3 text-sm text-red-500">{loadError}</p>}
+          {loadError && <p className="mb-3 text-sm text-danger">{loadError}</p>}
 
           {mode === 'staff' ? (
             <form onSubmit={handleStaffLogin} className="flex flex-col gap-4">
               {loadingTours ? (
-                <p className="text-gray-500">{t('common.loading')}</p>
+                <p className="text-ink-muted">{t('common.loading')}</p>
               ) : (
                 <>
                   {/* มีทริปเดียวก็ไม่ต้องโชว์ช่องเลือก — ลดขั้นตอนหน้างาน */}
@@ -284,7 +284,7 @@ export default function Login() {
 
                   {selectedTourId &&
                     (loadingStaff ? (
-                      <p className="text-gray-500">{t('common.loading')}</p>
+                      <p className="text-ink-muted">{t('common.loading')}</p>
                     ) : (
                       <SelectField
                         label={t('staff.login.selectName')}
@@ -302,7 +302,7 @@ export default function Login() {
                     <PinInput value={pin} onChange={setPin} label={t('staff.login.pin')} />
                   )}
 
-                  {authError && <p className="text-sm text-red-500">{authError}</p>}
+                  {authError && <p className="text-sm text-danger">{authError}</p>}
 
                   <Button
                     type="submit"
@@ -329,7 +329,7 @@ export default function Login() {
 
               <PinInput value={pin} onChange={setPin} label={t('staff.login.pin')} />
 
-              {authError && <p className="text-sm text-red-500">{authError}</p>}
+              {authError && <p className="text-sm text-danger">{authError}</p>}
 
               <Button type="submit" disabled={submitting || !staffCode.trim() || !pin}>
                 {submitting ? t('guest.register.submitting') : t('staff.login.submit')}

@@ -21,7 +21,7 @@ import { toTimeInput } from '../../lib/timeFormat'
 function Row({ icon, label, value }) {
   if (!value) return null
   return (
-    <div className="flex items-center gap-2.5 border-b border-black/[0.06] py-2 last:border-0">
+    <div className="flex items-center gap-2.5 border-b border-line-subtle py-2 last:border-0">
       <span className="shrink-0 text-ink-faint">
         <Icon name={icon} size={16} />
       </span>

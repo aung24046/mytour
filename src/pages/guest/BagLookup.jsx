@@ -73,37 +73,37 @@ export default function BagLookup() {
   }, [tagCode])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-surface-muted p-4">
       <div className="w-full max-w-sm">
         <Card className="text-center">
-          {loading && <p className="text-gray-500">{t('common.loading')}</p>}
+          {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
 
           {error === 'not-found' && (
-            <p className="text-gray-600">{t('guest.bagLookup.notFound')}</p>
+            <p className="text-ink-muted">{t('guest.bagLookup.notFound')}</p>
           )}
 
           {error === 'unassigned' && (
-            <p className="text-gray-600">{t('guest.bagLookup.unassigned')}</p>
+            <p className="text-ink-muted">{t('guest.bagLookup.unassigned')}</p>
           )}
 
           {!loading && !error && bag && (
             <div className="flex flex-col items-center gap-4">
-              <p className="text-sm font-medium text-gray-400">{t('guest.bagLookup.title')}</p>
+              <p className="text-sm font-medium text-ink-faint">{t('guest.bagLookup.title')}</p>
 
               {bag.photoUrl ? (
                 <img
                   src={bag.photoUrl}
                   alt={bag.displayName}
-                  className="h-48 w-48 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
+                  className="h-48 w-48 rounded-2xl object-cover shadow-sm ring-1 ring-line-subtle"
                 />
               ) : (
-                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-gray-100 text-5xl">
+                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-surface-sunken text-5xl">
                   🧳
                 </div>
               )}
 
-              <p className="text-2xl font-bold text-gray-900">{bag.displayName}</p>
-              <p className="font-mono text-xs text-gray-400">{bag.tagCode}</p>
+              <p className="text-2xl font-bold text-ink">{bag.displayName}</p>
+              <p className="font-mono text-xs text-ink-faint">{bag.tagCode}</p>
             </div>
           )}
         </Card>

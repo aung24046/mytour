@@ -339,31 +339,31 @@ export default function ExpenseTracker() {
   const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: t(`staff.expenseTracker.category.${c}`) }))
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">{t('staff.expenseTracker.title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">{t('staff.expenseTracker.subtitle')}</p>
+        <h1 className="text-xl font-bold text-ink">{t('staff.expenseTracker.title')}</h1>
+        <p className="mt-1 text-sm text-ink-muted">{t('staff.expenseTracker.subtitle')}</p>
 
-        {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="mt-4 text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
             {/* สรุปรวมทั้งทริป */}
             <Card className="mt-4">
-              <p className="text-sm text-gray-500">{t('staff.expenseTracker.totalLabel')}</p>
-              <p className="mt-0.5 text-3xl font-extrabold text-gray-900">
-                {totalAmount.toLocaleString()} <span className="text-base font-semibold text-gray-400">฿</span>
+              <p className="text-sm text-ink-muted">{t('staff.expenseTracker.totalLabel')}</p>
+              <p className="mt-0.5 text-3xl font-extrabold text-ink">
+                {totalAmount.toLocaleString()} <span className="text-base font-semibold text-ink-faint">฿</span>
               </p>
               {totalsByCategory.length > 0 && (
-                <div className="mt-3 flex flex-col gap-1.5 border-t border-gray-100 pt-3">
-                  <p className="text-xs font-semibold uppercase text-gray-400">
+                <div className="mt-3 flex flex-col gap-1.5 border-t border-line-subtle pt-3">
+                  <p className="text-xs font-semibold uppercase text-ink-faint">
                     {t('staff.expenseTracker.byCategoryLabel')}
                   </p>
                   {totalsByCategory.map((c) => (
                     <div key={c.category} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{t(`staff.expenseTracker.category.${c.category}`)}</span>
-                      <span className="font-semibold text-gray-900">{c.total.toLocaleString()} ฿</span>
+                      <span className="text-ink-muted">{t(`staff.expenseTracker.category.${c.category}`)}</span>
+                      <span className="font-semibold text-ink">{c.total.toLocaleString()} ฿</span>
                     </div>
                   ))}
                 </div>
@@ -409,7 +409,7 @@ export default function ExpenseTracker() {
                 />
 
                 <div>
-                  <p className="mb-1.5 text-sm font-semibold text-gray-700">{t('staff.expenseTracker.receiptPhoto')}</p>
+                  <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.expenseTracker.receiptPhoto')}</p>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -420,7 +420,7 @@ export default function ExpenseTracker() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full rounded-xl bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-700"
+                    className="w-full rounded-xl bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-neutral-text"
                   >
                     {t('staff.expenseTracker.takePhoto')}
                   </button>
@@ -429,17 +429,17 @@ export default function ExpenseTracker() {
                   )}
                 </div>
 
-                {formError && <p className="text-sm text-red-500">{formError}</p>}
+                {formError && <p className="text-sm text-danger">{formError}</p>}
 
                 <Button type="submit" disabled={saving}>
                   {saving ? t('staff.expenseTracker.saving') : t('staff.expenseTracker.addExpense')}
                 </Button>
 
                 {!navigator.onLine && (
-                  <p className="text-xs text-amber-700">{t('staff.expenseTracker.queuedNotice')}</p>
+                  <p className="text-xs text-warning-text">{t('staff.expenseTracker.queuedNotice')}</p>
                 )}
                 {pendingCount > 0 && (
-                  <p className="text-xs text-amber-700">
+                  <p className="text-xs text-warning-text">
                     {t('staff.expenseTracker.pendingSync', { count: pendingCount })}
                   </p>
                 )}
@@ -451,7 +451,7 @@ export default function ExpenseTracker() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm"
+                className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm"
               >
                 <option value="all">{t('staff.expenseTracker.filterAll')}</option>
                 {categoryOptions.map((c) => (
@@ -463,7 +463,7 @@ export default function ExpenseTracker() {
               <select
                 value={filterPaidBy}
                 onChange={(e) => setFilterPaidBy(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm"
+                className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm"
               >
                 <option value="all">{t('staff.expenseTracker.filterAll')}</option>
                 {staffList.map((s) => (
@@ -476,7 +476,7 @@ export default function ExpenseTracker() {
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm"
+                className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm"
               />
               {(filterCategory !== 'all' || filterPaidBy !== 'all' || filterDate) && (
                 <button
@@ -485,7 +485,7 @@ export default function ExpenseTracker() {
                     setFilterPaidBy('all')
                     setFilterDate('')
                   }}
-                  className="text-sm font-medium text-sky-600"
+                  className="text-sm font-medium text-brand"
                 >
                   {t('staff.expenseTracker.clearFilters')}
                 </button>
@@ -493,7 +493,7 @@ export default function ExpenseTracker() {
               <button
                 onClick={handleExportCsv}
                 disabled={expenses.length === 0}
-                className="ml-auto text-sm font-semibold text-sky-600 disabled:opacity-40"
+                className="ml-auto text-sm font-semibold text-brand disabled:opacity-40"
               >
                 {t('staff.expenseTracker.exportCsv')}
               </button>
@@ -502,44 +502,44 @@ export default function ExpenseTracker() {
             {/* ลิสต์รายจ่าย */}
             <div className="mt-3 flex flex-col gap-2">
               {expenses.length === 0 && (
-                <p className="text-sm text-gray-400">{t('staff.expenseTracker.noExpenses')}</p>
+                <p className="text-sm text-ink-faint">{t('staff.expenseTracker.noExpenses')}</p>
               )}
               {expenses.length > 0 && filteredExpenses.length === 0 && (
-                <p className="text-sm text-gray-400">{t('staff.expenseTracker.noResults')}</p>
+                <p className="text-sm text-ink-faint">{t('staff.expenseTracker.noResults')}</p>
               )}
               {filteredExpenses.map((e) => (
                 <Card key={e.id} className="p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
+                        <span className="rounded-full bg-brand-lighter px-2 py-0.5 text-[11px] font-semibold text-brand">
                           {t(`staff.expenseTracker.category.${e.category}`)}
                         </span>
-                        <span className="text-xs text-gray-400">{e.expense_date}</span>
+                        <span className="text-xs text-ink-faint">{e.expense_date}</span>
                       </div>
-                      {e.description && <p className="mt-1 text-sm text-gray-700">{e.description}</p>}
+                      {e.description && <p className="mt-1 text-sm text-neutral-text">{e.description}</p>}
                       {e.paid_by && staffById[e.paid_by] && (
-                        <p className="mt-0.5 text-xs text-gray-400">
+                        <p className="mt-0.5 text-xs text-ink-faint">
                           {t('staff.expenseTracker.paidBy')}: {staffById[e.paid_by].name}
                         </p>
                       )}
                     </div>
-                    <p className="shrink-0 font-bold text-gray-900">{Number(e.amount).toLocaleString()} ฿</p>
+                    <p className="shrink-0 font-bold text-ink">{Number(e.amount).toLocaleString()} ฿</p>
                   </div>
-                  <div className="mt-2 flex items-center gap-3 border-t border-gray-100 pt-2">
+                  <div className="mt-2 flex items-center gap-3 border-t border-line-subtle pt-2">
                     {e.receipt_url && (
                       <a
                         href={e.receipt_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-sky-600"
+                        className="text-sm font-medium text-brand"
                       >
                         {t('staff.expenseTracker.viewReceipt')}
                       </a>
                     )}
                     <button
                       onClick={() => deleteExpense(e)}
-                      className="text-sm font-medium text-red-500"
+                      className="text-sm font-medium text-danger"
                     >
                       {t('staff.expenseTracker.deleteExpense')}
                     </button>

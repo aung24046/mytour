@@ -8,8 +8,8 @@ import Icon from '../../components/common/Icon'
 
 // จุดสีตามเพศ (พื้นทึบ) สำหรับชิปรายชื่อ
 function genderDotClass(gender) {
-  if (gender === 'ชาย') return 'bg-blue-500'
-  if (gender === 'หญิง') return 'bg-pink-500'
+  if (gender === 'ชาย') return 'bg-blue-600'
+  if (gender === 'หญิง') return 'bg-pink-600'
   return 'bg-ink-faint'
 }
 
@@ -146,19 +146,19 @@ export default function DietarySummary() {
   function renderSection(tally, keyPrefix, dotClass, pillClass) {
     if (tally.length === 0) {
       return (
-        <div className="rounded-card border border-white/60 bg-surface p-4 text-sm text-ink-faint shadow-card ring-1 ring-black/[0.02]">
+        <div className="rounded-card border border-line bg-surface p-4 text-sm text-ink-faint shadow-card ring-1 ring-line-subtle">
           {t('staff.dietarySummary.none')}
         </div>
       )
     }
     return (
-      <div className="overflow-hidden rounded-card border border-white/60 bg-surface shadow-card ring-1 ring-black/[0.02]">
+      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card ring-1 ring-line-subtle">
         {tally.map((item, idx) => {
           const id = `${keyPrefix}::${item.value}`
           const expanded = !!expandedItems[id]
           const preview = item.people.map((g) => g?.nickname || g?.name || '—').join(', ')
           return (
-            <div key={id} className={idx > 0 ? 'border-t border-black/[0.05]' : ''}>
+            <div key={id} className={idx > 0 ? 'border-t border-line-subtle' : ''}>
               <button
                 type="button"
                 onClick={() => toggleItem(id)}
@@ -193,7 +193,7 @@ export default function DietarySummary() {
                   {item.people.map((g, i) => (
                     <span
                       key={`${g?.id ?? i}`}
-                      className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-black/[0.04]"
+                      className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-line-subtle"
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${genderDotClass(g?.gender)}`} />
                       <span className={`text-xs font-medium ${genderTextClass(g?.gender) || 'text-ink'}`}>
@@ -217,7 +217,7 @@ export default function DietarySummary() {
     <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md">
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-          <Icon name="bowl" size={24} color="#0e7490" />
+          <Icon name="bowl" size={24} className="text-brand-hover" />
           {t('staff.dietarySummary.title')}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">{t('staff.dietarySummary.subtitle')}</p>

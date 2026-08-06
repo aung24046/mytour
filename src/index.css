@@ -50,6 +50,193 @@
   }
 }
 
+/* ══ สีของธีม — แหล่งความจริงแหล่งเดียวของทั้งแอป ══════════════════════
+   `tailwind.config.js` ไม่มีค่าสีจริงแล้ว มันแค่ผูกชื่อ token เข้ากับตัวแปรพวกนี้
+   ผลคือเปลี่ยนธีมได้ตอนรันไทม์ ไม่ต้อง build ใหม่ — จำเป็นเพราะบริษัททัวร์
+   แต่ละรายใช้สีของตัวเอง (ดู MyTour_Theming_Design_v1.md)
+
+   ⚠️ รูปแบบค่าต้องเป็น "เลขสามช่อง" เช่น `8 145 178` เท่านั้น
+      ห้ามเขียน #0891b2 หรือ rgb(8,145,178) เพราะ Tailwind ต้องเอาไปต่อกับ
+      ค่าความโปร่งใสเป็น rgb(8 145 178 / 0.4) ให้ opacity modifier ทำงาน
+      โค้ดใช้ bg-success-bg/40, bg-brand-light/70 อยู่หลายสิบจุด
+      ถ้าเขียนผิดรูปแบบ จุดพวกนั้นจะหายไปเงียบๆ โดยไม่มี error
+
+   วิธีเปลี่ยนธีมตอนรันไทม์:
+     document.documentElement.style.setProperty('--c-brand', '47 93 140')
+
+   ⚠️ ห้ามใส่สีดิบ (gray-500, #abc123) ลงในไฟล์ JSX — ให้เพิ่ม token ที่นี่แทน */
+:root {
+  /* ── สีแบรนด์ — บริษัททัวร์ปรับได้ ────────────────────────────
+     ค่าพวกนี้ต้องตรงกับผลของ deriveBrandTokens('#077c99') ใน lib/themes.js
+     (เป็นค่าเริ่มต้นตอนยังโหลดธีมจาก DB ไม่เสร็จ)
+
+     เดิม --c-brand คือ 8 145 178 (#0891b2) เปลี่ยนเมื่อ ส.ค. 2569
+     เพราะตัวหนังสือขาวบนสีเดิมได้คอนทราสต์ 3.68:1 ไม่ผ่าน WCAG AA (4.5:1)
+     กระทบปุ่มหลักและปุ่ม QR กลางแถบ ซึ่งลูกทัวร์ต้องกดกลางแดด */
+  --c-brand: 7 124 153;
+  --c-brand-hover: 6 107 132;
+  --c-brand-light: 212 232 237;
+  --c-brand-lighter: 242 248 250;
+  --c-brand-deep: 5 87 107;
+  --c-brand-start: 11 191 236; /* หัว gradient — สว่างขึ้นแต่ยังสด */
+
+  /* สีที่สามของธีม — ใช้กับสถานะ "กำลังทำอยู่ตอนนี้" และปุ่มเน้น
+     ตั้งใจไม่ใช้สีแบรนด์กับสถานะนี้ เพราะทั้งหน้ามีสีแบรนด์เต็มไปหมดอยู่แล้ว
+     (แถบหัว ปุ่มหลัก ปุ่ม QR ชิปเมนู) พอสถานะเป็นสีเดียวกันด้วย มิติก็หายหมด
+     และไม่ใช้เขียวเพราะเขียวสงวนไว้ให้ "เสร็จแล้ว" อย่างเดียว */
+  --c-accent: 249 115 98;
+  --c-accent-hover: 239 90 72;
+  --c-accent-bg: 255 241 238;
+  --c-accent-text: 194 59 44;
+
+  /* ── พื้นผิวและตัวหนังสือ ──────────────────────────────────── */
+  --c-surface: 255 255 255;
+  --c-surface-muted: 246 249 251;
+  --c-surface-sunken: 238 244 247;
+
+  --c-ink: 15 43 53;
+  --c-ink-muted: 78 102 112;
+  --c-ink-faint: 90 111 121;
+
+  --c-neutral-bg: 238 244 247;
+  --c-neutral-text: 61 85 96;
+
+  --c-line-subtle: 232 239 242;
+  --c-line: 215 227 232;
+  --c-line-strong: 185 204 212;
+
+  /* ── สีเชิงความหมาย — ธีมของบริษัทเปลี่ยนไม่ได้ ─────────────
+     เขียว = สำเร็จ, เหลือง = เตือน, แดง = อันตราย
+     ถ้าปล่อยให้ลูกค้าเปลี่ยนสีปุ่ม SOS ได้ นั่นคือความเสี่ยง ไม่ใช่ฟีเจอร์ */
+  --c-success: 18 133 60;
+  --c-success-bg: 220 252 231;
+  --c-success-text: 21 128 61;
+
+  --c-warning: 217 119 6;
+  --c-warning-bg: 254 243 199;
+  --c-warning-text: 180 83 9;
+  --c-warning-ink: 69 26 3;
+
+  --c-danger: 220 38 38;
+  --c-danger-bg: 254 226 226;
+  --c-danger-text: 185 28 28;
+
+  /* ── ตัวหนังสือบนพื้นทึบที่ "สว่างเกินกว่าจะใช้ตัวขาว" ──────────
+     ส้มพีชกับเหลืองอำพันเป็นสีที่ตัวหนังสือขาวอ่านไม่ออก (2.7:1 และ 3.2:1)
+     ทางแก้ที่ถูกคือใช้ตัวหนังสือสีเข้มบนพื้นพวกนี้ ไม่ใช่บังคับให้สีเข้มขึ้น
+     จนส้มพีชกลายเป็นสีอิฐ — สองตัวนี้จึงเข้มทั้งสองโหมด */
+  --c-on-accent: 43 13 8;
+  --c-on-warning: 69 26 3;
+
+  /* ── เปลือกแอป — ใช้ที่เดียวเลยไม่มีใน tailwind config ─────── */
+  --c-app-glow: 224 247 250;
+  --c-scrollbar: 182 212 222;
+
+  /* ความทึบของการ์ดกระจก — โหมดมืดต้องใช้ค่าต่างกัน */
+  --glass-bg: 255 255 255;
+  --glass-alpha: 0.72;
+}
+
+/* ══ โหมดมืด ═══════════════════════════════════════════════════════════
+   เปิดใช้ด้วย <html data-mode="dark"> (ดู lib/colorMode.js)
+   ค่าเริ่มต้นตามการตั้งค่าของเครื่อง แต่ผู้ใช้เลือกเองทับได้
+
+   ทำไมต้องมี: ทัวร์มีกิจกรรมกลางคืนและช่วงนั่งรถบัสตอนมืดจริง
+   จอสว่างจ้าในรถที่ปิดไฟรบกวนคนอื่นและแสบตาคนใช้เอง
+
+   ⚠️ ชื่อ token ไม่เปลี่ยนความหมาย — `ink` ยังแปลว่า "สีตัวหนังสือ"
+      แค่กลายเป็นสีอ่อนบนพื้นเข้ม ส่วน `surface` ยังแปลว่า "พื้นการ์ด"
+      นี่คือเหตุผลที่ตั้งชื่อ token ตามหน้าที่ ไม่ใช่ตามสี
+
+   ⚠️ เฉดอ่อนของแบรนด์ (brand-light/lighter) ในโหมดมืดต้องเป็นสีเข้ม
+      เพราะมันคือ "พื้นหลังของชิป" ไม่ใช่ "สีอ่อน" — และ brand-hover
+      ที่เป็นตัวหนังสือบนชิปนั้นต้องกลับเป็นสีสว่างแทน */
+:root[data-mode='dark'] {
+  /* ต้องตรงกับผลของ deriveBrandTokens('#077c99', 'dark') ใน lib/themes.js
+     สังเกตว่า brand ยังเป็นสีเดิม — เพราะปุ่มทึบยังใช้ตัวหนังสือขาว
+     เกณฑ์คอนทราสต์จึงเท่ากันทั้งสองโหมด ส่วน hover กลับเป็นสีสว่างแทน */
+  --c-brand: 7 124 153;
+  --c-brand-hover: 11 187 231;
+  --c-brand-light: 19 58 71;
+  --c-brand-lighter: 22 46 55;
+  --c-brand-deep: 57 208 246;
+  --c-brand-start: 6 102 125;
+
+  --c-accent: 249 130 114;
+  --c-accent-hover: 252 168 156;
+  --c-accent-bg: 63 30 25;
+  --c-accent-text: 252 180 170;
+
+  --c-surface: 24 33 39;
+  --c-surface-muted: 18 25 30;
+  --c-surface-sunken: 13 19 23;
+
+  --c-ink: 233 240 243;
+  --c-ink-muted: 163 181 190;
+  --c-ink-faint: 126 146 156;
+
+  --c-neutral-bg: 31 42 49;
+  --c-neutral-text: 186 202 210;
+
+  --c-line-subtle: 32 43 50;
+  --c-line: 46 60 69;
+  --c-line-strong: 74 93 103;
+
+  /* สีความหมายยังคงความหมายเดิม แต่ต้องสลับน้ำหนัก:
+     พื้น = เฉดเข้ม, ตัวหนังสือ = เฉดสว่าง */
+  --c-success: 31 133 70;
+  --c-success-bg: 18 51 33;
+  --c-success-text: 126 231 166;
+
+  --c-warning: 232 145 30;
+  --c-warning-bg: 58 40 12;
+  --c-warning-text: 250 199 106;
+  --c-warning-ink: 253 230 178;
+
+  --c-danger: 205 71 71;
+  --c-danger-bg: 61 24 24;
+  --c-danger-text: 250 154 154;
+
+  /* เข้มทั้งสองโหมด — พื้นส้ม/เหลืองสว่างพอกันทั้งคู่ */
+  --c-on-accent: 43 13 8;
+  --c-on-warning: 61 38 6;
+
+  --c-app-glow: 20 40 48;
+  --c-scrollbar: 74 93 103;
+
+  --glass-bg: 24 33 39;
+  --glass-alpha: 0.78;
+}
+
+/* ══ หน้าเอกสาร A4 — บังคับโหมดสว่างเสมอ ══════════════════════════════
+   เอกสารเป็นกระดาษขาว ต้องอ่านออกและพิมพ์ได้เหมือนกันไม่ว่าผู้ใช้เปิดโหมดไหน
+
+   ⚠️ บั๊กที่กันไว้: ตัวหนังสือในเอกสารส่วนใหญ่ไม่ได้ระบุสีเอง มันสืบทอดจาก body
+   ซึ่งในโหมดมืดเป็นสีขาวนวล ผลคือตัวหนังสือขาวบนกระดาษขาว = หายไปทั้งหน้า
+   ส่วนแถบเครื่องมือด้านบนก็ใช้ token (text-ink, bg-surface-sunken) ซึ่งกลับด้านเช่นกัน
+
+   วิธีแก้: ประกาศตัวแปรชุดโหมดสว่างซ้ำเฉพาะ .doc-root
+   selector มี specificity สูงกว่า :root[data-mode='dark'] จึงชนะ
+   ประกาศเฉพาะ token ที่หน้าเอกสารใช้จริง ไม่ต้องยกมาทั้งชุด */
+:root[data-mode='dark'] .doc-root {
+  --c-ink: 15 43 53;
+  --c-ink-muted: 78 102 112;
+  --c-ink-faint: 90 111 121;
+  --c-surface: 255 255 255;
+  --c-surface-sunken: 238 244 247;
+  --c-brand: 7 124 153;
+  --c-brand-light: 212 232 237;
+  --c-brand-lighter: 242 248 250;
+  --c-success-bg: 220 252 231;
+  --c-success-text: 21 128 61;
+  --c-danger: 220 38 38;
+  --c-danger-bg: 254 226 226;
+  --c-danger-text: 185 28 28;
+
+  color: rgb(var(--c-ink));
+  color-scheme: light;
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -58,13 +245,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
   font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', system-ui, sans-serif;
-  color: #0f2b35;
-  /* พื้นหลังแอปแบบไล่เฉดฟ้า–มิ้นท์นุ่มๆ ให้ดูสดใสทั้งแอป */
-  background:
-    radial-gradient(1200px 520px at 100% -10%, #cffafe 0%, transparent 55%),
-    radial-gradient(900px 520px at -10% 0%, #e0f7fa 0%, transparent 50%),
-    linear-gradient(180deg, #f6f9fb 0%, #eef4f7 100%);
-  background-attachment: fixed;
+  color: rgb(var(--c-ink));
+  /* พื้นหลังแอป — สีทึบเรียบ
+     เดิมเป็น radial glow สีฟ้าสองชั้นซ้อนบนไล่เฉดแนวตั้ง (แก้ ส.ค. 2569)
+     ตัวแปร --c-app-glow ยังเก็บไว้เผื่ออยากได้คืน แต่ตอนนี้ไม่มีใครใช้ */
+  background: rgb(var(--c-surface-muted));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -72,21 +257,23 @@ body {
 /* Scrollbar บางๆ เข้าธีม */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #b6d4de transparent;
+  scrollbar-color: rgb(var(--c-scrollbar)) transparent;
 }
 *::-webkit-scrollbar { height: 8px; width: 8px; }
-*::-webkit-scrollbar-thumb { background: #b6d4de; border-radius: 9999px; }
+*::-webkit-scrollbar-thumb { background: rgb(var(--c-scrollbar)); border-radius: 9999px; }
 *::-webkit-scrollbar-track { background: transparent; }
 
 @layer components {
-  /* หัวข้อหน้าแบบ hero ไล่เฉดฟ้าทะเล — ใช้ครอบ header ของแต่ละหน้าได้ */
+  /* หัวข้อหน้าแบบ hero — สีแบรนด์ทึบ (เดิมไล่เฉด 3 สี แก้ ส.ค. 2569) */
   .hero-gradient {
-    background: linear-gradient(135deg, #22d3ee 0%, #0891b2 55%, #0e7490 100%);
+    background: rgb(var(--c-brand));
     color: #ffffff;
   }
-  /* การ์ดกระจก โปร่งแสงเล็กน้อย ให้ลอยเหนือพื้นหลัง */
+  /* การ์ดกระจก โปร่งแสงเล็กน้อย ให้ลอยเหนือพื้นหลัง
+     ⚠️ ยังไม่มีไฟล์ไหนใช้คลาสนี้ (ตรวจเมื่อ ส.ค. 2569) — เก็บไว้เพราะ
+     ยังอยู่ในภาษาดีไซน์ ถ้าอีกรอบยังไม่มีใครใช้ให้ลบทิ้ง */
   .glass-card {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgb(var(--glass-bg) / var(--glass-alpha));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -95,7 +282,7 @@ body {
 @layer base {
   /* โฟกัสคีย์บอร์ดชัดเจน เพื่อ accessibility */
   :focus-visible {
-    outline: 2px solid #0891b2;
+    outline: 2px solid rgb(var(--c-brand));
     outline-offset: 2px;
   }
   h1, h2, h3 {

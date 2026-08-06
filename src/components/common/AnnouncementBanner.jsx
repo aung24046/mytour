@@ -69,19 +69,19 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
 
   if (variant === 'box') {
     return (
-      <div className="mt-4 flex items-start gap-3 rounded-card bg-[#FFF3CF] p-4 text-amber-950 shadow-card ring-1 ring-black/[0.02]">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-900/10">
+      <div className="mt-4 flex items-start gap-3 rounded-card bg-warning-bg p-4 text-warning-ink shadow-card ring-1 ring-line-subtle">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-warning-ink/10">
           <Icon name="megaphone" size={20} filled />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-amber-900/70">
+          <p className="text-xs font-bold uppercase tracking-wide text-warning-ink/70">
             {t('guest.home.announcementLabel')}
           </p>
           <p className="mt-0.5 text-sm font-semibold leading-snug">{announcement.message}</p>
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-amber-900/80 transition hover:bg-white/30"
+          className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
           aria-label="close"
         >
           ×
@@ -91,12 +91,12 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
   }
 
   return (
-    <div className="sticky top-0 z-10 flex items-start gap-2.5 bg-[#FFF3CF] px-4 py-3 text-sm font-semibold text-amber-950 shadow-md">
+    <div className="sticky top-0 z-10 flex items-start gap-2.5 bg-warning-bg px-4 py-3 text-sm font-semibold text-warning-ink shadow-md">
       <Icon name="megaphone" size={17} filled className="mt-px shrink-0" />
       <span className="flex-1 leading-snug">{announcement.message}</span>
       <button
         onClick={() => setDismissed(true)}
-        className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-amber-900/80 transition hover:bg-white/30"
+        className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
         aria-label="close"
       >
         ×

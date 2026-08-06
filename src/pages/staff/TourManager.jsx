@@ -17,11 +17,11 @@ import SelectField from '../../components/common/SelectField'
 import BottomSheet from '../../components/common/BottomSheet'
 
 const STATUS_LABEL = {
-  draft: { text: 'ร่าง', cls: 'bg-amber-100 text-amber-800' },
-  active: { text: 'ใช้งานอยู่', cls: 'bg-emerald-100 text-emerald-800' },
-  archived: { text: 'จบแล้ว', cls: 'bg-slate-100 text-slate-600' },
-  completed: { text: 'จบแล้ว', cls: 'bg-slate-100 text-slate-600' },
-  cancelled: { text: 'ยกเลิก', cls: 'bg-rose-100 text-rose-700' },
+  draft: { text: 'ร่าง', cls: 'bg-warning-bg text-warning-text' },
+  active: { text: 'ใช้งานอยู่', cls: 'bg-success-bg text-success-text' },
+  archived: { text: 'จบแล้ว', cls: 'bg-surface-sunken text-ink-muted' },
+  completed: { text: 'จบแล้ว', cls: 'bg-surface-sunken text-ink-muted' },
+  cancelled: { text: 'ยกเลิก', cls: 'bg-danger-bg text-danger-text' },
 }
 
 const FILTERS = [
@@ -101,7 +101,7 @@ const EMPTY_DRAFT = {
 }
 
 function StatusChip({ status }) {
-  const s = STATUS_LABEL[status] ?? { text: status, cls: 'bg-slate-100 text-slate-600' }
+  const s = STATUS_LABEL[status] ?? { text: status, cls: 'bg-surface-sunken text-ink-muted' }
   return (
     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${s.cls}`}>
       {s.text}
@@ -387,7 +387,7 @@ export default function TourManager() {
   const cloneSources = tours.filter((t) => t.status !== 'cancelled')
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-surface-muted pb-24">
       <div className="mx-auto max-w-2xl px-4 py-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -412,7 +412,7 @@ export default function TourManager() {
               className={`shrink-0 rounded-pill px-3.5 py-1.5 text-sm font-semibold transition ${
                 filter === f.key
                   ? 'bg-brand text-white shadow-brand'
-                  : 'bg-white text-ink-muted ring-1 ring-black/5'
+                  : 'bg-surface text-ink-muted ring-1 ring-line-subtle'
               }`}
             >
               {f.label}
@@ -421,7 +421,7 @@ export default function TourManager() {
         </div>
 
         {loading && <p className="text-ink-muted">กำลังโหลด…</p>}
-        {error && <p className="text-rose-600">{error}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && visible.length === 0 && (
           <Card>
@@ -442,7 +442,7 @@ export default function TourManager() {
                       <h2 className="truncate font-bold text-ink">{tour.name}</h2>
                       <StatusChip status={tour.status} />
                       {tour.is_template && (
-                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                        <span className="rounded-full bg-accent-bg px-2 py-0.5 text-xs font-semibold text-accent-text">
                           แม่แบบ
                         </span>
                       )}
@@ -468,7 +468,7 @@ export default function TourManager() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-black/5 pt-3">
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-line-subtle pt-3">
                   {!isCurrent && !isArchived && (
                     <Button
                       variant="secondary"
@@ -636,7 +636,7 @@ export default function TourManager() {
             เปลี่ยนชื่อไม่กระทบรหัสทริป — QR และลิงก์ที่แจกไปแล้วยังใช้ได้ตามปกติ
           </p>
 
-          {editError && <p className="text-sm text-rose-600">{editError}</p>}
+          {editError && <p className="text-sm text-danger">{editError}</p>}
 
           <Button type="submit" disabled={busy}>
             {busy ? 'กำลังบันทึก…' : 'บันทึก'}
@@ -657,7 +657,7 @@ export default function TourManager() {
                 type="button"
                 onClick={() => setDraft((d) => ({ ...d, mode: m.key }))}
                 className={`flex-1 rounded-[10px] py-2 text-sm font-semibold transition ${
-                  draft.mode === m.key ? 'bg-white text-brand shadow-card' : 'text-ink-muted'
+                  draft.mode === m.key ? 'bg-surface text-brand shadow-card' : 'text-ink-muted'
                 }`}
               >
                 {m.label}
@@ -734,7 +734,7 @@ export default function TourManager() {
                   </div>
                 </div>
 
-                <div className="divide-y divide-black/5 overflow-hidden rounded-control bg-surface-sunken">
+                <div className="divide-y divide-line-subtle overflow-hidden rounded-control bg-surface-sunken">
                   {COPY_OPTIONS.map((o) => (
                     <label
                       key={o.key}
@@ -789,7 +789,7 @@ export default function TourManager() {
             </>
           )}
 
-          {createError && <p className="text-sm text-rose-600">{createError}</p>}
+          {createError && <p className="text-sm text-danger">{createError}</p>}
 
           <Button type="submit" disabled={busy}>
             {busy ? 'กำลังสร้าง…' : 'สร้างทริป'}

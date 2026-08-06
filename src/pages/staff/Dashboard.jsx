@@ -8,6 +8,7 @@ import { getStaffSession, clearStaffSession, useActiveTourId } from '../../lib/s
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Icon from '../../components/common/Icon'
+import ColorModeToggle from '../../components/common/ColorModeToggle'
 import TourSwitcher from '../../components/common/TourSwitcher'
 
 // เมนูจัดเป็นหมวด — หาง่ายกว่ารายการยาวๆ
@@ -377,6 +378,8 @@ export default function Dashboard() {
             {staffSession?.name && (
               <p className="mt-0.5 text-sm text-ink-muted">{staffSession.name}</p>
             )}
+            {/* ทีมงานทำงานกลางคืนบนรถบัสจริง จอสว่างจ้ารบกวนลูกทัวร์ที่กำลังนอน */}
+            <ColorModeToggle className="mt-2" />
           </div>
           <button
             onClick={handleLogout}
@@ -409,7 +412,7 @@ export default function Dashboard() {
         {!loading && !error && (
           <>
             {/* การ์ดเช็คอิน (พื้นขาว) */}
-            <div className="mb-3 rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+            <div className="mb-3 rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-ink-muted">
                   {t('staff.dashboard.checkingInAt')}
@@ -451,7 +454,7 @@ export default function Dashboard() {
                           <Icon
                             name={done ? 'check' : isActive ? 'location' : 'compass'}
                             size={12}
-                            color={done ? '#16a34a' : isActive ? '#0891b2' : '#93a7b0'}
+                            className={done ? 'text-success' : isActive ? 'text-brand' : 'text-ink-faint'}
                           />
                           <span className="truncate text-[10px] text-ink-muted">{cp.title}</span>
                         </div>
@@ -528,7 +531,7 @@ export default function Dashboard() {
                         <span
                           className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
                             isCurrent
-                              ? 'bg-brand ring-4 ring-brand-light'
+                              ? 'bg-accent ring-4 ring-accent-bg'
                               : isDone
                                 ? 'bg-ink-faint'
                                 : 'bg-ink-faint/40'
@@ -546,7 +549,7 @@ export default function Dashboard() {
                           >
                             {item.title}
                             {isCurrent && (
-                              <span className="ml-1 text-xs font-normal text-brand">
+                              <span className="ml-1 text-xs font-normal text-accent-text">
                                 · {t('staff.dashboard.nowTag')}
                               </span>
                             )}
@@ -601,7 +604,7 @@ export default function Dashboard() {
                         {phone ? (
                           <a
                             href={`tel:${phone}`}
-                            className="rounded-pill bg-white px-3 py-1 text-sm font-semibold text-brand shadow-sm"
+                            className="rounded-pill bg-surface px-3 py-1 text-sm font-semibold text-brand shadow-sm"
                           >
                             {phone}
                           </a>
@@ -629,8 +632,8 @@ export default function Dashboard() {
             )}
 
             {/* ค้นหาเมนู */}
-            <div className="mb-4 flex items-center gap-2 rounded-control border border-black/10 bg-surface px-3">
-              <Icon name="search" size={16} color="#93a7b0" />
+            <div className="mb-4 flex items-center gap-2 rounded-control border border-line bg-surface px-3">
+              <Icon name="search" size={16} className="text-ink-faint" />
               <input
                 type="text"
                 value={menuSearch}
@@ -658,7 +661,7 @@ export default function Dashboard() {
                       return (
                         <Link key={link.to} to={link.to} className="relative flex flex-col items-center gap-1.5">
                           {isSos && openSosCount > 0 && (
-                            <span className="absolute -right-1 -top-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-sm">
+                            <span className="absolute -right-1 -top-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-sm">
                               {openSosCount}
                             </span>
                           )}
@@ -666,7 +669,7 @@ export default function Dashboard() {
                             className={`flex h-[52px] w-full items-center justify-center rounded-[14px] ${
                               isSos
                                 ? 'bg-danger-bg text-danger'
-                                : 'bg-surface text-brand shadow-card ring-1 ring-black/[0.03]'
+                                : 'bg-surface text-brand shadow-card ring-1 ring-line-subtle'
                             }`}
                           >
                             <Icon name={link.icon} size={23} />

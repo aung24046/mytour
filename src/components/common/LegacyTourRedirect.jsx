@@ -45,13 +45,13 @@ export default function LegacyTourRedirect({ to = '' }) {
   if (failed) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-slate-800">เปิดลิงก์นี้ไม่ได้</p>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="text-lg font-semibold text-ink">เปิดลิงก์นี้ไม่ได้</p>
+        <p className="mt-2 text-sm text-ink-muted">
           ลิงก์นี้เป็นรูปแบบเก่า กรุณาสแกน QR ล่าสุดจากทีมงาน
         </p>
         <a
           href="/join"
-          className="mt-6 inline-block rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-medium text-white"
+          className="mt-6 inline-block rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-white"
         >
           กรอกรหัสทริป
         </a>
@@ -62,7 +62,7 @@ export default function LegacyTourRedirect({ to = '' }) {
   if (!code) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-strong border-t-neutral-text" />
       </div>
     )
   }

@@ -159,7 +159,7 @@ export default function DateWheelField({ label, required = false, value, onChang
       <div className="relative rounded-control border border-transparent bg-surface-sunken px-2 shadow-inner">
         {/* แถบไฮไลต์แถวกลาง บอกว่ากำลังเลือกอะไรอยู่ */}
         <div
-          className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 rounded-lg border-y-2 border-brand-light bg-white/40"
+          className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 rounded-lg border-y-2 border-brand-light bg-brand-lighter/60"
           style={{ height: ITEM_HEIGHT }}
         />
         <div className="relative flex gap-1">

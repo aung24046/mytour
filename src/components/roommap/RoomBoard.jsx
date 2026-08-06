@@ -24,8 +24,8 @@ export function maxGuestsFor(roomType) {
 export { ROOM_TYPES }
 
 function genderDotClass(gender) {
-  if (gender === 'ชาย') return 'bg-blue-500'
-  if (gender === 'หญิง') return 'bg-pink-500'
+  if (gender === 'ชาย') return 'bg-blue-600'
+  if (gender === 'หญิง') return 'bg-pink-600'
   return 'bg-ink-faint'
 }
 
@@ -186,7 +186,7 @@ export default function RoomBoard({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('staff.checkIn.searchPlaceholder')}
-              className="mb-1.5 w-full rounded-control border border-black/10 bg-surface px-2 py-1.5 text-xs focus:outline-none"
+              className="mb-1.5 w-full rounded-control border border-line bg-surface px-2 py-1.5 text-xs focus:outline-none"
             />
           )}
 
@@ -200,7 +200,7 @@ export default function RoomBoard({
                   className={`inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-medium transition ${
                     on
                       ? 'bg-brand text-white'
-                      : `bg-surface ring-1 ring-black/[0.05] ${genderTextClass(g.gender) || 'text-ink'}`
+                      : `bg-surface ring-1 ring-line-subtle ${genderTextClass(g.gender) || 'text-ink'}`
                   }`}
                 >
                   {!on && <span className={`h-1.5 w-1.5 rounded-full ${genderDotClass(g.gender)}`} />}
@@ -262,7 +262,7 @@ export default function RoomBoard({
                       className={`relative rounded-control p-2 text-center transition ${
                         canPlace
                           ? 'bg-brand-lighter ring-2 ring-brand'
-                          : 'bg-surface ring-1 ring-black/[0.06]'
+                          : 'bg-surface ring-1 ring-line'
                       }`}
                     >
                       <div
@@ -318,7 +318,7 @@ export default function RoomBoard({
                   type="text"
                   defaultValue={openRoom.room_number ?? ''}
                   onBlur={(e) => onUpdateRoom(openRoom.id, { room_number: e.target.value })}
-                  className="w-full rounded-control border border-black/10 px-2.5 py-2 text-base focus:outline-none"
+                  className="w-full rounded-control border border-line px-2.5 py-2 text-base focus:outline-none"
                 />
               </label>
               <label className="w-20">
@@ -329,7 +329,7 @@ export default function RoomBoard({
                   type="text"
                   defaultValue={openRoom.floor ?? ''}
                   onBlur={(e) => onUpdateRoom(openRoom.id, { floor: e.target.value })}
-                  className="w-full rounded-control border border-black/10 px-2.5 py-2 text-base focus:outline-none"
+                  className="w-full rounded-control border border-line px-2.5 py-2 text-base focus:outline-none"
                 />
               </label>
             </div>
@@ -352,7 +352,7 @@ export default function RoomBoard({
                   }
                   onUpdateRoom(openRoom.id, { room_type: e.target.value, max_guests: nextMax })
                 }}
-                className="w-full rounded-control border border-black/10 px-2.5 py-2 text-base focus:outline-none"
+                className="w-full rounded-control border border-line px-2.5 py-2 text-base focus:outline-none"
               >
                 {ROOM_TYPES.map((rt) => (
                   <option key={rt.value} value={rt.value}>
@@ -392,7 +392,7 @@ export default function RoomBoard({
                 {Array.from({ length: capacityLeftOf(openRoom) }, (_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="rounded-control border border-dashed border-black/10 px-2.5 py-2 text-sm text-ink-faint"
+                    className="rounded-control border border-dashed border-line px-2.5 py-2 text-sm text-ink-faint"
                   >
                     {t('staff.roomMap.emptyBed')}
                   </div>
@@ -409,7 +409,7 @@ export default function RoomBoard({
                 defaultValue={openRoom.note ?? ''}
                 placeholder={t('staff.roomMap.roomNotePlaceholder')}
                 onBlur={(e) => onUpdateRoom(openRoom.id, { note: e.target.value.trim() || null })}
-                className="w-full rounded-control border border-black/10 px-2.5 py-2 text-sm focus:outline-none"
+                className="w-full rounded-control border border-line px-2.5 py-2 text-sm focus:outline-none"
               />
             </label>
 

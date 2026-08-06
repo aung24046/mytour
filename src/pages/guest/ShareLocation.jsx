@@ -6,7 +6,6 @@ import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
-import Button from '../../components/common/Button'
 import GuestNav from '../../components/common/GuestNav'
 
 const SEND_INTERVAL_MS = 15000 // ส่งพิกัดทุก 15 วิ ระหว่างเปิดหน้าค้างไว้
@@ -155,18 +154,18 @@ export default function ShareLocation() {
 
           <GuestNav active="shareLocation" />
 
-          {loadingSession && <p className="text-gray-500">{t('common.loading')}</p>}
+          {loadingSession && <p className="text-ink-muted">{t('common.loading')}</p>}
 
           {!loadingSession && !activeSession && (
             <Card>
-              <p className="text-gray-500">{t('guest.shareLocation.noActiveSession')}</p>
+              <p className="text-ink-muted">{t('guest.shareLocation.noActiveSession')}</p>
             </Card>
           )}
 
           {!loadingSession && activeSession && (
             <Card>
               {activeSession.label && (
-                <p className="mb-2 text-sm font-medium text-sky-600">{activeSession.label}</p>
+                <p className="mb-2 text-sm font-medium text-brand">{activeSession.label}</p>
               )}
 
               <label className="flex items-start gap-3">
@@ -174,17 +173,17 @@ export default function ShareLocation() {
                   type="checkbox"
                   checked={consented}
                   onChange={handleToggleConsent}
-                  className="mt-1 h-5 w-5 shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                  className="mt-1 h-5 w-5 shrink-0 rounded border-line-strong text-brand focus:ring-brand"
                 />
-                <span className="text-sm text-gray-700">{t('guest.shareLocation.consent')}</span>
+                <span className="text-sm text-neutral-text">{t('guest.shareLocation.consent')}</span>
               </label>
 
-              {geoError && <p className="mt-3 text-sm text-red-500">{geoError}</p>}
+              {geoError && <p className="mt-3 text-sm text-danger">{geoError}</p>}
 
               {sharing && !geoError && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2">
-                  <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-500" />
-                  <p className="text-sm text-green-700">
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-success-bg px-3 py-2">
+                  <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-success" />
+                  <p className="text-sm text-success-text">
                     {lastSentAt
                       ? t('guest.shareLocation.sharingSince', {
                           time: lastSentAt.toLocaleTimeString(),
@@ -195,7 +194,7 @@ export default function ShareLocation() {
               )}
 
               {!sharing && !geoError && consented === false && (
-                <p className="mt-3 text-xs text-gray-400">{t('guest.shareLocation.hint')}</p>
+                <p className="mt-3 text-xs text-ink-faint">{t('guest.shareLocation.hint')}</p>
               )}
             </Card>
           )}

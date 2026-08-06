@@ -15,9 +15,9 @@ import Icon from '../common/Icon'
 /** กล่องหัวข้อย่อยในฟอร์ม */
 export function FormSection({ icon, title, badge, children }) {
   return (
-    <div className="rounded-xl bg-gray-50 p-2.5">
+    <div className="rounded-xl bg-surface-muted p-2.5">
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           {icon && <Icon name={icon} size={14} />}
           {title}
         </p>
@@ -54,7 +54,7 @@ export function InfoTile({ icon, label, children }) {
 function FacilityDetailRow({ item, meta, label, onPatch }) {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-control bg-white/70 px-2 py-1.5">
+    <div className="flex flex-wrap items-center gap-1.5 rounded-control bg-surface/70 px-2 py-1.5">
       <span className="flex w-full items-center gap-1.5 text-[11px] font-semibold text-ink sm:w-auto sm:flex-1">
         {meta?.icon && <Icon name={meta.icon} size={14} />}
         {label}
@@ -62,7 +62,7 @@ function FacilityDetailRow({ item, meta, label, onPatch }) {
       <select
         value={item.fee ?? ''}
         onChange={(e) => onPatch({ fee: e.target.value })}
-        className="rounded-control border border-black/10 bg-surface px-1.5 py-1 text-[11px] text-ink-muted focus:outline-none"
+        className="rounded-control border border-line bg-surface px-1.5 py-1 text-[11px] text-ink-muted focus:outline-none"
       >
         <option value="">{t('common.facility.feeUnset')}</option>
         <option value="free">{t('common.facility.feeFree')}</option>
@@ -75,7 +75,7 @@ function FacilityDetailRow({ item, meta, label, onPatch }) {
             value={item.from ?? ''}
             onChange={(e) => onPatch({ from: e.target.value })}
             aria-label={t('common.facility.hoursFrom')}
-            className="rounded-control border border-black/10 bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
+            className="rounded-control border border-line bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
           />
           <span className="text-[11px] text-ink-faint">–</span>
           <input
@@ -83,7 +83,7 @@ function FacilityDetailRow({ item, meta, label, onPatch }) {
             value={item.to ?? ''}
             onChange={(e) => onPatch({ to: e.target.value })}
             aria-label={t('common.facility.hoursTo')}
-            className="rounded-control border border-black/10 bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
+            className="rounded-control border border-line bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
           />
         </span>
       )}
@@ -92,7 +92,7 @@ function FacilityDetailRow({ item, meta, label, onPatch }) {
         value={item.note ?? ''}
         onChange={(e) => onPatch({ note: e.target.value })}
         placeholder={t('common.facility.note')}
-        className="min-w-[5rem] flex-1 rounded-control border border-black/10 bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
+        className="min-w-[5rem] flex-1 rounded-control border border-line bg-surface px-1.5 py-1 text-[11px] text-ink focus:outline-none"
       />
     </div>
   )
@@ -107,13 +107,13 @@ export function FacilityChipGroup({ title, items, value, onChange, defaultOpen =
   const countInGroup = items.filter((i) => selectedKeys.has(i.key)).length
 
   return (
-    <div className="rounded-control bg-white/60 p-2">
+    <div className="rounded-control bg-surface/60 p-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-2 text-left"
       >
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
           {title}
           {countInGroup > 0 && <span className="ml-1.5 text-brand">· {countInGroup}</span>}
         </span>
@@ -131,7 +131,7 @@ export function FacilityChipGroup({ title, items, value, onChange, defaultOpen =
                   type="button"
                   onClick={() => onChange(toggleItem(value, item.key))}
                   className={`rounded-pill px-2.5 py-1 text-[11px] font-medium transition ${
-                    isOn ? 'bg-brand text-white' : 'bg-surface text-ink-muted ring-1 ring-black/[0.06]'
+                    isOn ? 'bg-brand text-white' : 'bg-surface text-ink-muted ring-1 ring-line'
                   }`}
                 >
                   <span className="inline-flex items-center gap-1.5">
@@ -169,7 +169,7 @@ export function FacilityBadge({ item, meta, label }) {
   const { t } = useTranslation()
   const range = formatTimeRange(item.from, item.to)
   return (
-    <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2 py-1 text-[11px] text-ink ring-1 ring-black/[0.04]">
+    <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2 py-1 text-[11px] text-ink ring-1 ring-line-subtle">
       {meta?.icon && <Icon name={meta.icon} size={13} />}
       <span className="font-medium">{label}</span>
       {item.fee === 'free' && (

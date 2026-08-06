@@ -491,29 +491,29 @@ export default function CheckIn() {
   const responsesByGuestId = useMemo(() => buildResponsesByGuestId(responses), [responses])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">{t('staff.checkIn.title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-ink">{t('staff.checkIn.title')}</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           {t('staff.checkIn.summary', { checkedIn: checkedInCount, total: guests.length })}
         </p>
 
         <button
           onClick={() => setEventPickerOpen(true)}
-          className="mt-2 flex w-full items-center justify-between rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5 text-left"
+          className="mt-2 flex w-full items-center justify-between rounded-xl border border-brand-light bg-brand-lighter px-3 py-2.5 text-left"
         >
-          <span className="min-w-0 truncate text-sm font-semibold text-sky-800">
+          <span className="min-w-0 truncate text-sm font-semibold text-brand-deep">
             📍 {selectedEvent ? selectedEvent.title : t('common.loading')}
           </span>
-          <span className="shrink-0 text-xs font-medium text-sky-600">{t('staff.checkIn.changeEvent')}</span>
+          <span className="shrink-0 text-xs font-medium text-brand">{t('staff.checkIn.changeEvent')}</span>
         </button>
 
         {!isCoreEvent && (
-          <p className="mt-1 text-xs text-amber-700">{t('staff.checkIn.eventOfflineNotice')}</p>
+          <p className="mt-1 text-xs text-warning-text">{t('staff.checkIn.eventOfflineNotice')}</p>
         )}
 
         {(!isOnline || usingCache || pendingCount > 0) && (
-          <div className="mt-2 rounded-xl bg-amber-100 px-3 py-2 text-sm text-amber-800">
+          <div className="mt-2 rounded-xl bg-warning-bg px-3 py-2 text-sm text-warning-text">
             {!isOnline && <p>{t('staff.checkIn.offline')}</p>}
             {usingCache && <p>{t('staff.checkIn.usingCache')}</p>}
             {pendingCount > 0 && <p>{t('staff.checkIn.pendingSync', { count: pendingCount })}</p>}
@@ -524,10 +524,10 @@ export default function CheckIn() {
           <div
             className={`mt-2 rounded-xl px-3 py-2 text-sm font-medium ${
               scanFeedback.type === 'success'
-                ? 'bg-green-100 text-green-800'
+                ? 'bg-success-bg text-success-text'
                 : scanFeedback.type === 'duplicate'
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-red-100 text-red-700'
+                  ? 'bg-warning-bg text-warning-text'
+                  : 'bg-danger-bg text-danger-text'
             }`}
           >
             {scanFeedback.type === 'success' &&
@@ -551,14 +551,14 @@ export default function CheckIn() {
             placeholder={t('staff.checkIn.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
           />
           <button
             onClick={() => {
               setScanFeedback(null)
               setScannerOpen(true)
             }}
-            className="shrink-0 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white"
+            className="shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white"
           >
             {t('staff.checkIn.scanQr')}
           </button>
@@ -571,8 +571,8 @@ export default function CheckIn() {
               onClick={() => setFilter(f)}
               className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                 filter === f
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-brand text-white'
+                  : 'bg-surface-sunken text-neutral-text'
               }`}
             >
               {f === 'all' && t('staff.checkIn.filterAll')}
@@ -587,7 +587,7 @@ export default function CheckIn() {
             <button
               onClick={() => setBusFilter('all')}
               className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                busFilter === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                busFilter === 'all' ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
               }`}
             >
               {t('staff.checkIn.allBuses')}
@@ -597,7 +597,7 @@ export default function CheckIn() {
                 key={bus.id}
                 onClick={() => setBusFilter(bus.id)}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                  busFilter === bus.id ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                  busFilter === bus.id ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
                 }`}
               >
                 {bus.name}
@@ -607,10 +607,10 @@ export default function CheckIn() {
         )}
 
         <div className="mt-4 flex flex-col gap-2">
-          {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-          {loadError && <p className="text-red-500">{loadError}</p>}
+          {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+          {loadError && <p className="text-danger">{loadError}</p>}
           {!loading && !loadError && filteredGuests.length === 0 && (
-            <p className="text-gray-500">{t('staff.checkIn.noResults')}</p>
+            <p className="text-ink-muted">{t('staff.checkIn.noResults')}</p>
           )}
 
           {filteredGuests.map((guest) => {
@@ -621,30 +621,30 @@ export default function CheckIn() {
                 key={guest.id}
                 className={`flex cursor-pointer items-center justify-between border-l-4 transition ${
                   checkedIn
-                    ? 'border-l-green-500 bg-green-50'
-                    : 'border-l-red-400 bg-red-50'
+                    ? 'border-l-success bg-success-bg'
+                    : 'border-l-danger bg-danger-bg'
                 } ${togglingId === guest.id ? 'opacity-60' : ''}`}
                 onClick={() => handleToggle(guest)}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-gray-900'}`}>
+                    <p className={`min-w-0 max-w-full truncate font-medium ${genderTextClass(guest.gender) || 'text-ink'}`}>
                       {guest.name}
                     </p>
                     {staffGuestIdSet.has(guest.id) && (
-                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-[10px] font-semibold text-warning-text">
                         {t('staff.checkIn.staffBadge')}
                       </span>
                     )}
                   </div>
                   {guest.nickname && (
-                    <p className="text-sm text-gray-500">{guest.nickname}</p>
+                    <p className="text-sm text-ink-muted">{guest.nickname}</p>
                   )}
                   {phone && (
                     <a
                       href={`tel:${phone}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-0.5 inline-block text-sm font-medium text-sky-600"
+                      className="mt-0.5 inline-block text-sm font-medium text-brand"
                     >
                       {phone}
                     </a>
@@ -653,8 +653,8 @@ export default function CheckIn() {
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${
                     checkedIn
-                      ? 'bg-green-500 text-white'
-                      : 'bg-red-400 text-white'
+                      ? 'bg-success text-white'
+                      : 'bg-danger text-white'
                   }`}
                 >
                   {checkedIn
@@ -673,7 +673,7 @@ export default function CheckIn() {
         title={t('staff.checkIn.scanQr')}
       >
         <QrScanner onScan={handleScan} onError={handleScanError} />
-        <p className="mt-3 text-center text-sm text-gray-500">
+        <p className="mt-3 text-center text-sm text-ink-muted">
           {t('staff.checkIn.scanHint')}
         </p>
         <Button variant="secondary" className="mt-3" onClick={() => setScannerOpen(false)}>
@@ -696,13 +696,13 @@ export default function CheckIn() {
               }}
               className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${
                 ev.id === selectedEventId
-                  ? 'border-sky-400 bg-sky-50 text-sky-800'
-                  : 'border-gray-200 text-gray-900 hover:bg-gray-50'
+                  ? 'border-brand bg-brand-lighter text-brand-deep'
+                  : 'border-line text-ink hover:bg-surface-muted'
               }`}
             >
               {ev.title}
               {ev.is_core && (
-                <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                <span className="ml-2 rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-ink-muted">
                   {t('staff.checkIn.coreEventTag')}
                 </span>
               )}
@@ -756,19 +756,19 @@ export default function CheckIn() {
 
         <form onSubmit={handleCreateEvent} className="flex flex-col gap-3">
           {createEventTab === 'itinerary' && (
-            <div className="max-h-[30vh] overflow-y-auto rounded-xl border border-gray-100">
+            <div className="max-h-[30vh] overflow-y-auto rounded-xl border border-line-subtle">
               {itineraryItems.length === 0 && (
-                <p className="p-3 text-sm text-gray-400">{t('staff.checkIn.noItineraryItems')}</p>
+                <p className="p-3 text-sm text-ink-faint">{t('staff.checkIn.noItineraryItems')}</p>
               )}
               {itineraryItems.map((item) => (
                 <button
                   type="button"
                   key={item.id}
                   onClick={() => pickItineraryItem(item)}
-                  className={`block w-full border-b border-gray-50 px-3 py-2 text-left text-sm last:border-b-0 ${
+                  className={`block w-full border-b border-line-subtle px-3 py-2 text-left text-sm last:border-b-0 ${
                     selectedItineraryItemId === item.id
-                      ? 'bg-sky-50 font-semibold text-sky-700'
-                      : 'text-gray-900'
+                      ? 'bg-brand-lighter font-semibold text-brand-hover'
+                      : 'text-ink'
                   }`}
                 >
                   {itineraryItemLabel(item)}
@@ -778,7 +778,7 @@ export default function CheckIn() {
           )}
 
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-gray-700">
+            <span className="mb-1 block text-sm font-medium text-neutral-text">
               {t('staff.checkIn.eventTitleLabel')}
             </span>
             <input
@@ -786,7 +786,7 @@ export default function CheckIn() {
               value={newEventTitle}
               onChange={(e) => setNewEventTitle(e.target.value)}
               placeholder={t('staff.checkIn.eventTitlePlaceholder')}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
             />
           </label>
 

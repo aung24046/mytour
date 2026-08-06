@@ -458,7 +458,7 @@ export default function RoomMap() {
                   className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
                     activeHotelId === hotel.id
                       ? 'bg-brand text-white shadow-brand'
-                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                      : 'bg-surface text-ink-muted ring-1 ring-line-subtle'
                   }`}
                 >
                   {hotel.name}
@@ -515,7 +515,7 @@ export default function RoomMap() {
             {activeHotel && (
               <>
                 {/* แถบโรงแรม: ชื่อ + วัน + เวลาสำคัญ ย่อให้เหลือบรรทัดเดียว */}
-                <div className="mt-3 rounded-card bg-surface p-3 ring-1 ring-black/[0.04]">
+                <div className="mt-3 rounded-card bg-surface p-3 ring-1 ring-line-subtle">
                   <div className="flex items-center gap-2">
                     <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
                       {activeHotel.name}

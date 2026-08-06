@@ -46,7 +46,7 @@ export default function HomeButton() {
     <button
       onClick={() => navigate(target)}
       aria-label={t('common.home')}
-      className="no-print fixed bottom-4 left-4 z-40 flex items-center gap-1.5 rounded-pill bg-white/90 px-4 py-3 text-sm font-bold text-brand shadow-card-hover ring-1 ring-black/5 backdrop-blur transition active:scale-95 hover:bg-white print:hidden"
+      className="no-print fixed bottom-4 left-4 z-40 flex items-center gap-1.5 rounded-pill bg-surface px-4 py-3 text-sm font-bold text-brand shadow-card-hover ring-1 ring-line-subtle backdrop-blur transition active:scale-95 hover:bg-surface print:hidden"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
       <Icon name="home" size={16} filled interactive />

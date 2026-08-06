@@ -248,7 +248,7 @@ export default function SOS() {
         <div className="p-4 pb-28">
           <div className="mx-auto max-w-md">
             <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-              <Icon name="alert" size={26} filled color="#dc2626" />
+              <Icon name="alert" size={26} filled className="text-danger" />
               {t('guest.sos.title')}
             </h1>
             <GuestNav active="sos" />
@@ -270,7 +270,7 @@ export default function SOS() {
       <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
           <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-            <Icon name="alert" size={26} filled color="#dc2626" />
+            <Icon name="alert" size={26} filled className="text-danger" />
             {t('guest.sos.title')}
           </h1>
 
@@ -281,13 +281,13 @@ export default function SOS() {
 
             <div className="relative mx-auto flex h-40 w-40 items-center justify-center">
               <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full -rotate-90">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#fee2e2" strokeWidth="8" />
+                <circle cx="50" cy="50" r="45" fill="none" className="stroke-danger-bg" strokeWidth="8" />
                 <circle
                   cx="50"
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#dc2626"
+                  className="stroke-danger"
                   strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray={CIRCUMFERENCE}
@@ -301,16 +301,16 @@ export default function SOS() {
                 onPointerLeave={cancelHold}
                 onContextMenu={(e) => e.preventDefault()}
                 disabled={sending}
-                className="relative flex h-32 w-32 select-none items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition active:scale-95 disabled:opacity-60"
+                className="relative flex h-32 w-32 select-none items-center justify-center rounded-full bg-danger text-white shadow-lg transition active:scale-95 disabled:opacity-60"
               >
                 <span className="flex flex-col items-center gap-1">
-                  <Icon name="alert" size={30} color="#fff" filled />
+                  <Icon name="alert" size={30} className="text-white" filled />
                   <span className="text-lg font-extrabold">SOS</span>
                 </span>
               </button>
             </div>
 
-            {holding && <p className="mt-3 text-sm font-semibold text-red-600">{t('guest.sos.holding')}</p>}
+            {holding && <p className="mt-3 text-sm font-semibold text-danger">{t('guest.sos.holding')}</p>}
             {sending && <p className="mt-3 text-sm font-semibold text-ink-muted">{t('guest.sos.sending')}</p>}
 
             <label className="mt-4 block text-left">
@@ -320,22 +320,22 @@ export default function SOS() {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t('guest.sos.notePlaceholder')}
-                className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                className="w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
               />
             </label>
 
             {sendResult === 'sent' && (
-              <div className="mt-4 rounded-xl bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-700">
+              <div className="mt-4 rounded-xl bg-success-bg px-3 py-2.5 text-sm font-semibold text-success-text">
                 {t('guest.sos.sentBody')}
               </div>
             )}
             {sendResult === 'queued' && (
-              <div className="mt-4 rounded-xl bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
+              <div className="mt-4 rounded-xl bg-warning-bg px-3 py-2.5 text-sm font-semibold text-warning-text">
                 {t('guest.sos.queuedBody')}
               </div>
             )}
             {pendingCount > 0 && (
-              <p className="mt-2 text-xs text-amber-700">
+              <p className="mt-2 text-xs text-warning-text">
                 {t('guest.sos.pendingSync', { count: pendingCount })}
               </p>
             )}
@@ -345,7 +345,7 @@ export default function SOS() {
             {t('guest.sos.contactsTitle')}
           </h2>
 
-          {usingCache && <p className="mb-2 text-xs text-amber-700">{t('guest.sos.offlineNotice')}</p>}
+          {usingCache && <p className="mb-2 text-xs text-warning-text">{t('guest.sos.offlineNotice')}</p>}
           {loadingContacts && <p className="text-ink-muted">{t('common.loading')}</p>}
           {!loadingContacts && groupedContacts.length === 0 && (
             <p className="text-sm text-ink-faint">{t('guest.sos.noContacts')}</p>
@@ -362,7 +362,7 @@ export default function SOS() {
                     <a
                       key={contact.id}
                       href={`tel:${contact.phone}`}
-                      className="flex items-center justify-between rounded-control bg-surface px-3.5 py-3 shadow-card ring-1 ring-black/[0.02]"
+                      className="flex items-center justify-between rounded-control bg-surface px-3.5 py-3 shadow-card ring-1 ring-line-subtle"
                     >
                       <span className="font-semibold text-ink">{contact.label}</span>
                       <span className="rounded-pill bg-brand-lighter px-3 py-1 text-sm font-bold text-brand">

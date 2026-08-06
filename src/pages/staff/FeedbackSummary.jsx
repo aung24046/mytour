@@ -171,17 +171,17 @@ export default function FeedbackSummary() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">{t('staff.feedbackSummary.title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">{t('staff.feedbackSummary.subtitle')}</p>
+        <h1 className="text-xl font-bold text-ink">{t('staff.feedbackSummary.title')}</h1>
+        <p className="mt-1 text-sm text-ink-muted">{t('staff.feedbackSummary.subtitle')}</p>
 
-        {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="mt-4 text-danger">{error}</p>}
 
         {!loading && !error && fields.length === 0 && (
           <Card className="mt-4">
-            <p className="text-sm text-gray-500">{t('staff.feedbackSummary.noFields')}</p>
+            <p className="text-sm text-ink-muted">{t('staff.feedbackSummary.noFields')}</p>
           </Card>
         )}
 
@@ -189,16 +189,16 @@ export default function FeedbackSummary() {
           <>
             <Card className="mt-4 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-ink-muted">
                   {t('staff.feedbackSummary.responseCount', {
                     count: respondedGuestCount,
                     total: guests.length,
                   })}
                   {paperCount > 0 && (
-                    <span className="text-gray-400"> · จากกระดาษ {paperCount} ใบ</span>
+                    <span className="text-ink-faint"> · จากกระดาษ {paperCount} ใบ</span>
                   )}
                 </p>
-                <p className={`mt-0.5 text-xs font-semibold ${isFormOpen ? 'text-green-600' : 'text-gray-400'}`}>
+                <p className={`mt-0.5 text-xs font-semibold ${isFormOpen ? 'text-success-text' : 'text-ink-faint'}`}>
                   {isFormOpen ? t('staff.feedbackSummary.formOpen') : t('staff.feedbackSummary.formClosed')}
                 </p>
               </div>
@@ -217,14 +217,14 @@ export default function FeedbackSummary() {
             <Card className="mt-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900">แบบประเมินฉบับกระดาษ</p>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                  <p className="font-semibold text-ink">แบบประเมินฉบับกระดาษ</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">
                     สำหรับลูกทัวร์ที่กรอกในมือถือไม่สะดวก
                   </p>
                 </div>
                 <Link
                   to="/staff/documents/feedback-form"
-                  className="shrink-0 rounded-control px-3 py-2 text-sm font-semibold text-sky-700 ring-1 ring-sky-200"
+                  className="shrink-0 rounded-control px-3 py-2 text-sm font-semibold text-brand-hover ring-1 ring-brand-light"
                 >
                   พิมพ์ฟอร์มเปล่า
                 </Link>
@@ -251,7 +251,7 @@ export default function FeedbackSummary() {
 
             {ratingFields.length > 0 && (
               <>
-                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-ink-muted">
                   {t('staff.feedbackSummary.ratings')}
                 </h2>
                 {ratingFields.map((f) => (
@@ -262,7 +262,7 @@ export default function FeedbackSummary() {
 
             {commentFields.length > 0 && (
               <>
-                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-ink-muted">
                   {t('staff.feedbackSummary.comments')}
                 </h2>
                 {commentFields.map((f) => (
@@ -273,7 +273,7 @@ export default function FeedbackSummary() {
 
             {otherFields.length > 0 && (
               <>
-                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-ink-muted">
                   {t('staff.feedbackSummary.otherAnswers')}
                 </h2>
                 {otherFields.map((f) => (
@@ -376,20 +376,20 @@ function PaperEntry({ fields, guests, responses, joinCode, onSaved }) {
 
   return (
     <Card className="mt-3">
-      <p className="font-semibold text-gray-900">คีย์คำตอบจากกระดาษ</p>
-      <p className="mt-0.5 text-xs text-gray-500">
+      <p className="font-semibold text-ink">คีย์คำตอบจากกระดาษ</p>
+      <p className="mt-0.5 text-xs text-ink-muted">
         กรอกเฉพาะข้อที่ลูกทัวร์ตอบ ข้อที่เว้นว่างไว้ระบบจะข้ามให้เอง
       </p>
 
       <div className="mt-3 flex flex-col gap-3">
-        <label className="text-xs font-semibold text-gray-500">
+        <label className="text-xs font-semibold text-ink-muted">
           เลขที่ใบ
           <input
             type="text"
             value={slip}
             onChange={(e) => setSlip(e.target.value)}
             placeholder={suggested}
-            className="mt-1 block w-full rounded-control border border-gray-200 px-3 py-2 text-sm text-ink"
+            className="mt-1 block w-full rounded-control border border-line px-3 py-2 text-sm text-ink"
           />
           {slipTaken && (
             <span className="mt-1 block font-normal text-danger">
@@ -398,12 +398,12 @@ function PaperEntry({ fields, guests, responses, joinCode, onSaved }) {
           )}
         </label>
 
-        <label className="text-xs font-semibold text-gray-500">
+        <label className="text-xs font-semibold text-ink-muted">
           ผู้ตอบ
           <select
             value={guestId}
             onChange={(e) => setGuestId(e.target.value)}
-            className="mt-1 block w-full rounded-control border border-gray-200 px-3 py-2 text-sm text-ink"
+            className="mt-1 block w-full rounded-control border border-line px-3 py-2 text-sm text-ink"
           >
             <option value="">ไม่ระบุชื่อ</option>
             {guests.map((g) => (
@@ -412,13 +412,13 @@ function PaperEntry({ fields, guests, responses, joinCode, onSaved }) {
               </option>
             ))}
           </select>
-          <span className="mt-1 block font-normal text-gray-400">
+          <span className="mt-1 block font-normal text-ink-faint">
             เลือกชื่อเฉพาะเมื่อลูกทัวร์เขียนชื่อบนใบ — ชื่อไม่บังคับตั้งแต่บนกระดาษแล้ว
           </span>
         </label>
       </div>
 
-      <div className="mt-4 flex flex-col gap-5 border-t border-gray-100 pt-4">
+      <div className="mt-4 flex flex-col gap-5 border-t border-line-subtle pt-4">
         {fields.map((f) => (
           <DynamicField
             key={f.id}
@@ -457,20 +457,20 @@ function RatingBar({ field, responses }) {
   return (
     <Card className="mb-3">
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-semibold text-gray-900">{field.label}</p>
-        <div className="flex items-center gap-1 text-amber-500">
-          <Icon name="star" size={18} filled color="#f59e0b" />
+        <p className="font-semibold text-ink">{field.label}</p>
+        <div className="flex items-center gap-1 text-warning">
+          <Icon name="star" size={18} filled className="text-warning" />
           <span className="font-bold">{count > 0 ? average.toFixed(1) : '—'}</span>
-          <span className="text-xs text-gray-400">({count})</span>
+          <span className="text-xs text-ink-faint">({count})</span>
         </div>
       </div>
       <div className="flex flex-col gap-1">
         {distribution.map(({ star, count: c }) => (
-          <div key={star} className="flex items-center gap-2 text-xs text-gray-500">
+          <div key={star} className="flex items-center gap-2 text-xs text-ink-muted">
             <span className="w-6 shrink-0">{star}★</span>
-            <div className="h-2 flex-1 overflow-hidden rounded-pill bg-gray-100">
+            <div className="h-2 flex-1 overflow-hidden rounded-pill bg-surface-sunken">
               <div
-                className="h-full rounded-pill bg-amber-400"
+                className="h-full rounded-pill bg-warning"
                 style={{ width: `${(c / maxCount) * 100}%` }}
               />
             </div>
@@ -487,19 +487,19 @@ function CommentList({ field, responses, guestById, t }) {
 
   return (
     <Card className="mb-3">
-      <p className="mb-2 font-semibold text-gray-900">{field.label}</p>
+      <p className="mb-2 font-semibold text-ink">{field.label}</p>
       {items.length === 0 && (
-        <p className="text-sm text-gray-400">{t('staff.feedbackSummary.noComments')}</p>
+        <p className="text-sm text-ink-faint">{t('staff.feedbackSummary.noComments')}</p>
       )}
-      <div className="flex flex-col divide-y divide-gray-100">
+      <div className="flex flex-col divide-y divide-line-subtle">
         {items.map((r) => (
           <div key={r.id} className="py-2 first:pt-0 last:pb-0">
-            <p className="text-sm text-gray-800">{r.value}</p>
-            <p className="mt-0.5 text-xs text-gray-400">
+            <p className="text-sm text-ink">{r.value}</p>
+            <p className="mt-0.5 text-xs text-ink-faint">
               {guestById[r.guest_id]?.nickname ||
                 guestById[r.guest_id]?.name ||
                 (r.paper_slip_no ? `ไม่ระบุชื่อ · ใบ ${r.paper_slip_no}` : '—')}
-              {r.source === 'paper' && <span className="ml-1 text-gray-300">· กระดาษ</span>}
+              {r.source === 'paper' && <span className="ml-1 text-ink-faint">· กระดาษ</span>}
             </p>
           </div>
         ))}

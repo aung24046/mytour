@@ -186,7 +186,7 @@ export default function DocumentHub() {
         <div className="mb-3 flex items-center gap-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg text-ink-muted shadow-card"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-lg text-ink-muted shadow-card"
             aria-label="ย้อนกลับ"
           >
             ←
@@ -203,10 +203,10 @@ export default function DocumentHub() {
           {can(session, 'org.profile') && (
             <Link
               to="/staff/company-profile"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-card"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface shadow-card"
               aria-label="ข้อมูลบริษัท"
             >
-              <Icon name="settings" size={18} color="#5b7580" />
+              <Icon name="settings" size={18} className="text-ink-muted" />
             </Link>
           )}
         </div>
@@ -216,14 +216,14 @@ export default function DocumentHub() {
             to="/staff/company-profile"
             className="mb-3 flex items-center gap-2 rounded-control bg-warning-bg px-3 py-2.5 text-sm text-warning-text"
           >
-            <Icon name="alert" size={17} color="#b45309" />
+            <Icon name="alert" size={17} className="text-warning-text" />
             ยังไม่ได้ตั้งค่าข้อมูลบริษัท — เอกสารจะไม่มีหัวกระดาษ
           </Link>
         )}
 
         {/* หัวหน้าทัวร์บนเอกสาร — ใช้กับทุกใบของทริปนี้ ตั้งที่เดียวจบ */}
         {can(session, 'tourstaff.manage') && staffOptions.length > 0 && (
-          <div className="mb-3 rounded-card bg-white px-3 py-2.5 shadow-card">
+          <div className="mb-3 rounded-card bg-surface px-3 py-2.5 shadow-card">
             <div className="mb-1 flex items-center justify-between">
               <span className="text-xs font-semibold text-ink-faint">หัวหน้าทัวร์บนเอกสาร</span>
               {savingLeader && <span className="text-[11px] text-ink-faint">กำลังบันทึก…</span>}
@@ -231,7 +231,7 @@ export default function DocumentHub() {
             <select
               value={leaderId}
               onChange={(e) => saveLeader(e.target.value)}
-              className="w-full rounded-control bg-surface-sunken px-3 py-2 text-sm text-ink outline-none focus:bg-white focus:ring-2 focus:ring-brand-light"
+              className="w-full rounded-control bg-surface-sunken px-3 py-2 text-sm text-ink outline-none focus:bg-surface focus:ring-2 focus:ring-brand-light"
             >
               <option value="">— ไม่แสดงชื่อหัวหน้าทัวร์ —</option>
               {staffOptions.map((s) => (
@@ -250,8 +250,8 @@ export default function DocumentHub() {
         )}
 
         {/* ค้นหา */}
-        <div className="mb-3 flex items-center gap-2 rounded-full bg-white px-4 py-2.5 shadow-card">
-          <Icon name="search" size={17} color="#93a7b0" />
+        <div className="mb-3 flex items-center gap-2 rounded-full bg-surface px-4 py-2.5 shadow-card">
+          <Icon name="search" size={17} className="text-ink-faint" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -283,7 +283,7 @@ export default function DocumentHub() {
                       key={doc.to}
                       to={`/staff/documents/${doc.to}`}
                       onClick={() => open(doc.to)}
-                      className="flex min-w-0 flex-1 items-center gap-2 rounded-card bg-white px-3 py-2.5 shadow-card"
+                      className="flex min-w-0 flex-1 items-center gap-2 rounded-card bg-surface px-3 py-2.5 shadow-card"
                     >
                       <Icon name={doc.icon} size={18} color={doc.tint} />
                       <span className="truncate text-xs font-medium text-ink">{doc.name}</span>
@@ -323,14 +323,14 @@ function GroupLabel({ title, hint }) {
 // ทำให้กวาดสายตาหาชื่อเอกสารได้เร็วกว่าเมื่อมีหลายรายการ
 function DocRows({ docs, onOpen }) {
   return (
-    <div className="overflow-hidden rounded-card bg-white shadow-card">
+    <div className="overflow-hidden rounded-card bg-surface shadow-card">
       {docs.map((doc, i) => (
         <Link
           key={doc.to}
           to={`/staff/documents/${doc.to}`}
           onClick={() => onOpen(doc.to)}
           className={`flex items-center gap-3 px-3 py-2.5 active:bg-surface-sunken ${
-            i > 0 ? 'border-t border-black/5' : ''
+            i > 0 ? 'border-t border-line-subtle' : ''
           }`}
         >
           <Icon name={doc.icon} size={19} color={doc.tint} />

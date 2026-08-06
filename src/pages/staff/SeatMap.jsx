@@ -30,15 +30,15 @@ function byNickname(a, b) {
 
 // สีปุ่มเลือกประเภท (active state)
 const TYPE_ACTIVE_CLASS = {
-  guest: 'bg-sky-500 text-white',
-  staff: 'bg-emerald-500 text-white',
-  vip: 'bg-amber-500 text-white',
+  guest: 'bg-brand text-white',
+  staff: 'bg-emerald-700 text-white',
+  vip: 'bg-warning text-on-warning',
 }
 
 // สีพื้นของที่นั่งตามประเภท — ลูกทัวร์ใช้สีตามเพศ (ฟ้า/ชมพู), Staff เขียว, VIP เหลือง
 function seatTypeBgClass(type, gender) {
-  if (type === 'vip') return 'bg-amber-500 text-white'
-  if (type === 'staff') return 'bg-emerald-500 text-white'
+  if (type === 'vip') return 'bg-warning text-on-warning'
+  if (type === 'staff') return 'bg-emerald-700 text-white'
   return genderBgClass(gender)
 }
 
@@ -598,7 +598,7 @@ export default function SeatMap() {
                     className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
                       activeBusId === bus.id
                         ? 'bg-brand text-white shadow-brand'
-                        : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                        : 'bg-surface text-ink-muted ring-1 ring-line-subtle'
                     }`}
                   >
                     {bus.name}
@@ -629,7 +629,7 @@ export default function SeatMap() {
                       return (
                         <div
                           key={bus.id}
-                          className="relative rounded-card border border-white/60 bg-surface p-2.5 shadow-card ring-1 ring-black/[0.02]"
+                          className="relative rounded-card border border-line bg-surface p-2.5 shadow-card ring-1 ring-line-subtle"
                         >
                           <div className="mb-2 flex items-center justify-between gap-1">
                             <span className="flex min-w-0 items-center gap-1 font-bold text-ink">
@@ -680,7 +680,7 @@ export default function SeatMap() {
                                 className="fixed inset-0 z-10"
                                 onClick={() => setBusMenuId(null)}
                               />
-                              <div className="absolute right-2 top-9 z-20 min-w-[132px] rounded-xl border border-black/10 bg-surface p-1 shadow-card">
+                              <div className="absolute right-2 top-9 z-20 min-w-[132px] rounded-xl border border-line bg-surface p-1 shadow-card">
                                 <button
                                   onClick={() => {
                                     setMode('seats')
@@ -732,7 +732,7 @@ export default function SeatMap() {
                       placeholder={t('staff.checkIn.searchPlaceholder')}
                       value={poolSearch}
                       onChange={(e) => setPoolSearch(e.target.value)}
-                      className="mb-2.5 w-full rounded-control border border-black/10 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                      className="mb-2.5 w-full rounded-control border border-line px-3 py-2 text-sm focus:border-brand focus:outline-none"
                     />
                   )}
                   {!guests.some((g) => !g.bus_id) ? (
@@ -797,8 +797,8 @@ export default function SeatMap() {
                     value={newBus.license_plate}
                     onChange={(e) => setNewBus((prev) => ({ ...prev, license_plate: e.target.value }))}
                   />
-                  <div className="rounded-xl bg-gray-50 p-2.5">
-                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <div className="rounded-xl bg-surface-muted p-2.5">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                       {t('staff.seatMap.driverSection')}
                     </p>
                     <div className="flex flex-col gap-2">
@@ -815,7 +815,7 @@ export default function SeatMap() {
                       />
                     </div>
                   </div>
-                  {createBusError && <p className="text-sm text-red-500">{createBusError}</p>}
+                  {createBusError && <p className="text-sm text-danger">{createBusError}</p>}
                   <div className="flex gap-2">
                     <Button type="submit" disabled={creatingBus || !newBus.name.trim()}>
                       {creatingBus ? t('guest.register.submitting') : t('common.save')}
@@ -923,14 +923,14 @@ export default function SeatMap() {
                       className="flex-1"
                     />
                   </div>
-                  <p className="-mt-1 text-xs text-gray-400">{t('staff.seatMap.resizeHint')}</p>
+                  <p className="-mt-1 text-xs text-ink-faint">{t('staff.seatMap.resizeHint')}</p>
                   <TextField
                     label={t('staff.seatMap.licensePlate')}
                     value={busDraft.license_plate}
                     onChange={(e) => setBusDraft((prev) => ({ ...prev, license_plate: e.target.value }))}
                   />
-                  <div className="rounded-xl bg-gray-50 p-2.5">
-                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <div className="rounded-xl bg-surface-muted p-2.5">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                       {t('staff.seatMap.driverSection')}
                     </p>
                     <div className="flex flex-col gap-2">
@@ -947,7 +947,7 @@ export default function SeatMap() {
                       />
                     </div>
                   </div>
-                  {editBusError && <p className="text-sm text-red-500">{editBusError}</p>}
+                  {editBusError && <p className="text-sm text-danger">{editBusError}</p>}
                   <div className="flex gap-2">
                     <Button
                       onClick={() => saveBusEdit(activeBus.id)}
@@ -968,21 +968,21 @@ export default function SeatMap() {
             )}
 
             {mode === 'seats' && activeBus && (
-              <div className="mt-3 rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+              <div className="mt-3 rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
                 {/* คำอธิบายสี */}
                 <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
                   <span className="flex items-center gap-1">
                     <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('staff.seatMap.empty')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-blue-500" />/
-                    <span className="h-3 w-3 rounded bg-pink-500" /> {t('staff.seatMap.type_guest')}
+                    <span className="h-3 w-3 rounded bg-blue-600" />/
+                    <span className="h-3 w-3 rounded bg-pink-600" /> {t('staff.seatMap.type_guest')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-emerald-500" /> {t('staff.seatMap.type_staff')}
+                    <span className="h-3 w-3 rounded bg-emerald-700" /> {t('staff.seatMap.type_staff')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-amber-500" /> {t('staff.seatMap.type_vip')}
+                    <span className="h-3 w-3 rounded bg-warning" /> {t('staff.seatMap.type_vip')}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="h-3 w-3 rounded bg-ink-faint/50" /> {t('staff.seatMap.blocked')}
@@ -990,15 +990,15 @@ export default function SeatMap() {
                 </div>
 
                 {/* ตัวรถ */}
-                <div className="overflow-hidden rounded-2xl border-[1.5px] border-black/10">
+                <div className="overflow-hidden rounded-2xl border-[1.5px] border-line">
                   {/* หัวรถ */}
-                  <div className="flex items-center justify-between border-b border-dashed border-black/10 bg-surface-muted px-3 py-2">
+                  <div className="flex items-center justify-between border-b border-dashed border-line bg-surface-muted px-3 py-2">
                     <span className="flex items-center gap-1 text-[11px] text-ink-faint">
                       <Icon name="door" size={14} /> {t('staff.seatMap.doorLabel')}
                     </span>
                     <span className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
                       {t('staff.seatMap.frontDriver')}
-                      <Icon name="steering-wheel" size={16} color="#0e7490" />
+                      <Icon name="steering-wheel" size={16} className="text-brand-hover" />
                     </span>
                   </div>
 
@@ -1043,7 +1043,7 @@ export default function SeatMap() {
                   </div>
 
                   {/* ท้ายรถ */}
-                  <div className="border-t border-dashed border-black/10 py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
+                  <div className="border-t border-dashed border-line py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
                     {t('staff.seatMap.rearLabel')}
                   </div>
                 </div>
@@ -1140,7 +1140,7 @@ export default function SeatMap() {
             <button
               onClick={disableSeat}
               disabled={assigning}
-              className="mt-4 w-full rounded-control border border-dashed border-black/15 py-2 text-sm font-medium text-ink-muted hover:border-danger/40 hover:text-danger"
+              className="mt-4 w-full rounded-control border border-dashed border-line py-2 text-sm font-medium text-ink-muted hover:border-danger/40 hover:text-danger"
             >
               {t('staff.seatMap.disableSeat')}
             </button>
@@ -1183,7 +1183,7 @@ export default function SeatMap() {
                       className={`flex items-center justify-between gap-2 rounded-control border px-3 py-2.5 text-left text-sm font-semibold ${
                         current
                           ? 'border-brand bg-brand-lighter text-brand-hover'
-                          : 'border-black/10 hover:bg-surface-muted'
+                          : 'border-line hover:bg-surface-muted'
                       }`}
                     >
                       <span className="flex items-center gap-2">

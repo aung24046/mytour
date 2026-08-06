@@ -197,7 +197,7 @@ export default function GuestHome({ guest, isNew = false }) {
         className={`inline-flex items-center gap-1 text-left ${className}`}
       >
         <span className="underline decoration-brand/40 underline-offset-2">{item.title}</span>
-        <Icon name="book" size={14} color="#0e7490" />
+        <Icon name="book" size={14} className="text-brand-hover" />
       </button>
     )
   }
@@ -244,7 +244,7 @@ export default function GuestHome({ guest, isNew = false }) {
 
       {/* การ์ดกำหนดการวันนี้ — ไทม์ไลน์ ไฮไลท์รายการปัจจุบัน */}
       {scheduleItems.length > 0 && (
-        <div className="mt-4 rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+        <div className="mt-4 rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">{t('guest.home.todaySchedule')}</span>
             <button
@@ -261,7 +261,7 @@ export default function GuestHome({ guest, isNew = false }) {
               <div key={item.id} className="flex gap-2.5">
                 <span
                   className={`w-11 shrink-0 text-right text-sm ${
-                    isCurrent ? 'pt-[9px] font-semibold text-success' : 'pt-0.5 text-ink-muted'
+                    isCurrent ? 'pt-[9px] font-semibold text-accent-text' : 'pt-0.5 text-ink-muted'
                   }`}
                 >
                   {formatTime(item.scheduled_time)}
@@ -276,15 +276,15 @@ export default function GuestHome({ guest, isNew = false }) {
                   <span
                     className={`relative z-10 rounded-full ${
                       isCurrent
-                        ? 'mt-[11px] h-[15px] w-[15px] bg-success ring-4 ring-success-bg'
-                        : 'mt-1 h-[11px] w-[11px] border-2 border-ink-faint bg-white'
+                        ? 'mt-[11px] h-[15px] w-[15px] bg-accent ring-4 ring-accent-bg'
+                        : 'mt-1 h-[11px] w-[11px] border-2 border-ink-faint bg-surface'
                     }`}
                   />
                 </div>
 
                 <div className={`min-w-0 flex-1 ${isCurrent ? 'pb-4' : 'pb-3.5'}`}>
                   {isCurrent ? (
-                    <div className="rounded-control border border-l-[3px] border-success/30 border-l-success bg-success-bg/50 p-3">
+                    <div className="rounded-control border border-l-[3px] border-accent/30 border-l-accent bg-accent-bg p-3">
                       {renderTitle(item, 'text-[17px] font-semibold text-ink')}
                       {item.location_name && (
                         <p className="mt-0.5 text-xs text-ink-muted">{item.location_name}</p>
@@ -352,7 +352,7 @@ export default function GuestHome({ guest, isNew = false }) {
 
       {/* เมนูลัด (QR ย้ายไปปุ่มกลางแถบล่างแล้ว) */}
       <div className="mt-4 grid grid-cols-4 gap-2">
-        <NavTile icon="book" label={t('guest.nav.tripGuide')} onClick={() => navigate(tp('trip-guide'))} />
+        <NavTile icon="seat" label={t('guest.nav.mySeat')} onClick={() => navigate(tp('my-seat'))} />
         <NavTile icon="target" label={t('guest.nav.bingo')} onClick={() => navigate(tp('bingo'))} />
         <NavTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate(tp('share-location'))} />
         <NavTile icon="alert" label={t('guest.nav.sos')} onClick={() => navigate(tp('sos'))} danger />

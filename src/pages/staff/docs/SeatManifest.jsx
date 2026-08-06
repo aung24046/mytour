@@ -168,7 +168,7 @@ function SeatBox({ seat, guest, gapAfter }) {
     ? 'bg-gray-100 text-gray-500'
     : guest.gender === 'female' || guest.gender === 'หญิง'
       ? 'bg-pink-50 text-pink-900'
-      : 'bg-sky-50 text-sky-900'
+      : 'bg-blue-50 text-blue-900'
 
   return (
     <>

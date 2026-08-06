@@ -7,9 +7,9 @@ export function genderTextClass(gender) {
 }
 
 // เวอร์ชัน background สีทึบ ใช้กับจุดที่โชว์ชื่อเป็นกล่อง/ป้ายสีพื้น เช่น ผังที่นั่งบนรถบัส
-export function genderBgClass(gender, fallback = 'bg-sky-500 text-white') {
-  if (gender === 'ชาย') return 'bg-blue-500 text-white'
-  if (gender === 'หญิง') return 'bg-pink-500 text-white'
+export function genderBgClass(gender, fallback = 'bg-brand text-white') {
+  if (gender === 'ชาย') return 'bg-blue-600 text-white'
+  if (gender === 'หญิง') return 'bg-pink-600 text-white'
   return fallback
 }
 
@@ -17,5 +17,5 @@ export function genderBgClass(gender, fallback = 'bg-sky-500 text-white') {
 export function genderBorderClass(gender) {
   if (gender === 'ชาย') return 'bg-blue-50 text-blue-700 border-blue-200'
   if (gender === 'หญิง') return 'bg-pink-50 text-pink-700 border-pink-200'
-  return 'bg-surface-sunken text-ink-muted border-black/10'
+  return 'bg-surface-sunken text-ink-muted border-line'
 }

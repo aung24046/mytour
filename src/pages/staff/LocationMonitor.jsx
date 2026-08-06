@@ -157,17 +157,17 @@ export default function LocationMonitor() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">
+        <h1 className="mb-1 text-xl font-bold text-ink">
           {t('staff.locationMonitor.title')}
         </h1>
 
-        {loadingSession && <p className="mt-2 text-gray-500">{t('common.loading')}</p>}
+        {loadingSession && <p className="mt-2 text-ink-muted">{t('common.loading')}</p>}
 
         {!loadingSession && !session && (
           <Card className="mt-3">
-            <p className="mb-3 text-sm text-gray-600">{t('staff.locationMonitor.noSession')}</p>
+            <p className="mb-3 text-sm text-ink-muted">{t('staff.locationMonitor.noSession')}</p>
             <TextField
               label={t('staff.locationMonitor.sessionLabel')}
               placeholder={t('staff.locationMonitor.sessionLabelPlaceholder')}
@@ -184,10 +184,10 @@ export default function LocationMonitor() {
           <Card className="mt-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-green-700">
+                <p className="text-sm font-semibold text-success-text">
                   {t('staff.locationMonitor.sessionActive')}
                 </p>
-                {session.label && <p className="text-sm text-gray-600">{session.label}</p>}
+                {session.label && <p className="text-sm text-ink-muted">{session.label}</p>}
               </div>
               <Button variant="danger" fullWidth={false} className="px-3 py-2 text-sm" onClick={stopSession}>
                 {t('staff.locationMonitor.stopSession')}
@@ -196,14 +196,14 @@ export default function LocationMonitor() {
           </Card>
         )}
 
-        <h2 className="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-ink-muted">
           {t('staff.locationMonitor.guestPositions')}
         </h2>
 
-        {loadingLocations && <p className="text-gray-500">{t('common.loading')}</p>}
+        {loadingLocations && <p className="text-ink-muted">{t('common.loading')}</p>}
 
         {!loadingLocations && sortedLocations.length === 0 && (
-          <p className="text-sm text-gray-400">{t('staff.locationMonitor.noLocations')}</p>
+          <p className="text-sm text-ink-faint">{t('staff.locationMonitor.noLocations')}</p>
         )}
 
         <div className="flex flex-col gap-2">
@@ -213,16 +213,16 @@ export default function LocationMonitor() {
             return (
               <Card key={loc.id} className="flex items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
-                  <p className={`truncate font-medium ${genderTextClass(guest?.gender) || 'text-gray-900'}`}>
+                  <p className={`truncate font-medium ${genderTextClass(guest?.gender) || 'text-ink'}`}>
                     {guest ? guest.nickname || guest.name : t('staff.locationMonitor.unknownGuest')}
                   </p>
-                  <p className="text-xs text-gray-500">{timeAgoLabel(t, loc.recorded_at)}</p>
+                  <p className="text-xs text-ink-muted">{timeAgoLabel(t, loc.recorded_at)}</p>
                 </div>
                 <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white"
+                  className="shrink-0 rounded-xl bg-brand px-3 py-2 text-sm font-semibold text-white"
                 >
                   {t('staff.locationMonitor.viewOnMap')}
                 </a>

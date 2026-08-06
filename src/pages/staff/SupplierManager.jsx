@@ -206,14 +206,14 @@ export default function SupplierManager() {
   const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: t(`staff.supplierManager.category.${c}`) }))
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">{t('staff.supplierManager.title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">{t('staff.supplierManager.subtitle')}</p>
+        <h1 className="text-xl font-bold text-ink">{t('staff.supplierManager.title')}</h1>
+        <p className="mt-1 text-sm text-ink-muted">{t('staff.supplierManager.subtitle')}</p>
 
         <button
           onClick={openNew}
-          className="mt-3 w-full rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 hover:border-sky-400 hover:text-sky-600"
+          className="mt-3 w-full rounded-xl border border-dashed border-line-strong px-4 py-2.5 text-sm font-medium text-ink-muted hover:border-brand hover:text-brand"
         >
           + {t('staff.supplierManager.addSupplier')}
         </button>
@@ -223,14 +223,14 @@ export default function SupplierManager() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('staff.supplierManager.searchPlaceholder')}
-          className="mt-3 w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+          className="mt-3 w-full rounded-xl border border-line-strong px-3.5 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
         />
 
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             onClick={() => setFilterCategory('all')}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              filterCategory === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+              filterCategory === 'all' ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
             }`}
           >
             {t('staff.supplierManager.filterAll')}
@@ -240,7 +240,7 @@ export default function SupplierManager() {
               key={c.value}
               onClick={() => setFilterCategory(c.value)}
               className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                filterCategory === c.value ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                filterCategory === c.value ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
               }`}
             >
               {c.label}
@@ -248,14 +248,14 @@ export default function SupplierManager() {
           ))}
         </div>
 
-        {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="mt-4 text-danger">{error}</p>}
 
         {!loading && !error && suppliers.length === 0 && (
-          <p className="mt-4 text-sm text-gray-400">{t('staff.supplierManager.noSuppliers')}</p>
+          <p className="mt-4 text-sm text-ink-faint">{t('staff.supplierManager.noSuppliers')}</p>
         )}
         {!loading && !error && suppliers.length > 0 && filteredSuppliers.length === 0 && (
-          <p className="mt-4 text-sm text-gray-400">{t('staff.supplierManager.noResults')}</p>
+          <p className="mt-4 text-sm text-ink-faint">{t('staff.supplierManager.noResults')}</p>
         )}
 
         <div className="mt-3 flex flex-col gap-2">
@@ -266,18 +266,18 @@ export default function SupplierManager() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900">{s.name}</p>
-                      <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
+                      <p className="font-semibold text-ink">{s.name}</p>
+                      <span className="shrink-0 rounded-full bg-brand-lighter px-2 py-0.5 text-[11px] font-semibold text-brand">
                         {t(`staff.supplierManager.category.${s.category}`)}
                       </span>
                     </div>
-                    {s.contact_person && <p className="mt-0.5 text-sm text-gray-500">{s.contact_person}</p>}
-                    {s.address && <p className="mt-0.5 text-xs text-gray-400">{s.address}</p>}
+                    {s.contact_person && <p className="mt-0.5 text-sm text-ink-muted">{s.contact_person}</p>}
+                    {s.address && <p className="mt-0.5 text-xs text-ink-faint">{s.address}</p>}
                   </div>
                   <button
                     onClick={() => setTripLink(s.id, !linked)}
                     className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      linked ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      linked ? 'bg-success-bg text-success-text' : 'bg-surface-sunken text-ink-muted'
                     }`}
                   >
                     {linked ? t('staff.supplierManager.usedInTrip') : t('staff.supplierManager.notUsedInTrip')}
@@ -286,7 +286,7 @@ export default function SupplierManager() {
 
                 <div className="mt-2 flex items-center gap-3">
                   {s.phone && (
-                    <a href={`tel:${s.phone}`} className="text-sm font-medium text-sky-600">
+                    <a href={`tel:${s.phone}`} className="text-sm font-medium text-brand">
                       📞 {s.phone}
                     </a>
                   )}
@@ -295,22 +295,22 @@ export default function SupplierManager() {
                       href={`https://line.me/ti/p/~${s.line_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium text-green-600"
+                      className="text-sm font-medium text-success-text"
                     >
                       💬 {s.line_id}
                     </a>
                   )}
                 </div>
 
-                {s.notes && <p className="mt-2 text-sm text-gray-600">{s.notes}</p>}
+                {s.notes && <p className="mt-2 text-sm text-ink-muted">{s.notes}</p>}
 
-                <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+                <div className="mt-2 flex items-center justify-between border-t border-line-subtle pt-2">
                   <StarRating value={s.rating ?? ''} onChange={(v) => updateRating(s, Number(v))} size={18} />
                   <div className="flex gap-3">
-                    <button onClick={() => openEdit(s)} className="text-sm font-medium text-sky-600">
+                    <button onClick={() => openEdit(s)} className="text-sm font-medium text-brand">
                       {t('staff.supplierManager.editSupplier')}
                     </button>
-                    <button onClick={() => deleteSupplier(s)} className="text-sm font-medium text-red-500">
+                    <button onClick={() => deleteSupplier(s)} className="text-sm font-medium text-danger">
                       {t('staff.supplierManager.deleteSupplier')}
                     </button>
                   </div>
@@ -373,12 +373,12 @@ export default function SupplierManager() {
               type="checkbox"
               checked={draft.linkToTrip}
               onChange={(e) => setDraft((prev) => ({ ...prev, linkToTrip: e.target.checked }))}
-              className="h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand-light"
+              className="h-5 w-5 rounded border-line-strong text-brand focus:ring-brand-light"
             />
             <span className="text-sm font-medium text-neutral-text">{t('staff.supplierManager.linkToTrip')}</span>
           </label>
 
-          {formError && <p className="text-sm text-red-500">{formError}</p>}
+          {formError && <p className="text-sm text-danger">{formError}</p>}
 
           <Button onClick={saveSupplier} disabled={saving || !draft.name.trim()}>
             {saving ? t('common.loading') : t('common.save')}

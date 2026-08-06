@@ -294,7 +294,7 @@ export default function TripGuide() {
           <GuestNav active="tripGuide" />
 
           {usingCache && (
-            <p className="mb-3 rounded-xl bg-amber-100 px-3 py-2 text-sm text-amber-800">
+            <p className="mb-3 rounded-xl bg-warning-bg px-3 py-2 text-sm text-warning-text">
               {t('guest.tripGuide.offlineNotice')}
             </p>
           )}
@@ -335,7 +335,7 @@ export default function TripGuide() {
                   value={articleSearch}
                   onChange={(e) => setArticleSearch(e.target.value)}
                   placeholder={t('guest.tripGuide.searchArticles')}
-                  className="w-full rounded-control border border-transparent bg-surface-sunken py-3 pl-10 pr-3.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                  className="w-full rounded-control border border-transparent bg-surface-sunken py-3 pl-10 pr-3.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                 />
               </div>
 
@@ -464,7 +464,7 @@ export default function TripGuide() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t('guest.tripGuide.searchPlaceholder')}
-                  className="w-full rounded-control border border-transparent bg-surface-sunken py-3 pl-10 pr-3.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                  className="w-full rounded-control border border-transparent bg-surface-sunken py-3 pl-10 pr-3.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                 />
               </div>
 
@@ -495,7 +495,7 @@ export default function TripGuide() {
                         key={lg}
                         onClick={() => setTargetLang(lg)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          activeLang === lg ? 'bg-accent text-white' : 'bg-surface-sunken text-neutral-text'
+                          activeLang === lg ? 'bg-accent text-on-accent' : 'bg-surface-sunken text-neutral-text'
                         }`}
                       >
                         {t(`guest.tripGuide.lang.${lg}`)}
@@ -690,7 +690,7 @@ function ListCard({ article, col, badge, onOpen, t }) {
   return (
     <button
       onClick={onOpen}
-      className="flex items-stretch gap-3 overflow-hidden rounded-r-card border border-surface-sunken bg-white p-2.5 text-left"
+      className="flex items-stretch gap-3 overflow-hidden rounded-r-card border border-surface-sunken bg-surface p-2.5 text-left"
       style={{ borderLeft: `3px solid ${pass ? '#B4B2A9' : col.border}`, opacity: pass ? 0.9 : 1 }}
     >
       {article.image_url ? (
@@ -746,7 +746,7 @@ function PhraseCard({ phrase, translation, pronunciation, tagText, lang }) {
   // อังกฤษ (และภาษาที่คำแปลยาวแบบละติน) — วางเป็นแนวตั้ง อ่านง่ายเต็มความกว้าง
   if (lang === 'en') {
     return (
-      <div className="rounded-card border border-surface-sunken bg-white p-3">
+      <div className="rounded-card border border-surface-sunken bg-surface p-3">
         <p className="text-sm text-ink-muted">{phrase.phrase}</p>
         <p className="mt-0.5 text-lg font-semibold leading-snug text-brand">{translation}</p>
         {tagEl}
@@ -756,7 +756,7 @@ function PhraseCard({ phrase, translation, pronunciation, tagText, lang }) {
 
   // จีน (และค่าเริ่มต้น) — อักษรตัวใหญ่ + คำอ่านชิดขวา อ่านง่ายสำหรับตัวอักษร CJK
   return (
-    <div className="flex items-start justify-between gap-3 rounded-card border border-surface-sunken bg-white p-3">
+    <div className="flex items-start justify-between gap-3 rounded-card border border-surface-sunken bg-surface p-3">
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-ink">{phrase.phrase}</p>
         {tagEl}

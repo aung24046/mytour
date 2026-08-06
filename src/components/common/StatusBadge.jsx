@@ -5,7 +5,7 @@ const TONE_CLASSES = {
   success: 'bg-success-bg text-success-text ring-success/20',
   warning: 'bg-warning-bg text-warning-text ring-warning/20',
   danger: 'bg-danger-bg text-danger-text ring-danger/20',
-  neutral: 'bg-neutral-bg text-neutral-text ring-black/5',
+  neutral: 'bg-neutral-bg text-neutral-text ring-line-subtle',
   brand: 'bg-brand-light text-brand-hover ring-brand/20',
 }
 

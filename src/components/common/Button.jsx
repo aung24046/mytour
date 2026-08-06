@@ -19,11 +19,11 @@ export default function Button({
     primary:
       'bg-brand-gradient text-white shadow-brand hover:brightness-105 hover:shadow-lg',
     secondary:
-      'bg-white text-brand ring-1 ring-inset ring-brand-light hover:bg-brand-lighter',
+      'bg-surface text-brand ring-1 ring-inset ring-brand-light hover:bg-brand-lighter',
     accent:
-      'bg-accent text-white shadow-accent hover:bg-accent-hover',
+      'bg-accent text-on-accent shadow-accent hover:bg-accent-hover',
     danger:
-      'bg-danger text-white shadow-sm hover:bg-red-700',
+      'bg-danger text-white shadow-sm hover:bg-danger-text',
     ghost:
       'bg-transparent text-ink-muted hover:bg-neutral-bg',
   }

@@ -53,18 +53,23 @@ import RequireRole from './components/common/RequireRole.jsx'
 import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
 import HomeButton from './components/common/HomeButton.jsx'
 import { TourProvider, useTour, TOUR_STATUS } from './lib/TourContext.jsx'
-import { getActiveTourId } from './lib/staffSession.js'
+import { getActiveTourId, useActiveOrgId } from './lib/staffSession.js'
+import { useOrgTheme } from './lib/useOrgTheme.js'
+import { ColorModeContext, useColorMode } from './lib/colorMode.js'
 
 // ---------------------------------------------------------------------
 // Layout ฝั่งลูกทัวร์ — resolve /t/:code เป็น tour_id ให้ทุกหน้าลูกใต้มัน
 // ---------------------------------------------------------------------
 function TourGate() {
-  const { status, tour } = useTour()
+  const { status, tour, orgId } = useTour()
+
+  // ธีมของบริษัทเจ้าของทริป — orgId ยังเป็น null ระหว่างโหลด hook จัดการเอง
+  useOrgTheme(orgId)
 
   if (status === TOUR_STATUS.LOADING) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-strong border-t-neutral-text" />
       </div>
     )
   }
@@ -72,13 +77,13 @@ function TourGate() {
   if (status === TOUR_STATUS.NOT_FOUND) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-slate-800">ไม่พบทริปนี้</p>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="text-lg font-semibold text-ink">ไม่พบทริปนี้</p>
+        <p className="mt-2 text-sm text-ink-muted">
           รหัสทริปอาจพิมพ์ผิด หรือทริปถูกลบไปแล้ว — ตรวจสอบกับทีมงานอีกครั้ง
         </p>
         <a
           href="/join"
-          className="mt-6 inline-block rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-medium text-white"
+          className="mt-6 inline-block rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-white"
         >
           กรอกรหัสทริปใหม่
         </a>
@@ -89,8 +94,8 @@ function TourGate() {
   if (status === TOUR_STATUS.ERROR) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-lg font-semibold text-slate-800">เชื่อมต่อไม่ได้</p>
-        <p className="mt-2 text-sm text-slate-500">ตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่</p>
+        <p className="text-lg font-semibold text-ink">เชื่อมต่อไม่ได้</p>
+        <p className="mt-2 text-sm text-ink-muted">ตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่</p>
       </div>
     )
   }
@@ -98,7 +103,7 @@ function TourGate() {
   return (
     <>
       {tour?.status === 'archived' && (
-        <div className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-800">
+        <div className="bg-warning-bg px-4 py-2 text-center text-sm text-warning-text">
           ทริปนี้จบแล้ว — ดูข้อมูลย้อนหลังได้ แต่แก้ไขไม่ได้
         </div>
       )}
@@ -119,6 +124,9 @@ function GuestTourLayout() {
 // Layout ฝั่งทีมงาน — tour_id มาจาก staffSession ไม่ใช่ URL
 // ---------------------------------------------------------------------
 function StaffTourLayout({ children }) {
+  // ฝั่ง staff รู้ org จาก session ตั้งแต่ตอน login — ไม่ต้องรอ resolve ทริป
+  // ตั้งใจให้ staff เห็นสีเดียวกับลูกทัวร์ จะได้คุยกันรู้เรื่องเวลามีปัญหาหน้างาน
+  useOrgTheme(useActiveOrgId())
   return <TourProvider tourId={getActiveTourId()}>{children}</TourProvider>
 }
 
@@ -132,8 +140,11 @@ function staffRoute(capability, element) {
 }
 
 function App() {
+  // โหมดสว่าง/มืดต้องอยู่ระดับบนสุด เพราะทั้งธีมบริษัทและ UI ต้องเห็นค่าเดียวกัน
+  const colorMode = useColorMode()
+
   return (
-    <>
+    <ColorModeContext.Provider value={colorMode}>
       <Routes>
         {/* ── หน้าแรก / เลือกทริป ───────────────────────────────── */}
         <Route path="/" element={<TourEntry />} />
@@ -232,7 +243,7 @@ function App() {
         />
       </Routes>
       <HomeButton />
-    </>
+    </ColorModeContext.Provider>
   )
 }
 

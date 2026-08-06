@@ -379,10 +379,10 @@ export default function Register() {
 
   if (checkingExisting) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-surface-muted">
         <AnnouncementBanner />
         <div className="p-4">
-          <p className="text-gray-500">{t('common.loading')}</p>
+          <p className="text-ink-muted">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -406,8 +406,8 @@ export default function Register() {
             </p>
           </div>
 
-          {loadingFields && <p className="text-gray-500">{t('common.loading')}</p>}
-          {loadError && <p className="text-red-500">{loadError}</p>}
+          {loadingFields && <p className="text-ink-muted">{t('common.loading')}</p>}
+          {loadError && <p className="text-danger">{loadError}</p>}
 
           {!loadingFields && !loadError && (
             <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
@@ -436,7 +436,7 @@ export default function Register() {
                 )
               })}
 
-              {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+              {submitError && <p className="text-sm text-danger">{submitError}</p>}
 
               <Button type="submit" disabled={submitting}>
                 {submitting ? t('guest.register.submitting') : t('guest.register.submit')}
@@ -485,31 +485,31 @@ export default function Register() {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder={t('guest.register.phonePlaceholder')}
-                className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3.5 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
               />
               <Button type="submit" disabled={phoneSearching} fullWidth={false} className="shrink-0 px-4">
                 {t('common.search')}
               </Button>
             </form>
 
-            {phoneSearching && <p className="mt-3 text-sm text-gray-500">{t('common.loading')}</p>}
-            {phoneSearchError && <p className="mt-3 text-sm text-red-500">{phoneSearchError}</p>}
+            {phoneSearching && <p className="mt-3 text-sm text-ink-muted">{t('common.loading')}</p>}
+            {phoneSearchError && <p className="mt-3 text-sm text-danger">{phoneSearchError}</p>}
 
             {phoneMatches && phoneMatches.length === 0 && (
-              <p className="mt-3 text-sm text-gray-500">{t('guest.register.recoveryNoMatch')}</p>
+              <p className="mt-3 text-sm text-ink-muted">{t('guest.register.recoveryNoMatch')}</p>
             )}
 
             {phoneMatches && phoneMatches.length > 0 && (
               <div className="mt-3 flex flex-col gap-2">
-                <p className="text-sm text-gray-500">{t('guest.register.recoverySelectYou')}</p>
+                <p className="text-sm text-ink-muted">{t('guest.register.recoverySelectYou')}</p>
                 {phoneMatches.map((g) => (
                   <button
                     key={g.id}
                     onClick={() => restoreGuestSession(g)}
-                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-left text-sm font-medium text-gray-900 hover:bg-gray-50"
+                    className="rounded-xl border border-line px-3 py-2.5 text-left text-sm font-medium text-ink hover:bg-surface-muted"
                   >
                     {g.nickname || g.name}
-                    {g.nickname && <span className="ml-1 text-gray-400">({g.name})</span>}
+                    {g.nickname && <span className="ml-1 text-ink-faint">({g.name})</span>}
                   </button>
                 ))}
               </div>
@@ -520,11 +520,11 @@ export default function Register() {
         {recoveryTab === 'qr' && (
           <div>
             <QrScanner onScan={handleRestoreScan} onError={handleRestoreScanError} />
-            <p className="mt-3 text-center text-sm text-gray-500">
+            <p className="mt-3 text-center text-sm text-ink-muted">
               {t('guest.register.recoveryQrHint')}
             </p>
             {qrScanError && (
-              <p className="mt-2 text-center text-sm text-red-500">{qrScanError}</p>
+              <p className="mt-2 text-center text-sm text-danger">{qrScanError}</p>
             )}
           </div>
         )}

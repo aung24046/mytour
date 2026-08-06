@@ -7,6 +7,9 @@ import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
+import ThemeSettings from '../../components/common/ThemeSettings'
+import { applyThemeTokens, resolveTheme, cacheTheme, DEFAULT_PRESET } from '../../lib/themes'
+import { useMode } from '../../lib/colorMode'
 import {
   FEEDBACK_TEXT_DEFAULTS,
   FEEDBACK_TEXT_KEYS,
@@ -32,6 +35,8 @@ const EMPTY_FORM = {
   email: '',
   website: '',
   doc_footer_note: '',
+  theme_preset: DEFAULT_PRESET,
+  theme_brand_color: null,
   // ข้อความบนแบบประเมินกระดาษ — ปล่อยว่างได้ ระบบจะใช้ค่าตั้งต้นตอนพิมพ์
   ...Object.fromEntries(FEEDBACK_TEXT_KEYS.map((k) => [k, ''])),
   feedback_show_consent: true,
@@ -39,6 +44,7 @@ const EMPTY_FORM = {
 
 export default function CompanyProfile() {
   const orgId = useActiveOrgId()
+  const mode = useMode()
   const navigate = useNavigate()
   const fileRef = useRef(null)
 
@@ -87,6 +93,8 @@ export default function CompanyProfile() {
         email: data?.email ?? '',
         website: data?.website ?? '',
         doc_footer_note: data?.doc_footer_note ?? '',
+        theme_preset: data?.theme_preset ?? DEFAULT_PRESET,
+        theme_brand_color: data?.theme_brand_color ?? null,
         ...Object.fromEntries(FEEDBACK_TEXT_KEYS.map((k) => [k, data?.[k] ?? ''])),
         feedback_show_consent: data?.feedback_show_consent !== false,
       })
@@ -149,6 +157,7 @@ export default function CompanyProfile() {
         id: orgId,
         ...form,
         name: form.name.trim(),
+        theme_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
@@ -158,9 +167,28 @@ export default function CompanyProfile() {
 
     if (saveError) {
       console.error('[CompanyProfile] save failed', saveError)
-      setError('บันทึกไม่สำเร็จ')
+      // ยังไม่ได้รัน migration → คอลัมน์ไม่มี ซึ่งโผล่มาได้สองรูปแบบ:
+      //   PGRST204 — PostgREST ตอบจาก schema cache ของตัวเอง (เจอบ่อยสุด)
+      //   42703    — Postgres ตอบตรงๆ ตอน cache ตรงกับ DB แล้วแต่คอลัมน์ยังไม่มี
+      // เดิมดักแค่ 42703 ผู้ใช้เลยเห็นข้อความดิบภาษาอังกฤษแล้วไล่หาสาเหตุผิดทาง
+      const msg = saveError.message ?? ''
+      const missingCol =
+        saveError.code === 'PGRST204' ||
+        saveError.code === '42703' ||
+        /column .* does not exist/i.test(msg) ||
+        /could not find the .* column/i.test(msg)
+      setError(
+        missingCol
+          ? 'ยังไม่ได้รัน migration 20260806_org_theme.sql — ตาราง organizations ยังไม่มีคอลัมน์ธีม'
+          : `บันทึกไม่สำเร็จ (${saveError.message ?? 'ไม่ทราบสาเหตุ'})`
+      )
       return
     }
+    // ฉีดธีมใหม่ทั้งหน้าทันทีหลังบันทึกสำเร็จ + อัปเดต cache
+    // ไม่งั้น owner ต้องรีเฟรชถึงจะเห็นผล ซึ่งทำให้คิดว่าบันทึกไม่ติด
+    applyThemeTokens(resolveTheme(form, mode).tokens)
+    cacheTheme(orgId, form)
+
     setSaved(true)
   }
 
@@ -169,12 +197,12 @@ export default function CompanyProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
         <div className="mb-3 flex items-center gap-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-lg text-ink-muted ring-1 ring-black/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-lg text-ink-muted ring-1 ring-line-subtle"
             aria-label="ย้อนกลับ"
           >
             ←
@@ -186,7 +214,7 @@ export default function CompanyProfile() {
         </div>
 
         {error && (
-          <p className="mb-3 rounded-control bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+          <p className="mb-3 rounded-control bg-danger-bg px-3 py-2 text-sm text-danger-text">{error}</p>
         )}
 
         <Card className="mb-3">
@@ -298,6 +326,26 @@ export default function CompanyProfile() {
           <p className="mt-1.5 text-xs text-ink-faint">แสดงท้ายทุกหน้าของเอกสารทุกใบ</p>
         </Card>
 
+        {/* ธีมสีของบริษัท — เห็นผลกับลูกทัวร์ทุกคนในทุกทริปทันทีที่บันทึก
+            เอกสาร A4 ไม่ตามธีม เพราะต้องอ่านออกตอนพิมพ์ขาวดำ */}
+        <Card className="mb-4">
+          <div className="mb-3">
+            <p className="font-semibold text-ink">ธีมสีของแอป</p>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              มีผลกับหน้าที่ลูกทัวร์เห็นและหน้าของทีมงาน · เอกสารที่พิมพ์ไม่เปลี่ยนตาม
+            </p>
+          </div>
+
+          <ThemeSettings
+            value={{ theme_preset: form.theme_preset, theme_brand_color: form.theme_brand_color }}
+            disabled={saving || uploading}
+            onChange={(next) => {
+              setForm((f) => ({ ...f, ...next }))
+              setSaved(false)
+            }}
+          />
+        </Card>
+
         {/* ข้อความบนแบบประเมินฉบับกระดาษ — ตัวคำถามไม่ได้อยู่ตรงนี้ อยู่ที่หน้าจัดการฟอร์ม
             ตรงนี้คือข้อความรอบ ๆ คำถามที่เป็นน้ำเสียงของบริษัท ใช้ร่วมกันทุกทริป */}
         <Card className="mb-4 space-y-3">
@@ -344,7 +392,7 @@ export default function CompanyProfile() {
             )
           )}
 
-          <div className="rounded-control bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <div className="rounded-control bg-warning-bg px-3 py-2 text-xs text-warning-text">
             {form.feedback_show_consent
               ? 'เมื่อเปิดไว้ ข้อความสองข้อนี้เว้นว่างไม่ได้ — ถ้าเว้น ระบบจะพิมพ์ข้อความมาตรฐานแทน เพราะถ้าไม่มี ความเห็นที่เก็บมาจะนำไปเผยแพร่ไม่ได้ตามกฎหมาย'
               : 'ปิดกล่องยินยอมไว้ — ความเห็นที่เก็บจากฟอร์มนี้จะนำไปใช้ประชาสัมพันธ์ไม่ได้ เว้นแต่มีความยินยอมจากช่องทางอื่นแล้ว'}

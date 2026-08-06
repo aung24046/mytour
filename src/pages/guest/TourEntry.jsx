@@ -85,7 +85,7 @@ export default function TourEntry() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-strong border-t-neutral-text" />
       </div>
     )
   }
@@ -96,8 +96,8 @@ export default function TourEntry() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-8">
-      <h1 className="text-xl font-semibold text-slate-800">เลือกทริปของคุณ</h1>
-      <p className="mt-1 text-sm text-slate-500">เครื่องนี้ลงทะเบียนไว้ {sorted.length} ทริป</p>
+      <h1 className="text-xl font-semibold text-ink">เลือกทริปของคุณ</h1>
+      <p className="mt-1 text-sm text-ink-muted">เครื่องนี้ลงทะเบียนไว้ {sorted.length} ทริป</p>
 
       <div className="mt-5 space-y-3">
         {sorted.map(({ tourId, tour }) => (
@@ -110,14 +110,14 @@ export default function TourEntry() {
             <Card className="transition active:scale-[0.99]">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-slate-800">{tour.name}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="truncate font-medium text-ink">{tour.name}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">
                     รหัส {tour.join_code}
                     {tour.start_date ? ` · ${tour.start_date}` : ''}
                   </p>
                 </div>
                 {tour.status === 'archived' && (
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                  <span className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-ink-muted">
                     จบแล้ว
                   </span>
                 )}
@@ -128,7 +128,7 @@ export default function TourEntry() {
       </div>
 
       <form onSubmit={handleJoin} className="mt-8">
-        <p className="mb-2 text-sm font-medium text-slate-700">เข้าทริปใหม่ด้วยรหัส</p>
+        <p className="mb-2 text-sm font-medium text-neutral-text">เข้าทริปใหม่ด้วยรหัส</p>
         <div className="flex gap-2">
           <TextField
             value={codeInput}

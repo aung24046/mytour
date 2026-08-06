@@ -289,7 +289,7 @@ export default function ItineraryBuilder() {
     <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md">
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-          <Icon name="map" size={24} color="#0e7490" />
+          <Icon name="map" size={24} className="text-brand-hover" />
           {t('staff.itineraryBuilder.title')}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">{t('staff.itineraryBuilder.subtitle')}</p>
@@ -308,7 +308,7 @@ export default function ItineraryBuilder() {
                   className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
                     activeDay === day
                       ? 'bg-brand text-white shadow-brand'
-                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                      : 'bg-surface text-ink-muted ring-1 ring-line-subtle'
                   }`}
                 >
                   {t('guest.itinerary.day', { day })}
@@ -365,9 +365,9 @@ export default function ItineraryBuilder() {
                 const header = (
                   <div className="flex items-start gap-2.5 p-3">
                     <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
-                      {isDone && <Icon name="check" size={14} filled color="#5dcaa5" />}
-                      {isCurrent && <span className="h-2 w-2 rounded-full bg-success ring-2 ring-success/25" />}
-                      <span className={`text-[13px] font-semibold ${isCurrent ? 'text-success-text' : 'text-ink-muted'}`}>
+                      {isDone && <Icon name="check" size={14} filled className="text-success" />}
+                      {isCurrent && <span className="h-2 w-2 rounded-full bg-accent ring-2 ring-accent/25" />}
+                      <span className={`text-[13px] font-semibold ${isCurrent ? 'text-accent-text' : 'text-ink-muted'}`}>
                         {toTimeInputValue(item.scheduled_time) || '—'}
                       </span>
                     </span>
@@ -407,10 +407,10 @@ export default function ItineraryBuilder() {
                     key={item.id}
                     className={`overflow-hidden rounded-[12px] border border-l-[3px] shadow-card ${
                       isCurrent
-                        ? 'border-success/40 border-l-success bg-success-bg/40'
+                        ? 'border-accent/40 border-l-accent bg-accent-bg'
                         : isDone
-                          ? `border-black/[0.06] border-l-[#9fe1cb] bg-surface ${expanded ? '' : 'opacity-60'}`
-                          : 'border-black/[0.06] border-l-ink-faint/30 bg-surface'
+                          ? `border-line border-l-success/50 bg-surface ${expanded ? '' : 'opacity-60'}`
+                          : 'border-line border-l-ink-faint/30 bg-surface'
                     }`}
                   >
                     {isCurrent ? (
@@ -453,13 +453,13 @@ export default function ItineraryBuilder() {
                           )}
                         </div>
 
-                        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/[0.05] pt-2.5">
+                        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-line-subtle pt-2.5">
                           <label className="flex items-center gap-1.5 text-xs text-ink-muted">
                             {t('staff.itineraryBuilder.moveToDay')}
                             <select
                               value={item.day_number}
                               onChange={(e) => moveToDay(item, Number(e.target.value))}
-                              className="rounded-control border border-black/10 bg-surface px-2 py-1 text-sm text-ink"
+                              className="rounded-control border border-line bg-surface px-2 py-1 text-sm text-ink"
                             >
                               {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
                                 <option key={d} value={d}>
@@ -472,20 +472,20 @@ export default function ItineraryBuilder() {
                             <button
                               onClick={() => moveWithinDay(activeDay, index, -1)}
                               disabled={index === 0}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-ink-muted disabled:opacity-30"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted disabled:opacity-30"
                             >
                               <svg viewBox="0 0 24 24" className="h-4 w-4 rotate-180" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
                             </button>
                             <button
                               onClick={() => moveWithinDay(activeDay, index, 1)}
                               disabled={index === dayItems.length - 1}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-ink-muted disabled:opacity-30"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted disabled:opacity-30"
                             >
                               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
                             </button>
                             <button
                               onClick={() => startEdit(item)}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-surface text-brand"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-brand"
                               title={t('staff.itineraryBuilder.edit')}
                             >
                               <Icon name="edit" size={16} />
@@ -535,13 +535,13 @@ function ItemForm({ t, draft, setDraft, onSubmit, onCancel, saving, saveError, m
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <div className="flex gap-2">
         <label className="flex-1">
-          <span className="mb-1 block text-sm font-medium text-gray-700">
+          <span className="mb-1 block text-sm font-medium text-neutral-text">
             {t('guest.itinerary.title')}
           </span>
           <select
             value={draft.day_number}
             onChange={(e) => setDraft((prev) => ({ ...prev, day_number: Number(e.target.value) }))}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base"
+            className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-base"
           >
             {Array.from({ length: Math.max(maxDay, draft.day_number) + 1 }, (_, i) => i + 1).map(
               (d) => (
@@ -554,14 +554,14 @@ function ItemForm({ t, draft, setDraft, onSubmit, onCancel, saving, saveError, m
         </label>
 
         <label className="w-32">
-          <span className="mb-1 block text-sm font-medium text-gray-700">
+          <span className="mb-1 block text-sm font-medium text-neutral-text">
             {t('staff.itineraryBuilder.time')}
           </span>
           <input
             type="time"
             value={draft.scheduled_time}
             onChange={(e) => setDraft((prev) => ({ ...prev, scheduled_time: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-base"
+            className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-base"
           />
         </label>
       </div>
@@ -592,7 +592,7 @@ function ItemForm({ t, draft, setDraft, onSubmit, onCancel, saving, saveError, m
         onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
       />
 
-      {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+      {saveError && <p className="text-sm text-danger">{saveError}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={saving || !draft.title.trim()}>

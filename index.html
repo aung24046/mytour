@@ -10,6 +10,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="แอปจัดการทัวร์และดูแลลูกทัวร์หน้างาน" />
     <title>MyTour</title>
+    <!-- ตั้งโหมดสว่าง/มืดก่อน React จะ render
+         ถ้ารอ React ผู้ใช้จะเห็นจอขาวแวบนึงแล้วค่อยมืด ซึ่งแสบตามากตอนกลางคืน
+         ตรรกะต้องตรงกับ resolveMode() ใน src/lib/colorMode.js -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('mytour_color_mode')
+          var dark =
+            saved === 'dark' ||
+            (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) {
+            document.documentElement.setAttribute('data-mode', 'dark')
+            document.documentElement.style.colorScheme = 'dark'
+          }
+        } catch (e) {
+          /* localStorage ถูกบล็อก — ใช้โหมดสว่างไปก่อน */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

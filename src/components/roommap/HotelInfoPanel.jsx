@@ -116,7 +116,7 @@ export default function HotelInfoPanel({
                     key={entry.key}
                     onClick={() => onStartEdit(entry.key)}
                     className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${
-                      i > 0 ? 'border-t border-black/[0.06]' : ''
+                      i > 0 ? 'border-t border-line-subtle' : ''
                     } ${status === 'missing' ? 'bg-danger-bg' : ''}`}
                   >
                     <span className="shrink-0">
@@ -173,7 +173,7 @@ export default function HotelInfoPanel({
             </div>
           )}
           {amenities.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5 border-t border-black/[0.06] pt-2">
+            <div className="mt-2 flex flex-wrap gap-1.5 border-t border-line-subtle pt-2">
               {amenities.map((a) => (
                 <FacilityBadge
                   key={a.key}
@@ -190,7 +190,7 @@ export default function HotelInfoPanel({
       {/* ทีมงานไม่มีทางรู้ว่าข้อมูลออกไปหน้าตายังไงจนกว่าจะเปิดเครื่องลูกค้าดู */}
       <button
         onClick={() => setShowGuestPreview(true)}
-        className="flex items-center gap-2 rounded-card bg-surface px-3 py-2.5 text-left ring-1 ring-black/[0.04]"
+        className="flex items-center gap-2 rounded-card bg-surface px-3 py-2.5 text-left ring-1 ring-line-subtle"
       >
         <span className="text-ink-muted">
           <Icon name="eye" size={16} />

@@ -70,11 +70,11 @@ export default function MyQR() {
         <GuestNav active="myQr" />
 
         <Card className="text-center">
-          {loading && <p className="text-gray-500">{t('common.loading')}</p>}
+          {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
 
           {error === 'no-session' && (
             <div className="flex flex-col items-center gap-3">
-              <p className="text-gray-600">{t('guest.myQr.noSession')}</p>
+              <p className="text-ink-muted">{t('guest.myQr.noSession')}</p>
               <Link to={tp()} className="w-full">
                 <Button>{t('guest.register.title')}</Button>
               </Link>
@@ -82,29 +82,29 @@ export default function MyQR() {
           )}
 
           {error === 'load-error' && (
-            <p className="text-red-500">{t('common.error')}</p>
+            <p className="text-danger">{t('common.error')}</p>
           )}
 
           {!loading && !error && guest && (
             <div className="flex flex-col items-center gap-4">
-              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+              <div className="rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-line-subtle">
                 <QRCodeSVG value={guest.qr_token} size={220} />
               </div>
 
               <div>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-ink">
                   {guest.nickname || guest.name}
                 </p>
                 {guest.nickname && (
-                  <p className="text-sm text-gray-500">{guest.name}</p>
+                  <p className="text-sm text-ink-muted">{guest.name}</p>
                 )}
               </div>
 
               <span
                 className={`rounded-full px-3 py-1 text-sm font-semibold ${
                   guest.check_in_status
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-success text-white'
+                    : 'bg-surface-sunken text-ink-muted'
                 }`}
               >
                 {guest.check_in_status

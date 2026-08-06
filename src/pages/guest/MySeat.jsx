@@ -17,8 +17,8 @@ const CACHE_KEY = 'my_seat'
 
 // สีพื้นของที่นั่งตามประเภท — เหมือนฝั่ง Staff: ลูกทัวร์ใช้สีตามเพศ, Staff เขียว, VIP เหลือง
 function seatTypeBgClass(type, gender) {
-  if (type === 'vip') return 'bg-amber-500 text-white'
-  if (type === 'staff') return 'bg-emerald-500 text-white'
+  if (type === 'vip') return 'bg-amber-700 text-white'
+  if (type === 'staff') return 'bg-emerald-700 text-white'
   return genderBgClass(gender)
 }
 
@@ -183,7 +183,7 @@ export default function MySeat() {
             ) : (
               bus && (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-ink px-3.5 py-1.5 text-sm font-semibold text-white">
-                  <Icon name="bus" size={15} color="#fff" />
+                  <Icon name="bus" size={15} className="text-white" />
                   {bus.name}
                 </span>
               )
@@ -218,7 +218,7 @@ export default function MySeat() {
           {guestId && !loading && !error && !notAssigned && bus && (
             <>
               {/* แถบข้อมูลรถ — เด่นขึ้น */}
-              <div className="mb-3 flex items-center gap-3 rounded-card border border-white/60 bg-surface p-3 shadow-card ring-1 ring-black/[0.02]">
+              <div className="mb-3 flex items-center gap-3 rounded-card border border-line bg-surface p-3 shadow-card ring-1 ring-line-subtle">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-brand-lighter text-brand-hover">
                   <Icon name="bus" size={22} />
                 </span>
@@ -245,21 +245,21 @@ export default function MySeat() {
               )}
 
               {/* ผังรถ */}
-              <div className="rounded-card border border-white/60 bg-surface p-4 shadow-card ring-1 ring-black/[0.02]">
+              <div className="rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
                 {/* คำอธิบายสี */}
                 <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
                   <span className="flex items-center gap-1">
                     <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('guest.mySeat.legendEmpty')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-blue-500" />/
-                    <span className="h-3 w-3 rounded bg-pink-500" /> {t('guest.mySeat.legendGuest')}
+                    <span className="h-3 w-3 rounded bg-blue-600" />/
+                    <span className="h-3 w-3 rounded bg-pink-600" /> {t('guest.mySeat.legendGuest')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-emerald-500" /> {t('guest.mySeat.legendStaff')}
+                    <span className="h-3 w-3 rounded bg-emerald-700" /> {t('guest.mySeat.legendStaff')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-amber-500" /> {t('guest.mySeat.legendVip')}
+                    <span className="h-3 w-3 rounded bg-amber-700" /> {t('guest.mySeat.legendVip')}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="h-3 w-3 rounded bg-brand" /> {t('guest.mySeat.yourSeat')}
@@ -267,15 +267,15 @@ export default function MySeat() {
                 </div>
 
                 {/* ตัวรถ */}
-                <div className="overflow-hidden rounded-2xl border-[1.5px] border-black/10">
+                <div className="overflow-hidden rounded-2xl border-[1.5px] border-line">
                   {/* หัวรถ */}
-                  <div className="flex items-center justify-between border-b border-dashed border-black/10 bg-surface-muted px-3 py-2">
+                  <div className="flex items-center justify-between border-b border-dashed border-line bg-surface-muted px-3 py-2">
                     <span className="flex items-center gap-1 text-[11px] text-ink-faint">
                       <Icon name="door" size={14} /> {t('guest.mySeat.doorLabel')}
                     </span>
                     <span className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
                       {t('guest.mySeat.frontDriver')}
-                      <Icon name="steering-wheel" size={16} color="#0e7490" />
+                      <Icon name="steering-wheel" size={16} className="text-brand-hover" />
                     </span>
                   </div>
 
@@ -327,7 +327,7 @@ export default function MySeat() {
                   </div>
 
                   {/* ท้ายรถ */}
-                  <div className="border-t border-dashed border-black/10 py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
+                  <div className="border-t border-dashed border-line py-1.5 text-center text-[10px] uppercase tracking-wide text-ink-faint">
                     {t('guest.mySeat.rearLabel')}
                   </div>
                 </div>
@@ -337,7 +337,8 @@ export default function MySeat() {
         </div>
       </div>
 
-      <GuestNav active="mySeat" />
+      {/* ที่นั่งย้ายออกจากแถบล่างแล้ว (ส.ค. 2569) — ไม่มีปุ่มไหนตรง จึงไม่ไฮไลต์ */}
+      <GuestNav />
     </div>
   )
 }
@@ -368,7 +369,7 @@ function MySeatBox({ seat, guest, isMine }) {
     >
       {isMine && (
         <span className="absolute -top-2 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] text-white shadow-sm">
-          <Icon name="location" size={10} color="#fff" />
+          <Icon name="location" size={10} className="text-white" />
         </span>
       )}
       <span className="w-full truncate text-center">{label}</span>

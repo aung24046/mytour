@@ -236,10 +236,10 @@ export default function FormBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-gray-900">{t('staff.formBuilder.title')}</h1>
-        <p className="mt-1 text-sm text-gray-600">{t('staff.formBuilder.subtitle')}</p>
+        <h1 className="text-xl font-bold text-ink">{t('staff.formBuilder.title')}</h1>
+        <p className="mt-1 text-sm text-ink-muted">{t('staff.formBuilder.subtitle')}</p>
 
         {/* สลับชนิดฟอร์ม */}
         <div className="mt-3 flex gap-2">
@@ -257,11 +257,11 @@ export default function FormBuilder() {
         </div>
 
         {/* สลับ แก้ไข / ดูตัวอย่าง */}
-        <div className="mt-3 inline-flex rounded-full bg-gray-100 p-1">
+        <div className="mt-3 inline-flex rounded-full bg-surface-sunken p-1">
           <button
             onClick={() => setMode('edit')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              mode === 'edit' ? 'bg-sky-600 text-white' : 'text-gray-600'
+              mode === 'edit' ? 'bg-brand text-white' : 'text-ink-muted'
             }`}
           >
             {t('staff.formBuilder.modeEdit')}
@@ -269,15 +269,15 @@ export default function FormBuilder() {
           <button
             onClick={() => setMode('preview')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              mode === 'preview' ? 'bg-sky-600 text-white' : 'text-gray-600'
+              mode === 'preview' ? 'bg-brand text-white' : 'text-ink-muted'
             }`}
           >
             {t('staff.formBuilder.modePreview')}
           </button>
         </div>
 
-        {loading && <p className="mt-4 text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="mt-4 text-danger">{error}</p>}
 
         {/* โหมดแก้ไข */}
         {!loading && !error && mode === 'edit' && (
@@ -290,7 +290,7 @@ export default function FormBuilder() {
             </button>
 
             {fields.length === 0 && (
-              <p className="mt-4 text-sm text-gray-400">{t('staff.formBuilder.noFields')}</p>
+              <p className="mt-4 text-sm text-ink-faint">{t('staff.formBuilder.noFields')}</p>
             )}
 
             <div className="mt-3 flex flex-col gap-2">
@@ -299,7 +299,7 @@ export default function FormBuilder() {
                 return (
                   <div
                     key={field.id}
-                    className={`flex items-start gap-2 rounded-xl border border-gray-100 bg-white px-2.5 py-2.5 ${
+                    className={`flex items-start gap-2 rounded-xl border border-line-subtle bg-surface px-2.5 py-2.5 ${
                       field.is_active ? '' : 'opacity-50'
                     }`}
                   >
@@ -307,7 +307,7 @@ export default function FormBuilder() {
                       <button
                         onClick={() => moveField(index, -1)}
                         disabled={index === 0}
-                        className="rounded bg-gray-100 px-1.5 text-xs text-gray-500 disabled:opacity-30"
+                        className="rounded bg-surface-sunken px-1.5 text-xs text-ink-muted disabled:opacity-30"
                         aria-label={t('staff.guideBuilder.moveUp')}
                       >
                         ▲
@@ -315,7 +315,7 @@ export default function FormBuilder() {
                       <button
                         onClick={() => moveField(index, 1)}
                         disabled={index === fields.length - 1}
-                        className="rounded bg-gray-100 px-1.5 text-xs text-gray-500 disabled:opacity-30"
+                        className="rounded bg-surface-sunken px-1.5 text-xs text-ink-muted disabled:opacity-30"
                         aria-label={t('staff.guideBuilder.moveDown')}
                       >
                         ▼
@@ -323,11 +323,11 @@ export default function FormBuilder() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-900">
+                      <p className="truncate text-sm font-medium text-ink">
                         {field.label}
-                        {field.is_required && <span className="text-red-500"> *</span>}
+                        {field.is_required && <span className="text-danger"> *</span>}
                       </p>
-                      <p className="mt-0.5 truncate text-[11px] text-gray-400">
+                      <p className="mt-0.5 truncate text-[11px] text-ink-faint">
                         {fieldTypeLabel(field.field_type)}
                         {field.is_core && ` · ${t('staff.formBuilder.coreTag')}`}
                         {!field.is_active && ` · ${t('staff.formBuilder.hide')}`}
@@ -345,17 +345,17 @@ export default function FormBuilder() {
 
                     <button
                       onClick={() => updateField(field.id, { is_active: !field.is_active })}
-                      className="shrink-0 text-gray-400"
+                      className="shrink-0 text-ink-faint"
                       aria-label={field.is_active ? t('staff.formBuilder.hide') : t('staff.formBuilder.show')}
                     >
                       <Icon name={field.is_active ? 'check' : 'lock'} size={16} />
                     </button>
                     <button
                       onClick={() => openEditSheet(field)}
-                      className="shrink-0 text-sky-600"
+                      className="shrink-0 text-brand"
                       aria-label={t('staff.formBuilder.fieldSettings')}
                     >
-                      <Icon name="settings" size={16} color="#0891b2" />
+                      <Icon name="settings" size={16} className="text-brand" />
                     </button>
                   </div>
                 )
@@ -367,12 +367,12 @@ export default function FormBuilder() {
         {/* โหมดดูตัวอย่าง — ฟอร์มจริงที่ลูกทัวร์จะเห็น */}
         {!loading && !error && mode === 'preview' && (
           <div className="mt-4">
-            <p className="mb-3 flex items-center gap-1.5 text-xs text-gray-500">
+            <p className="mb-3 flex items-center gap-1.5 text-xs text-ink-muted">
               <Icon name="search" size={13} />
               {t('staff.formBuilder.previewHint')}
             </p>
             {activeFields.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.formBuilder.noFields')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.formBuilder.noFields')}</p>
             )}
             <div className="flex flex-col gap-3.5">
               {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
@@ -451,12 +451,12 @@ export default function FormBuilder() {
             />
           )}
 
-          <label className="flex items-center gap-2.5 text-sm text-gray-700">
+          <label className="flex items-center gap-2.5 text-sm text-neutral-text">
             <input
               type="checkbox"
               checked={draft.is_required}
               onChange={(e) => setDraft((prev) => ({ ...prev, is_required: e.target.checked }))}
-              className="h-5 w-5 rounded border-gray-300 text-sky-600"
+              className="h-5 w-5 rounded border-line-strong text-brand"
             />
             {t('staff.formBuilder.required')}
           </label>
@@ -471,7 +471,7 @@ export default function FormBuilder() {
                 deleteField({ id: draft.id, is_core: draft.is_core })
                 setSheetOpen(false)
               }}
-              className="text-sm font-medium text-red-500"
+              className="text-sm font-medium text-danger"
             >
               {draft.is_core ? t('staff.formBuilder.hide') : t('staff.formBuilder.delete')}
             </button>

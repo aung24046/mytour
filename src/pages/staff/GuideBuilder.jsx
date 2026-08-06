@@ -984,10 +984,10 @@ export default function GuideBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.guideBuilder.title')}</h1>
-        <p className="mb-3 text-sm text-gray-500">{t('staff.guideBuilder.subtitle')}</p>
+        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.guideBuilder.title')}</h1>
+        <p className="mb-3 text-sm text-ink-muted">{t('staff.guideBuilder.subtitle')}</p>
 
         <div className="mb-3 flex gap-2">
           <button
@@ -1010,21 +1010,21 @@ export default function GuideBuilder() {
 
         {tab === 'articles' && (
           <>
-            {loadingArticles && <p className="text-gray-500">{t('common.loading')}</p>}
+            {loadingArticles && <p className="text-ink-muted">{t('common.loading')}</p>}
 
             {/* จัดการหมวดหมู่ */}
             {!loadingArticles && (
-              <div className="mb-4 rounded-xl border border-gray-200 bg-white">
+              <div className="mb-4 rounded-xl border border-line bg-surface">
                 <button
                   type="button"
                   onClick={() => setManageCats((v) => !v)}
                   aria-expanded={manageCats}
-                  className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-semibold text-gray-700"
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-semibold text-neutral-text"
                 >
                   <span className="flex items-center gap-1.5">
                     <Icon name="settings" size={16} />
                     {t('staff.guideBuilder.manageCategories')}
-                    <span className="font-normal text-gray-400">({categories.length})</span>
+                    <span className="font-normal text-ink-faint">({categories.length})</span>
                   </span>
                   <svg
                     className={`h-4 w-4 transition-transform ${manageCats ? '' : '-rotate-90'}`}
@@ -1036,7 +1036,7 @@ export default function GuideBuilder() {
                 </button>
 
                 {manageCats && (
-                  <div className="border-t border-gray-100 p-3">
+                  <div className="border-t border-line-subtle p-3">
                     <div className="flex flex-col gap-2">
                       {categories.map((cat, idx) => {
                         const col = catColor(cat.color)
@@ -1044,7 +1044,7 @@ export default function GuideBuilder() {
                         return (
                           <div
                             key={cat.id}
-                            className="flex items-center gap-2 rounded-lg border border-gray-100 px-2.5 py-2"
+                            className="flex items-center gap-2 rounded-lg border border-line-subtle px-2.5 py-2"
                             style={{ borderLeft: `3px solid ${col.border}`, opacity: cat.is_active ? 1 : 0.55 }}
                           >
                             <span
@@ -1054,8 +1054,8 @@ export default function GuideBuilder() {
                               <Icon name={cat.icon} size={18} color={col.text} />
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-gray-800">{catLabel(cat, lang)}</p>
-                              <p className="text-xs text-gray-400">
+                              <p className="truncate text-sm font-semibold text-ink">{catLabel(cat, lang)}</p>
+                              <p className="text-xs text-ink-faint">
                                 {t(`staff.guideBuilder.layout.${cat.layout}`)} · {count} {t('staff.guideBuilder.articlesUnit')}
                               </p>
                             </div>
@@ -1063,32 +1063,32 @@ export default function GuideBuilder() {
                               <button
                                 onClick={() => moveCategory(cat, -1)}
                                 disabled={idx === 0}
-                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                className="rounded p-1 text-ink-faint disabled:opacity-30"
                                 aria-label={t('staff.guideBuilder.moveUp')}
                               >▲</button>
                               <button
                                 onClick={() => moveCategory(cat, 1)}
                                 disabled={idx === categories.length - 1}
-                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                className="rounded p-1 text-ink-faint disabled:opacity-30"
                                 aria-label={t('staff.guideBuilder.moveDown')}
                               >▼</button>
                               <button
                                 onClick={() => toggleCategoryActive(cat)}
-                                className="rounded p-1 text-gray-500"
+                                className="rounded p-1 text-ink-muted"
                                 aria-label={t('staff.guideBuilder.toggleActive')}
                               >
                                 <Icon name={cat.is_active ? 'check' : 'lock'} size={16} />
                               </button>
                               <button
                                 onClick={() => openEditCategory(cat)}
-                                className="rounded p-1 text-sky-600"
+                                className="rounded p-1 text-brand"
                                 aria-label={t('staff.itineraryBuilder.edit')}
                               >
                                 <Icon name="edit" size={16} />
                               </button>
                               <button
                                 onClick={() => deleteCategory(cat)}
-                                className="rounded p-1 text-red-400"
+                                className="rounded p-1 text-danger"
                                 aria-label={t('staff.guideBuilder.deleteCategory')}
                               >
                                 <Icon name="trash" size={16} />
@@ -1100,7 +1100,7 @@ export default function GuideBuilder() {
                     </div>
                     <button
                       onClick={openNewCategory}
-                      className="mt-2 w-full rounded-lg border border-dashed border-sky-300 px-3 py-2 text-sm font-semibold text-sky-600 hover:border-sky-400"
+                      className="mt-2 w-full rounded-lg border border-dashed border-brand-light px-3 py-2 text-sm font-semibold text-brand hover:border-brand"
                     >
                       + {t('staff.guideBuilder.addCategory')}
                     </button>
@@ -1121,14 +1121,14 @@ export default function GuideBuilder() {
                       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase" style={{ color: col.text }}>
                         {cat ? <Icon name={cat.icon} size={15} color={col.text} /> : null}
                         {cat ? catLabel(cat, lang) : t('staff.guideBuilder.uncategorized')}
-                        <span className="font-normal text-gray-300">({items.length})</span>
+                        <span className="font-normal text-ink-faint">({items.length})</span>
                       </p>
                       <div className="flex shrink-0 items-center gap-3">
                         {items.length >= 2 && (
                           <button
                             onClick={() => openArrangeSheet(key)}
                             title={t('staff.guideBuilder.autoArrangeHint')}
-                            className="text-xs font-semibold text-emerald-600"
+                            className="text-xs font-semibold text-success-text"
                           >
                             📍 {t('staff.guideBuilder.autoArrange')}
                           </button>
@@ -1136,7 +1136,7 @@ export default function GuideBuilder() {
                         {cat && (
                           <button
                             onClick={() => openNewArticle(cat.id)}
-                            className="text-xs font-semibold text-sky-600"
+                            className="text-xs font-semibold text-brand"
                           >
                             + {t('staff.guideBuilder.addArticle')}
                           </button>
@@ -1145,7 +1145,7 @@ export default function GuideBuilder() {
                     </div>
 
                     {items.length === 0 && (
-                      <p className="text-sm text-gray-400">{t('staff.guideBuilder.noArticles')}</p>
+                      <p className="text-sm text-ink-faint">{t('staff.guideBuilder.noArticles')}</p>
                     )}
 
                     <div className="flex flex-col gap-2">
@@ -1159,27 +1159,27 @@ export default function GuideBuilder() {
                                 className="h-12 w-12 shrink-0 rounded-lg object-cover"
                               />
                             ) : (
-                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-surface-sunken text-ink-faint">
                                 📄
                               </div>
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="truncate font-semibold text-gray-900">
-                                {article.is_featured && <span className="mr-1 text-amber-500">★</span>}
+                              <p className="truncate font-semibold text-ink">
+                                {article.is_featured && <span className="mr-1 text-warning">★</span>}
                                 {article.title}
                               </p>
                               {article.province && (
-                                <span className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                <span className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-brand-lighter px-1.5 py-0.5 text-[10px] font-semibold text-brand-hover">
                                   <Icon name="location" size={9} /> {article.province}
                                 </span>
                               )}
                               {article.itinerary_item_id && itineraryItemById[article.itinerary_item_id] && (
-                                <p className="truncate text-xs text-sky-600">
+                                <p className="truncate text-xs text-brand">
                                   {itineraryItemLabel(itineraryItemById[article.itinerary_item_id])}
                                 </p>
                               )}
                               {article.maps_url && (
-                                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-emerald-600">
+                                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-success-text">
                                   <Icon name="navigation" size={12} /> {t('staff.guideBuilder.articleMapsUrl')}
                                 </p>
                               )}
@@ -1188,8 +1188,8 @@ export default function GuideBuilder() {
                               onClick={() => togglePublish(article)}
                               className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                 article.is_published
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-gray-100 text-gray-500'
+                                  ? 'bg-success-bg text-success-text'
+                                  : 'bg-surface-sunken text-ink-muted'
                               }`}
                             >
                               {article.is_published
@@ -1197,31 +1197,31 @@ export default function GuideBuilder() {
                                 : t('staff.guideBuilder.unpublished')}
                             </button>
                           </div>
-                          <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+                          <div className="mt-2 flex items-center justify-between border-t border-line-subtle pt-2">
                             <div className="flex items-center gap-0.5">
                               <button
                                 onClick={() => moveArticle(article, -1)}
                                 disabled={idx === 0}
-                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                className="rounded p-1 text-ink-faint disabled:opacity-30"
                                 aria-label={t('staff.guideBuilder.moveUp')}
                               >▲</button>
                               <button
                                 onClick={() => moveArticle(article, 1)}
                                 disabled={idx === items.length - 1}
-                                className="rounded p-1 text-gray-400 disabled:opacity-30"
+                                className="rounded p-1 text-ink-faint disabled:opacity-30"
                                 aria-label={t('staff.guideBuilder.moveDown')}
                               >▼</button>
                             </div>
                             <div className="flex gap-3">
                               <button
                                 onClick={() => openEditArticle(article)}
-                                className="text-sm font-medium text-sky-600"
+                                className="text-sm font-medium text-brand"
                               >
                                 {t('staff.itineraryBuilder.edit')}
                               </button>
                               <button
                                 onClick={() => deleteArticle(article)}
-                                className="text-sm font-medium text-red-500"
+                                className="text-sm font-medium text-danger"
                               >
                                 {t('staff.guideBuilder.deleteArticle')}
                               </button>
@@ -1248,14 +1248,14 @@ export default function GuideBuilder() {
                 </button>
                 <button
                   onClick={openImportSheet}
-                  className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-gray-300"
+                  className="flex flex-1 items-center justify-center rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-neutral-text hover:border-line-strong"
                 >
                   {t('staff.guideBuilder.importPhrases')}
                 </button>
                 {phrases.length > 0 && (
                   <button
                     onClick={() => setPhraseSelectMode(true)}
-                    className="flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-gray-500 hover:border-gray-300"
+                    className="flex items-center justify-center rounded-xl border border-line bg-surface px-3 py-2.5 text-ink-muted hover:border-line-strong"
                     title={t('staff.guideBuilder.selectToDelete')}
                     aria-label={t('staff.guideBuilder.selectToDelete')}
                   >
@@ -1264,31 +1264,31 @@ export default function GuideBuilder() {
                 )}
               </div>
             ) : (
-              <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 shadow-sm">
-                <span className="text-sm font-semibold text-sky-800">
+              <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-brand-light bg-brand-lighter px-3 py-2 shadow-sm">
+                <span className="text-sm font-semibold text-brand-deep">
                   {t('staff.guideBuilder.selectedCount', { count: selectedPhraseIds.size })}
                 </span>
                 <button
                   onClick={() => setSelectedPhraseIds(new Set(phrases.map((p) => p.id)))}
-                  className="ml-auto text-xs font-semibold text-sky-600"
+                  className="ml-auto text-xs font-semibold text-brand"
                 >
                   {t('staff.guideBuilder.selectAll')}
                 </button>
                 <button
                   onClick={openAssignPlace}
                   disabled={selectedPhraseIds.size === 0}
-                  className="rounded-lg border border-sky-400 px-3 py-1.5 text-xs font-semibold text-sky-700 disabled:opacity-40"
+                  className="rounded-lg border border-brand px-3 py-1.5 text-xs font-semibold text-brand-hover disabled:opacity-40"
                 >
                   📍 {t('staff.guideBuilder.assignPlace')}
                 </button>
                 <button
                   onClick={bulkDeletePhrases}
                   disabled={selectedPhraseIds.size === 0}
-                  className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                  className="rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
                 >
                   {t('staff.guideBuilder.deleteSelected')}
                 </button>
-                <button onClick={exitSelectMode} className="text-xs font-medium text-gray-500">
+                <button onClick={exitSelectMode} className="text-xs font-medium text-ink-muted">
                   {t('common.cancel')}
                 </button>
               </div>
@@ -1302,7 +1302,7 @@ export default function GuideBuilder() {
                   value={phraseSearch}
                   onChange={(e) => setPhraseSearch(e.target.value)}
                   placeholder={t('staff.guideBuilder.searchPhrases')}
-                  className="mb-2.5 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-sky-400 focus:outline-none"
+                  className="mb-2.5 w-full rounded-xl border border-line px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
                 />
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {[
@@ -1316,9 +1316,9 @@ export default function GuideBuilder() {
                       className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                         phraseFilter === key
                           ? key === 'all'
-                            ? 'bg-sky-600 text-white'
-                            : 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-100 text-gray-600'
+                            ? 'bg-brand text-white'
+                            : 'bg-warning-bg text-warning-text'
+                          : 'bg-surface-sunken text-ink-muted'
                       }`}
                     >
                       {labelText}
@@ -1328,10 +1328,10 @@ export default function GuideBuilder() {
               </>
             )}
 
-            {loadingPhrases && <p className="text-gray-500">{t('common.loading')}</p>}
+            {loadingPhrases && <p className="text-ink-muted">{t('common.loading')}</p>}
 
             {!loadingPhrases && phraseGroups.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.guideBuilder.noPhrases')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.guideBuilder.noPhrases')}</p>
             )}
 
             {!loadingPhrases &&
@@ -1347,7 +1347,7 @@ export default function GuideBuilder() {
                   <div
                     key={label}
                     className={`mb-2.5 overflow-hidden rounded-xl border ${
-                      linked ? 'border-sky-200' : 'border-gray-200'
+                      linked ? 'border-brand-light' : 'border-line'
                     }`}
                   >
                     <div className="flex items-center gap-2 px-2.5 py-2.5">
@@ -1359,26 +1359,26 @@ export default function GuideBuilder() {
                       >
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                            linked ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-400'
+                            linked ? 'bg-brand-light text-brand-hover' : 'bg-surface-sunken text-ink-faint'
                           }`}
                         >
                           <Icon name={linked ? 'calendar' : 'location'} size={16} color="currentColor" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-1.5">
-                            <span className="truncate text-sm font-semibold text-gray-800">{label}</span>
-                            <span className="shrink-0 text-xs font-normal text-gray-400">({items.length})</span>
+                            <span className="truncate text-sm font-semibold text-ink">{label}</span>
+                            <span className="shrink-0 text-xs font-normal text-ink-faint">({items.length})</span>
                           </span>
                           <span
                             className={`mt-0.5 block text-[11px] font-medium ${
-                              linked ? 'text-sky-600' : 'text-amber-600'
+                              linked ? 'text-brand' : 'text-warning-text'
                             }`}
                           >
                             {linked ? timeText : t('staff.guideBuilder.notLinkedYet')}
                           </span>
                         </span>
                         <svg
-                          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${
+                          className={`h-4 w-4 shrink-0 text-ink-faint transition-transform duration-200 ${
                             isOpen ? '' : '-rotate-90'
                           }`}
                           viewBox="0 0 24 24"
@@ -1401,7 +1401,7 @@ export default function GuideBuilder() {
                               return next
                             })
                           }
-                          className="shrink-0 text-xs font-semibold text-sky-600"
+                          className="shrink-0 text-xs font-semibold text-brand"
                         >
                           {t('staff.guideBuilder.selectGroup')}
                         </button>
@@ -1417,35 +1417,35 @@ export default function GuideBuilder() {
                           <div
                             key={phrase.id}
                             onClick={phraseSelectMode ? () => togglePhraseSelect(phrase.id) : undefined}
-                            className={`flex items-start gap-2 border-t border-gray-100 px-3 py-2.5 ${
+                            className={`flex items-start gap-2 border-t border-line-subtle px-3 py-2.5 ${
                               phraseSelectMode ? 'cursor-pointer' : ''
-                            } ${selected ? 'bg-sky-50' : ''}`}
+                            } ${selected ? 'bg-brand-lighter' : ''}`}
                           >
                             {phraseSelectMode && (
                               <input
                                 type="checkbox"
                                 checked={selected}
                                 onChange={() => togglePhraseSelect(phrase.id)}
-                                className="mt-0.5 h-5 w-5 shrink-0 rounded border-gray-300 text-sky-600"
+                                className="mt-0.5 h-5 w-5 shrink-0 rounded border-line-strong text-brand"
                               />
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-900">{phrase.phrase}</p>
+                              <p className="text-sm font-medium text-ink">{phrase.phrase}</p>
                               {phrase.translation_zh && (
                                 <p className="mt-0.5 text-xs">
-                                  <span className="font-medium text-sky-700">{phrase.translation_zh}</span>
+                                  <span className="font-medium text-brand-hover">{phrase.translation_zh}</span>
                                   {phrase.pronunciation_zh && (
-                                    <span className="text-gray-400"> · {phrase.pronunciation_zh}</span>
+                                    <span className="text-ink-faint"> · {phrase.pronunciation_zh}</span>
                                   )}
                                 </p>
                               )}
                               {phrase.translation_en ? (
-                                <p className="mt-0.5 text-xs text-gray-600">{phrase.translation_en}</p>
+                                <p className="mt-0.5 text-xs text-ink-muted">{phrase.translation_en}</p>
                               ) : (
                                 !phraseSelectMode && (
                                   <button
                                     onClick={() => openEditPhrase(phrase)}
-                                    className="mt-0.5 text-xs italic text-gray-400 hover:text-sky-600"
+                                    className="mt-0.5 text-xs italic text-ink-faint hover:text-brand"
                                   >
                                     + {t('staff.guideBuilder.addEnglish')}
                                   </button>
@@ -1464,10 +1464,10 @@ export default function GuideBuilder() {
                               {!phraseSelectMode && (
                                 <span className="flex gap-2.5">
                                   <button onClick={() => openEditPhrase(phrase)} aria-label={t('staff.itineraryBuilder.edit')}>
-                                    <Icon name="edit" size={16} color="#0891b2" />
+                                    <Icon name="edit" size={16} className="text-brand" />
                                   </button>
                                   <button onClick={() => deletePhrase(phrase)} aria-label={t('staff.guideBuilder.deletePhrase')}>
-                                    <Icon name="trash" size={16} color="#dc2626" />
+                                    <Icon name="trash" size={16} className="text-danger" />
                                   </button>
                                 </span>
                               )}
@@ -1490,7 +1490,7 @@ export default function GuideBuilder() {
         <div className="flex flex-col gap-3">
           <div>
             <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.guideBuilder.articleCategory')}</p>
-            <p className="mb-1.5 text-xs text-gray-400">{t('staff.guideBuilder.articleCategoryHint')}</p>
+            <p className="mb-1.5 text-xs text-ink-faint">{t('staff.guideBuilder.articleCategoryHint')}</p>
             <div className="flex flex-wrap gap-1.5">
               {categories.map((c) => {
                 const active = articleDraft.category_ids.includes(c.id)
@@ -1511,10 +1511,10 @@ export default function GuideBuilder() {
                     style={
                       active
                         ? { background: col.tint, borderColor: col.border, color: col.text }
-                        : { borderColor: '#e5e7eb', color: '#6b7280' }
+                        : { borderColor: '#d7e3e8', color: '#5b7580' }
                     }
                   >
-                    <Icon name={c.icon} size={13} color={active ? col.text : '#9ca3af'} />
+                    <Icon name={c.icon} size={13} color={active ? col.text : undefined} className={active ? '' : 'text-ink-faint'} />
                     {catLabel(c, lang)}
                   </button>
                 )
@@ -1535,7 +1535,7 @@ export default function GuideBuilder() {
                   type="button"
                   onClick={() => applyMarkdownFormat('bold')}
                   title={t('staff.guideBuilder.formatBold')}
-                  className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-bold text-gray-700 hover:bg-gray-200"
+                  className="rounded-lg bg-surface-sunken px-2.5 py-1 text-sm font-bold text-neutral-text hover:bg-surface-sunken"
                 >
                   B
                 </button>
@@ -1543,7 +1543,7 @@ export default function GuideBuilder() {
                   type="button"
                   onClick={() => applyMarkdownFormat('italic')}
                   title={t('staff.guideBuilder.formatItalic')}
-                  className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm italic text-gray-700 hover:bg-gray-200"
+                  className="rounded-lg bg-surface-sunken px-2.5 py-1 text-sm italic text-neutral-text hover:bg-surface-sunken"
                 >
                   I
                 </button>
@@ -1551,7 +1551,7 @@ export default function GuideBuilder() {
                   type="button"
                   onClick={() => applyMarkdownFormat('bullet')}
                   title={t('staff.guideBuilder.formatBullet')}
-                  className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm text-gray-700 hover:bg-gray-200"
+                  className="rounded-lg bg-surface-sunken px-2.5 py-1 text-sm text-neutral-text hover:bg-surface-sunken"
                 >
                   • List
                 </button>
@@ -1563,7 +1563,7 @@ export default function GuideBuilder() {
               onChange={(e) => setArticleDraft((prev) => ({ ...prev, body: e.target.value }))}
               rows={6}
             />
-            <p className="mt-1 text-xs text-gray-400">{t('staff.guideBuilder.formatUnderlineHint')}</p>
+            <p className="mt-1 text-xs text-ink-faint">{t('staff.guideBuilder.formatUnderlineHint')}</p>
           </div>
 
           <TextField
@@ -1608,7 +1608,7 @@ export default function GuideBuilder() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-xl bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-700"
+              className="w-full rounded-xl bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-neutral-text"
             >
               {t('staff.guideBuilder.takePhoto')}
             </button>
@@ -1645,25 +1645,25 @@ export default function GuideBuilder() {
               type="checkbox"
               checked={articleDraft.is_featured}
               onChange={(e) => setArticleDraft((prev) => ({ ...prev, is_featured: e.target.checked }))}
-              className="h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand-light"
+              className="h-5 w-5 rounded border-line-strong text-brand focus:ring-brand-light"
             />
             <span className="text-sm font-medium text-neutral-text">
               ★ {t('staff.guideBuilder.featuredArticle')}
             </span>
           </label>
-          <p className="-mt-1.5 text-xs text-gray-400">{t('staff.guideBuilder.featuredHint')}</p>
+          <p className="-mt-1.5 text-xs text-ink-faint">{t('staff.guideBuilder.featuredHint')}</p>
 
           <label className="flex items-center gap-2.5">
             <input
               type="checkbox"
               checked={articleDraft.is_published}
               onChange={(e) => setArticleDraft((prev) => ({ ...prev, is_published: e.target.checked }))}
-              className="h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand-light"
+              className="h-5 w-5 rounded border-line-strong text-brand focus:ring-brand-light"
             />
             <span className="text-sm font-medium text-neutral-text">{t('staff.guideBuilder.published')}</span>
           </label>
 
-          {articleError && <p className="text-sm text-red-500">{articleError}</p>}
+          {articleError && <p className="text-sm text-danger">{articleError}</p>}
 
           <Button onClick={saveArticle} disabled={savingArticle || !articleDraft.title.trim()}>
             {savingArticle ? t('common.loading') : t('common.save')}
@@ -1680,13 +1680,13 @@ export default function GuideBuilder() {
         title={t('staff.guideBuilder.autoArrangeChooseStart')}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-gray-400">{t('staff.guideBuilder.autoArrangeChooseStartHint')}</p>
+          <p className="text-xs text-ink-faint">{t('staff.guideBuilder.autoArrangeChooseStartHint')}</p>
           <div className="flex flex-col gap-1.5">
             {arrangeCandidates.map((a) => (
               <label
                 key={a.id}
                 className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm ${
-                  arrangeStartId === a.id ? 'border-sky-400 bg-sky-50' : 'border-gray-200'
+                  arrangeStartId === a.id ? 'border-brand bg-brand-lighter' : 'border-line'
                 }`}
               >
                 <input
@@ -1695,7 +1695,7 @@ export default function GuideBuilder() {
                   checked={arrangeStartId === a.id}
                   onChange={() => setArrangeStartId(a.id)}
                 />
-                <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{a.title}</span>
+                <span className="min-w-0 flex-1 truncate font-medium text-ink">{a.title}</span>
               </label>
             ))}
           </div>
@@ -1743,12 +1743,12 @@ export default function GuideBuilder() {
                     type="button"
                     onClick={() => setCatDraft((prev) => ({ ...prev, icon: ic }))}
                     className={`flex h-10 w-10 items-center justify-center rounded-lg border ${
-                      active ? 'border-2' : 'border-gray-200'
+                      active ? 'border-2' : 'border-line'
                     }`}
                     style={active ? { borderColor: col.border, background: col.tint } : {}}
                     aria-label={ic}
                   >
-                    <Icon name={ic} size={20} color={active ? col.text : '#6b7280'} />
+                    <Icon name={ic} size={20} color={active ? col.text : undefined} className={active ? '' : 'text-ink-muted'} />
                   </button>
                 )
               })}
@@ -1782,7 +1782,7 @@ export default function GuideBuilder() {
             onChange={(e) => setCatDraft((prev) => ({ ...prev, layout: e.target.value }))}
           />
 
-          {catError && <p className="text-sm text-red-500">{catError}</p>}
+          {catError && <p className="text-sm text-danger">{catError}</p>}
 
           <Button onClick={saveCategory} disabled={savingCat || !catDraft.label_th.trim()}>
             {savingCat ? t('common.loading') : t('common.save')}
@@ -1799,7 +1799,7 @@ export default function GuideBuilder() {
         title={t('staff.guideBuilder.assignPlace')}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-ink-muted">
             {t('staff.guideBuilder.assignPlaceHint', { count: selectedPhraseIds.size })}
           </p>
           <SelectField
@@ -1906,8 +1906,8 @@ export default function GuideBuilder() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-100 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase text-gray-400">{t('staff.guideBuilder.lang.zh')}</p>
+          <div className="rounded-xl border border-line-subtle p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-ink-faint">{t('staff.guideBuilder.lang.zh')}</p>
             <div className="flex flex-col gap-2">
               <TextField
                 label={t('staff.guideBuilder.translation')}
@@ -1922,8 +1922,8 @@ export default function GuideBuilder() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-100 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase text-gray-400">{t('staff.guideBuilder.lang.en')}</p>
+          <div className="rounded-xl border border-line-subtle p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-ink-faint">{t('staff.guideBuilder.lang.en')}</p>
             <TextField
               label={t('staff.guideBuilder.translation')}
               value={phraseDraft.translation_en}
@@ -1931,9 +1931,9 @@ export default function GuideBuilder() {
             />
           </div>
 
-          <p className="text-xs text-gray-400">{t('staff.guideBuilder.phraseTransHint')}</p>
+          <p className="text-xs text-ink-faint">{t('staff.guideBuilder.phraseTransHint')}</p>
 
-          {phraseError && <p className="text-sm text-red-500">{phraseError}</p>}
+          {phraseError && <p className="text-sm text-danger">{phraseError}</p>}
 
           <Button
             onClick={savePhrase}
@@ -1957,10 +1957,10 @@ export default function GuideBuilder() {
         title={t('staff.guideBuilder.importPhrases')}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-gray-500">{t('staff.guideBuilder.importInstructions')}</p>
-          <div className="rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500">
-            <p className="mb-1 font-semibold text-gray-600">{t('staff.guideBuilder.importColumns')}</p>
-            <code className="block whitespace-pre-wrap break-words text-[11px] leading-relaxed text-gray-700">
+          <p className="text-sm text-ink-muted">{t('staff.guideBuilder.importInstructions')}</p>
+          <div className="rounded-xl bg-surface-muted px-3 py-2 text-xs text-ink-muted">
+            <p className="mb-1 font-semibold text-ink-muted">{t('staff.guideBuilder.importColumns')}</p>
+            <code className="block whitespace-pre-wrap break-words text-[11px] leading-relaxed text-neutral-text">
               สถานที่ ⇥ คำไทย ⇥ จีน ⇥ พินอิน ⇥ อังกฤษ ⇥ หมวด L1 ⇥ หมวด L2
             </code>
           </div>
@@ -1974,15 +1974,15 @@ export default function GuideBuilder() {
           />
 
           {importText.trim() && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-ink-faint">
               {t('staff.guideBuilder.importPreview', { count: parseImportText(importText).rows.length })}
             </p>
           )}
 
-          {importError && <p className="text-sm text-red-500">{importError}</p>}
+          {importError && <p className="text-sm text-danger">{importError}</p>}
 
           {importResult && (
-            <p className="text-sm font-medium text-green-600">
+            <p className="text-sm font-medium text-success-text">
               {t('staff.guideBuilder.importSuccess', { count: importResult.count })}
               {importResult.skipped > 0 &&
                 ` — ${t('staff.guideBuilder.importSkipped', { count: importResult.skipped })}`}

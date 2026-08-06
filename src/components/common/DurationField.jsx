@@ -29,7 +29,7 @@ export default function DurationField({ label, required = false, value, onChange
         <select
           value={h}
           onChange={(e) => setHours(e.target.value)}
-          className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+          className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
         >
           {HOURS.map((hh) => (
             <option key={hh} value={hh}>
@@ -42,7 +42,7 @@ export default function DurationField({ label, required = false, value, onChange
         <select
           value={m}
           onChange={(e) => setMinutes(e.target.value)}
-          className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+          className="min-w-0 flex-1 rounded-control border border-transparent bg-surface-sunken px-3 py-3 text-base text-ink shadow-inner focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
         >
           {MINUTES.map((mm) => (
             <option key={mm} value={mm}>

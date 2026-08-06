@@ -12,7 +12,9 @@ const SIDE_ITEMS = {
   ],
   right: [
     { sub: 'my-room', key: 'myRoom', icon: 'bed', labelKey: 'guest.nav.myRoom' },
-    { sub: 'my-seat', key: 'mySeat', icon: 'seat', labelKey: 'guest.nav.mySeat' },
+    // คู่มือขึ้นมาอยู่แถบล่างแทนที่นั่ง (ส.ค. 2569) — ที่นั่งย้ายไปเป็นเมนูลัดบนหน้าแรก
+    // เหตุผล: หน้าแรกมีการ์ดสรุปเลขที่นั่งอยู่แล้ว ส่วนคู่มือเป็นหน้าที่เปิดซ้ำระหว่างเที่ยว
+    { sub: 'trip-guide', key: 'tripGuide', icon: 'book', labelKey: 'guest.nav.tripGuide' },
   ],
 }
 
@@ -51,7 +53,7 @@ export default function GuestNav({ active }) {
 
   return (
     <nav
-      className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white/90 backdrop-blur-lg"
+      className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="เมนูหลัก"
     >

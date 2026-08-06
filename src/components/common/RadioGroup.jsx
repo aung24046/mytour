@@ -43,7 +43,7 @@ export default function RadioGroup({
                   type="radio"
                   checked={checked}
                   onChange={() => select(opt)}
-                  className="h-5 w-5 border-gray-300 text-brand focus:ring-brand-light"
+                  className="h-5 w-5 border-line-strong text-brand focus:ring-brand-light"
                 />
                 <span className="text-base text-ink">{opt.label}</span>
               </label>
@@ -54,7 +54,7 @@ export default function RadioGroup({
                   value={text}
                   onChange={(e) => updateText(opt, e.target.value)}
                   placeholder={opt.textPlaceholder ?? ''}
-                  className="mt-1.5 w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-2.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
+                  className="mt-1.5 w-full rounded-control border border-transparent bg-surface-sunken px-3.5 py-2.5 text-base text-ink shadow-inner placeholder:text-ink-faint focus:border-brand focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-light/70 transition"
                 />
               )}
             </div>

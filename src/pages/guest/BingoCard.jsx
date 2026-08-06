@@ -350,11 +350,11 @@ export default function BingoCard() {
 
           <GuestNav active="bingo" />
 
-          {loadingGames && <p className="text-gray-500">{t('common.loading')}</p>}
+          {loadingGames && <p className="text-ink-muted">{t('common.loading')}</p>}
 
           {!loadingGames && games.length === 0 && (
             <Card>
-              <p className="text-gray-500">{t('guest.bingo.noGame')}</p>
+              <p className="text-ink-muted">{t('guest.bingo.noGame')}</p>
             </Card>
           )}
 
@@ -367,7 +367,7 @@ export default function BingoCard() {
                       key={g.id}
                       onClick={() => setActiveGameId(g.id)}
                       className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                        activeGameId === g.id ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                        activeGameId === g.id ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
                       }`}
                     >
                       {g.name || t('guest.bingo.unnamedRoom')}
@@ -376,24 +376,24 @@ export default function BingoCard() {
                 </div>
               )}
 
-              {loadingCard && <p className="text-gray-500">{t('common.loading')}</p>}
+              {loadingCard && <p className="text-ink-muted">{t('common.loading')}</p>}
 
               {!loadingCard && card && (
                 <>
                   {!card.is_confirmed && (
-                    <Card className="mb-3 bg-sky-50">
-                      <p className="text-sm font-medium text-sky-700">
+                    <Card className="mb-3 bg-brand-lighter">
+                      <p className="text-sm font-medium text-brand-hover">
                         {t('guest.bingo.editModeHint')}
                       </p>
                     </Card>
                   )}
 
                   {card.is_confirmed && card.has_bingo && (
-                    <Card className="mb-3 bg-amber-50 text-center">
-                      <p className="text-lg font-bold text-amber-700">
+                    <Card className="mb-3 bg-warning-bg text-center">
+                      <p className="text-lg font-bold text-warning-text">
                         🎉 {t('guest.bingo.youWon')}
                       </p>
-                      <p className="mt-1 text-sm text-amber-700/80">
+                      <p className="mt-1 text-sm text-warning-text/80">
                         {card.win_status === 'confirmed'
                           ? t('guest.bingo.winConfirmed')
                           : t('guest.bingo.winPending')}
@@ -402,8 +402,8 @@ export default function BingoCard() {
                   )}
 
                   {card.win_status === 'rejected' && !card.has_bingo && (
-                    <Card className="mb-3 bg-gray-50 text-center">
-                      <p className="text-sm font-medium text-gray-600">
+                    <Card className="mb-3 bg-surface-muted text-center">
+                      <p className="text-sm font-medium text-ink-muted">
                         {t('guest.bingo.winRejected')}
                       </p>
                     </Card>
@@ -411,18 +411,18 @@ export default function BingoCard() {
 
                   {card.is_confirmed && !card.has_bingo && hasBingoNow && (
                     <Card className="mb-3 text-center">
-                      <p className="mb-2 font-semibold text-sky-700">
+                      <p className="mb-2 font-semibold text-brand-hover">
                         {t('guest.bingo.youHaveBingo')}
                       </p>
                       <button
                         onClick={claimBingo}
                         disabled={claiming}
-                        className="w-full rounded-xl bg-amber-500 px-4 py-3 text-base font-bold text-white active:scale-[0.98] disabled:opacity-50"
+                        className="w-full rounded-xl bg-warning px-4 py-3 text-base font-bold text-on-warning active:scale-[0.98] disabled:opacity-50"
                       >
                         {claiming ? t('guest.register.submitting') : t('guest.bingo.claimBingo')}
                       </button>
                       {actionError && (
-                        <p className="mt-2 text-sm text-red-500">{actionError}</p>
+                        <p className="mt-2 text-sm text-danger">{actionError}</p>
                       )}
                     </Card>
                   )}
@@ -450,7 +450,7 @@ export default function BingoCard() {
                                 if (e.key === 'Enter') saveEditCell()
                                 if (e.key === 'Escape') cancelEditCell()
                               }}
-                              className="aspect-square rounded-lg border-2 border-sky-500 text-center text-sm font-bold"
+                              className="aspect-square rounded-lg border-2 border-brand text-center text-sm font-bold"
                             />
                           )
                         }
@@ -465,13 +465,13 @@ export default function BingoCard() {
                             className={`aspect-square rounded-lg text-sm font-bold transition ${
                               card.is_confirmed
                                 ? isMarked
-                                  ? 'bg-sky-600 text-white'
+                                  ? 'bg-brand text-white'
                                   : isCalled
-                                    ? 'bg-white text-gray-900 ring-1 ring-sky-300'
-                                    : 'bg-gray-100 text-gray-400'
+                                    ? 'bg-surface text-ink ring-1 ring-brand'
+                                    : 'bg-surface-sunken text-ink-faint'
                                 : isFree
-                                  ? 'bg-gray-100 text-gray-400'
-                                  : 'bg-white text-gray-900 ring-1 ring-gray-300 active:bg-gray-50'
+                                  ? 'bg-surface-sunken text-ink-faint'
+                                  : 'bg-surface text-ink ring-1 ring-line-strong active:bg-surface-muted'
                             }`}
                           >
                             {isFree ? t('guest.bingo.free') : num}
@@ -482,7 +482,7 @@ export default function BingoCard() {
                   </Card>
 
                   {editError && (
-                    <p className="mt-2 text-center text-sm text-red-500">{editError}</p>
+                    <p className="mt-2 text-center text-sm text-danger">{editError}</p>
                   )}
 
                   {!card.is_confirmed ? (
@@ -490,23 +490,23 @@ export default function BingoCard() {
                       <button
                         onClick={shuffleCard}
                         disabled={saving}
-                        className="w-full rounded-xl bg-gray-100 px-4 py-3 text-base font-semibold text-gray-700 active:scale-[0.98] disabled:opacity-50"
+                        className="w-full rounded-xl bg-surface-sunken px-4 py-3 text-base font-semibold text-neutral-text active:scale-[0.98] disabled:opacity-50"
                       >
                         {t('guest.bingo.shuffle')}
                       </button>
                       <button
                         onClick={confirmCard}
                         disabled={confirming || saving}
-                        className="w-full rounded-xl bg-sky-600 px-4 py-3 text-base font-bold text-white active:scale-[0.98] disabled:opacity-50"
+                        className="w-full rounded-xl bg-brand px-4 py-3 text-base font-bold text-white active:scale-[0.98] disabled:opacity-50"
                       >
                         {confirming ? t('guest.register.submitting') : t('guest.bingo.confirmCard')}
                       </button>
-                      <p className="text-center text-xs text-gray-400">
+                      <p className="text-center text-xs text-ink-faint">
                         {t('guest.bingo.editHint')}
                       </p>
                     </div>
                   ) : (
-                    <p className="mt-2 text-center text-xs text-gray-400">
+                    <p className="mt-2 text-center text-xs text-ink-faint">
                       {t('guest.bingo.tapHint')}
                     </p>
                   )}

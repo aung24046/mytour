@@ -8,6 +8,7 @@ import { getGuestId } from '../../lib/guestSession'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
+import ColorModeToggle from '../../components/common/ColorModeToggle'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
 import Icon from '../../components/common/Icon'
@@ -170,7 +171,14 @@ export default function EditProfile() {
       <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
           <h1 className="mb-1 text-2xl font-extrabold text-ink">{t('guest.editProfile.title')}</h1>
-          <p className="mb-4 text-sm text-ink-muted">{t('guest.editProfile.subtitle')}</p>
+          <p className="mb-3 text-sm text-ink-muted">{t('guest.editProfile.subtitle')}</p>
+
+          {/* โหมดสีเป็นความชอบส่วนตัวของแต่ละเครื่อง จึงอยู่หน้าข้อมูลส่วนตัว
+              ไม่ใช่หน้าตั้งค่าของบริษัท */}
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-card border border-line bg-surface px-3 py-2.5">
+            <span className="text-sm font-semibold text-ink">โหมดหน้าจอ</span>
+            <ColorModeToggle />
+          </div>
 
           {!guestId && (
             <Card className="flex flex-col items-center gap-3 py-8 text-center">

@@ -28,7 +28,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -42,7 +42,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -56,7 +56,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={Array.isArray(value) ? value : []}
             onChange={onChange}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -70,7 +70,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -86,7 +86,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={onChange}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -101,7 +101,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={onChange}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -115,7 +115,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={onChange}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -128,7 +128,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={onChange}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
 
@@ -148,7 +148,7 @@ export default function DynamicField({ field, value, onChange, error }) {
               value={value ?? ''}
               onChange={(e) => onChange(formatThaiNationalId(e.target.value))}
             />
-            {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-sm text-danger">{error}</p>}
           </div>
         )
       }
@@ -160,7 +160,7 @@ export default function DynamicField({ field, value, onChange, error }) {
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger">{error}</p>}
         </div>
       )
     }

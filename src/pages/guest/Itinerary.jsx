@@ -182,7 +182,7 @@ export default function Itinerary() {
       <div className="p-4 pb-28">
       <div className="mx-auto max-w-md">
         <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-          <Icon name="map" size={24} color="#0e7490" />
+          <Icon name="map" size={24} className="text-brand-hover" />
           {t('guest.itinerary.title')}
         </h1>
 
@@ -212,7 +212,7 @@ export default function Itinerary() {
                   className={`shrink-0 rounded-pill px-4 py-2 text-sm font-semibold transition ${
                     activeDay === day
                       ? 'bg-brand text-white shadow-brand'
-                      : 'bg-surface text-ink-muted ring-1 ring-black/[0.04]'
+                      : 'bg-surface text-ink-muted ring-1 ring-line-subtle'
                   }`}
                 >
                   {t('guest.itinerary.day', { day })}
@@ -249,25 +249,25 @@ export default function Itinerary() {
                     <div
                       key={item.id}
                       id="current-itinerary-item"
-                      className="rounded-[12px] border border-success/30 border-l-4 border-l-success bg-success-bg/40 p-3.5 shadow-card"
+                      className="rounded-[12px] border border-accent/30 border-l-4 border-l-accent bg-accent-bg p-3.5 shadow-card"
                     >
                       <div className="mb-1 flex items-center justify-between">
                         {item.scheduled_time ? (
-                          <span className="text-[13px] font-bold text-success-text">
+                          <span className="text-[13px] font-bold text-accent-text">
                             {formatTime(item.scheduled_time)}
                           </span>
                         ) : (
                           <span />
                         )}
-                        <span className="inline-flex items-center gap-1.5 rounded-pill bg-success px-2.5 py-0.5 text-[10px] font-semibold text-white">
-                          <span className="h-1 w-1 rounded-full bg-white" />
+                        <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent px-2.5 py-0.5 text-[10px] font-semibold text-on-accent">
+                          <span className="h-1 w-1 rounded-full bg-on-accent" />
                           {t('guest.itinerary.nowLabel')}
                         </span>
                       </div>
                       <p className="text-base font-semibold text-ink">{item.title}</p>
                       {item.location_name && (
                         <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-muted">
-                          <Icon name="location" size={14} color="#5b7580" />
+                          <Icon name="location" size={14} className="text-ink-muted" />
                           {item.location_name}
                         </p>
                       )}
@@ -284,7 +284,7 @@ export default function Itinerary() {
                 return (
                   <div
                     key={item.id}
-                    className={`overflow-hidden rounded-[12px] border border-black/[0.06] border-l-4 bg-surface shadow-card ${
+                    className={`overflow-hidden rounded-[12px] border border-line-subtle border-l-4 bg-surface shadow-card ${
                       isDone ? 'border-l-success/60' : 'border-l-ink-faint/30'
                     } ${isDone && !expanded ? 'opacity-60' : ''}`}
                   >
@@ -308,7 +308,7 @@ export default function Itinerary() {
                       </div>
 
                       {isDone ? (
-                        <Icon name="check" size={19} color="#1d9e75" />
+                        <Icon name="check" size={19} className="text-success" />
                       ) : (
                         <>
                           {article && (

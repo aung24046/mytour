@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node src/lib/__tests__/themes.test.mjs && node src/lib/__tests__/theme-apply.test.mjs && node src/lib/__tests__/contrast.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

@@ -349,10 +349,10 @@ export default function LuggageManager() {
   }, [luggage, listSearch, statusFilter, guestById])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-muted p-4">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-gray-900">{t('staff.luggageManager.title')}</h1>
-        <p className="mb-3 text-sm text-gray-500">
+        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.luggageManager.title')}</h1>
+        <p className="mb-3 text-sm text-ink-muted">
           {t('staff.luggageManager.summary', {
             total: counts.total,
             loaded: counts.loaded,
@@ -366,7 +366,7 @@ export default function LuggageManager() {
               key={m}
               onClick={() => setMode(m)}
               className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                mode === m ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'
+                mode === m ? 'bg-brand text-white' : 'bg-surface-sunken text-neutral-text'
               }`}
             >
               {t(`staff.luggageManager.mode.${m}`)}
@@ -374,12 +374,12 @@ export default function LuggageManager() {
           ))}
         </div>
 
-        {loading && <p className="text-gray-500">{t('common.loading')}</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="text-danger">{error}</p>}
 
         {!loading && !error && mode === 'generate' && (
           <Card>
-            <p className="mb-2 text-sm font-medium text-gray-700">{t('staff.luggageManager.genLabel')}</p>
+            <p className="mb-2 text-sm font-medium text-neutral-text">{t('staff.luggageManager.genLabel')}</p>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -387,13 +387,13 @@ export default function LuggageManager() {
                 max="500"
                 value={genCount}
                 onChange={(e) => setGenCount(e.target.value)}
-                className="min-w-0 flex-1 rounded-xl border border-gray-300 px-3 py-2.5 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                className="min-w-0 flex-1 rounded-xl border border-line-strong px-3 py-2.5 text-base focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
               />
               <Button onClick={generateTags} disabled={generating} fullWidth={false} className="shrink-0 px-4">
                 {generating ? t('common.loading') : t('staff.luggageManager.generateButton')}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-gray-400">{t('staff.luggageManager.genHint')}</p>
+            <p className="mt-2 text-xs text-ink-faint">{t('staff.luggageManager.genHint')}</p>
           </Card>
         )}
 
@@ -407,8 +407,8 @@ export default function LuggageManager() {
               <div
                 className={`mb-3 rounded-xl px-3 py-2 text-sm font-medium ${
                   assignFeedback.type === 'not_found' || assignFeedback.type === 'camera_error'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-green-100 text-green-800'
+                    ? 'bg-danger-bg text-danger-text'
+                    : 'bg-success-bg text-success-text'
                 }`}
               >
                 {assignFeedback.type === 'not_found' && t('staff.luggageManager.tagNotFound')}
@@ -419,12 +419,12 @@ export default function LuggageManager() {
               </div>
             )}
 
-            <p className="mb-2 text-sm font-medium text-gray-700">
+            <p className="mb-2 text-sm font-medium text-neutral-text">
               {t('staff.luggageManager.unassignedList', { count: unassignedTags.length })}
             </p>
             <div className="flex flex-col gap-2">
               {unassignedTags.length === 0 && (
-                <p className="text-sm text-gray-400">{t('staff.luggageManager.noUnassigned')}</p>
+                <p className="text-sm text-ink-faint">{t('staff.luggageManager.noUnassigned')}</p>
               )}
               {unassignedTags.map((tag) => (
                 <Card
@@ -432,8 +432,8 @@ export default function LuggageManager() {
                   className="flex cursor-pointer items-center justify-between"
                   onClick={() => openAssignForTag(tag)}
                 >
-                  <span className="font-mono text-lg font-semibold text-gray-900">{tag.tag_code}</span>
-                  <span className="text-sm text-sky-600">{t('staff.luggageManager.assignThis')}</span>
+                  <span className="font-mono text-lg font-semibold text-ink">{tag.tag_code}</span>
+                  <span className="text-sm text-brand">{t('staff.luggageManager.assignThis')}</span>
                 </Card>
               ))}
             </div>
@@ -443,13 +443,13 @@ export default function LuggageManager() {
         {!loading && !error && mode === 'loading' && (
           <div>
             <Card className="mb-3 text-center">
-              <p className="text-sm text-gray-500">{t('staff.luggageManager.loadingProgress')}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
+              <p className="text-sm text-ink-muted">{t('staff.luggageManager.loadingProgress')}</p>
+              <p className="mt-1 text-3xl font-bold text-ink">
                 {counts.loaded}
-                <span className="text-lg font-medium text-gray-400"> / {counts.total}</span>
+                <span className="text-lg font-medium text-ink-faint"> / {counts.total}</span>
               </p>
               {counts.total - counts.loaded > 0 && (
-                <p className="mt-1 text-sm text-amber-600">
+                <p className="mt-1 text-sm text-warning-text">
                   {t('staff.luggageManager.missingCount', { count: counts.total - counts.loaded })}
                 </p>
               )}
@@ -463,10 +463,10 @@ export default function LuggageManager() {
               <div
                 className={`mb-3 rounded-xl px-3 py-2 text-sm font-medium ${
                   loadingFeedback.type === 'success'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-success-bg text-success-text'
                     : loadingFeedback.type === 'duplicate' || loadingFeedback.type === 'unassigned'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-700'
+                      ? 'bg-warning-bg text-warning-text'
+                      : 'bg-danger-bg text-danger-text'
                 }`}
               >
                 {loadingFeedback.type === 'success' &&
@@ -485,14 +485,14 @@ export default function LuggageManager() {
             )}
 
             {/* รายชื่อกระเป๋าที่ยังไม่โหลด แยกตามเจ้าของ ให้เช็คได้ก่อนรถออก */}
-            <p className="mb-2 text-sm font-medium text-gray-700">{t('staff.luggageManager.notLoadedYet')}</p>
+            <p className="mb-2 text-sm font-medium text-neutral-text">{t('staff.luggageManager.notLoadedYet')}</p>
             <div className="flex flex-col gap-2">
               {luggage
                 .filter((l) => l.status !== 'loaded' && l.status !== 'delivered' && l.status !== 'unassigned')
                 .map((tag) => (
                   <Card key={tag.id} className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-gray-900">{tag.tag_code}</span>
-                    <span className={`text-sm ${genderTextClass(guestById[tag.guest_id]?.gender) || 'text-gray-600'}`}>
+                    <span className="font-mono text-sm text-ink">{tag.tag_code}</span>
+                    <span className={`text-sm ${genderTextClass(guestById[tag.guest_id]?.gender) || 'text-ink-muted'}`}>
                       {guestById[tag.guest_id]?.nickname || guestById[tag.guest_id]?.name || '-'}
                     </span>
                   </Card>
@@ -508,7 +508,7 @@ export default function LuggageManager() {
               placeholder={t('staff.luggageManager.searchPlaceholder')}
               value={listSearch}
               onChange={(e) => setListSearch(e.target.value)}
-              className="mb-3 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="mb-3 w-full rounded-xl border border-line-strong px-3 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
             />
 
             <div className="mb-3 flex flex-wrap gap-2">
@@ -517,7 +517,7 @@ export default function LuggageManager() {
                   key={s}
                   onClick={() => setStatusFilter(s)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                    statusFilter === s ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'
+                    statusFilter === s ? 'bg-neutral-text text-white' : 'bg-surface-sunken text-neutral-text'
                   }`}
                 >
                   {t(`staff.luggageManager.status.${s}`)}
@@ -526,7 +526,7 @@ export default function LuggageManager() {
             </div>
 
             {filteredList.length === 0 && (
-              <p className="text-sm text-gray-400">{t('staff.luggageManager.noResults')}</p>
+              <p className="text-sm text-ink-faint">{t('staff.luggageManager.noResults')}</p>
             )}
 
             <div className="flex flex-col gap-2">
@@ -542,13 +542,13 @@ export default function LuggageManager() {
                           className="h-12 w-12 shrink-0 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-surface-sunken text-ink-faint">
                           🧳
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="font-mono text-sm font-semibold text-gray-900">{tag.tag_code}</p>
-                        <p className={`truncate text-xs ${genderTextClass(guest?.gender) || 'text-gray-500'}`}>
+                        <p className="font-mono text-sm font-semibold text-ink">{tag.tag_code}</p>
+                        <p className={`truncate text-xs ${genderTextClass(guest?.gender) || 'text-ink-muted'}`}>
                           {guest ? guest.nickname || guest.name : t('staff.luggageManager.status.unassigned')}
                         </p>
                       </div>
@@ -570,14 +570,14 @@ export default function LuggageManager() {
                       {tag.guest_id && (
                         <button
                           onClick={() => unassignTag(tag)}
-                          className="flex-1 rounded-xl bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700"
+                          className="flex-1 rounded-xl bg-surface-sunken px-3 py-1.5 text-xs font-semibold text-neutral-text"
                         >
                           {t('staff.luggageManager.unassignTag')}
                         </button>
                       )}
                       <button
                         onClick={() => deleteTag(tag)}
-                        className="flex-1 rounded-xl bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600"
+                        className="flex-1 rounded-xl bg-danger-bg px-3 py-1.5 text-xs font-semibold text-danger"
                       >
                         {t('staff.luggageManager.deleteTag')}
                       </button>
@@ -597,7 +597,7 @@ export default function LuggageManager() {
         title={t('staff.luggageManager.scanTag')}
       >
         <QrScanner onScan={handleAssignScan} onError={handleAssignScanError} />
-        <p className="mt-3 text-center text-sm text-gray-500">{t('staff.luggageManager.scanTagHint')}</p>
+        <p className="mt-3 text-center text-sm text-ink-muted">{t('staff.luggageManager.scanTagHint')}</p>
         <Button variant="secondary" className="mt-3" onClick={() => setAssignScannerOpen(false)}>
           {t('common.cancel')}
         </Button>
@@ -610,7 +610,7 @@ export default function LuggageManager() {
         title={t('staff.luggageManager.scanToLoad')}
       >
         <QrScanner onScan={handleLoadingScan} onError={handleLoadingScanError} />
-        <p className="mt-3 text-center text-sm text-gray-500">{t('staff.luggageManager.scanToLoadHint')}</p>
+        <p className="mt-3 text-center text-sm text-ink-muted">{t('staff.luggageManager.scanToLoadHint')}</p>
         <Button variant="secondary" className="mt-3" onClick={() => setLoadingScannerOpen(false)}>
           {t('common.cancel')}
         </Button>
@@ -629,28 +629,28 @@ export default function LuggageManager() {
               placeholder={t('staff.luggageManager.searchGuestPlaceholder')}
               value={assignSearch}
               onChange={(e) => setAssignSearch(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="w-full rounded-xl border border-line-strong px-3 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-light"
             />
 
-            <div className="max-h-48 overflow-y-auto rounded-xl border border-gray-100">
+            <div className="max-h-48 overflow-y-auto rounded-xl border border-line-subtle">
               {filteredGuestOptions.map((g) => (
                 <button
                   key={g.id}
                   onClick={() => setAssignGuestId(g.id)}
-                  className={`block w-full border-b border-gray-50 px-3 py-2 text-left text-sm last:border-b-0 ${
+                  className={`block w-full border-b border-line-subtle px-3 py-2 text-left text-sm last:border-b-0 ${
                     assignGuestId === g.id
-                      ? 'bg-sky-50 font-semibold text-sky-700'
-                      : genderTextClass(g.gender) || 'text-gray-900'
+                      ? 'bg-brand-lighter font-semibold text-brand-hover'
+                      : genderTextClass(g.gender) || 'text-ink'
                   }`}
                 >
                   {g.nickname || g.name}
-                  {g.nickname && <span className="ml-1 text-gray-400">({g.name})</span>}
+                  {g.nickname && <span className="ml-1 text-ink-faint">({g.name})</span>}
                 </button>
               ))}
             </div>
 
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-400">
+              <p className="mb-1 text-xs font-medium text-ink-faint">
                 {t('staff.luggageManager.photoLabel')}
               </p>
               <input
@@ -663,7 +663,7 @@ export default function LuggageManager() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-xl bg-gray-100 px-3 py-2.5 text-sm font-semibold text-gray-700"
+                className="w-full rounded-xl bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-neutral-text"
               >
                 {t('staff.luggageManager.takePhoto')}
               </button>
@@ -676,7 +676,7 @@ export default function LuggageManager() {
               )}
             </div>
 
-            {assignError && <p className="text-sm text-red-500">{assignError}</p>}
+            {assignError && <p className="text-sm text-danger">{assignError}</p>}
 
             <Button onClick={saveAssign} disabled={assignSaving || !assignGuestId}>
               {assignSaving ? t('common.loading') : t('common.save')}
