@@ -200,7 +200,9 @@
       "claimFailed": "确认宾果失败 — 请检查已标记的号码是否连成一线且都已叫过。",
       "winPending": "等待工作人员核实",
       "winConfirmed": "工作人员已确认",
-      "winRejected": "工作人员核实后发现尚未连成一线，请继续游戏。"
+      "winRejected": "工作人员核实后发现尚未连成一线，请继续游戏。",
+      "lastCalled": "最新号码",
+      "revealing": "正在抽号…"
     },
     "shareLocation": {
       "title": "分享位置",
@@ -789,7 +791,10 @@
       "approveWin": "确认获胜",
       "rejectWin": "不通过",
       "statusWinConfirmed": "已确认",
-      "statusWinPending": "待核实"
+      "statusWinPending": "待核实",
+      "revealing": "正在抽号…",
+      "animationLabel": "抽号动画",
+      "animationHint": "增加 2 秒转动效果，对所有游客手机同样生效。"
     },
     "formBuilder": {
       "title": "报名表单管理",

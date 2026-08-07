@@ -200,7 +200,9 @@
       "claimFailed": "Couldn't confirm bingo — check that your marked numbers complete a line and have all been called.",
       "winPending": "Waiting for staff to verify",
       "winConfirmed": "Verified by staff",
-      "winRejected": "Staff checked and the line is not complete yet — keep playing."
+      "winRejected": "Staff checked and the line is not complete yet — keep playing.",
+      "lastCalled": "Last called",
+      "revealing": "Drawing..."
     },
     "shareLocation": {
       "title": "Share location",
@@ -789,7 +791,10 @@
       "approveWin": "Approve",
       "rejectWin": "Reject",
       "statusWinConfirmed": "Confirmed",
-      "statusWinPending": "Pending review"
+      "statusWinPending": "Pending review",
+      "revealing": "Drawing...",
+      "animationLabel": "Number draw animation",
+      "animationHint": "Adds a 2-second spin. Applies to every guest phone too."
     },
     "formBuilder": {
       "title": "Registration form builder",

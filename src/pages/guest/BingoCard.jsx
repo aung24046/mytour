@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { playWinAlert, primeWinAlert } from '../../lib/winAlert'
+import { useNumberReveal } from '../../lib/useNumberReveal'
+import NumberReveal from '../../components/common/NumberReveal'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
@@ -86,7 +88,7 @@ export default function BingoCard() {
       if (!silent) setLoadingGames(true)
       const { data } = await supabase
         .from('bingo_games')
-        .select('id, name, status, called_numbers')
+        .select('id, name, status, called_numbers, reveal_animation')
         .eq('tour_id', tourId)
         .in('status', ['waiting', 'playing'])
         .order('created_at', { ascending: true })
@@ -209,7 +211,26 @@ export default function BingoCard() {
     return () => supabase.removeChannel(cardChannel)
   }, [guestId])
 
-  const calledSet = useMemo(() => new Set(activeGame?.called_numbers ?? []), [activeGame])
+  const animationOn = activeGame?.reveal_animation !== false
+  const { revealing, isRevealing } = useNumberReveal(
+    activeGame?.called_numbers,
+    animationOn,
+    activeGameId
+  )
+
+  const lastCalled =
+    activeGame?.called_numbers?.length > 0
+      ? activeGame.called_numbers[activeGame.called_numbers.length - 1]
+      : null
+
+  // กักเลขที่กำลังเฉลยไว้ก่อน ไม่งั้นช่องในการ์ดจะกดได้ตั้งแต่เลขยังหมุนไม่หยุด
+  // = สปอยล์ตัวเอง (hook มี timeout กันค้างไว้แล้ว เลขจะไม่ถูกกักถาวร)
+  const calledSet = useMemo(() => {
+    const set = new Set(activeGame?.called_numbers ?? [])
+    if (revealing !== null) set.delete(revealing)
+    return set
+  }, [activeGame, revealing])
+
   const markedSet = useMemo(() => new Set(card?.marked_numbers ?? []), [card])
 
   const hasBingoNow = useMemo(() => {
@@ -424,6 +445,27 @@ export default function BingoCard() {
                       {actionError && (
                         <p className="mt-2 text-sm text-danger">{actionError}</p>
                       )}
+                    </Card>
+                  )}
+
+                  {/* แถบเลขล่าสุด — เดิมหน้าลูกทัวร์ไม่มีที่แสดงเลขที่ประกาศเลย
+                      รู้ได้แค่จากช่องในการ์ดที่กดได้ขึ้นมา ถ้าเลขนั้นไม่อยู่ในการ์ดตัวเอง
+                      ก็ไม่รู้เลยว่าเกิดอะไรขึ้น · วางเป็นแถบไม่ใช่ popup เพราะเด้งทับ
+                      2 วินาที × 75 รอบ = บังจอรวมสองนาทีครึ่ง และกดติ๊กช่องอื่นไม่ได้ */}
+                  {card.is_confirmed && (
+                    <Card className="mb-3 flex items-center justify-between gap-3 bg-warning-bg py-3">
+                      <span className="text-xs font-medium text-warning-text">
+                        {isRevealing
+                          ? t('guest.bingo.revealing')
+                          : t('guest.bingo.lastCalled')}
+                      </span>
+                      <span className="text-3xl font-bold leading-none text-warning-text">
+                        <NumberReveal
+                          number={lastCalled}
+                          spinning={isRevealing}
+                          max={MAX_NUMBER}
+                        />
+                      </span>
                     </Card>
                   )}
 

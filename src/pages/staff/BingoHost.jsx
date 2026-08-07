@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import { playWinAlert, primeWinAlert } from '../../lib/winAlert'
+import { useNumberReveal } from '../../lib/useNumberReveal'
+import NumberReveal from '../../components/common/NumberReveal'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -44,7 +46,7 @@ export default function BingoHost() {
       if (!silent) setLoadingGames(true)
       const { data } = await supabase
         .from('bingo_games')
-        .select('id, name, status, called_numbers, created_at')
+        .select('id, name, status, called_numbers, created_at, reveal_animation')
         .eq('tour_id', tourId)
         .in('status', ['waiting', 'playing'])
         .order('created_at', { ascending: true })
@@ -189,6 +191,27 @@ export default function BingoHost() {
     () => MAX_NUMBER - (activeGame?.called_numbers?.length ?? 0),
     [activeGame]
   )
+
+  const animationOn = activeGame?.reveal_animation !== false
+  const { isRevealing } = useNumberReveal(activeGame?.called_numbers, animationOn, activeGameId)
+
+  async function toggleAnimation() {
+    if (!activeGame) return
+    const next = !animationOn
+    // optimistic — realtime จะยืนยันกลับมาเอง และเครื่องลูกทัวร์รับค่าใหม่ผ่าน channel เดียวกัน
+    setGames((prev) =>
+      prev.map((g) => (g.id === activeGame.id ? { ...g, reveal_animation: next } : g))
+    )
+    const { error } = await supabase
+      .from('bingo_games')
+      .update({ reveal_animation: next })
+      .eq('id', activeGame.id)
+    if (error) {
+      setGames((prev) =>
+        prev.map((g) => (g.id === activeGame.id ? { ...g, reveal_animation: animationOn } : g))
+      )
+    }
+  }
 
   function applyCalledNumbers(gameId, nextCalled) {
     setGames((prev) => prev.map((g) => (g.id === gameId ? { ...g, called_numbers: nextCalled } : g)))
@@ -460,8 +483,12 @@ export default function BingoHost() {
                 )}
 
                 <Card className="mt-3 text-center">
-                  <p className="text-sm font-medium text-ink-muted">{t('staff.bingoHost.lastCalled')}</p>
-                  <p className="my-2 text-5xl font-bold text-brand">{lastCalled ?? '—'}</p>
+                  <p className="text-sm font-medium text-ink-muted">
+                    {isRevealing ? t('staff.bingoHost.revealing') : t('staff.bingoHost.lastCalled')}
+                  </p>
+                  <p className="my-2 text-5xl font-bold text-brand">
+                    <NumberReveal number={lastCalled} spinning={isRevealing} max={MAX_NUMBER} />
+                  </p>
                   <p className="text-xs text-ink-faint">
                     {t('staff.bingoHost.calledCount', {
                       count: activeGame.called_numbers?.length ?? 0,
@@ -469,10 +496,12 @@ export default function BingoHost() {
                     })}
                   </p>
 
+                  {/* ล็อกปุ่มระหว่างเฉลย — กัน staff กดรัวจนเลขวิ่งข้ามหัวคนดู
+                      และช่วยคุมจังหวะเกมไปในตัว */}
                   <Button
                     className="mt-4"
                     onClick={callRandomNumber}
-                    disabled={calling || remainingCount <= 0}
+                    disabled={calling || isRevealing || remainingCount <= 0}
                   >
                     {remainingCount <= 0
                       ? t('staff.bingoHost.allCalled')
@@ -495,13 +524,30 @@ export default function BingoHost() {
                     />
                     <button
                       type="submit"
-                      disabled={calling || !manualNumber}
+                      disabled={calling || isRevealing || !manualNumber}
                       className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                     >
                       {t('staff.bingoHost.manualCall')}
                     </button>
                   </form>
                   {manualError && <p className="mt-1 text-sm text-danger">{manualError}</p>}
+
+                  {/* สวิตช์ระดับห้อง ไม่ใช่ค่าในเครื่องนี้ — กดแล้วมีผลกับมือถือลูกทัวร์ทุกเครื่อง */}
+                  <label className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-neutral-bg px-3 py-2.5 text-left">
+                    <span className="text-sm font-medium text-neutral-text">
+                      {t('staff.bingoHost.animationLabel')}
+                      <span className="block text-xs font-normal text-ink-faint">
+                        {t('staff.bingoHost.animationHint')}
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={animationOn}
+                      onChange={toggleAnimation}
+                      className="h-6 w-6 shrink-0 accent-brand"
+                    />
+                  </label>
 
                   <Button variant="secondary" className="mt-3" onClick={endGame}>
                     {t('staff.bingoHost.endGame')}
