@@ -175,7 +175,15 @@
       "meetingPoint": "จุดนัดพบ",
       "dinner": "อาหารเย็น",
       "showLocalAddress": "แสดงที่อยู่ภาษาท้องถิ่น",
-      "localAddressHint": "ยื่นหน้าจอนี้ให้คนขับแท็กซี่ได้เลย"
+      "localAddressHint": "ยื่นหน้าจอนี้ให้คนขับแท็กซี่ได้เลย",
+      "sectionInternet": "อินเทอร์เน็ต",
+      "sectionSchedule": "ตารางเวลา",
+      "sectionGoBack": "กลับโรงแรม",
+      "copyPassword": "คัดลอกรหัส",
+      "me": "ฉัน",
+      "typeLabel": "ประเภท",
+      "floorShort": "ชั้น",
+      "roomShort": "ห้อง"
     },
     "bagLookup": {
       "title": "กระเป๋าใบนี้เป็นของ",

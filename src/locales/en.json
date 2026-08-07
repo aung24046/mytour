@@ -175,7 +175,15 @@
       "meetingPoint": "Meeting point",
       "dinner": "Dinner",
       "showLocalAddress": "Show address in local language",
-      "localAddressHint": "Show this screen to your taxi driver"
+      "localAddressHint": "Show this screen to your taxi driver",
+      "sectionInternet": "Internet",
+      "sectionSchedule": "Schedule",
+      "sectionGoBack": "Getting back",
+      "copyPassword": "Copy",
+      "me": "Me",
+      "typeLabel": "Type",
+      "floorShort": "Floor",
+      "roomShort": "Room"
     },
     "bagLookup": {
       "title": "This bag belongs to",

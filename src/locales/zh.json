@@ -175,7 +175,15 @@
       "meetingPoint": "集合地点",
       "dinner": "晚餐",
       "showLocalAddress": "显示当地语言地址",
-      "localAddressHint": "可直接出示此画面给出租车司机"
+      "localAddressHint": "可直接出示此画面给出租车司机",
+      "sectionInternet": "网络",
+      "sectionSchedule": "时间安排",
+      "sectionGoBack": "返回酒店",
+      "copyPassword": "复制密码",
+      "me": "我",
+      "typeLabel": "房型",
+      "floorShort": "楼层",
+      "roomShort": "房间"
     },
     "bagLookup": {
       "title": "这个行李属于",

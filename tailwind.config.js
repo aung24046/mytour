@@ -101,6 +101,13 @@ export default {
         'brand-gradient': 'linear-gradient(rgb(var(--c-brand)), rgb(var(--c-brand)))',
         'brand-soft': 'linear-gradient(rgb(var(--c-brand-lighter)), rgb(var(--c-brand-lighter)))',
         'app': 'linear-gradient(rgb(var(--c-surface-muted)), rgb(var(--c-surface-muted)))',
+        // ── ข้อยกเว้นเดียวของกฎ "ไม่ไล่เฉด" ───────────────────────────
+        // ใช้กับหัวการ์ดที่พัก (MyRoom) เท่านั้น — การ์ดนั้นเป็นของชิ้นเดียวเต็มจอ
+        // ที่ลูกทัวร์เปิดดูซ้ำทุกวัน จึงยอมให้มีน้ำหนักทางสายตามากกว่าการ์ดอื่น
+        // จงใจใช้แค่ 2 สต็อป (brand → brand-deep) ไม่ใช่ 3 สต็อปสว่างจัดแบบเดิม
+        // ที่ถูกถอดออกไป ห้ามนำไปใช้กับการ์ดทั่วไป ไม่งั้นจะกลับไปรกเหมือนเดิม
+        'stay-hero':
+          'linear-gradient(135deg, rgb(var(--c-brand)) 0%, rgb(var(--c-brand-deep)) 100%)',
       },
       borderRadius: {
         card: '1.25rem', // rounded-2xl+

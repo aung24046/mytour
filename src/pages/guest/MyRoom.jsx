@@ -213,193 +213,274 @@ export default function MyRoom() {
           )}
 
           {!loading && !error && stays.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {stays.map(({ room, hotel, roommates }, index) => {
-                const isCollapsed = !!collapsedStays[room.id]
-                const title = hotel?.name || t('guest.myRoom.roomNumber', { number: room.room_number || '—' })
-                const nights = nightsBetween(hotel?.check_in_date, hotel?.check_out_date)
-                const roomTypeLabel = t(`guest.myRoom.${ROOM_TYPE_LABELS[room.room_type] ?? 'roomTypeTwin'}`)
-                const hasWifi = hotel && (hotel.wifi_name || hotel.wifi_password)
-                const hasBreakfast = hotel && (hotel.breakfast_time || hotel.breakfast_location)
-                const hasDinner = hotel && (hotel.dinner_time || hotel.dinner_location)
-                const hasCheckIn = hotel && hotel.check_in_time
-                const hasCheckout = hotel && hotel.checkout_time
-                const hasMorningCall = hotel && hotel.morning_call
-                const hasLuggage = hotel && hotel.luggage_time
-                const hasMeetingPoint = hotel && hotel.meeting_point
-                const hasAmenityRows =
-                  hasWifi ||
-                  hasBreakfast ||
-                  hasDinner ||
-                  hasCheckIn ||
-                  hasCheckout ||
-                  hasMorningCall ||
-                  hasLuggage ||
-                  hasMeetingPoint
-                const hasNotes = hotel && hotel.general_info
-                return (
-                  <div
-                    key={room.id}
-                    className="overflow-hidden rounded-card border border-line bg-surface shadow-card ring-1 ring-line-subtle"
-                  >
-                    {/* หัวบัตร กดย่อ/ขยายได้ */}
-                    <button
-                      type="button"
-                      onClick={() => toggleStay(room.id)}
-                      aria-expanded={!isCollapsed}
-                      className="w-full p-4 text-left"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          {stays.length > 1 && (
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-                              {t('guest.myRoom.stayNumber', { number: index + 1 })}
-                            </p>
-                          )}
-                          <p className="truncate font-bold text-ink">{title}</p>
-                          <p className="mt-0.5 truncate text-xs text-ink-muted">
-                            {roomTypeLabel} · {t('guest.myRoom.floorLabel', { floor: room.floor || '—' })}
-                          </p>
-                          {(hotel?.check_in_date || hotel?.check_out_date) && (
-                            <span className="mt-2 inline-flex items-center gap-1.5 rounded-control bg-brand-lighter px-2 py-1 text-[11px] font-medium text-brand">
-                              <Icon name="calendar" size={12} />
-                              {hotel.check_in_date || '—'} → {hotel.check_out_date || '—'}
-                              {nights ? ` · ${t('guest.myRoom.nights', { count: nights })}` : ''}
-                            </span>
-                          )}
-                        </div>
-                        <svg
-                          viewBox="0 0 24 24"
-                          className={`h-4 w-4 shrink-0 text-ink-faint transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </div>
-
-                      <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-xs text-ink-faint">{t('guest.myRoom.roomNumberLabel')}</span>
-                        <span className="text-[40px] font-extrabold leading-none text-brand">
-                          {room.room_number || '—'}
-                        </span>
-                      </div>
-                    </button>
-
-                    {!isCollapsed && (
-                      <>
-                        {/* รอยปรุแบบบัตร */}
-                        <div className="mx-4 border-t-2 border-dashed border-line" />
-
-                        <div className="p-4">
-                          {/* เพื่อนร่วมห้อง */}
-                          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-                            {t('guest.myRoom.roommates')}
-                          </p>
-                          {roommates.length === 0 ? (
-                            <p className="text-sm text-ink-faint">{t('guest.myRoom.noRoommates')}</p>
-                          ) : (
-                            <div className="flex flex-wrap gap-1.5">
-                              {roommates.map((g) => (
-                                <span
-                                  key={g.id}
-                                  className="inline-flex items-center gap-1.5 rounded-pill bg-surface-muted px-2.5 py-1 ring-1 ring-line-subtle"
-                                >
-                                  <span className={`h-1.5 w-1.5 rounded-full ${genderDotClass(g.gender)}`} />
-                                  <span className={`text-xs font-medium ${genderTextClass(g.gender) || 'text-ink'}`}>
-                                    {g.nickname || g.name}
-                                  </span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* ที่อยู่โรงแรม + ปุ่มลัด — สำคัญที่สุดเวลาลูกทัวร์แยกตัวไปเที่ยวเองแล้วต้องกลับ */}
-                          <HotelLocation hotel={hotel} />
-
-                          {/* ข้อมูลโรงแรมเป็นแถวรายการ */}
-                          {hasAmenityRows && (
-                            <div className="mt-3 flex flex-col">
-                              {hasWifi && (
-                                <AmenityRow icon="wifi" label={t('guest.myRoom.wifi')}>
-                                  {hotel.wifi_name}
-                                  {hotel.wifi_name && hotel.wifi_password ? ' · ' : ''}
-                                  {hotel.wifi_password && (
-                                    <span className="select-all font-mono">{hotel.wifi_password}</span>
-                                  )}
-                                </AmenityRow>
-                              )}
-                              {hasBreakfast && (
-                                <AmenityRow icon="coffee" label={t('guest.myRoom.breakfast')}>
-                                  {[hotel.breakfast_time, hotel.breakfast_location].filter(Boolean).join(' · ')}
-                                </AmenityRow>
-                              )}
-                              {hasDinner && (
-                                <AmenityRow icon="bowl" label={t('guest.myRoom.dinner')}>
-                                  {[hotel.dinner_time, hotel.dinner_location].filter(Boolean).join(' · ')}
-                                </AmenityRow>
-                              )}
-                              {hasCheckIn && (
-                                <AmenityRow icon="ticket" label={t('guest.myRoom.checkIn')}>
-                                  {hotel.check_in_time}
-                                </AmenityRow>
-                              )}
-                              {hasCheckout && (
-                                <AmenityRow icon="door" label={t('guest.myRoom.checkout')}>
-                                  {hotel.checkout_time}
-                                </AmenityRow>
-                              )}
-                              {hasMorningCall && (
-                                <AmenityRow icon="alert" label={t('guest.myRoom.morningCall')}>
-                                  {hotel.morning_call}
-                                </AmenityRow>
-                              )}
-                              {hasLuggage && (
-                                <AmenityRow icon="bag" label={t('guest.myRoom.luggageTime')}>
-                                  {hotel.luggage_time}
-                                </AmenityRow>
-                              )}
-                              {hasMeetingPoint && (
-                                <AmenityRow icon="bus" label={t('guest.myRoom.meetingPoint')}>
-                                  {hotel.meeting_point}
-                                </AmenityRow>
-                              )}
-                            </div>
-                          )}
-
-                          {/* สิ่งอำนวยความสะดวก + ของในห้อง */}
-                          <HotelFacilities hotel={hotel} />
-
-                          {hasNotes && (
-                            <div className="mt-3 flex items-start gap-2.5 rounded-control bg-surface-muted p-3">
-                              <span className="mt-0.5 flex w-5 shrink-0 justify-center">
-                                <Icon name="form" size={16} className="text-brand-hover" />
-                              </span>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-                                  {t('guest.myRoom.notes')}
-                                </p>
-                                <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink-muted">
-                                  {hotel.general_info}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )
-              })}
+            <div className="flex flex-col gap-4">
+              {stays.map((stay, index) => (
+                <StayCard
+                  key={stay.room.id}
+                  stay={stay}
+                  index={index}
+                  showStayNumber={stays.length > 1}
+                  collapsed={!!collapsedStays[stay.room.id]}
+                  onToggle={() => toggleStay(stay.room.id)}
+                />
+              ))}
             </div>
           )}
         </div>
       </div>
     </div>
+  )
+}
+
+// ══ การ์ดที่พักหนึ่งแห่ง ══════════════════════════════════════════════
+// โครงเป็น "หัวการ์ดสีแบรนด์ + เนื้อหาแบ่งบล็อกมีหัวข้อ"
+// เหตุผลที่แบ่งบล็อก: ของเดิมเป็นแถวไอคอน+ข้อความ 8 แถวเรียงกันน้ำหนักเท่ากันหมด
+// ลูกทัวร์ต้องอ่านทีละแถวถึงจะเจอสิ่งที่ต้องการ พอแบ่งเป็น "อินเทอร์เน็ต /
+// ตารางเวลา / เพื่อนร่วมห้อง / กลับโรงแรม / สิ่งอำนวยความสะดวก" จะกวาดตาหาได้ทันที
+function StayCard({ stay, index, showStayNumber, collapsed, onToggle }) {
+  const { t } = useTranslation()
+  const { room, hotel, roommates } = stay
+
+  const title = hotel?.name || t('guest.myRoom.roomNumber', { number: room.room_number || '—' })
+  const nights = nightsBetween(hotel?.check_in_date, hotel?.check_out_date)
+  const roomTypeLabel = t(`guest.myRoom.${ROOM_TYPE_LABELS[room.room_type] ?? 'roomTypeTwin'}`)
+
+  // บรรทัดบนสุดของหัวการ์ด: ที่พักที่ N · วันเข้า → วันออก · กี่คืน
+  const kicker = [
+    showStayNumber ? t('guest.myRoom.stayNumber', { number: index + 1 }) : null,
+    hotel?.check_in_date || hotel?.check_out_date
+      ? `${hotel.check_in_date || '—'} → ${hotel.check_out_date || '—'}`
+      : null,
+    nights ? t('guest.myRoom.nights', { count: nights }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const scheduleRows = hotel
+    ? [
+        { icon: 'ticket', label: t('guest.myRoom.checkIn'), value: hotel.check_in_time },
+        {
+          icon: 'coffee',
+          label: t('guest.myRoom.breakfast'),
+          value: [hotel.breakfast_time, hotel.breakfast_location].filter(Boolean).join(' · '),
+        },
+        {
+          icon: 'bowl',
+          label: t('guest.myRoom.dinner'),
+          value: [hotel.dinner_time, hotel.dinner_location].filter(Boolean).join(' · '),
+        },
+        { icon: 'alarm', label: t('guest.myRoom.morningCall'), value: hotel.morning_call },
+        { icon: 'bag', label: t('guest.myRoom.luggageTime'), value: hotel.luggage_time },
+        { icon: 'bus', label: t('guest.myRoom.meetingPoint'), value: hotel.meeting_point },
+        { icon: 'door', label: t('guest.myRoom.checkout'), value: hotel.checkout_time },
+      ].filter((r) => r.value)
+    : []
+
+  return (
+    <div className="rounded-[1.5rem] border border-line-subtle bg-surface p-1 shadow-card">
+      {/* ── หัวการ์ด — กดเพื่อย่อ/ขยาย ─────────────────────────────── */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        className="relative w-full overflow-hidden rounded-[1.25rem] bg-stay-hero p-4 text-left text-white"
+      >
+        {/* ลายเตียงจางๆ มุมขวาล่าง — ให้หัวการ์ดมีอะไรมองนอกจากตัวหนังสือ
+            aria-hidden เพราะเป็นของตกแต่งล้วน */}
+        <span className="pointer-events-none absolute -bottom-6 -right-5 opacity-[0.14]" aria-hidden="true">
+          <Icon name="bed" size={120} />
+        </span>
+
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            {kicker && (
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-white/80">
+                {kicker}
+              </p>
+            )}
+            <p className="mt-1 text-lg font-extrabold leading-tight">{title}</p>
+          </div>
+          <svg
+            viewBox="0 0 24 24"
+            className={`mt-1 h-4 w-4 shrink-0 text-white/80 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        {/* แถบสามช่อง: เลขห้อง / ชั้น / ประเภท — สามอย่างที่ถูกถามบ่อยที่สุด
+            รวมไว้บรรทัดเดียวบนหัวการ์ด ไม่ต้องกางการ์ดก็เห็น */}
+        <div className="relative mt-4 flex overflow-hidden rounded-control border border-white/25 bg-white/[0.13]">
+          <div className="flex-1 border-r border-white/20 px-2.5 py-2">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-white/80">
+              {t('guest.myRoom.roomShort')}
+            </p>
+            <p className="mt-0.5 text-xl font-extrabold leading-none">{room.room_number || '—'}</p>
+          </div>
+          <div className="flex-1 border-r border-white/20 px-2.5 py-2">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-white/80">
+              {t('guest.myRoom.floorShort')}
+            </p>
+            <p className="mt-0.5 text-base font-extrabold leading-tight">{room.floor || '—'}</p>
+          </div>
+          <div className="flex-1 px-2.5 py-2">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-white/80">
+              {t('guest.myRoom.typeLabel')}
+            </p>
+            <p className="mt-0.5 truncate text-[13px] font-extrabold leading-tight">{roomTypeLabel}</p>
+          </div>
+        </div>
+      </button>
+
+      {!collapsed && (
+        <div className="flex flex-col gap-4 px-3 pb-3 pt-4">
+          <WifiBlock hotel={hotel} />
+
+          {scheduleRows.length > 0 && (
+            <section>
+              <SectionHeading>{t('guest.myRoom.sectionSchedule')}</SectionHeading>
+              <div className="flex flex-col gap-px overflow-hidden rounded-control border border-line-subtle bg-line-subtle">
+                {scheduleRows.map((r) => (
+                  <div key={r.label} className="flex items-center gap-2.5 bg-surface px-3 py-2.5">
+                    <Icon name={r.icon} size={16} className="shrink-0 text-brand" />
+                    <span className="flex-1 text-[13px] text-ink-muted">{r.label}</span>
+                    <span className="min-w-0 text-right text-[13px] font-bold text-ink">{r.value}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <SectionHeading>{t('guest.myRoom.roommates')}</SectionHeading>
+            {roommates.length === 0 ? (
+              <p className="text-sm text-ink-faint">{t('guest.myRoom.noRoommates')}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {/* ตัวเราเองอยู่ในกลุ่มด้วย — ลูกทัวร์นับหัวได้ว่าห้องนี้มีกี่คน
+                    โดยไม่ต้องบวกหนึ่งเอง */}
+                <PersonAvatar isMe label={t('guest.myRoom.me')} />
+                {roommates.map((g) => (
+                  <PersonAvatar key={g.id} gender={g.gender} label={g.nickname || g.name} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ที่อยู่โรงแรม + ปุ่มลัด — สำคัญที่สุดเวลาลูกทัวร์แยกตัวไปเที่ยวเองแล้วต้องกลับ */}
+          <HotelLocation hotel={hotel} />
+
+          {/* สิ่งอำนวยความสะดวก + ของในห้อง */}
+          <HotelFacilities hotel={hotel} />
+
+          {hotel?.general_info && (
+            <div className="rounded-r-control border-l-[3px] border-accent bg-accent-bg px-3 py-2.5">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-accent-text">
+                {t('guest.myRoom.notes')}
+              </p>
+              <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-accent-text">
+                {hotel.general_info}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// หัวข้อประจำบล็อก — ตัวหนังสือสั้นๆ + เส้นลากยาวไปจนสุดขอบ
+// ทำให้แต่ละบล็อกแยกจากกันได้โดยไม่ต้องใส่กล่องซ้อนกล่อง
+function SectionHeading({ children }) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className="text-[12.5px] font-extrabold tracking-tight text-ink">{children}</span>
+      <span className="h-px flex-1 bg-line-subtle" />
+    </div>
+  )
+}
+
+// อวาตาร์กลมของคนหนึ่งคน — สีตามเพศเหมือนที่ใช้ทั้งแอป
+// ตัวเราเองใช้กรอบประแทนพื้นทึบ เพื่อให้แยกออกจากเพื่อนร่วมห้องได้ทันที
+function PersonAvatar({ gender, label, isMe = false }) {
+  const initial = (label || '').trim().charAt(0) || '?'
+  return (
+    <div className="flex w-[62px] flex-col items-center gap-1.5">
+      <span
+        className={`grid h-11 w-11 place-items-center rounded-full text-[15px] font-extrabold ${
+          isMe
+            ? 'border-2 border-dashed border-brand-light bg-surface-sunken text-brand'
+            : `${genderDotClass(gender)} text-white`
+        }`}
+        aria-hidden="true"
+      >
+        {initial}
+      </span>
+      <span
+        className={`text-center text-[11px] font-semibold leading-tight ${
+          isMe ? 'text-ink-muted' : genderTextClass(gender) || 'text-ink'
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+// Wi-Fi แยกออกมาเป็นบล็อกของตัวเอง — เป็นข้อมูลที่ถูกเปิดหาบ่อยที่สุดในหน้านี้
+// และเป็นข้อมูลเดียวที่ต้อง "พิมพ์ตาม" จึงต้องตัวใหญ่ + มีปุ่มคัดลอก
+function WifiBlock({ hotel }) {
+  const { t } = useTranslation()
+  const [copied, setCopied] = useState(false)
+
+  if (!hotel || (!hotel.wifi_name && !hotel.wifi_password)) return null
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(hotel.wifi_password)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch (clipboardError) {
+      console.error('[MyRoom] copy wifi failed', clipboardError)
+    }
+  }
+
+  return (
+    <section>
+      <SectionHeading>{t('guest.myRoom.sectionInternet')}</SectionHeading>
+      <div className="rounded-control border border-dashed border-brand-light bg-brand-lighter p-3">
+        {hotel.wifi_name && (
+          <>
+            <p className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-ink-faint">
+              <Icon name="wifi" size={13} className="text-brand" />
+              {t('guest.myRoom.wifiName')}
+            </p>
+            <p className="mt-1 break-all text-[15px] font-extrabold text-ink">{hotel.wifi_name}</p>
+          </>
+        )}
+        {hotel.wifi_password && (
+          <div className="mt-2 flex items-center justify-between gap-2 rounded-control border border-line bg-surface px-3 py-2">
+            <code className="select-all break-all font-mono text-[15px] font-bold tracking-wide text-ink">
+              {hotel.wifi_password}
+            </code>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex shrink-0 items-center gap-1 rounded-control bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white"
+            >
+              <Icon name={copied ? 'checkCircle' : 'copy'} size={12} />
+              {copied ? t('guest.myRoom.copied') : t('guest.myRoom.copyPassword')}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -426,73 +507,75 @@ function HotelLocation({ hotel }) {
   }
 
   return (
-    <div className="mt-3 rounded-control bg-surface-muted p-3">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex w-5 shrink-0 justify-center">
-          <Icon name="location" size={16} className="text-brand-hover" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-            {t('guest.myRoom.address')}
-          </p>
-          {hotel.address && (
-            <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink">{hotel.address}</p>
-          )}
-        </div>
-      </div>
+    <section>
+      <SectionHeading>{t('guest.myRoom.sectionGoBack')}</SectionHeading>
 
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        {hotel.phone && (
-          <a
-            href={`tel:${hotel.phone}`}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
-          >
-            <Icon name="phone" size={13} /> {t('guest.myRoom.callHotel')}
-          </a>
-        )}
+      {/* ปุ่มลัดเป็นช่องสี่เหลี่ยมเรียงกัน แตะง่ายกว่าชิปเล็กๆ แบบเดิม
+          ซึ่งสำคัญมากเพราะสถานการณ์ที่ต้องใช้คือยืนอยู่กลางถนนต่างประเทศ */}
+      <div className="grid grid-cols-3 gap-1.5">
         {hotel.map_url && (
           <a
             href={hotel.map_url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
+            className="flex flex-col items-center gap-1.5 rounded-control border border-line-subtle bg-surface-muted px-1 py-2.5 text-[11px] font-bold text-brand"
           >
-            <Icon name="map" size={13} /> {t('guest.myRoom.openMap')}
+            <Icon name="map" size={19} />
+            {t('guest.myRoom.openMap')}
           </a>
         )}
-        {(hotel.address || hotel.address_local) && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted ring-1 ring-line-subtle"
+        {hotel.phone && (
+          <a
+            href={`tel:${hotel.phone}`}
+            className="flex flex-col items-center gap-1.5 rounded-control border border-line-subtle bg-surface-muted px-1 py-2.5 text-[11px] font-bold text-brand"
           >
-            <Icon name={copied ? 'checkCircle' : 'copy'} size={13} />
-            {copied ? t('guest.myRoom.copied') : t('guest.myRoom.copyAddress')}
-          </button>
+            <Icon name="phone" size={19} />
+            {t('guest.myRoom.callHotel')}
+          </a>
         )}
         {hotel.address_local && (
           <button
             type="button"
             onClick={() => setShowLocal((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-xs font-semibold text-brand ring-1 ring-line-subtle"
+            aria-expanded={showLocal}
+            className={`flex flex-col items-center gap-1.5 rounded-control border px-1 py-2.5 text-[11px] font-bold ${
+              showLocal
+                ? 'border-brand bg-brand-lighter text-brand'
+                : 'border-line-subtle bg-surface-muted text-brand'
+            }`}
           >
-            <Icon name="language" size={13} /> {t('guest.myRoom.showLocalAddress')}
+            <Icon name="language" size={19} />
+            {t('guest.myRoom.showLocalAddress')}
           </button>
         )}
       </div>
 
       {showLocal && hotel.address_local && (
-        <div className="mt-2.5 rounded-control bg-surface p-3 ring-1 ring-line">
+        <div className="mt-2 rounded-control border border-line bg-surface p-3">
           <p className="text-[11px] text-ink-faint">{t('guest.myRoom.localAddressHint')}</p>
           <p className="mt-1 whitespace-pre-wrap text-lg font-bold leading-snug text-ink">
             {hotel.address_local}
           </p>
-          {hotel.phone && (
-            <p className="mt-1 font-mono text-sm text-ink-muted">{hotel.phone}</p>
-          )}
+          {hotel.phone && <p className="mt-1 font-mono text-sm text-ink-muted">{hotel.phone}</p>}
         </div>
       )}
-    </div>
+
+      {hotel.address && (
+        <div className="mt-2 flex items-start gap-2">
+          <p className="min-w-0 flex-1 whitespace-pre-wrap text-[11.5px] leading-relaxed text-ink-faint">
+            {hotel.address}
+          </p>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex shrink-0 items-center gap-1 rounded-pill border border-line-subtle bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-ink-muted"
+          >
+            <Icon name={copied ? 'checkCircle' : 'copy'} size={12} />
+            {copied ? t('guest.myRoom.copied') : t('guest.myRoom.copyAddress')}
+          </button>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -502,7 +585,7 @@ function FacilityChip({ item, meta, label }) {
   const { t } = useTranslation()
   return (
     <span className="inline-flex items-center gap-1 rounded-pill bg-surface-muted px-2.5 py-1 text-xs ring-1 ring-line-subtle">
-      {meta?.icon && <Icon name={meta.icon} size={14} />}
+      {meta?.icon && <Icon name={meta.icon} size={14} className="text-brand" />}
       <span className="font-medium text-ink">{label}</span>
       {item.fee === 'free' && (
         <span className="rounded-pill bg-success-bg px-1.5 text-[10px] font-semibold text-success-text">
@@ -532,12 +615,10 @@ function HotelFacilities({ hotel }) {
   if (facilities.length === 0 && amenities.length === 0 && !hotel.power_plug) return null
 
   return (
-    <div className="mt-3 flex flex-col gap-2">
+    <section className="flex flex-col gap-3">
       {facilities.length > 0 && (
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-            {t('common.facility.hotelFacilities')}
-          </p>
+          <SectionHeading>{t('common.facility.hotelFacilities')}</SectionHeading>
           <div className="flex flex-wrap gap-1.5">
             {facilities.map((item) => (
               <FacilityChip
@@ -553,9 +634,7 @@ function HotelFacilities({ hotel }) {
 
       {amenities.length > 0 && (
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-            {t('common.facility.roomAmenities')}
-          </p>
+          <SectionHeading>{t('common.facility.roomAmenities')}</SectionHeading>
           <div className="flex flex-wrap gap-1.5">
             {amenities.map((item) => (
               <FacilityChip
@@ -571,24 +650,11 @@ function HotelFacilities({ hotel }) {
 
       {hotel.power_plug && (
         <p className="flex items-center gap-1 text-xs text-ink-muted">
-          <Icon name="plug" size={13} />
+          <Icon name="plug" size={13} className="text-brand" />
           {t('common.facility.powerPlug')}:{' '}
           <span className="font-medium text-ink">{hotel.power_plug}</span>
         </p>
       )}
-    </div>
-  )
-}
-
-// แถวข้อมูลโรงแรม: ไอคอน + หัวข้อ (ซ้าย) + ค่า (ขวา) แบบรายการในบัตร
-function AmenityRow({ icon, label, children }) {
-  return (
-    <div className="flex items-center gap-2.5 border-b border-line-subtle py-2.5 last:border-0">
-      <span className="flex w-6 shrink-0 justify-center">
-        <Icon name={icon} size={18} className="text-brand-hover" />
-      </span>
-      <span className="flex-1 text-sm text-ink-muted">{label}</span>
-      <span className="min-w-0 text-right text-sm font-medium text-ink">{children}</span>
-    </div>
+    </section>
   )
 }
