@@ -8,6 +8,12 @@ import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '
 import { saveCache, loadCache } from '../../lib/offlineCache'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
 import { genderTextClass } from '../../lib/genderColor'
+import {
+  getSelectedCheckinEventId,
+  setSelectedCheckinEventId,
+  subscribeSelectedCheckinEvent,
+  resolveCheckinEventId,
+} from '../../lib/checkinEvent'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
@@ -47,7 +53,8 @@ export default function CheckIn() {
   // โหมดออฟไลน์ (ต้องมีเน็ตตอนเช็ค) เพื่อจำกัดขอบเขตงานให้จัดการได้
   const [events, setEvents] = useState([])
   const [itineraryItems, setItineraryItems] = useState([])
-  const [selectedEventId, setSelectedEventId] = useState(null)
+  // จำจุดที่เลือกไว้ข้ามการรีเฟรช/ข้ามหน้า (Dashboard อ่านค่าเดียวกัน)
+  const [selectedEventId, setSelectedEventId] = useState(() => getSelectedCheckinEventId(tourId))
   const [eventRecords, setEventRecords] = useState([])
   const [eventPickerOpen, setEventPickerOpen] = useState(false)
   const [createEventOpen, setCreateEventOpen] = useState(false)
@@ -241,10 +248,31 @@ export default function CheckIn() {
 
     if (eventsRes.data) {
       setEvents(eventsRes.data)
-      setSelectedEventId((prev) => prev ?? eventsRes.data.find((ev) => ev.is_core)?.id ?? eventsRes.data[0]?.id ?? null)
+      // ยึดจุดที่จำไว้ก่อน ถ้าจุดนั้นถูกลบไปแล้วค่อย fallback ไปจุดหลัก
+      setSelectedEventId((prev) => resolveCheckinEventId(eventsRes.data, prev ?? getSelectedCheckinEventId(tourId)))
     }
     if (itemsRes.data) setItineraryItems(itemsRes.data)
   }
+
+  /** เปลี่ยนจุดเช็คอิน + จำไว้ให้หน้าอื่น (Dashboard) เห็นตรงกัน */
+  function selectEvent(eventId) {
+    setSelectedEventId(eventId)
+    setSelectedCheckinEventId(tourId, eventId)
+  }
+
+  // ให้ค่าที่จำไว้ตรงกับ state เสมอ (เช่น ครั้งแรกที่ fallback ไปจุดหลักเอง)
+  useEffect(() => {
+    if (selectedEventId && selectedEventId !== getSelectedCheckinEventId(tourId)) {
+      setSelectedCheckinEventId(tourId, selectedEventId)
+    }
+  }, [selectedEventId, tourId])
+
+  // อีกแท็บ/อีกหน้าเปลี่ยนจุด → ตามให้ทัน
+  useEffect(() => {
+    return subscribeSelectedCheckinEvent(tourId, (eventId) => {
+      if (eventId) setSelectedEventId(eventId)
+    })
+  }, [tourId])
 
   useEffect(() => {
     loadEvents()
@@ -373,7 +401,7 @@ export default function CheckIn() {
 
     if (!error && data) {
       setEvents((prev) => [...prev, data])
-      setSelectedEventId(data.id)
+      selectEvent(data.id)
       setNewEventTitle('')
       setSelectedItineraryItemId('')
       setCreateEventTab('itinerary')
@@ -691,7 +719,7 @@ export default function CheckIn() {
             <button
               key={ev.id}
               onClick={() => {
-                setSelectedEventId(ev.id)
+                selectEvent(ev.id)
                 setEventPickerOpen(false)
               }}
               className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${

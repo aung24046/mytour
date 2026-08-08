@@ -18,8 +18,9 @@ export default function Broadcast() {
   const [history, setHistory] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(true)
 
-  async function loadHistory() {
-    setLoadingHistory(true)
+  // silent = รีเฟรชเบื้องหลัง ไม่ต้องโชว์ "กำลังโหลด" ให้จอกระพริบ
+  async function loadHistory({ silent = false } = {}) {
+    if (!silent) setLoadingHistory(true)
     const { data, error } = await supabase
       .from('announcements')
       .select('id, message, is_active, created_at')
@@ -38,23 +39,53 @@ export default function Broadcast() {
   useEffect(() => {
     loadHistory()
 
+    // เหตุผลเดียวกับฝั่งลูกทัวร์: websocket หลุดตอนสลับแอป/เน็ตหาย แล้ว event ที่พลาดไม่ถูกส่งย้อนหลัง
+    // ทีมงานมักเปิดหน้านี้ค้างไว้ทั้งวัน ถ้าไม่ดึงใหม่ประวัติจะไม่ตรงกับที่คนอื่นส่ง
     const channel = supabase
       .channel(`broadcast-staff-${tourId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'announcements',
           filter: `tour_id=eq.${tourId}`,
         },
         (payload) => {
-          setHistory((prev) => [payload.new, ...prev])
+          if (payload.eventType === 'INSERT') {
+            // กันซ้ำ เผื่อ refetch มาถึงก่อน event
+            setHistory((prev) =>
+              prev.some((a) => a.id === payload.new.id) ? prev : [payload.new, ...prev]
+            )
+          } else if (payload.eventType === 'UPDATE') {
+            setHistory((prev) =>
+              prev.map((a) => (a.id === payload.new.id ? { ...a, ...payload.new } : a))
+            )
+          } else {
+            loadHistory({ silent: true })
+          }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') loadHistory({ silent: true })
+      })
 
-    return () => supabase.removeChannel(channel)
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') loadHistory({ silent: true })
+    }
+    function handleOnline() {
+      loadHistory({ silent: true })
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('online', handleOnline)
+
+    return () => {
+      supabase.removeChannel(channel)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('online', handleOnline)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSend(e) {

@@ -5,16 +5,32 @@ import { supabase } from '../../lib/supabase'
 import { useTourId } from '../../lib/TourContext'
 import Icon from './Icon'
 
-// แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่ — อัปเดตแบบ real-time ผ่าน Supabase Realtime ไม่ต้อง refresh หน้า
+// แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่ — อัปเดตเองไม่ต้อง refresh หน้า
+//
+// ทำไมต้องมีหลายชั้น (realtime อย่างเดียวไม่พอในสนามจริง):
+//   1) Supabase Realtime — เร็วสุด ได้ทันทีที่ทีมงานกดส่ง
+//   2) รีเฟรชตอนกลับมาที่หน้า (visibilitychange) — มือถือปิดจอ/สลับแอป websocket จะถูกตัด
+//      แล้ว event ที่พลาดไประหว่างนั้น "ไม่มีการส่งย้อนหลัง" ถ้าไม่ดึงใหม่จะไม่มีวันเห็น
+//   3) รีเฟรชตอนเน็ตกลับมา (online) — บนรถบัส/ในถ้ำ เน็ตหลุดบ่อย
+//   4) poll ทุก 45 วิ เฉพาะตอนหน้าเปิดอยู่ — กันเคส websocket ต่อไม่ติดเลย (proxy/ไฟร์วอลล์โรงแรม
+//      บางที่บล็อก wss) ผู้ใช้ยังได้ประกาศช้าสุด 45 วิ ไม่ใช่ไม่ได้เลย
+//
 // variant "strip" (ค่าเริ่มต้น) = แถบ sticky บนสุดของหน้า ใช้กับหน้าลูกทัวร์ทั่วไป
 // variant "box" = กล่องเด่นแทรกในเนื้อหา — ใช้ที่หน้า Home เหนือปุ่ม QR เพราะ sticky strip เดิมมองข้ามง่าย
+
+const POLL_INTERVAL_MS = 45000
+
 export default function AnnouncementBanner({ variant = 'strip' }) {
   const tourId = useTourId()
   const { t } = useTranslation()
   const [announcement, setAnnouncement] = useState(null)
-  const [dismissed, setDismissed] = useState(false)
+  // เก็บเป็น "id ที่ปิดไปแล้ว" ไม่ใช่ boolean — ไม่งั้นทุกครั้งที่ poll/refetch
+  // ประกาศเดิมที่ผู้ใช้กดปิดไปแล้วจะเด้งกลับมาใหม่
+  const [dismissedId, setDismissedId] = useState(null)
 
   useEffect(() => {
+    if (!tourId) return
+
     let isMounted = true
 
     async function loadLatest() {
@@ -28,16 +44,22 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
         .maybeSingle()
 
       if (!isMounted) return
-      if (!error && data) {
-        setAnnouncement(data)
-        setDismissed(false)
+      if (error) {
+        console.error('[AnnouncementBanner] โหลดประกาศไม่สำเร็จ', error)
+        return
       }
+      // data = null แปลว่าทีมงานปิดประกาศไปแล้ว → ต้องเอาแบนเนอร์ออกด้วย
+      setAnnouncement(data ?? null)
     }
 
     loadLatest()
 
+    // ชื่อ channel ต้องไม่ซ้ำต่อ instance — บางหน้า (Register / SOS) render แบนเนอร์ 2 จุด
+    // ถ้าใช้ topic เดียวกันบน client เดียว ตัวที่สองจะ subscribe ไม่ติด
+    const topic = `announcements-${tourId}-${Math.random().toString(36).slice(2, 9)}`
+
     const channel = supabase
-      .channel(`broadcast-guest-${tourId}`)
+      .channel(topic)
       .on(
         'postgres_changes',
         {
@@ -47,25 +69,50 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
           filter: `tour_id=eq.${tourId}`,
         },
         (payload) => {
-          if (payload.eventType === 'DELETE') return
-          if (payload.new?.is_active) {
-            setAnnouncement(payload.new)
-            setDismissed(false)
-          } else if (announcement && payload.new?.id === announcement.id) {
-            setAnnouncement(null)
+          if (payload.eventType === 'DELETE') {
+            // replica identity เป็น default → payload.old มีแค่ id ตัดสินใจเองไม่ได้ ดึงใหม่ชัวร์กว่า
+            loadLatest()
+            return
+          }
+          const row = payload.new
+          if (row?.is_active) {
+            setAnnouncement(row)
+          } else {
+            // ประกาศถูกปิด — ถ้าเป็นตัวที่โชว์อยู่ให้เอาออก แล้วดึงตัวถัดไป (ถ้ามี)
+            setAnnouncement((prev) => (prev && prev.id === row?.id ? null : prev))
+            loadLatest()
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        // ต่อติด/ต่อใหม่สำเร็จ → sync สถานะปัจจุบันทันที กันช่วงที่หลุดไปแล้วพลาด event
+        if (status === 'SUBSCRIBED') loadLatest()
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('[AnnouncementBanner] realtime ต่อไม่ติด — ใช้ polling แทน', status)
+        }
+      })
+
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') loadLatest()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('online', loadLatest)
+
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') loadLatest()
+    }, POLL_INTERVAL_MS)
 
     return () => {
       isMounted = false
       supabase.removeChannel(channel)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('online', loadLatest)
+      clearInterval(poll)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [tourId])
 
-  if (!announcement || dismissed) return null
+  if (!announcement || announcement.id === dismissedId) return null
 
   if (variant === 'box') {
     return (
@@ -80,7 +127,7 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
           <p className="mt-0.5 text-sm font-semibold leading-snug">{announcement.message}</p>
         </div>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={() => setDismissedId(announcement.id)}
           className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
           aria-label="close"
         >
@@ -95,7 +142,7 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
       <Icon name="megaphone" size={17} filled className="mt-px shrink-0" />
       <span className="flex-1 leading-snug">{announcement.message}</span>
       <button
-        onClick={() => setDismissed(true)}
+        onClick={() => setDismissedId(announcement.id)}
         className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
         aria-label="close"
       >

@@ -6,6 +6,12 @@ import { supabase } from '../../lib/supabase'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { getStaffSession, clearStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
+import {
+  getSelectedCheckinEventId,
+  setSelectedCheckinEventId,
+  subscribeSelectedCheckinEvent,
+  resolveCheckinEventId,
+} from '../../lib/checkinEvent'
 import Card from '../../components/common/Card'
 import Icon from '../../components/common/Icon'
 import ColorModeToggle from '../../components/common/ColorModeToggle'
@@ -82,7 +88,9 @@ export default function Dashboard() {
 
   // จุดเช็คอินหลายจุด (checkin_events) + จำนวนที่เช็คแล้วต่อจุด
   const [events, setEvents] = useState([])
-  const [recordCounts, setRecordCounts] = useState({}) // eventId -> count (เฉพาะ event ที่ไม่ใช่ core)
+  const [recordGuestIds, setRecordGuestIds] = useState({}) // eventId -> Set(guest_id) (เฉพาะ event ที่ไม่ใช่ core)
+  // จุดที่ทีมงานเลือกไว้ในหน้าเช็คชื่อ — แดชบอร์ดต้องโชว์จุดเดียวกัน ไม่เดาเอง
+  const [selectedEventId, setSelectedEventId] = useState(() => getSelectedCheckinEventId(tourId))
 
   // แผนการเดินทางสำหรับไทม์ไลน์วันนี้
   const [itineraryItems, setItineraryItems] = useState([])
@@ -156,10 +164,12 @@ export default function Dashboard() {
     }
 
     setEvents(eventsData ?? [])
+    // จุดที่จำไว้อาจถูกลบไปแล้ว — ให้ตกกลับไปจุดหลักแทน
+    setSelectedEventId((prev) => resolveCheckinEventId(eventsData ?? [], prev))
 
     const nonCoreIds = (eventsData ?? []).filter((ev) => !ev.is_core).map((ev) => ev.id)
     if (nonCoreIds.length === 0) {
-      setRecordCounts({})
+      setRecordGuestIds({})
       return
     }
 
@@ -168,9 +178,12 @@ export default function Dashboard() {
       .select('event_id, guest_id')
       .in('event_id', nonCoreIds)
 
-    const counts = {}
-    for (const r of records ?? []) counts[r.event_id] = (counts[r.event_id] ?? 0) + 1
-    setRecordCounts(counts)
+    const byEvent = {}
+    for (const r of records ?? []) {
+      if (!byEvent[r.event_id]) byEvent[r.event_id] = new Set()
+      byEvent[r.event_id].add(r.guest_id)
+    }
+    setRecordGuestIds(byEvent)
   }
 
   async function loadItinerary() {
@@ -241,6 +254,12 @@ export default function Dashboard() {
         { event: '*', schema: 'public', table: 'checkin_records' },
         () => loadCheckpoints()
       )
+      // จุดเช็คอินถูกเพิ่ม/แก้/ลบในหน้าเช็คชื่อ → แดชบอร์ดอัปเดตตาม
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'checkin_events', filter: `tour_id=eq.${tourId}` },
+        () => loadCheckpoints()
+      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'luggage', filter: `tour_id=eq.${tourId}` },
@@ -261,11 +280,24 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // หน้าเช็คชื่อเปลี่ยนจุด (หรืออีกแท็บเปลี่ยน) → แดชบอร์ดตามทันที
+  useEffect(() => {
+    return subscribeSelectedCheckinEvent(tourId, (eventId) => {
+      setSelectedEventId(eventId)
+    })
+  }, [tourId])
+
+  // ถ้ายังไม่เคยเลือก (หรือจุดที่จำไว้ถูกลบ) ให้เขียนค่าที่ resolve ได้กลับไป
+  useEffect(() => {
+    if (selectedEventId && selectedEventId !== getSelectedCheckinEventId(tourId)) {
+      setSelectedCheckinEventId(tourId, selectedEventId)
+    }
+  }, [selectedEventId, tourId])
+
   const phoneField = useMemo(() => findFieldByPurpose(fields, 'phone'), [fields])
   const responsesByGuestId = useMemo(() => buildResponsesByGuestId(responses), [responses])
 
   const checkedInCount = guests.filter((g) => g.check_in_status).length
-  const missingGuests = guests.filter((g) => !g.check_in_status)
   const totalGuests = guests.length
 
   // จำนวนที่เช็คแล้วต่อจุด — core ใช้ check_in_status, จุดอื่นใช้ checkin_records
@@ -275,22 +307,34 @@ export default function Dashboard() {
       title: ev.title,
       isCore: ev.is_core,
       itineraryItemId: ev.itinerary_item_id,
-      count: ev.is_core ? checkedInCount : recordCounts[ev.id] ?? 0,
+      count: ev.is_core ? checkedInCount : recordGuestIds[ev.id]?.size ?? 0,
       total: totalGuests,
     }))
-  }, [events, recordCounts, checkedInCount, totalGuests])
+  }, [events, recordGuestIds, checkedInCount, totalGuests])
 
-  // จุดที่ "กำลังทำ" — จุดแรกที่ยังเช็คไม่ครบ ไล่ตามลำดับ, ถ้าครบหมดใช้จุดสุดท้าย
+  // จุดที่โชว์ = จุดที่เลือกไว้ในหน้าเช็คชื่อ
+  // ถ้ายังไม่มีค่าที่จำไว้ ค่อยเดาแบบเดิม (จุดแรกที่ยังเช็คไม่ครบ / จุดสุดท้ายถ้าครบหมด)
   const activeIndex = useMemo(() => {
     if (checkpoints.length === 0) return -1
+    const selectedIdx = checkpoints.findIndex((c) => c.id === selectedEventId)
+    if (selectedIdx !== -1) return selectedIdx
     const idx = checkpoints.findIndex((c) => c.count < c.total)
     return idx === -1 ? checkpoints.length - 1 : idx
-  }, [checkpoints])
+  }, [checkpoints, selectedEventId])
 
   const activeCheckpoint = activeIndex >= 0 ? checkpoints[activeIndex] : null
   const heroCount = activeCheckpoint ? activeCheckpoint.count : checkedInCount
   const heroTotal = activeCheckpoint ? activeCheckpoint.total : totalGuests
   const heroPct = heroTotal ? (heroCount / heroTotal) * 100 : 0
+
+  // รายชื่อคนที่ยังไม่มา — อิงจุดที่เลือกอยู่ ไม่ใช่จุดนัดพบเสมอไป
+  const missingGuests = useMemo(() => {
+    if (!activeCheckpoint || activeCheckpoint.isCore) {
+      return guests.filter((g) => !g.check_in_status)
+    }
+    const checked = recordGuestIds[activeCheckpoint.id] ?? new Set()
+    return guests.filter((g) => !checked.has(g.id))
+  }, [guests, activeCheckpoint, recordGuestIds])
 
   // เลือกวันของไทม์ไลน์: วันของรายการที่ status current, ไม่งั้นวันแรกที่ยังไม่จบ, ไม่งั้นวันสุดท้าย
   const todayItems = useMemo(() => {
@@ -444,9 +488,14 @@ export default function Dashboard() {
                     const done = cp.total > 0 && cp.count >= cp.total
                     const isActive = i === activeIndex
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={cp.id}
-                        className={`flex-1 rounded-control px-2 py-1.5 ${
+                        onClick={() => {
+                          setSelectedEventId(cp.id)
+                          setSelectedCheckinEventId(tourId, cp.id)
+                        }}
+                        className={`flex-1 rounded-control px-2 py-1.5 text-left transition ${
                           isActive ? 'bg-brand-lighter ring-1 ring-brand-light' : 'bg-surface-sunken'
                         }`}
                       >
@@ -463,7 +512,7 @@ export default function Dashboard() {
                             ? t('staff.dashboard.waiting')
                             : `${cp.count}/${cp.total}`}
                         </p>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
