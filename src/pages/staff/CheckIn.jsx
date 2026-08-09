@@ -6,14 +6,8 @@ import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
 import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '../../lib/guestFields'
 import { saveCache, loadCache } from '../../lib/offlineCache'
-import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
 import { genderTextClass } from '../../lib/genderColor'
-import {
-  getSelectedCheckinEventId,
-  setSelectedCheckinEventId,
-  subscribeSelectedCheckinEvent,
-  resolveCheckinEventId,
-} from '../../lib/checkinEvent'
+import { useCheckinEvent } from '../../lib/useCheckinEvent'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
@@ -36,26 +30,31 @@ export default function CheckIn() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [usingCache, setUsingCache] = useState(false)
-  const [pendingCount, setPendingCount] = useState(0)
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator === 'undefined' ? true : navigator.onLine
-  )
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [busFilter, setBusFilter] = useState('all')
-  const [togglingId, setTogglingId] = useState(null)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanFeedback, setScanFeedback] = useState(null) // { type: 'success' | 'error' | 'duplicate', name }
 
-  // เช็คชื่อหลาย event ผูกกับแผนการเดินทาง — event แรก (is_core) คือเช็คอินจุดนัดพบเดิม
-  // ยังใช้ guests.check_in_status + offline queue เหมือนเดิมทุกประการ ส่วน event อื่นๆ (สร้างใหม่
-  // ผูกกับจุดหมายในแผนการเดินทาง หรือกำหนดเอง) ใช้ตาราง checkin_records แยกต่างหาก — ไม่รองรับ
-  // โหมดออฟไลน์ (ต้องมีเน็ตตอนเช็ค) เพื่อจำกัดขอบเขตงานให้จัดการได้
-  const [events, setEvents] = useState([])
-  const [itineraryItems, setItineraryItems] = useState([])
-  // จำจุดที่เลือกไว้ข้ามการรีเฟรช/ข้ามหน้า (Dashboard อ่านค่าเดียวกัน)
-  const [selectedEventId, setSelectedEventId] = useState(() => getSelectedCheckinEventId(tourId))
-  const [eventRecords, setEventRecords] = useState([])
+  // ลอจิกจุดเช็คอิน/ติ๊ก/คิวออฟไลน์ อยู่ใน useCheckinEvent ทั้งหมด
+  // หน้าผังที่นั่งกับแดชบอร์ดใช้ hook เดียวกัน ตัวเลขและจุดที่เลือกจึงตรงกันเสมอ
+  const {
+    events,
+    itineraryItems,
+    selectedEvent,
+    selectedEventId,
+    selectEvent,
+    isCoreEvent,
+    isCheckedIn,
+    checkedInGuestIds,
+    checkedInCount,
+    toggle,
+    togglingId,
+    createEvent,
+    pendingCount,
+    isOnline,
+  } = useCheckinEvent(tourId, { guests, setGuests })
+
   const [eventPickerOpen, setEventPickerOpen] = useState(false)
   const [createEventOpen, setCreateEventOpen] = useState(false)
   const [createEventTab, setCreateEventTab] = useState('itinerary') // 'itinerary' | 'custom'
@@ -73,25 +72,6 @@ export default function CheckIn() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  function refreshPendingCount() {
-    setPendingCount(getQueue().filter((a) => a.type === 'checkin').length)
-  }
-
-  async function flushQueue() {
-    const queue = getQueue().filter((a) => a.type === 'checkin')
-    for (const action of queue) {
-      const { error } = await supabase
-        .from('guests')
-        .update({ check_in_status: action.status, check_in_time: action.checkInTime })
-        .eq('id', action.guestId)
-
-      if (!error) {
-        removeFromQueue(action.id)
-      }
-    }
-    refreshPendingCount()
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -183,8 +163,6 @@ export default function CheckIn() {
     }
 
     loadGuests()
-    refreshPendingCount()
-    flushQueue()
 
     // Realtime: sync check-in status if another staff member checks someone in
     const channel = supabase
@@ -205,210 +183,39 @@ export default function CheckIn() {
       )
       .subscribe()
 
+    // เน็ตกลับมา → โหลดรายชื่อใหม่ (ส่วนคิวที่ค้าง hook จัดการให้เอง)
     function handleOnline() {
-      setIsOnline(true)
       loadGuests()
-      flushQueue()
-    }
-    function handleOffline() {
-      setIsOnline(false)
     }
     window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    // กันเคสที่ browser ไม่ยิง online/offline event แม่นยำ — ลองรีเฟรชคิวเป็นระยะ
-    const retryInterval = setInterval(() => {
-      if (navigator.onLine) flushQueue()
-    }, 15000)
 
     return () => {
       isMounted = false
       supabase.removeChannel(channel)
       window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-      clearInterval(retryInterval)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t])
 
-  async function loadEvents() {
-    const [eventsRes, itemsRes] = await Promise.all([
-      supabase
-        .from('checkin_events')
-        .select('id, title, is_core, itinerary_item_id, sort_order')
-        .eq('tour_id', tourId)
-        .order('sort_order', { ascending: true }),
-      supabase
-        .from('itinerary_items')
-        .select('id, day_number, scheduled_time, title, location_name')
-        .eq('tour_id', tourId)
-        .order('day_number', { ascending: true })
-        .order('sort_order', { ascending: true }),
-    ])
-
-    if (eventsRes.data) {
-      setEvents(eventsRes.data)
-      // ยึดจุดที่จำไว้ก่อน ถ้าจุดนั้นถูกลบไปแล้วค่อย fallback ไปจุดหลัก
-      setSelectedEventId((prev) => resolveCheckinEventId(eventsRes.data, prev ?? getSelectedCheckinEventId(tourId)))
-    }
-    if (itemsRes.data) setItineraryItems(itemsRes.data)
-  }
-
-  /** เปลี่ยนจุดเช็คอิน + จำไว้ให้หน้าอื่น (Dashboard) เห็นตรงกัน */
-  function selectEvent(eventId) {
-    setSelectedEventId(eventId)
-    setSelectedCheckinEventId(tourId, eventId)
-  }
-
-  // ให้ค่าที่จำไว้ตรงกับ state เสมอ (เช่น ครั้งแรกที่ fallback ไปจุดหลักเอง)
-  useEffect(() => {
-    if (selectedEventId && selectedEventId !== getSelectedCheckinEventId(tourId)) {
-      setSelectedCheckinEventId(tourId, selectedEventId)
-    }
-  }, [selectedEventId, tourId])
-
-  // อีกแท็บ/อีกหน้าเปลี่ยนจุด → ตามให้ทัน
-  useEffect(() => {
-    return subscribeSelectedCheckinEvent(tourId, (eventId) => {
-      if (eventId) setSelectedEventId(eventId)
-    })
-  }, [tourId])
-
-  useEffect(() => {
-    loadEvents()
-
-    const channel = supabase
-      .channel(`checkin-events-${tourId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'checkin_events', filter: `tour_id=eq.${tourId}` },
-        () => loadEvents()
-      )
-      .subscribe()
-
-    return () => supabase.removeChannel(channel)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const selectedEvent = useMemo(
-    () => events.find((ev) => ev.id === selectedEventId) ?? null,
-    [events, selectedEventId]
-  )
-  // ก่อนโหลด events เสร็จ ถือว่าเป็น core event ไปก่อน (พฤติกรรมเดิมทุกประการ ไม่กระทบของเก่า)
-  const isCoreEvent = selectedEvent ? selectedEvent.is_core : true
-
-  // โหลด/subscribe checkin_records เฉพาะตอนเลือก event ที่ไม่ใช่ core
-  useEffect(() => {
-    if (!selectedEventId || isCoreEvent) {
-      setEventRecords([])
-      return
-    }
-
-    let isMounted = true
-
-    async function loadRecords() {
-      const { data, error } = await supabase
-        .from('checkin_records')
-        .select('id, guest_id, checked_in_at')
-        .eq('event_id', selectedEventId)
-
-      if (isMounted && !error) setEventRecords(data ?? [])
-    }
-
-    loadRecords()
-
-    const channel = supabase
-      .channel(`checkin-records-${selectedEventId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'checkin_records', filter: `event_id=eq.${selectedEventId}` },
-        () => loadRecords()
-      )
-      .subscribe()
-
-    return () => {
-      isMounted = false
-      supabase.removeChannel(channel)
-    }
-  }, [selectedEventId, isCoreEvent])
-
-  const checkedInGuestIds = useMemo(
-    () => new Set(eventRecords.map((r) => r.guest_id)),
-    [eventRecords]
-  )
-
-  function isCheckedIn(guest) {
-    return isCoreEvent ? !!guest.check_in_status : checkedInGuestIds.has(guest.id)
-  }
-
-  async function toggleEventRecord(guest) {
-    setTogglingId(guest.id)
-    const currentlyIn = checkedInGuestIds.has(guest.id)
-
-    if (currentlyIn) {
-      setEventRecords((prev) => prev.filter((r) => r.guest_id !== guest.id))
-      const { error } = await supabase
-        .from('checkin_records')
-        .delete()
-        .eq('event_id', selectedEventId)
-        .eq('guest_id', guest.id)
-      if (error) console.error('[CheckIn] remove event record failed', error)
-    } else {
-      const tempRecord = { id: `temp-${guest.id}`, guest_id: guest.id, checked_in_at: new Date().toISOString() }
-      setEventRecords((prev) => [...prev, tempRecord])
-      const { error } = await supabase
-        .from('checkin_records')
-        .insert({ event_id: selectedEventId, guest_id: guest.id })
-      if (error) {
-        console.error('[CheckIn] add event record failed', error)
-        setEventRecords((prev) => prev.filter((r) => r.id !== tempRecord.id))
-      }
-    }
-    setTogglingId(null)
-  }
-
-  async function handleToggle(guest) {
-    if (isCoreEvent) {
-      await toggleCheckIn(guest)
-    } else {
-      await toggleEventRecord(guest)
-    }
-  }
 
   async function handleCreateEvent(e) {
     e.preventDefault()
 
-    let title = newEventTitle.trim()
+    const title = newEventTitle.trim()
     const itineraryItemId = createEventTab === 'itinerary' ? selectedItineraryItemId || null : null
 
     if (createEventTab === 'itinerary' && !itineraryItemId) return
     if (!title) return
 
     setCreatingEvent(true)
-    const maxSort = events.reduce((max, ev) => Math.max(max, ev.sort_order), 0)
+    const { error } = await createEvent({ title, itineraryItemId })
 
-    const { data, error } = await supabase
-      .from('checkin_events')
-      .insert({
-        tour_id: tourId,
-        itinerary_item_id: itineraryItemId,
-        title,
-        is_core: false,
-        sort_order: maxSort + 1,
-      })
-      .select('id, title, is_core, itinerary_item_id, sort_order')
-      .single()
-
-    if (!error && data) {
-      setEvents((prev) => [...prev, data])
-      selectEvent(data.id)
+    if (!error) {
       setNewEventTitle('')
       setSelectedItineraryItemId('')
       setCreateEventTab('itinerary')
       setCreateEventOpen(false)
       setEventPickerOpen(false)
-    } else {
-      console.error('[CheckIn] create event failed', error)
     }
     setCreatingEvent(false)
   }
@@ -424,37 +231,6 @@ export default function CheckIn() {
     return `${t('staff.checkIn.dayLabel', { day: item.day_number })}${time ? ' · ' + time : ''} · ${item.title}${place}`
   }
 
-  async function toggleCheckIn(guest) {
-    setTogglingId(guest.id)
-    const nextStatus = !guest.check_in_status
-    const checkInTime = nextStatus ? new Date().toISOString() : null
-
-    // Optimistic update — ติ๊กได้ทันทีไม่ว่าจะออนไลน์หรือไม่
-    setGuests((prev) =>
-      prev.map((g) =>
-        g.id === guest.id ? { ...g, check_in_status: nextStatus, check_in_time: checkInTime } : g
-      )
-    )
-
-    if (!navigator.onLine) {
-      enqueue({ type: 'checkin', guestId: guest.id, status: nextStatus, checkInTime })
-      refreshPendingCount()
-      setTogglingId(null)
-      return
-    }
-
-    const { error } = await supabase
-      .from('guests')
-      .update({ check_in_status: nextStatus, check_in_time: checkInTime })
-      .eq('id', guest.id)
-
-    if (error) {
-      console.error('[CheckIn] toggle failed — queued for retry', error)
-      enqueue({ type: 'checkin', guestId: guest.id, status: nextStatus, checkInTime })
-      refreshPendingCount()
-    }
-    setTogglingId(null)
-  }
 
   async function handleScan(decodedText) {
     setScannerOpen(false)
@@ -470,7 +246,7 @@ export default function CheckIn() {
       return
     }
 
-    await handleToggle(guest)
+    await toggle(guest)
     setScanFeedback({ type: 'success', name: guest.nickname || guest.name })
   }
 
@@ -511,10 +287,6 @@ export default function CheckIn() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guests, search, filter, busFilter, guestBusId, isCoreEvent, checkedInGuestIds])
 
-  const checkedInCount = isCoreEvent
-    ? guests.filter((g) => g.check_in_status).length
-    : checkedInGuestIds.size
-
   const phoneField = useMemo(() => findFieldByPurpose(fields, 'phone'), [fields])
   const responsesByGuestId = useMemo(() => buildResponsesByGuestId(responses), [responses])
 
@@ -535,10 +307,6 @@ export default function CheckIn() {
           </span>
           <span className="shrink-0 text-xs font-medium text-brand">{t('staff.checkIn.changeEvent')}</span>
         </button>
-
-        {!isCoreEvent && (
-          <p className="mt-1 text-xs text-warning-text">{t('staff.checkIn.eventOfflineNotice')}</p>
-        )}
 
         {(!isOnline || usingCache || pendingCount > 0) && (
           <div className="mt-2 rounded-xl bg-warning-bg px-3 py-2 text-sm text-warning-text">
@@ -652,7 +420,7 @@ export default function CheckIn() {
                     ? 'border-l-success bg-success-bg'
                     : 'border-l-danger bg-danger-bg'
                 } ${togglingId === guest.id ? 'opacity-60' : ''}`}
-                onClick={() => handleToggle(guest)}
+                onClick={() => toggle(guest)}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">

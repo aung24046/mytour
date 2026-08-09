@@ -13,6 +13,14 @@ export function genderBgClass(gender, fallback = 'bg-brand text-white') {
   return fallback
 }
 
+// เฉพาะสีขอบซ้าย — ใช้ตอนที่พื้นหลังถูกจองไว้สื่อความหมายอื่นแล้ว
+// (เช่นผังที่นั่งโหมดเช็คชื่อ: พื้น = เช็คแล้ว/ยังไม่มา, ขอบ = เพศ)
+export function genderEdgeClass(gender) {
+  if (gender === 'ชาย') return 'border-l-blue-600'
+  if (gender === 'หญิง') return 'border-l-pink-600'
+  return 'border-l-ink-faint'
+}
+
 // เวอร์ชันโครงร่าง (พื้นอ่อน + ตัวอักษรสีตามเพศ) ใช้กับชิปคนที่ยังไม่จับลงคัน
 export function genderBorderClass(gender) {
   if (gender === 'ชาย') return 'bg-blue-50 text-blue-700 border-blue-200'

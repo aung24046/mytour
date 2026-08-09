@@ -530,7 +530,6 @@
       "scanNotFound": "ไม่พบ QR นี้ในทริป",
       "scanCameraError": "เปิดกล้องไม่สำเร็จ กรุณาอนุญาตให้ใช้กล้อง",
       "changeEvent": "เปลี่ยน",
-      "eventOfflineNotice": "การเช็คชื่อรอบนี้ต้องใช้อินเทอร์เน็ต ไม่รองรับโหมดออฟไลน์",
       "selectEvent": "เลือกรอบเช็คชื่อ",
       "coreEventTag": "จุดนัดพบ",
       "createEvent": "สร้างรอบเช็คชื่อใหม่",
@@ -597,7 +596,17 @@
       "removeFromBus": "เอาออกจากคัน",
       "pickGuest": "เลือกคนลงที่นั่งนี้",
       "noSeatCount": "ยังไม่มีที่นั่ง · {{count}}",
-      "noSeatableGuests": "ยังไม่มีคนในคันนี้ที่รอที่นั่ง"
+      "noSeatableGuests": "ยังไม่มีคนในคันนี้ที่รอที่นั่ง",
+      "seatCheckIn": "เช็คชื่อ",
+      "checkedHere": "คันนี้",
+      "wholeTour": "ทั้งทริป",
+      "unseated": "ยังไม่ได้จัดที่นั่ง {{count}} คน",
+      "undo": "เลิกทำ",
+      "checkedGuest": "เช็คอิน \"{{name}}\" แล้ว",
+      "uncheckedGuest": "ยกเลิกเช็คอิน \"{{name}}\"",
+      "legendChecked": "เช็คแล้ว",
+      "legendNotChecked": "ยังไม่มา",
+      "legendGenderEdge": "ขอบ = ช/ญ"
     },
     "roomMap": {
       "title": "ผังห้องพัก",

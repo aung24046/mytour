@@ -530,7 +530,6 @@
       "scanNotFound": "This QR code doesn't match anyone on this trip",
       "scanCameraError": "Couldn't open the camera. Please allow camera access.",
       "changeEvent": "Change",
-      "eventOfflineNotice": "This check-in round needs an internet connection — offline mode isn't supported.",
       "selectEvent": "Select check-in round",
       "coreEventTag": "meeting point",
       "createEvent": "Create new check-in round",
@@ -597,7 +596,17 @@
       "removeFromBus": "Remove from bus",
       "pickGuest": "Pick a guest for this seat",
       "noSeatCount": "No seat yet · {{count}}",
-      "noSeatableGuests": "No one on this bus is waiting for a seat"
+      "noSeatableGuests": "No one on this bus is waiting for a seat",
+      "seatCheckIn": "Roll call",
+      "checkedHere": "this bus",
+      "wholeTour": "whole tour",
+      "unseated": "{{count}} without a seat",
+      "undo": "Undo",
+      "checkedGuest": "Checked in \"{{name}}\"",
+      "uncheckedGuest": "Undid check-in for \"{{name}}\"",
+      "legendChecked": "checked in",
+      "legendNotChecked": "not yet",
+      "legendGenderEdge": "edge = m/f"
     },
     "roomMap": {
       "title": "Room map",

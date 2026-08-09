@@ -457,13 +457,13 @@ export default function Dashboard() {
           <>
             {/* การ์ดเช็คอิน (พื้นขาว) */}
             <div className="mb-3 rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-ink-muted">
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink-muted">
                   {t('staff.dashboard.checkingInAt')}
                   {activeCheckpoint ? ` · ${activeCheckpoint.title}` : ''}
                 </p>
                 {checkpoints.length > 1 && (
-                  <p className="text-xs text-ink-faint">
+                  <p className="shrink-0 text-xs text-ink-faint">
                     {t('staff.dashboard.checkpointStep', {
                       current: activeIndex + 1,
                       total: checkpoints.length,
@@ -482,8 +482,9 @@ export default function Dashboard() {
                 />
               </div>
 
+              {/* จุดเช็คอินมีได้หลายจุดและชื่อสถานที่ยาว — เลื่อนแนวนอนแทนการบีบให้ล้นกรอบ */}
               {checkpoints.length > 1 && (
-                <div className="mt-3 flex gap-1.5">
+                <div className="-mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {checkpoints.map((cp, i) => {
                     const done = cp.total > 0 && cp.count >= cp.total
                     const isActive = i === activeIndex
@@ -491,21 +492,22 @@ export default function Dashboard() {
                       <button
                         type="button"
                         key={cp.id}
+                        title={cp.title}
                         onClick={() => {
                           setSelectedEventId(cp.id)
                           setSelectedCheckinEventId(tourId, cp.id)
                         }}
-                        className={`flex-1 rounded-control px-2 py-1.5 text-left transition ${
+                        className={`shrink-0 grow basis-[104px] overflow-hidden rounded-control px-2 py-1.5 text-left transition ${
                           isActive ? 'bg-brand-lighter ring-1 ring-brand-light' : 'bg-surface-sunken'
                         }`}
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex min-w-0 items-center gap-1">
                           <Icon
                             name={done ? 'check' : isActive ? 'location' : 'compass'}
                             size={12}
-                            className={done ? 'text-success' : isActive ? 'text-brand' : 'text-ink-faint'}
+                            className={`shrink-0 ${done ? 'text-success' : isActive ? 'text-brand' : 'text-ink-faint'}`}
                           />
-                          <span className="truncate text-[10px] text-ink-muted">{cp.title}</span>
+                          <span className="min-w-0 flex-1 truncate text-[10px] text-ink-muted">{cp.title}</span>
                         </div>
                         <p className="mt-0.5 text-xs font-semibold text-ink">
                           {cp.count === 0 && !isActive && !done

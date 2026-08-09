@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
-import { genderTextClass, genderBgClass, genderBorderClass } from '../../lib/genderColor'
+import { genderTextClass, genderBgClass, genderBorderClass, genderEdgeClass } from '../../lib/genderColor'
+import { useCheckinEvent } from '../../lib/useCheckinEvent'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -46,7 +47,7 @@ export default function SeatMap() {
   const tourId = useActiveTourId()
   const { t } = useTranslation()
 
-  const [mode, setMode] = useState('assign') // 'assign' = จับลงคัน, 'seats' = จัดที่นั่ง
+  const [mode, setMode] = useState('assign') // 'assign' = จับลงคัน, 'seats' = จัดที่นั่ง, 'checkin' = เช็คชื่อ
   const [buses, setBuses] = useState([])
   const [activeBusId, setActiveBusId] = useState(null)
   const [seats, setSeats] = useState([])
@@ -67,6 +68,22 @@ export default function SeatMap() {
   const [creatingBus, setCreatingBus] = useState(false)
   const [createBusError, setCreateBusError] = useState(null)
 
+  // โหมดเช็คชื่อ — ใช้ hook ตัวเดียวกับหน้าเช็คชื่อและแดชบอร์ด ตัวเลขจึงตรงกันเสมอ
+  const {
+    events,
+    selectedEvent,
+    selectedEventId,
+    selectEvent,
+    isCheckedIn,
+    checkedInCount,
+    toggle,
+    togglingId,
+    pendingCount,
+    isOnline,
+  } = useCheckinEvent(tourId, { guests, setGuests })
+  const [eventPickerOpen, setEventPickerOpen] = useState(false)
+  const [lastToggle, setLastToggle] = useState(null) // { guest, checked } — สำหรับปุ่มเลิกทำ
+
   const [editingBusId, setEditingBusId] = useState(null)
   const [busDraft, setBusDraft] = useState(NEW_BUS_TEMPLATE)
   const [savingBus, setSavingBus] = useState(false)
@@ -86,7 +103,11 @@ export default function SeatMap() {
         .from('bus_seats')
         .select('id, bus_id, row_number, seat_position, guest_id, is_available, is_seat, seat_type')
         .eq('tour_id', tourId),
-      supabase.from('guests').select('id, name, nickname, gender, bus_id').eq('tour_id', tourId).order('name'),
+      supabase
+        .from('guests')
+        .select('id, name, nickname, gender, bus_id, check_in_status')
+        .eq('tour_id', tourId)
+        .order('name'),
     ])
 
     if (busesRes.error || seatsRes.error || guestsRes.error) {
@@ -119,6 +140,16 @@ export default function SeatMap() {
               ? prev.map((s) => (s.id === payload.new.id ? payload.new : s))
               : [...prev, payload.new]
           })
+        }
+      )
+      // ทีมงานคนอื่นเช็คชื่อจากหน้าเช็คชื่อ → ผังที่นั่งเปลี่ยนสีตามทันที
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'guests', filter: `tour_id=eq.${tourId}` },
+        (payload) => {
+          setGuests((prev) =>
+            prev.map((g) => (g.id === payload.new.id ? { ...g, ...payload.new } : g))
+          )
         }
       )
       .subscribe()
@@ -536,6 +567,34 @@ export default function SeatMap() {
   )
   const occupiedCount = busSeatList.filter((s) => s.guest_id).length
 
+  // ----- โหมดเช็คชื่อ -----
+  // คนที่นั่งอยู่บนคันนี้ (เรียงตามที่นั่ง) — ใช้นับ "คันนี้ x/y"
+  const busGuests = useMemo(
+    () => busSeatList.filter((s) => s.guest_id).map((s) => guestById[s.guest_id]).filter(Boolean),
+    [busSeatList, guestById]
+  )
+  const busCheckedCount = busGuests.filter((g) => isCheckedIn(g)).length
+
+  // คนที่ยังไม่มีที่นั่ง — ต้องโชว์ไว้ ไม่งั้นตกสำรวจ (ไกด์ท้องถิ่น/คนที่ยังไม่จัดเบาะ)
+  const unseatedGuests = useMemo(
+    () => guests.filter((g) => !occupiedGuestIds.has(g.id)),
+    [guests, occupiedGuestIds]
+  )
+
+  async function handleCheckinTap(seat) {
+    const guest = guestById[seat?.guest_id]
+    if (!guest) return
+    const checked = await toggle(guest)
+    setLastToggle({ guest, checked })
+  }
+
+  async function undoLastToggle() {
+    if (!lastToggle) return
+    const guest = guests.find((g) => g.id === lastToggle.guest.id) ?? lastToggle.guest
+    await toggle(guest)
+    setLastToggle(null)
+  }
+
   return (
     <div className="min-h-screen p-4">
       <div className="mx-auto max-w-md">
@@ -572,6 +631,7 @@ export default function SeatMap() {
               {[
                 { key: 'assign', label: t('staff.seatMap.modeAssign') },
                 { key: 'seats', label: t('staff.seatMap.modeSeats') },
+                { key: 'checkin', label: t('staff.seatMap.seatCheckIn') },
               ].map((m) => (
                 <button
                   key={m.key}
@@ -589,7 +649,46 @@ export default function SeatMap() {
               ))}
             </div>
 
-            {mode === 'seats' && (
+            {mode === 'checkin' && (
+              <>
+                <button
+                  onClick={() => setEventPickerOpen(true)}
+                  className="mb-2 flex w-full items-center justify-between gap-2 rounded-xl border border-brand-light bg-brand-lighter px-3 py-2.5 text-left"
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-brand-deep">
+                    <Icon name="location" size={16} className="shrink-0" />
+                    <span className="min-w-0 truncate">
+                      {selectedEvent ? selectedEvent.title : t('common.loading')}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-brand">
+                    {t('staff.checkIn.changeEvent')}
+                  </span>
+                </button>
+
+                <div className="mb-2 flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-ink">
+                    {busCheckedCount}
+                    <span className="text-base font-semibold text-ink-faint">/{busGuests.length}</span>
+                  </span>
+                  <span className="text-sm text-ink-muted">
+                    {t('staff.seatMap.checkedHere')} · {t('staff.seatMap.wholeTour')} {checkedInCount}/
+                    {guests.length}
+                  </span>
+                </div>
+
+                {(!isOnline || pendingCount > 0) && (
+                  <div className="mb-2 rounded-xl bg-warning-bg px-3 py-2 text-sm text-warning-text">
+                    {!isOnline && <p>{t('staff.checkIn.offline')}</p>}
+                    {pendingCount > 0 && (
+                      <p>{t('staff.checkIn.pendingSync', { count: pendingCount })}</p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {(mode === 'seats' || mode === 'checkin') && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {buses.map((bus) => (
                   <button
@@ -967,27 +1066,43 @@ export default function SeatMap() {
               </Card>
             )}
 
-            {mode === 'seats' && activeBus && (
+            {(mode === 'seats' || mode === 'checkin') && activeBus && (
               <div className="mt-3 rounded-card border border-line bg-surface p-4 shadow-card ring-1 ring-line-subtle">
-                {/* คำอธิบายสี */}
-                <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
-                  <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('staff.seatMap.empty')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-blue-600" />/
-                    <span className="h-3 w-3 rounded bg-pink-600" /> {t('staff.seatMap.type_guest')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-emerald-700" /> {t('staff.seatMap.type_staff')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-warning" /> {t('staff.seatMap.type_vip')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-ink-faint/50" /> {t('staff.seatMap.blocked')}
-                  </span>
-                </div>
+                {/* คำอธิบายสี — โหมดเช็คชื่อสีสื่อความหมายคนละอย่าง */}
+                {mode === 'checkin' ? (
+                  <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-success" /> {t('staff.seatMap.legendChecked')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded border border-danger/40 bg-danger-bg" />{' '}
+                      {t('staff.seatMap.legendNotChecked')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('staff.seatMap.empty')}
+                    </span>
+                    <span className="text-ink-faint">{t('staff.seatMap.legendGenderEdge')}</span>
+                  </div>
+                ) : (
+                  <div className="mb-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-surface-sunken" /> {t('staff.seatMap.empty')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-blue-600" />/
+                      <span className="h-3 w-3 rounded bg-pink-600" /> {t('staff.seatMap.type_guest')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-emerald-700" /> {t('staff.seatMap.type_staff')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-warning" /> {t('staff.seatMap.type_vip')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-3 w-3 rounded bg-ink-faint/50" /> {t('staff.seatMap.blocked')}
+                    </span>
+                  </div>
+                )}
 
                 {/* ตัวรถ */}
                 <div className="overflow-hidden rounded-2xl border-[1.5px] border-line">
@@ -1018,7 +1133,12 @@ export default function SeatMap() {
                                   key={pos}
                                   seat={seat}
                                   guest={guestById[seat?.guest_id]}
-                                  onClick={() => seat && openSeat(seat)}
+                                  checkinMode={mode === 'checkin'}
+                                  checkedIn={isCheckedIn(guestById[seat?.guest_id])}
+                                  busy={togglingId && togglingId === seat?.guest_id}
+                                  onClick={() =>
+                                    seat && (mode === 'checkin' ? handleCheckinTap(seat) : openSeat(seat))
+                                  }
                                 />
                               )
                             })}
@@ -1032,7 +1152,12 @@ export default function SeatMap() {
                                   key={pos}
                                   seat={seat}
                                   guest={guestById[seat?.guest_id]}
-                                  onClick={() => seat && openSeat(seat)}
+                                  checkinMode={mode === 'checkin'}
+                                  checkedIn={isCheckedIn(guestById[seat?.guest_id])}
+                                  busy={togglingId && togglingId === seat?.guest_id}
+                                  onClick={() =>
+                                    seat && (mode === 'checkin' ? handleCheckinTap(seat) : openSeat(seat))
+                                  }
                                 />
                               )
                             })}
@@ -1048,11 +1173,64 @@ export default function SeatMap() {
                   </div>
                 </div>
 
-                <p className="mt-3 text-center text-[11px] text-ink-faint">{t('staff.seatMap.tapHint')}</p>
+                {mode !== 'checkin' && (
+                  <p className="mt-3 text-center text-[11px] text-ink-faint">
+                    {t('staff.seatMap.tapHint')}
+                  </p>
+                )}
               </div>
             )}
 
-            {mode === 'seats' && !activeBus && (
+            {/* คนที่ยังไม่มีที่นั่ง — ไม่โผล่บนผัง ต้องเตือนไว้ไม่งั้นตกสำรวจ */}
+            {mode === 'checkin' && unseatedGuests.length > 0 && (
+              <div className="mt-3 rounded-control bg-warning-bg px-3 py-2.5 text-sm text-warning-text">
+                <p className="font-semibold">
+                  {t('staff.seatMap.unseated', { count: unseatedGuests.length })}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {unseatedGuests.map((g) => {
+                    const checked = isCheckedIn(g)
+                    return (
+                      <button
+                        key={g.id}
+                        onClick={async () => {
+                          const next = await toggle(g)
+                          setLastToggle({ guest: g, checked: next })
+                        }}
+                        className={`flex items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-semibold transition ${
+                          checked ? 'bg-success text-white' : 'bg-surface text-ink-muted'
+                        } ${togglingId === g.id ? 'opacity-60' : ''}`}
+                      >
+                        {checked && <Icon name="check" size={11} />}
+                        {g.nickname || g.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* เลิกทำ — ปุ่มที่นั่งเล็กและชิดกัน แตะพลาดง่าย */}
+            {mode === 'checkin' && lastToggle && (
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-control border border-line bg-surface px-3 py-2 text-sm">
+                <span className="min-w-0 truncate text-ink-muted">
+                  {t(
+                    lastToggle.checked
+                      ? 'staff.seatMap.checkedGuest'
+                      : 'staff.seatMap.uncheckedGuest',
+                    { name: lastToggle.guest.nickname || lastToggle.guest.name }
+                  )}
+                </span>
+                <button
+                  onClick={undoLastToggle}
+                  className="shrink-0 font-semibold text-brand"
+                >
+                  {t('staff.seatMap.undo')}
+                </button>
+              </div>
+            )}
+
+            {(mode === 'seats' || mode === 'checkin') && !activeBus && (
               <p className="mt-4 text-ink-muted">{t('staff.seatMap.noBus')}</p>
             )}
           </>
@@ -1209,6 +1387,41 @@ export default function SeatMap() {
           </div>
         )}
       </BottomSheet>
+
+      {/* เลือกจุดเช็คอิน — รายการเดียวกับหน้าเช็คชื่อ (สร้างจุดใหม่ทำที่หน้าเช็คชื่อ) */}
+      <BottomSheet
+        open={eventPickerOpen}
+        onClose={() => setEventPickerOpen(false)}
+        title={t('staff.checkIn.selectEvent')}
+      >
+        <div className="flex max-h-[45vh] flex-col gap-1.5 overflow-y-auto">
+          {events.map((ev) => (
+            <button
+              key={ev.id}
+              onClick={() => {
+                selectEvent(ev.id)
+                setLastToggle(null)
+                setEventPickerOpen(false)
+              }}
+              className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${
+                ev.id === selectedEventId
+                  ? 'border-brand bg-brand-lighter text-brand-deep'
+                  : 'border-line text-ink hover:bg-surface-muted'
+              }`}
+            >
+              {ev.title}
+              {ev.is_core && (
+                <span className="ml-2 rounded-full bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-ink-muted">
+                  {t('staff.checkIn.coreEventTag')}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <Button variant="secondary" className="mt-3" onClick={() => setEventPickerOpen(false)}>
+          {t('common.close')}
+        </Button>
+      </BottomSheet>
     </div>
   )
 }
@@ -1233,13 +1446,16 @@ function TypeSelector({ value, onChange, t }) {
   )
 }
 
-function SeatButton({ seat, guest, onClick }) {
+function SeatButton({ seat, guest, onClick, checkinMode = false, checkedIn = false, busy = false }) {
   if (!seat) {
     return <div className="h-10 flex-1 rounded-lg bg-transparent" />
   }
 
   if (!seat.is_seat) {
-    return (
+    // ช่องที่ไม่ใช่ที่นั่ง (ทางเดิน/ห้องน้ำ) — ในโหมดเช็คชื่อกดไม่ได้ กันแตะพลาด
+    return checkinMode ? (
+      <div className="h-10 min-w-0 flex-1 rounded-lg bg-ink-faint/20" />
+    ) : (
       <button
         onClick={onClick}
         className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-ink-faint/50 text-xs font-semibold text-white"
@@ -1251,6 +1467,31 @@ function SeatButton({ seat, guest, onClick }) {
 
   const occupied = !!seat.guest_id
   const label = occupied ? guest?.nickname || guest?.name || '?' : seat.seat_position
+
+  // โหมดเช็คชื่อ: พื้น = สถานะเช็คอิน, ขอบซ้าย = เพศ (ไม่ให้ข้อมูลเดิมหายไป)
+  if (checkinMode) {
+    if (!occupied) {
+      return (
+        <div className="flex h-10 min-w-0 flex-1 items-center justify-center rounded-lg bg-surface-sunken text-xs text-ink-faint">
+          {label}
+        </div>
+      )
+    }
+    return (
+      <button
+        onClick={onClick}
+        title={guest?.name || ''}
+        className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-lg border-l-4 px-1 text-xs font-semibold leading-tight transition ${
+          genderEdgeClass(guest?.gender)
+        } ${
+          checkedIn ? 'bg-success text-white' : 'bg-danger-bg text-danger-text'
+        } ${busy ? 'opacity-60' : ''}`}
+      >
+        {checkedIn && <Icon name="check" size={12} className="shrink-0" />}
+        <span className="min-w-0 truncate">{label}</span>
+      </button>
+    )
+  }
 
   return (
     <button

@@ -530,7 +530,6 @@
       "scanNotFound": "此二维码与本次行程的访客不匹配",
       "scanCameraError": "无法打开摄像头，请允许使用摄像头权限",
       "changeEvent": "更改",
-      "eventOfflineNotice": "本轮签到需要网络连接，不支持离线模式。",
       "selectEvent": "选择签到轮次",
       "coreEventTag": "集合点",
       "createEvent": "创建新签到轮次",
@@ -597,7 +596,17 @@
       "removeFromBus": "移出车辆",
       "pickGuest": "选择乘客坐此座位",
       "noSeatCount": "尚无座位 · {{count}}",
-      "noSeatableGuests": "此车暂无等待安排座位的乘客"
+      "noSeatableGuests": "此车暂无等待安排座位的乘客",
+      "seatCheckIn": "签到",
+      "checkedHere": "本车",
+      "wholeTour": "全团",
+      "unseated": "{{count}} 人未安排座位",
+      "undo": "撤销",
+      "checkedGuest": "已签到「{{name}}」",
+      "uncheckedGuest": "已取消「{{name}}」签到",
+      "legendChecked": "已签到",
+      "legendNotChecked": "未到",
+      "legendGenderEdge": "边框 = 男/女"
     },
     "roomMap": {
       "title": "房间图",
