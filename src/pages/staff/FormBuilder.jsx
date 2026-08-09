@@ -88,6 +88,12 @@ export default function FormBuilder() {
 
   const [previewValues, setPreviewValues] = useState({})
 
+  // สวิตช์ "เปิดให้ลูกทัวร์ประเมินในแอป" — คุมการ์ดชวนประเมินบนหน้าแรกลูกทัวร์
+  // แยกจาก is_active ของคำถามโดยตั้งใจ: is_active = "ใช้ข้อนี้ไหม" (ตั้งล่วงหน้าได้)
+  // ส่วนสวิตช์นี้ = "ถึงเวลาให้ตอบหรือยัง" (กดวันสุดท้ายของทริป)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [togglingOpen, setTogglingOpen] = useState(false)
+
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState('new') // 'new' | 'edit'
   const [draft, setDraft] = useState(EMPTY_DRAFT)
@@ -117,6 +123,46 @@ export default function FormBuilder() {
     setPreviewValues({})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formType])
+
+  // อ่านค่าสวิตช์ใหม่ทุกครั้งที่เข้าหน้า — ทีมงานหลายคนเปิดหน้านี้พร้อมกันได้
+  // ถ้าใช้ค่าที่ค้างในเครื่อง คนที่สองจะเห็นสวิตช์ปิดทั้งที่คนแรกเพิ่งกดเปิด
+  useEffect(() => {
+    let alive = true
+    async function loadFeedbackOpen() {
+      if (!tourId) return
+      const { data } = await supabase
+        .from('tours')
+        .select('feedback_open')
+        .eq('id', tourId)
+        .maybeSingle()
+      if (alive && data) setFeedbackOpen(!!data.feedback_open)
+    }
+    loadFeedbackOpen()
+    return () => {
+      alive = false
+    }
+  }, [tourId])
+
+  async function toggleFeedbackOpen() {
+    const next = !feedbackOpen
+    setFeedbackOpen(next) // optimistic — สวิตช์ต้องตอบสนองทันที ไม่งั้นทีมงานจะกดซ้ำ
+    setTogglingOpen(true)
+
+    const { error: toggleError } = await supabase
+      .from('tours')
+      .update({
+        feedback_open: next,
+        // บันทึกเฉพาะตอนเปิด — ตอนปิดคงเวลาเดิมไว้ ไว้ตอบว่า "เปิดให้ประเมินตั้งแต่เมื่อไหร่"
+        ...(next ? { feedback_opened_at: new Date().toISOString() } : {}),
+      })
+      .eq('id', tourId)
+
+    if (toggleError) {
+      console.error('[FormBuilder] toggle feedback_open failed', toggleError)
+      setFeedbackOpen(!next) // ย้อนกลับ — ห้ามให้สวิตช์โกหกว่าเปิดแล้วทั้งที่ลูกทัวร์ยังไม่เห็น
+    }
+    setTogglingOpen(false)
+  }
 
   async function updateField(id, patch) {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))
@@ -255,6 +301,54 @@ export default function FormBuilder() {
             </button>
           ))}
         </div>
+
+        {/* สวิตช์เปิดให้ลูกทัวร์ประเมิน — เฉพาะแท็บ Feedback */}
+        {formType === 'feedback' && (
+          <div
+            className={`mt-3 rounded-xl border p-3 transition ${
+              feedbackOpen ? 'border-success/40 bg-success-bg' : 'border-line-subtle bg-surface'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-ink">
+                  {t('staff.formBuilder.feedbackOpenTitle')}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-muted">
+                  {feedbackOpen
+                    ? t('staff.formBuilder.feedbackOpenOn')
+                    : t('staff.formBuilder.feedbackOpenOff')}
+                </p>
+              </div>
+
+              <button
+                onClick={toggleFeedbackOpen}
+                disabled={togglingOpen}
+                role="switch"
+                aria-checked={feedbackOpen}
+                aria-label={t('staff.formBuilder.feedbackOpenTitle')}
+                className={`relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition disabled:opacity-60 ${
+                  feedbackOpen ? 'bg-success' : 'bg-line-strong'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                    feedbackOpen ? 'left-6' : 'left-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* !loading สำคัญ — ระหว่างสลับแท็บ fields ยังว่างอยู่ชั่วขณะ
+                ถ้าไม่กันไว้ คำเตือน "ยังไม่มีคำถาม" จะแวบขึ้นมาทุกครั้งที่เข้าแท็บนี้
+                ทั้งที่ฟอร์มมีคำถามครบ — ทีมงานจะไม่กล้าเปิดสวิตช์ */}
+            {feedbackOpen && !loading && activeFields.length === 0 && (
+              <p className="mt-2 rounded-lg bg-warning-bg px-2.5 py-1.5 text-xs font-medium text-warning-text">
+                {t('staff.formBuilder.feedbackOpenNoFields')}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* สลับ แก้ไข / ดูตัวอย่าง */}
         <div className="mt-3 inline-flex rounded-full bg-surface-sunken p-1">

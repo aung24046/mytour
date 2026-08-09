@@ -242,7 +242,11 @@
       "noSeat": "尚未分配",
       "todaySchedule": "今日行程",
       "viewAll": "查看全部",
-      "editProfile": "编辑我的信息"
+      "editProfile": "编辑我的信息",
+      "feedbackInviteTitle": "为本次行程评分",
+      "feedbackInviteBody": "不到 2 分钟 · 可跳过任何一题",
+      "feedbackDoneTitle": "已提交意见",
+      "feedbackDoneBody": "点击可修改您的回答"
     },
     "editProfile": {
       "title": "编辑我的信息",
@@ -832,7 +836,11 @@
       "modePreview": "预览",
       "previewHint": "这是客人将看到的样子",
       "fieldSettings": "问题设置",
-      "noFields": "暂无问题"
+      "noFields": "暂无问题",
+      "feedbackOpenTitle": "开放团友在 App 内评分",
+      "feedbackOpenOn": "团友的首页已显示评分卡片",
+      "feedbackOpenOff": "暂不在 App 内显示 — 建议行程接近结束时开启（纸本 QR 码仍可使用）",
+      "feedbackOpenNoFields": "已开启，但尚无启用的题目 — 团友仍看不到卡片"
     },
     "itineraryBuilder": {
       "title": "行程管理",

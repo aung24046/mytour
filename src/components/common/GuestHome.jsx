@@ -49,6 +49,10 @@ export default function GuestHome({ guest, isNew = false }) {
   const [articlesByItem, setArticlesByItem] = useState({}) // itinerary_item_id -> guide article
   const [openArticle, setOpenArticle] = useState(null)
 
+  // การ์ดชวนประเมิน — โผล่ต่อเมื่อครบ 3 เงื่อนไข (ดู loadFeedbackInvite)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackDone, setFeedbackDone] = useState(false)
+
   useEffect(() => {
     const guestId = guest?.id
     if (!guestId) return
@@ -144,11 +148,74 @@ export default function GuestHome({ guest, isNew = false }) {
       if (isMounted) setArticlesByItem(map)
     }
 
+    // การ์ดชวนประเมิน — ซ่อนไว้จนกว่าจะครบทั้ง 3 ข้อ:
+    //   1. ทีมงานกดเปิด (tours.feedback_open)
+    //   2. ฟอร์มมีคำถามที่เปิดใช้อยู่จริง — ไม่งั้นกดเข้าไปเจอหน้าว่าง
+    //   3. คนที่ถืออุปกรณ์นี้ไม่ใช่ทีมงาน — หน้า Feedback บล็อก staff อยู่แล้ว
+    //      ถ้าไม่เช็คตรงนี้ด้วย ทีมงานจะกดเข้าไปเจอ "ทีมงานไม่สามารถส่งรีวิวได้"
+    //
+    // เช็คแยกทั้ง 3 query แทนการ join เพราะ v_tour_staff กับ tours อยู่คนละชั้นสิทธิ์
+    // และค่าที่ได้ถูก cache ฝั่ง TourContext ไม่ได้ (ทีมงานกดเปิดกลางทริป ต้องเห็นทันทีที่รีเฟรช)
+    //
+    // ⚠️ ทุกทางออกต้อง setShowFeedback(false) ไม่ใช่แค่ return เฉยๆ
+    //    ฟังก์ชันนี้ถูกเรียกซ้ำตอนทีมงาน "ปิด" สวิตช์ด้วย (ผ่าน realtime ข้างล่าง)
+    //    ถ้า return เฉยๆ การ์ดที่ขึ้นอยู่แล้วจะค้างบนจอทั้งที่ปิดไปแล้ว
+    async function loadFeedbackInvite() {
+      const { data: tour } = await supabase
+        .from('tours')
+        .select('feedback_open')
+        .eq('id', tourId)
+        .maybeSingle()
+      if (!isMounted) return
+      if (!tour?.feedback_open) {
+        setShowFeedback(false)
+        return
+      }
+
+      const { data: staffMatch } = await supabase
+        .from('v_tour_staff')
+        .select('id')
+        .eq('tour_id', tourId)
+        .eq('guest_id', guestId)
+        .maybeSingle()
+      if (!isMounted) return
+      if (staffMatch) {
+        setShowFeedback(false)
+        return
+      }
+
+      const { data: fbFields } = await supabase
+        .from('v_tour_form_fields')
+        .select('id')
+        .eq('tour_id', tourId)
+        .eq('form_type', 'feedback')
+        .eq('is_active', true)
+      if (!isMounted) return
+      if (!fbFields || fbFields.length === 0) {
+        setShowFeedback(false)
+        return
+      }
+
+      // ตอบไปแล้วก็ยังโชว์การ์ด แต่เปลี่ยนข้อความเป็น "แก้ไขคำตอบ"
+      // (หน้า Feedback ให้แก้คำตอบเดิมได้ ถ้าซ่อนการ์ดไปเลยจะกลับเข้าไปแก้ไม่ได้)
+      const { data: answered } = await supabase
+        .from('guest_form_responses')
+        .select('id')
+        .eq('guest_id', guestId)
+        .in('field_id', fbFields.map((f) => f.id))
+        .limit(1)
+
+      if (!isMounted) return
+      setFeedbackDone((answered ?? []).length > 0)
+      setShowFeedback(true)
+    }
+
     loadStatus()
     loadRoom()
     loadSeat()
     loadItinerary()
     loadGuideArticles()
+    loadFeedbackInvite()
 
     const channel = supabase
       .channel(`guest-home-${guestId}`)
@@ -161,6 +228,14 @@ export default function GuestHome({ guest, isNew = false }) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'guests', filter: `id=eq.${guestId}` },
         (payload) => setCheckedIn(!!payload.new.check_in_status)
+      )
+      // ทีมงานกดเปิดประเมินตอนไหน การ์ดต้องขึ้นเดี๋ยวนั้น
+      // จังหวะจริงคือหัวหน้าทัวร์ประกาศบนรถว่า "เปิดให้ประเมินแล้วนะ" แล้วทุกคนก้มดูมือถือพร้อมกัน
+      // ถ้ารอให้รีเฟรชเอง จะมีคนกลุ่มหนึ่งไม่เห็นอะไรเลยแล้วเลิกหา
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'tours', filter: `id=eq.${tourId}` },
+        () => loadFeedbackInvite()
       )
       .subscribe()
 
@@ -357,6 +432,35 @@ export default function GuestHome({ guest, isNew = false }) {
         <NavTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate(tp('share-location'))} />
         <NavTile icon="alert" label={t('guest.nav.sos')} onClick={() => navigate(tp('sos'))} danger />
       </div>
+
+      {/* ชวนประเมินทริป — ทีมงานเปิดสวิตช์แล้วเท่านั้น (ดู loadFeedbackInvite)
+          วางเต็มความกว้างใต้เมนูลัด ไม่ยัดเป็น tile ที่ 5 เพราะแถวเมนูเป็น grid 4 ช่องพอดี
+          และการประเมินเป็นงาน "ทำครั้งเดียวตอนจบทริป" คนละจังหวะกับเมนูที่กดซ้ำทุกวัน */}
+      {showFeedback && (
+        <button
+          onClick={() => navigate(tp('feedback'))}
+          className="mt-4 flex w-full items-center gap-3 rounded-card border-[1.5px] border-warning/40 bg-warning-bg p-4 text-left shadow-card transition active:scale-[0.98]"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-warning/20 text-warning-text">
+            <Icon name="star" size={24} filled />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-bold text-ink">
+              {feedbackDone
+                ? t('guest.home.feedbackDoneTitle')
+                : t('guest.home.feedbackInviteTitle')}
+            </span>
+            <span className="mt-0.5 block text-xs text-ink-muted">
+              {feedbackDone
+                ? t('guest.home.feedbackDoneBody')
+                : t('guest.home.feedbackInviteBody')}
+            </span>
+          </span>
+          <span className="shrink-0 text-lg font-bold text-warning-text" aria-hidden="true">
+            ›
+          </span>
+        </button>
+      )}
 
       {/* คู่มือสถานที่ — เด้งขึ้นเมื่อกดชื่อกิจกรรมที่มีคู่มือ */}
       <BottomSheet open={!!openArticle} onClose={() => setOpenArticle(null)} title={openArticle?.title}>

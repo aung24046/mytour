@@ -242,7 +242,11 @@
       "noSeat": "Not assigned yet",
       "todaySchedule": "Today's schedule",
       "viewAll": "View all",
-      "editProfile": "Edit my info"
+      "editProfile": "Edit my info",
+      "feedbackInviteTitle": "Rate this trip",
+      "feedbackInviteBody": "Under 2 minutes · skip any question",
+      "feedbackDoneTitle": "Feedback submitted",
+      "feedbackDoneBody": "Tap to edit your answers"
     },
     "editProfile": {
       "title": "Edit my info",
@@ -832,7 +836,11 @@
       "modePreview": "Preview",
       "previewHint": "This is what guests will see",
       "fieldSettings": "Question settings",
-      "noFields": "No questions yet"
+      "noFields": "No questions yet",
+      "feedbackOpenTitle": "Let guests rate the trip in the app",
+      "feedbackOpenOn": "Guests now see the rating card on their home screen",
+      "feedbackOpenOff": "Hidden in the app — turn on near the end of the trip (printed QR codes still work)",
+      "feedbackOpenNoFields": "Turned on, but no active questions yet — guests will not see the card"
     },
     "itineraryBuilder": {
       "title": "Itinerary builder",
