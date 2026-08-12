@@ -12,6 +12,7 @@ import SelectField from '../../components/common/SelectField'
 import BottomSheet from '../../components/common/BottomSheet'
 import DynamicField from '../../components/common/DynamicField'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'ข้อความสั้น' },
@@ -282,11 +283,13 @@ export default function FormBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-ink">{t('staff.formBuilder.title')}</h1>
-        <p className="mt-1 text-sm text-ink-muted">{t('staff.formBuilder.subtitle')}</p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="form"
+        title={t('staff.formBuilder.title')}
+        subtitle={t('staff.formBuilder.subtitle')}
+      />
+      <div className="mx-auto max-w-md p-4">
         {/* สลับชนิดฟอร์ม */}
         <div className="mt-3 flex gap-2">
           {FORM_TYPES.map((ft) => (

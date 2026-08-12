@@ -37,7 +37,9 @@ export const CONTENT_MAP = {
   emergency_contacts: {
     junction: 'tour_emergency_contacts',
     fk: 'contact_id',
-    perTour: ['is_active', 'sort_order'],
+    // is_quick = ปักหมุดเป็นปุ่มโทรด่วนบนหน้า SOS — ต่อทริป เพราะเบอร์ชุดเดียวกัน
+    // ถูกใช้ข้ามทริป แต่ละทริปเลือกเบอร์ด่วนคนละชุดได้
+    perTour: ['is_active', 'sort_order', 'is_quick'],
   },
 }
 

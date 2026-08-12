@@ -8,11 +8,15 @@ import { findFieldByPurpose, buildResponsesByGuestId, resolveGuestPhone } from '
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
+import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 import TextField from '../../components/common/TextField'
 import SelectField from '../../components/common/SelectField'
 
 const CATEGORIES = ['guide', 'staff', 'government', 'hospital', 'other']
 const NEW_CONTACT_TEMPLATE = { label: '', phone: '', category: 'other' }
+// ต้องตรงกับ QUICK_CALL_MAX ใน src/pages/guest/SOS.jsx — ปุ่มโทรด่วนวางเป็นตาราง 2×2
+const QUICK_CALL_MAX = 4
 
 function timeAgoLabel(t, dateStr) {
   if (!dateStr) return t('staff.locationMonitor.never')
@@ -118,7 +122,9 @@ export default function SOSMonitor() {
 
   async function updateAlertStatus(alert, status) {
     const patch = { status }
-    if (status === 'resolved') patch.resolved_by = staffSession?.id ?? null
+    // session คือ { staff, orgRole, ... } — id ของคนอยู่ใน .staff.id ไม่ใช่ระดับบนสุด
+    // เดิมอ่าน staffSession?.id ที่เป็น undefined เสมอ ทุกเคสที่ปิดจึงไม่มีชื่อคนปิดติดไว้
+    if (status === 'resolved') patch.resolved_by = staffSession?.staff?.id ?? null
 
     const { error } = await supabase.from('sos_alerts').update(patch).eq('id', alert.id)
     if (error) {
@@ -141,12 +147,12 @@ export default function SOSMonitor() {
     const [contactsRes, guideRes] = await Promise.all([
       supabase
         .from('v_tour_emergency_contacts')
-        .select('id, label, phone, category, sort_order, is_active')
+        .select('id, assignment_id, label, phone, category, sort_order, is_active, is_quick')
         .eq('tour_id', tourId)
         .order('sort_order', { ascending: true }),
       supabase
         .from('v_tour_staff')
-        .select('id, name, phone, show_to_guest')
+        .select('id, assignment_id, name, phone, show_to_guest, is_quick')
         .eq('tour_id', tourId)
         .eq('show_to_guest', true),
     ])
@@ -207,6 +213,59 @@ export default function SOSMonitor() {
     if (!error) setContacts((prev) => prev.filter((c) => c.id !== contact.id))
   }
 
+  // --- โทรด่วน ---
+  // ปุ่มโทรด่วนใต้ปุ่ม SOS ฝั่งลูกทัวร์รับได้ 4 เบอร์ ปักหมุดจากที่นี่
+  // ธงอยู่ที่ตารางเชื่อม (tour_emergency_contacts / tour_staff) → ปักคนละชุดได้ทุกทริป
+  const quickCount = useMemo(
+    () => contacts.filter((c) => c.is_quick).length + guideStaff.filter((s) => s.is_quick).length,
+    [contacts, guideStaff]
+  )
+  const quickFull = quickCount >= QUICK_CALL_MAX
+
+  async function toggleQuick(kind, row) {
+    const next = !row.is_quick
+    if (next && quickFull) return
+
+    const table = kind === 'staff' ? 'tour_staff' : 'tour_emergency_contacts'
+    const setter = kind === 'staff' ? setGuideStaff : setContacts
+
+    // อัปเดตจอก่อนแล้วค่อยยิง — ปุ่มดาวต้องตอบสนองทันที ถ้าพลาดค่อยถอยกลับ
+    setter((prev) => prev.map((r) => (r.id === row.id ? { ...r, is_quick: next } : r)))
+
+    const { error } = await supabase
+      .from(table)
+      .update({ is_quick: next })
+      .eq('id', row.assignment_id)
+
+    if (error) {
+      console.error('[SOSMonitor] toggle quick call failed', error)
+      setter((prev) => prev.map((r) => (r.id === row.id ? { ...r, is_quick: row.is_quick } : r)))
+    }
+  }
+
+  function QuickStar({ kind, row }) {
+    const on = !!row.is_quick
+    const blocked = !on && quickFull
+    return (
+      <button
+        type="button"
+        onClick={() => toggleQuick(kind, row)}
+        disabled={blocked}
+        aria-pressed={on}
+        title={blocked ? t('staff.sosMonitor.quickFull', { max: QUICK_CALL_MAX }) : t('staff.sosMonitor.quickToggle')}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition ${
+          on
+            ? 'bg-warning-bg text-warning-text'
+            : blocked
+              ? 'text-ink-faint opacity-40'
+              : 'text-ink-faint hover:bg-surface-sunken'
+        }`}
+      >
+        <Icon name="star" size={18} filled={on} />
+      </button>
+    )
+  }
+
   const contactsByCategory = useMemo(() => {
     const groups = {}
     for (const c of contacts) {
@@ -217,10 +276,9 @@ export default function SOSMonitor() {
   }, [contacts])
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-3 text-xl font-bold text-ink">{t('staff.sosMonitor.title')}</h1>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader icon="alert" title={t('staff.sosMonitor.title')} />
+      <div className="mx-auto max-w-md p-4">
         <div className="mb-3 flex gap-2">
           <button
             onClick={() => setTab('alerts')}
@@ -392,6 +450,23 @@ export default function SOSMonitor() {
 
             {!loadingContacts && (
               <div className="flex flex-col gap-4">
+                <Card className="flex items-start gap-2.5 border-warning/40 bg-warning-bg/50 p-3">
+                  <Icon name="star" size={18} filled className="mt-0.5 text-warning-text" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-ink">
+                      {t('staff.sosMonitor.quickTitle')}{' '}
+                      <span className="tabular-nums text-ink-muted">
+                        {quickCount}/{QUICK_CALL_MAX}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-muted">
+                      {quickCount === 0
+                        ? t('staff.sosMonitor.quickEmptyHint')
+                        : t('staff.sosMonitor.quickHint', { max: QUICK_CALL_MAX })}
+                    </p>
+                  </div>
+                </Card>
+
                 <div>
                   <p className="mb-1.5 text-xs font-semibold uppercase text-ink-faint">
                     {t('staff.sosMonitor.guideNumbersTitle')}
@@ -402,9 +477,14 @@ export default function SOSMonitor() {
                   )}
                   <div className="flex flex-col gap-1.5">
                     {guideStaff.map((s) => (
-                      <Card key={s.id} className="flex items-center justify-between p-3">
-                        <span className="font-medium text-ink">{s.name}</span>
-                        <span className="text-sm text-ink-muted">{s.phone || '—'}</span>
+                      <Card key={s.id} className="flex items-center gap-2 p-3">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium text-ink">{s.name}</span>
+                          <span className="block truncate text-sm tabular-nums text-ink-muted">
+                            {s.phone || '—'}
+                          </span>
+                        </span>
+                        <QuickStar kind="staff" row={s} />
                       </Card>
                     ))}
                   </div>
@@ -420,11 +500,12 @@ export default function SOSMonitor() {
                     )}
                     <div className="flex flex-col gap-1.5">
                       {(contactsByCategory[category] ?? []).map((contact) => (
-                        <Card key={contact.id} className="flex items-center justify-between p-3">
-                          <div>
-                            <p className="font-medium text-ink">{contact.label}</p>
-                            <p className="text-sm text-ink-muted">{contact.phone}</p>
+                        <Card key={contact.id} className="flex items-center gap-2 p-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium text-ink">{contact.label}</p>
+                            <p className="truncate text-sm tabular-nums text-ink-muted">{contact.phone}</p>
                           </div>
+                          <QuickStar kind="contact" row={contact} />
                           <button
                             onClick={() => deleteContact(contact)}
                             className="shrink-0 text-sm font-medium text-danger"

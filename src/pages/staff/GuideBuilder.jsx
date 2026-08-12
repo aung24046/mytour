@@ -17,6 +17,7 @@ import { THAI_PROVINCES, guessProvinceFromText } from '../../lib/thaiProvinces'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
 import SelectField from '../../components/common/SelectField'
@@ -984,11 +985,13 @@ export default function GuideBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.guideBuilder.title')}</h1>
-        <p className="mb-3 text-sm text-ink-muted">{t('staff.guideBuilder.subtitle')}</p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="book"
+        title={t('staff.guideBuilder.title')}
+        subtitle={t('staff.guideBuilder.subtitle')}
+      />
+      <div className="mx-auto max-w-md p-4">
         <div className="mb-3 flex gap-2">
           <button
             onClick={() => setTab('articles')}

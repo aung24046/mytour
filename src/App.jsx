@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
+import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom'
 
 // Guest pages
 import TourEntry from './pages/guest/TourEntry.jsx'
@@ -20,6 +20,7 @@ import Login from './pages/staff/Login.jsx'
 import Dashboard from './pages/staff/Dashboard.jsx'
 import CheckIn from './pages/staff/CheckIn.jsx'
 import Broadcast from './pages/staff/Broadcast.jsx'
+import BroadcastShortcuts from './pages/staff/BroadcastShortcuts.jsx'
 import SeatMap from './pages/staff/SeatMap.jsx'
 import RoomMap from './pages/staff/RoomMap.jsx'
 import LocationMonitor from './pages/staff/LocationMonitor.jsx'
@@ -30,7 +31,7 @@ import DietarySummary from './pages/staff/DietarySummary.jsx'
 import StaffManager from './pages/staff/StaffManager.jsx'
 import GuestManager from './pages/staff/GuestManager.jsx'
 import LuggageManager from './pages/staff/LuggageManager.jsx'
-import PrintExport from './pages/staff/PrintExport.jsx'
+import Labels from './pages/staff/docs/Labels.jsx'
 import SOSMonitor from './pages/staff/SOSMonitor.jsx'
 import GuideBuilder from './pages/staff/GuideBuilder.jsx'
 import FeedbackSummary from './pages/staff/FeedbackSummary.jsx'
@@ -48,10 +49,14 @@ import EmergencyCard from './pages/staff/docs/EmergencyCard.jsx'
 import ExpenseReport from './pages/staff/docs/ExpenseReport.jsx'
 import FeedbackReport from './pages/staff/docs/FeedbackReport.jsx'
 import FeedbackFormPrint from './pages/staff/docs/FeedbackFormPrint.jsx'
+import JoinPoster from './pages/staff/docs/JoinPoster.jsx'
+import SignatureSheet from './pages/staff/docs/SignatureSheet.jsx'
+import NameTag from './pages/staff/docs/NameTag.jsx'
 
 import RequireRole from './components/common/RequireRole.jsx'
 import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
 import HomeButton from './components/common/HomeButton.jsx'
+import { resolveHomeButton, HOME_BUTTON_SPACE } from './lib/homeButton.js'
 import { TourProvider, useTour, TOUR_STATUS } from './lib/TourContext.jsx'
 import { getActiveTourId, useActiveOrgId } from './lib/staffSession.js'
 import { useOrgTheme } from './lib/useOrgTheme.js'
@@ -143,8 +148,14 @@ function App() {
   // โหมดสว่าง/มืดต้องอยู่ระดับบนสุด เพราะทั้งธีมบริษัทและ UI ต้องเห็นค่าเดียวกัน
   const colorMode = useColorMode()
 
+  // ปุ่มลอย "หน้าหลัก" เป็น position:fixed จึงไม่กินที่ในสายตา layout
+  // ถ้าไม่จองที่ให้ตรงนี้ มันจะไปทับเนื้อหาแถวสุดท้ายของทุกหน้าที่ไม่ได้เผื่อ padding เอง
+  // จองที่เดียวจบ ครอบหน้าที่ยังไม่ได้เขียนด้วย
+  const { visible: homeButtonVisible } = resolveHomeButton(useLocation().pathname)
+
   return (
     <ColorModeContext.Provider value={colorMode}>
+      <div style={homeButtonVisible ? { paddingBottom: HOME_BUTTON_SPACE } : undefined}>
       <Routes>
         {/* ── หน้าแรก / เลือกทริป ───────────────────────────────── */}
         <Route path="/" element={<TourEntry />} />
@@ -188,6 +199,10 @@ function App() {
         <Route path="/staff/admin" element={staffRoute('tour.create', <TourManager />)} />
         <Route path="/staff/check-in" element={staffRoute('checkin.use', <CheckIn />)} />
         <Route path="/staff/broadcast" element={staffRoute('broadcast.send', <Broadcast />)} />
+        <Route
+          path="/staff/broadcast/shortcuts"
+          element={staffRoute('broadcast.send', <BroadcastShortcuts />)}
+        />
         <Route path="/staff/seat-map" element={staffRoute('seat.edit', <SeatMap />)} />
         <Route path="/staff/room-map" element={staffRoute('room.edit', <RoomMap />)} />
         <Route
@@ -213,7 +228,10 @@ function App() {
           path="/staff/luggage-manager"
           element={staffRoute('luggage.use', <LuggageManager />)}
         />
-        <Route path="/staff/print" element={staffRoute('print.export', <PrintExport />)} />
+        {/* ป้ายสติกเกอร์ย้ายไปอยู่ใต้ /staff/documents แล้ว (ส.ค. 2569)
+            คงเส้นทางเดิมไว้เป็น redirect เพราะทีมงานอาจบุ๊กมาร์กไว้ */}
+        <Route path="/staff/print" element={<Navigate to="/staff/documents/labels" replace />} />
+        <Route path="/staff/documents/labels" element={staffRoute('print.export', <Labels />)} />
 
         {/* เอกสารรูปเล่ม A4/A5 — แยกจาก /staff/print ที่เป็นป้ายสติกเกอร์ */}
         <Route path="/staff/company-profile" element={staffRoute('org.profile', <CompanyProfile />)} />
@@ -227,6 +245,10 @@ function App() {
         <Route path="/staff/documents/expense-report" element={staffRoute('expense.edit', <ExpenseReport />)} />
         <Route path="/staff/documents/feedback-report" element={staffRoute('feedback.view', <FeedbackReport />)} />
         <Route path="/staff/documents/feedback-form" element={staffRoute('document.print', <FeedbackFormPrint />)} />
+        {/* เอกสารหน้างาน (ส.ค. 2569) */}
+        <Route path="/staff/documents/join-poster" element={staffRoute('document.print', <JoinPoster />)} />
+        <Route path="/staff/documents/signature-sheet" element={staffRoute('document.print', <SignatureSheet />)} />
+        <Route path="/staff/documents/name-tag" element={staffRoute('document.print', <NameTag />)} />
         <Route path="/staff/sos-monitor" element={staffRoute('sos.monitor', <SOSMonitor />)} />
         <Route path="/staff/guide-builder" element={staffRoute('guide.assign', <GuideBuilder />)} />
         <Route
@@ -242,6 +264,7 @@ function App() {
           element={staffRoute('supplier.assign', <SupplierManager />)}
         />
       </Routes>
+      </div>
       <HomeButton />
     </ColorModeContext.Provider>
   )

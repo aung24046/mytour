@@ -5,8 +5,10 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { supabase } from './supabase'
+import { fetchAllRows } from './fetchAll'
 import { useActiveTourId, useActiveOrgId } from './staffSession'
 import { OVERFLOW } from './printProfiles'
+import { splitEntries, parseEntry } from './dietarySummary'
 
 /** ชนิดเอกสารที่ระบบรองรับ — ตรงกับ CHECK constraint ของ document_presets */
 export const DOC_TYPES = {
@@ -19,6 +21,10 @@ export const DOC_TYPES = {
   EXPENSE_REPORT: 'expense_report',
   FEEDBACK_REPORT: 'feedback_report',
   FEEDBACK_FORM: 'feedback_form',
+  // เอกสารหน้างาน (ส.ค. 2569) — ใช้ตอนรวมพลและระหว่างเดินทาง
+  JOIN_POSTER: 'join_poster',
+  SIGNATURE_SHEET: 'signature_sheet',
+  NAME_TAG: 'name_tag',
 }
 
 export const DOC_TITLES = {
@@ -32,6 +38,9 @@ export const DOC_TITLES = {
   feedback_report: { title: 'รายงานความพึงพอใจ', subtitle: 'Feedback report' },
   // ⚠️ คนละใบกับ feedback_report — ใบนี้คือฟอร์มเปล่าไว้แจก ชื่อจึงต้องต่างกันให้ชัด
   feedback_form: { title: 'แบบประเมิน (ฉบับกระดาษ)', subtitle: 'Feedback form — blank' },
+  join_poster: { title: 'เข้าร่วมทริป', subtitle: 'Join QR poster' },
+  signature_sheet: { title: 'ใบเซ็นชื่อ', subtitle: 'Signature sheet' },
+  name_tag: { title: 'ป้ายชื่อ', subtitle: 'Name tag' },
 }
 
 /** ป้ายชื่อคอลัมน์กลาง — ใช้ทั้งในเอกสารและหน้าเลือกคอลัมน์ */
@@ -80,6 +89,64 @@ export const SENSITIVE_KEYS = new Set([
   'birthdate',
 ])
 
+/* ------------------------------------------------------------------ *
+ * คอลัมน์ที่มาจากคำถามในฟอร์มลงทะเบียน (DataSpec §9.2)
+ *
+ * key เป็น `field:<field_id>` ไม่ใช่ field_key เพราะ:
+ *   - field_key แต่ละทริปตั้งเองซ้ำกันได้ (custom_1784284645523 ฯลฯ)
+ *   - field_id เป็น uuid ของคลังกลาง คงที่ข้ามทริป preset จึงใช้ซ้ำได้จริง
+ * ------------------------------------------------------------------ */
+
+export const FIELD_COLUMN_PREFIX = 'field:'
+
+export function fieldColumnKey(fieldId) {
+  return `${FIELD_COLUMN_PREFIX}${fieldId}`
+}
+
+export function isFieldColumn(key) {
+  return typeof key === 'string' && key.startsWith(FIELD_COLUMN_PREFIX)
+}
+
+export function fieldIdFromColumn(key) {
+  return isFieldColumn(key) ? key.slice(FIELD_COLUMN_PREFIX.length) : null
+}
+
+/** ป้ายหัวตาราง — คอลัมน์จากฟอร์มพก label มาเอง ตัวมาตรฐานใช้ COLUMN_LABELS */
+export function columnLabel(col) {
+  return col?.label ?? COLUMN_LABELS[col?.key] ?? col?.key ?? ''
+}
+
+/** คอลัมน์จากฟอร์มไม่มี field_purpose บอกความอ่อนไหว จึงเดาจาก label ตอนสร้าง
+ *  แล้วติดมากับ col.sensitive — ที่นี่แค่เคารพค่าที่ติดมา */
+export function isSensitiveColumn(col) {
+  return col?.sensitive ?? SENSITIVE_KEYS.has(col?.key)
+}
+
+/** เดาความอ่อนไหวของคำถามจากข้อความ — พลาดทางเข้มดีกว่าพลาดทางหลวม */
+const SENSITIVE_LABEL_RE =
+  /บัตรประชาชน|ประจำตัวประชาชน|พาสปอร์ต|หนังสือเดินทาง|passport|national\s*id|วันเกิด|วันเดือนปีเกิด|birth|โรคประจำตัว|แพ้ยา|ยาที่ใช้|ประวัติการรักษา|medical|ศาสนา|religion/i
+
+/** คำถามปลายเปิดยาวเกินกว่าจะยัดในช่องตาราง — ลงแถวย่อยแทน */
+const LONG_FIELD_TYPES = new Set(['textarea', 'long_text', 'paragraph'])
+const SHORT_FIELD_TYPES = new Set(['date', 'number', 'tel', 'phone'])
+
+function overflowForField(field) {
+  if (LONG_FIELD_TYPES.has(field.field_type)) return OVERFLOW.SUBROW
+  if (SHORT_FIELD_TYPES.has(field.field_type)) return OVERFLOW.NOWRAP
+  return OVERFLOW.WRAP
+}
+
+/** field หนึ่งข้อ → column def ที่ ColumnPicker กับ DocumentTable ใช้ได้ทันที */
+function toFieldColumn(field) {
+  return {
+    key: fieldColumnKey(field.id),
+    label: field.label ?? field.field_key,
+    overflow: overflowForField(field),
+    sensitive: SENSITIVE_LABEL_RE.test(field.label ?? ''),
+    group: 'form',
+  }
+}
+
 /** คอลัมน์ที่เลือกได้ของแต่ละเอกสาร พร้อมนโยบายข้อความยาวที่แนะนำ
  *  ทุกคอลัมน์แสดงเต็มเสมอ — ที่ยาวมากใช้ subrow หรือ footnote แทนการตัดข้อความ */
 export const AVAILABLE_COLUMNS = {
@@ -124,13 +191,22 @@ export const AVAILABLE_COLUMNS = {
   ],
 }
 
-/** ใส่ label + ป้ายอ่อนไหวให้ column def ที่มาจาก preset (jsonb เก็บแค่ key กับนโยบาย) */
-export function hydrateColumns(cols) {
-  return cols.map((c) => ({
-    ...c,
-    label: c.label ?? COLUMN_LABELS[c.key] ?? c.key,
-    sensitive: c.sensitive ?? SENSITIVE_KEYS.has(c.key),
-  }))
+/**
+ * ใส่ label + ป้ายอ่อนไหวให้ column def ที่มาจาก preset (jsonb เก็บแค่ key กับนโยบาย)
+ *
+ * `knownKeys` = คอลัมน์ที่ทริปปัจจุบันมีจริง ใช้ตัดคอลัมน์คำถามที่ทริปนี้ไม่ได้ถามทิ้ง
+ * เพราะ preset เก็บที่ระดับ org แต่คำถามผูกกับทริป — ถ้าไม่ตัด ผู้ใช้จะได้คอลัมน์ผี
+ * ที่มีหัวตารางแต่ทุกแถวเป็น "—" และหาถอดออกในรายการไม่เจอ
+ * ส่วนคอลัมน์มาตรฐานไม่ตัด เพราะมีครบทุกทริปอยู่แล้ว
+ */
+export function hydrateColumns(cols, { knownKeys } = {}) {
+  return cols
+    .filter((c) => !knownKeys || !isFieldColumn(c.key) || knownKeys.has(c.key))
+    .map((c) => ({
+      ...c,
+      label: c.label ?? COLUMN_LABELS[c.key] ?? c.key,
+      sensitive: c.sensitive ?? SENSITIVE_KEYS.has(c.key),
+    }))
 }
 
 /**
@@ -255,7 +331,10 @@ export function stripNoneAnswers(value) {
 }
 
 export function useGuestCustomFields(tourId) {
-  const [state, setState] = useState({ fields: [], responses: [] })
+  // loaded แยกจาก fields.length เพราะ "ยังไม่โหลด" กับ "โหลดแล้วแต่ทริปนี้ไม่มีคำถาม"
+  // ต้องแยกให้ออก — หน้าเอกสารรอ loaded ก่อนค่อย hydrate preset ไม่งั้นคอลัมน์คำถาม
+  // ในชุดที่บันทึกไว้จะถูกตัดทิ้งทั้งหมดตั้งแต่เฟรมแรก
+  const [state, setState] = useState({ loaded: false, fields: [], responses: [] })
 
   useEffect(() => {
     let cancelled = false
@@ -263,25 +342,37 @@ export function useGuestCustomFields(tourId) {
     async function load() {
       const { data: fields, error } = await supabase
         .from('v_tour_form_fields')
-        .select('id, field_key, label, field_purpose, field_type, is_active')
+        // options จำเป็นสำหรับ resolveList — ใช้ตัดสตริงคำตอบตามตัวเลือกจริง
+        .select('id, field_key, label, field_purpose, field_type, options, is_active, sort_order')
         .eq('tour_id', tourId)
         // เอกสารทุกใบเติมข้อมูลจากฟอร์มลงทะเบียนเท่านั้น
         // ถ้าไม่กรอง คำตอบแบบประเมิน (เช่นคอมเมนต์ปลายเปิด) มีสิทธิ์หลุดไปโผล่ในช่อง
         // "หมายเหตุ" หรือ "ข้อจำกัดอาหาร" ของใบที่ส่งให้โรงแรมและร้านอาหาร
         .eq('form_type', 'registration')
 
-      if (cancelled || error || !fields?.length) {
+      if (cancelled) return
+      if (error || !fields?.length) {
         if (error) console.warn('[documentData] custom fields load failed', error)
+        setState({ loaded: true, fields: [], responses: [] })
         return
       }
 
-      const active = fields.filter((f) => f.is_active !== false)
-      const { data: responses } = await supabase
-        .from('guest_form_responses')
-        .select('guest_id, field_id, value')
-        .in('field_id', active.map((f) => f.id))
+      const active = fields
+        .filter((f) => f.is_active !== false)
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      // ⚠️ ต้องแบ่งหน้า — คำตอบของทริปเดียวเกิน 1000 แถวได้ง่าย (ทริปจริงมี 1481)
+      //    ถ้าดึงรวดเดียวจะได้มาแค่ 1000 แถวแบบสุ่มชุด เอกสารจึงข้อมูลหายเป็นครั้งคราว
+      const activeIds = active.map((f) => f.id)
+      const { data: responses } = await fetchAllRows(
+        () =>
+          supabase
+            .from('guest_form_responses')
+            .select('guest_id, field_id, value')
+            .in('field_id', activeIds),
+        { orderBy: 'id' }
+      )
 
-      if (!cancelled) setState({ fields: active, responses: responses ?? [] })
+      if (!cancelled) setState({ loaded: true, fields: active, responses: responses ?? [] })
     }
 
     load()
@@ -310,8 +401,23 @@ export function useGuestCustomFields(tourId) {
       emergency_contact_phone: byPurpose('emergency_contact'),
     }
 
+    // คำถามที่ถูกดูดไปเป็นคอลัมน์มาตรฐานอยู่แล้ว (แพ้อาหาร / เบอร์ / เลขบัตร ฯลฯ)
+    // ห้ามโผล่เป็นคอลัมน์คำถามซ้ำอีกรอบ ไม่งั้นเอกสารจะมีสองช่องที่ค่าเหมือนกัน
+    const mappedIds = new Set(Object.values(sources).flat().map((f) => f.id))
+
+    /** คำถามทั้งหมดในฟอร์มลงทะเบียน → column def ที่เลือกได้ในหน้าเอกสาร */
+    const fieldColumns = state.fields
+      .filter((f) => !mappedIds.has(f.id))
+      .map(toFieldColumn)
+
     /** อ่านค่าของคอลัมน์หนึ่งจาก guest — core ก่อน ถ้าว่างค่อยรวมค่าจาก custom field */
     function resolve(guest, key) {
+      // คอลัมน์คำถาม: อ่านคำตอบข้อนั้นตรงๆ ไม่มี core ให้ fallback
+      const fieldId = fieldIdFromColumn(key)
+      if (fieldId) {
+        return stripNoneAnswers((byGuest[guest?.id] ?? {})[fieldId] ?? '')
+      }
+
       const core = guest?.[key]
       if (core != null && String(core).trim() !== '') return stripNoneAnswers(String(core))
 
@@ -323,7 +429,52 @@ export function useGuestCustomFields(tourId) {
       return [...new Set(parts)].join(' · ')
     }
 
-    return { resolve, ready: state.fields.length > 0 }
+    /**
+     * เหมือน resolve แต่คืนเป็น "รายการ" ที่แกะแล้ว แทนสตริงยาวต่อกันด้วย ' · '
+     *
+     * ทำไมต้องมี: ช่อง "ข้อจำกัด/ข้อควรทราบ" ในใบส่งร้านอาหารเคยเอาคำตอบหลายคำถาม
+     * มาต่อกันเป็นสตริงเดียว ทั้งที่แต่ละคำตอบเองก็มีวงเล็บอังกฤษและคำนำหน้า
+     * "อื่นๆ โปรดระบุ:" ติดมาด้วย ผลคือกำแพงข้อความที่ร้านอ่านไม่ออก
+     *
+     * ตัวแกะใช้ชุดเดียวกับหน้าสรุปข้อจำกัดอาหาร (dietarySummary) — สองที่ตีความตรงกัน
+     */
+    function resolveList(guest, key) {
+      const answers = byGuest[guest?.id] ?? {}
+      const out = []
+
+      const pushFrom = (raw, field) => {
+        const cleaned = stripNoneAnswers(String(raw ?? ''))
+        if (!cleaned) return
+        for (const entry of splitEntries(cleaned, field?.options)) {
+          const { label } = parseEntry(entry, field?.options)
+          if (label && !out.includes(label)) out.push(label)
+        }
+      }
+
+      const fieldId = fieldIdFromColumn(key)
+      if (fieldId) {
+        pushFrom(answers[fieldId], state.fields.find((f) => f.id === fieldId))
+        return out
+      }
+
+      // คอลัมน์ core ที่เก็บในตาราง guests ตรง ๆ ไม่มี options ให้เทียบ — คืนทั้งก้อน
+      const core = guest?.[key]
+      if (core != null && String(core).trim() !== '') {
+        pushFrom(core, null)
+        return out
+      }
+
+      for (const f of sources[key] ?? []) pushFrom(answers[f.id], f)
+      return out
+    }
+
+    return {
+      resolve,
+      resolveList,
+      fieldColumns,
+      loaded: state.loaded,
+      ready: state.fields.length > 0,
+    }
   }, [state])
 }
 

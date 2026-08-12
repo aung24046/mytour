@@ -1,11 +1,21 @@
+// ป้ายสติกเกอร์ (ป้ายกระเป๋า / สายรัดข้อมือ) — ย้ายมาจาก /staff/print เมื่อ ส.ค. 2569
+//
+// เหตุผลที่ย้าย: เดิมแยกเป็นเมนู "พิมพ์และส่งออก" ต่างหากจากเมนู "เอกสาร" ทั้งที่ทำเรื่อง
+// เดียวกัน (เอาข้อมูลออกมาเป็นแผ่นกระดาษ) ต่างกันแค่ขนาดกระดาษ ซึ่ง printProfiles.js
+// ก็เก็บ label_50x30 ไว้กองเดียวกับ A4 อยู่แล้ว — ผู้ใช้จึงต้องจำเองว่าอะไรอยู่เมนูไหน
+//
+// ⚠️ ใบนี้ยังไม่ได้ใช้ DocumentShell เพราะระบบเลือกกระดาษของมันเป็นของตัวเอง
+//    (ขนาดป้ายเป็นมิลลิเมตร ไม่ใช่ A4/A5) ถ้าวันหนึ่ง printProfiles รองรับป้ายเต็มรูปแบบ
+//    ค่อยย้ายมาใช้เปลือกเดียวกับเอกสารใบอื่น
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
 
-import { supabase } from '../../lib/supabase'
-import { useActiveTourId } from '../../lib/staffSession'
-import Card from '../../components/common/Card'
-import Button from '../../components/common/Button'
+import { supabase } from '../../../lib/supabase'
+import { useActiveTourId } from '../../../lib/staffSession'
+import Card from '../../../components/common/Card'
+import StaffHeader from '../../../components/common/StaffHeader'
+import Button from '../../../components/common/Button'
 
 const PRINT_MODES = ['luggage', 'wristband']
 
@@ -36,7 +46,7 @@ function downloadCsv(filename, rows) {
   URL.revokeObjectURL(url)
 }
 
-export default function PrintExport() {
+export default function Labels() {
   const tourId = useActiveTourId()
   const { t } = useTranslation()
 
@@ -68,7 +78,7 @@ export default function PrintExport() {
     ])
 
     if (luggageRes.error || guestsRes.error) {
-      console.error('[PrintExport] load failed', luggageRes.error, guestsRes.error)
+      console.error('[Labels] load failed', luggageRes.error, guestsRes.error)
       setError(t('common.error'))
       setLoading(false)
       return
@@ -151,11 +161,15 @@ export default function PrintExport() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4 print:bg-white print:p-0">
+    <div className="min-h-screen bg-surface-muted print:bg-white print:p-0">
+      <StaffHeader
+        icon="print"
+        title={t('staff.printExport.title')}
+        subtitle={t('staff.printExport.subtitle')}
+        backTo="/staff/documents"
+      />
       {/* ตัวควบคุม — ซ่อนตอนพิมพ์ */}
-      <div className="mx-auto max-w-md print:hidden">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.printExport.title')}</h1>
-        <p className="mb-3 text-sm text-ink-muted">{t('staff.printExport.subtitle')}</p>
+      <div className="mx-auto max-w-md p-4 print:hidden">
 
         {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
         {error && <p className="text-danger">{error}</p>}

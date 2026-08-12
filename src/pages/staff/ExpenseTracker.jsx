@@ -5,20 +5,15 @@ import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId } from '../../lib/staffSession'
 import { enqueue, getQueue, removeFromQueue } from '../../lib/offlineQueue'
 import Card from '../../components/common/Card'
-import Button from '../../components/common/Button'
-import TextField from '../../components/common/TextField'
-import TextAreaField from '../../components/common/TextAreaField'
-import SelectField from '../../components/common/SelectField'
-
-const CATEGORIES = ['food', 'transport', 'accommodation', 'entrance', 'tip', 'misc']
-
-const EMPTY_DRAFT = {
-  amount: '',
-  category: 'food',
-  description: '',
-  paid_by: '',
-  expense_date: new Date().toISOString().slice(0, 10),
-}
+import StaffHeader from '../../components/common/StaffHeader'
+import QuickAdd from './expense/QuickAdd'
+import BatchAdd from './expense/BatchAdd'
+import {
+  CATEGORIES,
+  localDateString,
+  readExpensePrefs,
+  writeExpensePrefs,
+} from './expense/expenseHelpers'
 
 function csvEscape(value) {
   const str = String(value ?? '')
@@ -82,7 +77,11 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([array], { type: mime })
 }
 
-async function uploadReceipt(blob) {
+// ⚠️ เดิมฟังก์ชันนี้อ้าง `tourId` ที่อยู่ในคอมโพเนนต์ ทั้งที่ตัวเองเป็นฟังก์ชันระดับโมดูล
+// ผลคือทุกครั้งที่แนบรูปใบเสร็จจะโยน ReferenceError → ตกเข้า catch → รายการถูกดันลง
+// offline queue เงียบๆ ผู้ใช้เห็นฟอร์มเคลียร์เหมือนบันทึกสำเร็จ แต่ของค้างคิว retry ไม่จบ
+// รับ tourId เป็นพารามิเตอร์แทน
+async function uploadReceipt(tourId, blob) {
   const path = `${tourId}/${Date.now()}.jpg`
   const { error } = await supabase.storage
     .from('receipt-photos')
@@ -101,7 +100,10 @@ function makeId() {
 export default function ExpenseTracker() {
   const tourId = useActiveTourId()
   const { t } = useTranslation()
-  const staffSession = getStaffSession()
+  // ⚠️ getStaffSession() คืน session ทั้งก้อน { staff, orgRole, activeTourId, ... }
+  //    ไม่ใช่แถว staff — โค้ดเดิมอ่าน staffSession?.id ซึ่งเป็น undefined เสมอ
+  //    ผลคือ paid_by/created_by ถูกบันทึกเป็น null ทุกใบตั้งแต่ต้น และช่องคนจ่ายขึ้น "—"
+  const me = getStaffSession()?.staff ?? null
 
   const [expenses, setExpenses] = useState([])
   const [staffList, setStaffList] = useState([])
@@ -109,12 +111,25 @@ export default function ExpenseTracker() {
   const [error, setError] = useState(null)
   const [pendingCount, setPendingCount] = useState(0)
 
-  const [draft, setDraft] = useState(EMPTY_DRAFT)
-  const [photoFile, setPhotoFile] = useState(null)
-  const [photoPreview, setPhotoPreview] = useState(null)
+  const [mode, setMode] = useState('quick')
   const [saving, setSaving] = useState(false)
-  const [formError, setFormError] = useState(null)
-  const fileInputRef = useRef(null)
+  // รายการที่เพิ่งบันทึก ไว้ให้กด "เลิกทำ" — แทนที่จะให้ผู้ใช้ไปหาแล้วกดลบทีละอัน
+  // การพิมพ์เลขผิดหลักคือความผิดพลาดที่เกิดบ่อยสุดตอนลงเร็วๆ ต้องถอยกลับได้ทันที
+  const [lastSaved, setLastSaved] = useState(null)
+  const undoTimer = useRef(null)
+  const listRef = useRef(null)
+
+  const prefs = useMemo(() => readExpensePrefs(tourId), [tourId])
+  const [draft, setDraft] = useState(() => ({
+    amount: '',
+    category: prefs.category ?? CATEGORIES[0],
+    description: '',
+    // คนจ่ายคือบัญชีที่ล็อกอินอยู่เสมอ — ไม่จำค่าล่าสุดไว้ทับ เพราะถ้าเคยเลือกเป็นคนอื่น
+    // ครั้งเดียว รายการที่ลงหลังจากนั้นทั้งหมดจะติดชื่อผิดคนโดยไม่มีใครสังเกต
+    paid_by: me?.id ?? null,
+    expense_date: localDateString(),
+    photoFile: null,
+  }))
 
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterPaidBy, setFilterPaidBy] = useState('all')
@@ -161,9 +176,9 @@ export default function ExpenseTracker() {
       try {
         let receiptUrl = null
         if (action.receiptDataUrl) {
-          receiptUrl = await uploadReceipt(dataUrlToBlob(action.receiptDataUrl))
+          receiptUrl = await uploadReceipt(action.tour_id, dataUrlToBlob(action.receiptDataUrl))
         }
-        const { error } = await supabase.from('expenses').insert({
+        const { error: insertError } = await supabase.from('expenses').insert({
           tour_id: action.tour_id,
           amount: action.amount,
           category: action.category,
@@ -173,7 +188,7 @@ export default function ExpenseTracker() {
           created_by: action.created_by,
           receipt_url: receiptUrl,
         })
-        if (error) throw error
+        if (insertError) throw insertError
         removeFromQueue(action.id)
         syncedAny = true
       } catch (err) {
@@ -201,6 +216,7 @@ export default function ExpenseTracker() {
     return () => {
       window.removeEventListener('online', handleOnline)
       clearInterval(retryInterval)
+      if (undoTimer.current) clearTimeout(undoTimer.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -214,6 +230,16 @@ export default function ExpenseTracker() {
   const totalAmount = useMemo(
     () => expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0),
     [expenses]
+  )
+
+  // ยอดของ "วันที่กำลังลงอยู่" ไม่ใช่ยอดทั้งทริป — ตอนลงย้อนหลังตอนเย็นต้องรู้ว่า
+  // วันนั้นลงไปแล้วเท่าไร เพื่อกระทบกับใบเสร็จในมือ ยอดทั้งทริปดูตอนสรุปพอ
+  const todayTotal = useMemo(
+    () =>
+      expenses
+        .filter((e) => e.expense_date === draft.expense_date)
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0),
+    [expenses, draft.expense_date]
   )
 
   const totalsByCategory = useMemo(() => {
@@ -233,66 +259,73 @@ export default function ExpenseTracker() {
     })
   }, [expenses, filterCategory, filterPaidBy, filterDate])
 
-  function handlePhotoChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setPhotoFile(file)
-    setPhotoPreview(URL.createObjectURL(file))
+  function showUndo(rows) {
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    setLastSaved(rows)
+    undoTimer.current = setTimeout(() => setLastSaved(null), 8000)
   }
 
-  function resetForm() {
-    setDraft(EMPTY_DRAFT)
-    setPhotoFile(null)
-    setPhotoPreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setFormError(null)
-
-    const amountNum = Number(draft.amount)
-    if (!draft.amount || Number.isNaN(amountNum) || amountNum <= 0) {
-      setFormError(t('staff.expenseTracker.amountError'))
-      return
+  async function undoLastSave() {
+    if (!lastSaved?.length) return
+    const ids = lastSaved.map((r) => r.id)
+    setLastSaved(null)
+    setExpenses((prev) => prev.filter((e) => !ids.includes(e.id)))
+    const { error: delError } = await supabase.from('expenses').delete().in('id', ids)
+    if (delError) {
+      console.error('[ExpenseTracker] undo failed', delError)
+      loadExpenses({ showSpinner: false })
     }
+  }
 
+  /**
+   * บันทึกรายการ (หนึ่งหรือหลายรายการ) — ใช้ร่วมกันทั้งโหมดเร็วและโหมดหลายรายการ
+   * ออฟไลน์หรือพังกลางทาง → ลงคิวไว้ทั้งชุด แล้ว retry เองทุก 15 วิ
+   */
+  async function persist(entries, photoFile) {
     setSaving(true)
-
-    const basePayload = {
+    const payloads = entries.map((e) => ({
       tour_id: tourId,
-      amount: amountNum,
-      category: draft.category,
-      description: draft.description.trim() || null,
-      paid_by: draft.paid_by || null,
-      expense_date: draft.expense_date,
-      created_by: staffSession?.id ?? null,
-    }
+      amount: e.amount,
+      category: e.category,
+      description: e.description ?? null,
+      paid_by: e.paid_by || null,
+      expense_date: e.expense_date,
+      created_by: me?.id ?? null,
+    }))
+
+    // จำหมวดที่เพิ่งใช้ไว้เป็นค่าตั้งต้นครั้งหน้า (ไม่จำคนจ่าย — ยึดบัญชีที่ล็อกอินเสมอ)
+    writeExpensePrefs(tourId, { category: entries[entries.length - 1].category })
 
     let compressed = null
     try {
       if (photoFile) compressed = await compressImage(photoFile)
 
       if (!navigator.onLine) {
-        enqueue({ type: 'expense', dedupeKey: makeId(), ...basePayload, receiptDataUrl: compressed?.dataUrl ?? null })
+        for (const p of payloads) {
+          enqueue({ type: 'expense', dedupeKey: makeId(), ...p, receiptDataUrl: compressed?.dataUrl ?? null })
+        }
         refreshPendingCount()
-        resetForm()
         return
       }
 
       let receiptUrl = null
-      if (compressed) receiptUrl = await uploadReceipt(compressed.blob)
+      if (compressed) receiptUrl = await uploadReceipt(tourId, compressed.blob)
 
-      const { error } = await supabase.from('expenses').insert({ ...basePayload, receipt_url: receiptUrl })
-      if (error) throw error
+      const { data, error: insertError } = await supabase
+        .from('expenses')
+        .insert(payloads.map((p, i) => ({ ...p, receipt_url: i === 0 ? receiptUrl : null })))
+        .select('id, amount, category, description, receipt_url, paid_by, expense_date, created_by, created_at')
+      if (insertError) throw insertError
 
-      resetForm()
-      loadExpenses()
+      // เติมลิสต์ทันทีแทนการโหลดใหม่ทั้งหน้า — ลงรายการรัวๆ จะได้ไม่กระพริบทุกครั้ง
+      setExpenses((prev) => [...(data ?? []), ...prev])
+      if (data?.length) showUndo(data)
     } catch (err) {
       console.error('[ExpenseTracker] save failed — queued for retry', err)
-      enqueue({ type: 'expense', dedupeKey: makeId(), ...basePayload, receiptDataUrl: compressed?.dataUrl ?? null })
+      for (const p of payloads) {
+        enqueue({ type: 'expense', dedupeKey: makeId(), ...p, receiptDataUrl: compressed?.dataUrl ?? null })
+      }
       refreshPendingCount()
-      resetForm()
     } finally {
       setSaving(false)
     }
@@ -302,9 +335,9 @@ export default function ExpenseTracker() {
     const confirmed = window.confirm(t('staff.expenseTracker.confirmDelete'))
     if (!confirmed) return
     setExpenses((prev) => prev.filter((e) => e.id !== expense.id))
-    const { error } = await supabase.from('expenses').delete().eq('id', expense.id)
-    if (error) {
-      console.error('[ExpenseTracker] delete failed', error)
+    const { error: delError } = await supabase.from('expenses').delete().eq('id', expense.id)
+    if (delError) {
+      console.error('[ExpenseTracker] delete failed', delError)
       loadExpenses()
     }
   }
@@ -334,26 +367,91 @@ export default function ExpenseTracker() {
     downloadCsv('expenses.csv', rows)
   }
 
-  // SelectField เติม option ว่างเปล่า ("—") ให้เองแล้ว — ไม่ต้องเติมซ้ำ
-  const staffOptions = staffList.map((s) => ({ value: s.id, label: s.name }))
-  const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: t(`staff.expenseTracker.category.${c}`) }))
+  const categoryOptions = CATEGORIES.map((c) => ({
+    value: c,
+    label: t(`staff.expenseTracker.category.${c}`),
+  }))
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-ink">{t('staff.expenseTracker.title')}</h1>
-        <p className="mt-1 text-sm text-ink-muted">{t('staff.expenseTracker.subtitle')}</p>
-
-        {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
-        {error && <p className="mt-4 text-danger">{error}</p>}
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader icon="wallet" title={t('staff.expenseTracker.title')} />
+      <div className="mx-auto max-w-md px-4">
+        {loading && <p className="pt-4 text-ink-muted">{t('common.loading')}</p>}
+        {error && <p className="pt-4 text-danger">{error}</p>}
 
         {!loading && !error && (
           <>
+            {/* จอแรก = ช่องลงรายการอย่างเดียว สูงพอดีหนึ่งวิวพอร์ต ไม่ต้องเลื่อน
+                (100dvh ไม่ใช่ 100vh — บนมือถือ 100vh นับรวมแถบที่อยู่เว็บของเบราว์เซอร์
+                ที่ยุบเข้าออกได้ ปุ่มบันทึกเลยหลุดใต้ขอบจอตอนแถบยังกางอยู่)
+                รายการที่ลงไปแล้วอยู่หน้าถัดไป เลื่อนลงดูได้ — งานหลักคือ "ลง" ไม่ใช่ "ดู" */}
+            <section className="flex h-[calc(100dvh-3.5rem)] flex-col gap-3 py-3">
+              <div className="flex shrink-0 items-baseline justify-between">
+                <p className="text-lg font-bold text-ink">{t('staff.expenseTracker.todayLabel')}</p>
+                <button
+                  onClick={() => listRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  className="text-sm font-semibold text-ink-muted"
+                >
+                  {t('staff.expenseTracker.todayTotal', { amount: todayTotal.toLocaleString() })}
+                </button>
+              </div>
+
+              <div className="flex shrink-0 gap-1 rounded-control bg-surface-sunken p-1">
+                {[
+                  { id: 'quick', label: t('staff.expenseTracker.modeQuick') },
+                  { id: 'batch', label: t('staff.expenseTracker.modeBatch') },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setMode(m.id)}
+                    aria-pressed={mode === m.id}
+                    className={`flex-1 rounded-control px-3 py-1.5 text-sm font-semibold transition ${
+                      mode === m.id ? 'bg-surface text-ink shadow-card' : 'text-ink-muted'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {mode === 'quick' ? (
+                <QuickAdd
+                  staffList={staffList}
+                  me={me}
+                  draft={draft}
+                  onDraftChange={setDraft}
+                  saving={saving}
+                  onSubmit={(entry) => persist([entry], entry.photoFile)}
+                />
+              ) : (
+                <BatchAdd
+                  staffList={staffList}
+                  me={me}
+                  defaults={draft}
+                  saving={saving}
+                  onSubmit={(entries) => persist(entries)}
+                />
+              )}
+
+              {!navigator.onLine && (
+                <p className="shrink-0 text-xs text-warning-text">
+                  {t('staff.expenseTracker.queuedNotice')}
+                </p>
+              )}
+              {pendingCount > 0 && (
+                <p className="shrink-0 text-xs text-warning-text">
+                  {t('staff.expenseTracker.pendingSync', { count: pendingCount })}
+                </p>
+              )}
+            </section>
+
             {/* สรุปรวมทั้งทริป */}
-            <Card className="mt-4">
+            <div ref={listRef} className="h-3 scroll-mt-3" />
+            <Card>
               <p className="text-sm text-ink-muted">{t('staff.expenseTracker.totalLabel')}</p>
               <p className="mt-0.5 text-3xl font-extrabold text-ink">
-                {totalAmount.toLocaleString()} <span className="text-base font-semibold text-ink-faint">฿</span>
+                {totalAmount.toLocaleString()}{' '}
+                <span className="text-base font-semibold text-ink-faint">฿</span>
               </p>
               {totalsByCategory.length > 0 && (
                 <div className="mt-3 flex flex-col gap-1.5 border-t border-line-subtle pt-3">
@@ -362,88 +460,14 @@ export default function ExpenseTracker() {
                   </p>
                   {totalsByCategory.map((c) => (
                     <div key={c.category} className="flex items-center justify-between text-sm">
-                      <span className="text-ink-muted">{t(`staff.expenseTracker.category.${c.category}`)}</span>
+                      <span className="text-ink-muted">
+                        {t(`staff.expenseTracker.category.${c.category}`)}
+                      </span>
                       <span className="font-semibold text-ink">{c.total.toLocaleString()} ฿</span>
                     </div>
                   ))}
                 </div>
               )}
-            </Card>
-
-            {/* ฟอร์มบันทึกเร็ว */}
-            <Card className="mt-4">
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                <TextField
-                  label={t('staff.expenseTracker.amount')}
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  step="0.01"
-                  value={draft.amount}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, amount: e.target.value }))}
-                />
-                <SelectField
-                  label={t('staff.expenseTracker.categoryLabel')}
-                  options={categoryOptions}
-                  value={draft.category}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value }))}
-                />
-                <TextAreaField
-                  label={t('staff.expenseTracker.description')}
-                  placeholder={t('staff.expenseTracker.descriptionPlaceholder')}
-                  rows={2}
-                  value={draft.description}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
-                />
-                <SelectField
-                  label={t('staff.expenseTracker.paidBy')}
-                  options={staffOptions}
-                  value={draft.paid_by}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, paid_by: e.target.value }))}
-                />
-                <TextField
-                  label={t('staff.expenseTracker.expenseDate')}
-                  type="date"
-                  value={draft.expense_date}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, expense_date: e.target.value }))}
-                />
-
-                <div>
-                  <p className="mb-1.5 text-sm font-semibold text-neutral-text">{t('staff.expenseTracker.receiptPhoto')}</p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full rounded-xl bg-surface-sunken px-3 py-2.5 text-sm font-semibold text-neutral-text"
-                  >
-                    {t('staff.expenseTracker.takePhoto')}
-                  </button>
-                  {photoPreview && (
-                    <img src={photoPreview} alt="preview" className="mt-2 h-32 w-full rounded-xl object-cover" />
-                  )}
-                </div>
-
-                {formError && <p className="text-sm text-danger">{formError}</p>}
-
-                <Button type="submit" disabled={saving}>
-                  {saving ? t('staff.expenseTracker.saving') : t('staff.expenseTracker.addExpense')}
-                </Button>
-
-                {!navigator.onLine && (
-                  <p className="text-xs text-warning-text">{t('staff.expenseTracker.queuedNotice')}</p>
-                )}
-                {pendingCount > 0 && (
-                  <p className="text-xs text-warning-text">
-                    {t('staff.expenseTracker.pendingSync', { count: pendingCount })}
-                  </p>
-                )}
-              </form>
             </Card>
 
             {/* ตัวกรอง */}
@@ -499,8 +523,8 @@ export default function ExpenseTracker() {
               </button>
             </div>
 
-            {/* ลิสต์รายจ่าย */}
-            <div className="mt-3 flex flex-col gap-2">
+            {/* ลิสต์รายจ่าย — เผื่อที่ท้ายไว้ให้แถบเลิกทำที่ลอยอยู่ล่างจอ */}
+            <div className="mt-3 flex flex-col gap-2 pb-24">
               {expenses.length === 0 && (
                 <p className="text-sm text-ink-faint">{t('staff.expenseTracker.noExpenses')}</p>
               )}
@@ -517,14 +541,18 @@ export default function ExpenseTracker() {
                         </span>
                         <span className="text-xs text-ink-faint">{e.expense_date}</span>
                       </div>
-                      {e.description && <p className="mt-1 text-sm text-neutral-text">{e.description}</p>}
+                      {e.description && (
+                        <p className="mt-1 text-sm text-neutral-text">{e.description}</p>
+                      )}
                       {e.paid_by && staffById[e.paid_by] && (
                         <p className="mt-0.5 text-xs text-ink-faint">
                           {t('staff.expenseTracker.paidBy')}: {staffById[e.paid_by].name}
                         </p>
                       )}
                     </div>
-                    <p className="shrink-0 font-bold text-ink">{Number(e.amount).toLocaleString()} ฿</p>
+                    <p className="shrink-0 font-bold text-ink">
+                      {Number(e.amount).toLocaleString()} ฿
+                    </p>
                   </div>
                   <div className="mt-2 flex items-center gap-3 border-t border-line-subtle pt-2">
                     {e.receipt_url && (
@@ -550,6 +578,18 @@ export default function ExpenseTracker() {
           </>
         )}
       </div>
+
+      {/* แถบเลิกทำ — ลอยล่างจอ หายเองใน 8 วิ ไม่บังปุ่มบันทึก */}
+      {lastSaved?.length > 0 && (
+        <div className="fixed inset-x-0 bottom-4 z-40 mx-auto flex max-w-sm items-center justify-between gap-3 rounded-card bg-ink px-4 py-3 text-surface shadow-lg">
+          <span className="text-sm">
+            {t('staff.expenseTracker.savedToast', { count: lastSaved.length })}
+          </span>
+          <button onClick={undoLastSave} className="text-sm font-bold underline">
+            {t('staff.expenseTracker.undo')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

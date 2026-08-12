@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {  } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
 import { useActiveOrgId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
@@ -45,7 +46,6 @@ const EMPTY_FORM = {
 export default function CompanyProfile() {
   const orgId = useActiveOrgId()
   const mode = useMode()
-  const navigate = useNavigate()
   const fileRef = useRef(null)
 
   const [form, setForm] = useState(null)
@@ -197,21 +197,9 @@ export default function CompanyProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <div className="mb-3 flex items-center gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-lg text-ink-muted ring-1 ring-line-subtle"
-            aria-label="ย้อนกลับ"
-          >
-            ←
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-ink">ข้อมูลบริษัท</h1>
-            <p className="text-sm text-ink-muted">ใช้เป็นหัวกระดาษของเอกสารทุกใบ</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader icon="briefcase" title="ข้อมูลบริษัท" subtitle="ใช้เป็นหัวกระดาษของเอกสารทุกใบ" />
+      <div className="mx-auto max-w-md p-4">
 
         {error && (
           <p className="mb-3 rounded-control bg-danger-bg px-3 py-2 text-sm text-danger-text">{error}</p>

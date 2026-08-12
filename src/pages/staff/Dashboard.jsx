@@ -54,7 +54,8 @@ const GROUPS = [
       { to: '/staff/dietary-summary', key: 'dietarySummary', icon: 'bowl' },
       { to: '/staff/feedback-summary', key: 'feedbackSummary', icon: 'star' },
       { to: '/staff/form-builder', key: 'formBuilder', icon: 'form' },
-      { to: '/staff/print', key: 'printExport', icon: 'print' },
+      // เมนู "พิมพ์และส่งออก" เดิมถูกยุบเข้าหน้าเอกสารแล้ว (ส.ค. 2569)
+      // ป้ายสติกเกอร์อยู่ในกลุ่ม "ป้ายและสติกเกอร์" ของหน้านั้น
       { to: '/staff/documents', key: 'documentHub', icon: 'form' },
     ],
   },
@@ -419,8 +420,10 @@ export default function Dashboard() {
               MyTour
             </p>
             <h1 className="text-2xl font-extrabold text-ink">{t('staff.dashboard.title')}</h1>
-            {staffSession?.name && (
-              <p className="mt-0.5 text-sm text-ink-muted">{staffSession.name}</p>
+            {/* ชื่อคนอยู่ใน session.staff ไม่ใช่ระดับบนสุด — เดิมหัวหน้าทัวร์เปิดแอปมาแล้ว
+                ไม่เห็นชื่อตัวเองเลยเพราะเงื่อนไขนี้เป็น undefined เสมอ */}
+            {staffSession?.staff?.name && (
+              <p className="mt-0.5 text-sm text-ink-muted">{staffSession.staff.name}</p>
             )}
             {/* ทีมงานทำงานกลางคืนบนรถบัสจริง จอสว่างจ้ารบกวนลูกทัวร์ที่กำลังนอน */}
             <ColorModeToggle className="mt-2" />

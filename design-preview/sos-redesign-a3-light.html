@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOS ฉุกเฉิน — แบบ A พื้นขาว (เทียบกับพื้นเข้ม)</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#077c99; --brand-deep:#05576b; --brand-start:#0bbfec;
+  --brand-light:#d4e8ed; --brand-lighter:#f2f8fa;
+  --surface:#fff; --surface-muted:#f6f9fb; --surface-sunken:#eef4f7;
+  --ink:#0f2b35; --ink-muted:#4e6670; --ink-faint:#5a6f79;
+  --line-subtle:#e8eff2; --line:#d7e3e8; --line-strong:#b9ccd4;
+  --success-bg:#dcfce7; --success-text:#15803d;
+  --warning-bg:#fef3c7; --warning-text:#b45309;
+  --danger:#e0524a; --danger-deep:#b93b34; --danger-bg:#fdecea; --danger-text:#b0392f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif;background:#e9eef1;color:var(--ink);padding:28px 20px 70px}
+.page-head{max-width:1160px;margin:0 auto 24px}
+.page-head h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.page-head p{color:var(--ink-muted);font-size:14px;margin-top:6px;max-width:80ch;line-height:1.65}
+.wrap{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:24px;align-items:start}
+.col{display:flex;flex-direction:column;gap:11px}
+.tag b{font-size:15.5px;font-weight:800;display:block}
+.tag span{font-size:12.5px;color:var(--ink-muted);display:block;margin-top:3px;line-height:1.55}
+.phone{background:var(--surface-muted);border-radius:28px;padding:13px 11px 16px;box-shadow:0 10px 30px rgba(15,43,53,.11);border:1px solid var(--line)}
+.phone.dark{background:#0a2029;border-color:#16404e}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.note{font-size:12px;color:var(--ink-muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;line-height:1.65}
+.note b{color:var(--ink)}
+
+/* ============ LIGHT SCREEN ============ */
+.scr{background:var(--surface-muted);border-radius:22px;padding:0 0 13px;display:flex;flex-direction:column;gap:12px;min-height:620px;overflow:hidden}
+.topband{background:linear-gradient(135deg,#f5827a 0%,var(--danger) 55%,var(--danger-deep) 100%);color:#fff;padding:13px 15px 17px;position:relative;overflow:hidden}
+.topband::after{content:"";position:absolute;right:-45px;top:-60px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.11)}
+.bar{position:relative;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
+.bar .back{display:inline-flex;align-items:center;gap:5px;opacity:.9}
+.live{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:#7ef0a8;box-shadow:0 0 0 0 rgba(126,240,168,.7);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(126,240,168,0)}100%{box-shadow:0 0 0 0 rgba(126,240,168,0)}}
+.tb-txt{position:relative;margin-top:11px}
+.tb-txt h2{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.tb-txt p{font-size:12.5px;opacity:.88;margin-top:4px;line-height:1.5}
+.pad{padding:0 14px;display:flex;flex-direction:column;gap:12px}
+
+.btnzone{display:grid;place-items:center;padding:2px 0 0;margin-top:-4px}
+.ring{position:relative;width:212px;height:212px;display:grid;place-items:center}
+.ring::before{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(224,82,74,.32);animation:halo 2.6s ease-out infinite}
+@keyframes halo{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.1);opacity:0}}
+.prog{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.big{width:164px;height:164px;border-radius:50%;border:none;cursor:pointer;color:#fff;
+  background:radial-gradient(120% 120% at 35% 25%,#ef6a5f 0%,var(--danger) 48%,var(--danger-deep) 100%);
+  box-shadow:0 12px 28px rgba(176,57,47,.34),inset 0 -5px 12px rgba(0,0,0,.14),inset 0 3px 10px rgba(255,255,255,.24);
+  display:grid;place-items:center;gap:1px;user-select:none;transition:transform .12s;touch-action:none}
+.big:active{transform:scale(.96)}
+.big .sos{font-size:39px;font-weight:800;letter-spacing:.04em;line-height:1}
+.big .sub{font-size:11px;font-weight:700;opacity:.9}
+.hint{text-align:center;font-size:12.5px;font-weight:600;color:var(--ink-faint);min-height:18px;margin-top:-2px}
+.hint.on{color:var(--danger-text)}
+
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-subtle);box-shadow:0 2px 7px rgba(15,43,53,.05);border-radius:15px;padding:10px 11px;text-decoration:none;color:var(--ink)}
+.q .qi{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--brand-lighter);color:var(--brand);border:1px solid var(--brand-light)}
+.q .qi.red{background:var(--danger-bg);color:var(--danger-text);border-color:#f8d3cf}
+.q .qt{min-width:0}
+.q b{display:block;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q span{font-size:10.5px;color:var(--ink-muted)}
+
+.sheet{background:var(--surface);border:1px solid var(--line-subtle);box-shadow:0 2px 7px rgba(15,43,53,.05);border-radius:16px;padding:11px 12px;display:flex;flex-direction:column;gap:8px}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
+.inp{width:100%;background:var(--surface-sunken);border:1px solid transparent;border-radius:11px;padding:9px 11px;color:var(--ink);font-family:inherit;font-size:13px;resize:none}
+.inp::placeholder{color:var(--ink-faint);opacity:.7}
+.geo{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-muted)}
+
+.toggle{margin-top:auto;width:100%;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 2px 7px rgba(15,43,53,.05);border-radius:15px;padding:12px 13px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
+.toggle .cnt{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--ink-faint)}
+.toggle .chev{transition:transform .25s}
+.toggle.open .chev{transform:rotate(180deg)}
+
+.panel{display:none;flex-direction:column;gap:10px;animation:rise .28s ease}
+.panel.open{display:flex}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--ink-faint)}
+.off{display:flex;align-items:center;gap:8px;background:var(--warning-bg);border:1px solid #fde68a;color:var(--warning-text);border-radius:12px;padding:9px 11px;font-size:11px;font-weight:600;line-height:1.45}
+.g{background:var(--surface);border:1px solid var(--line-subtle);box-shadow:0 2px 8px rgba(15,43,53,.05);border-radius:16px;overflow:hidden}
+.gh{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface-muted);border-bottom:1px solid var(--line-subtle)}
+.gh .gic{width:23px;height:23px;border-radius:7px;display:grid;place-items:center;color:#fff;flex:none}
+.gh b{font-size:11.5px;font-weight:800;letter-spacing:.02em}
+.gh .n{margin-left:auto;font-size:10px;font-weight:700;color:var(--ink-faint);background:var(--surface);border:1px solid var(--line-subtle);border-radius:999px;padding:2px 8px}
+.row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid var(--line-subtle);text-decoration:none;color:var(--ink)}
+.row:last-child{border-bottom:none}
+.row .rt{flex:1;min-width:0}
+.row .rt b{font-size:13px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt span{font-size:11px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.pill{font-size:9px;font-weight:800;border-radius:999px;padding:2px 6px;background:var(--brand-lighter);color:var(--brand);margin-left:5px;vertical-align:middle}
+.call{width:35px;height:35px;border-radius:50%;background:var(--success-bg);color:var(--success-text);display:grid;place-items:center;flex:none}
+.call.red{background:var(--danger-bg);color:var(--danger-text)}
+
+/* ============ DARK (ย่อไว้เทียบ) ============ */
+.dscr{background:linear-gradient(170deg,#14414f 0%,#0e2f3b 48%,#0a2029 100%);border-radius:22px;padding:15px 14px;color:#eaf3f6;display:flex;flex-direction:column;gap:12px;min-height:620px}
+.dscr .q{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#eaf3f6;box-shadow:none}
+.dscr .q .qi{background:rgba(11,191,236,.18);color:#7fdcf5;border-color:transparent}
+.dscr .q .qi.red{background:rgba(224,82,74,.2);color:#ff9d94;border-color:transparent}
+.dscr .q span{color:rgba(234,243,246,.65)}
+.dscr .sheet{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);box-shadow:none}
+.dscr .lbl{color:rgba(234,243,246,.55)}
+.dscr .inp{background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.12);color:#eaf3f6}
+.dscr .geo{color:rgba(234,243,246,.65)}
+.dscr .toggle{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#eaf3f6;box-shadow:none}
+.dscr .toggle .cnt{color:rgba(234,243,246,.65)}
+.dscr .hint{color:rgba(234,243,246,.7)}
+.dscr .bar{color:#eaf3f6}
+.dscr .head{text-align:center}
+.dscr .head h2{font-size:21px;font-weight:800}
+.dscr .head p{font-size:12.5px;opacity:.72;margin-top:5px}
+.dscr .live{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
+
+.verdict{max-width:1160px;margin:26px auto 0;background:var(--surface);border:1px solid var(--line-subtle);border-radius:18px;padding:16px 18px;box-shadow:0 3px 12px rgba(15,43,53,.06)}
+.verdict h3{font-size:15px;font-weight:800;margin-bottom:9px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.vcol h4{font-size:12.5px;font-weight:800;margin-bottom:6px}
+.vcol ul{margin-left:16px;font-size:12.5px;color:var(--ink-muted);line-height:1.75}
+.win{display:inline-block;background:var(--success-bg);color:var(--success-text);border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:800;margin-left:6px}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>พื้นขาว vs พื้นเข้ม — แบบ A</h1>
+  <p>คำตอบสั้น ๆ: <b>พื้นขาวดีกว่าครับ</b> เหตุผลหลักคือลูกทัวร์ใช้หน้านี้กลางแจ้ง จอมือถือกลางแดดจะหรี่และ UI เข้มจะอ่านแทบไม่ออก ส่วนจอสว่างยังพอสู้แดดได้ · แถมยัง reuse <code>Card / Button / GuestNav</code> เดิมได้ทั้งหมด ไม่ต้องเขียน dark variant ใหม่ · ยังคง "ความเป็นฉุกเฉิน" ได้ด้วยแถบหัวสีแดงบาง ๆ + ปุ่มแดงลูกใหญ่ ซึ่งเด่นบนพื้นขาวมากกว่าบนพื้นเข้มด้วยซ้ำ (ค่า contrast สูงกว่า)</p>
+</div>
+
+<div class="wrap">
+
+  <!-- LIGHT: normal -->
+  <div class="col">
+    <div class="tag"><b>พื้นขาว — สถานะปกติ <span class="win" style="display:inline-block">แนะนำ</span></b><span>แถบหัวแดงบอกว่านี่คือโหมดฉุกเฉิน ที่เหลือใช้ token เดิมของแอป · กดปุ่มล่างเพื่อดูแผงเบอร์</span></div>
+    <div class="phone">
+      <div class="scr">
+        <div class="topband">
+          <div class="bar">
+            <span class="back"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> ทัวร์เกาหลี 5 วัน</span>
+            <span class="live"><i class="dot"></i> ออนไลน์ · GPS พร้อม</span>
+          </div>
+          <div class="tb-txt" id="head">
+            <h2>ต้องการความช่วยเหลือ?</h2>
+            <p>กดค้าง 2 วินาที — ทีมงานจะเห็นพิกัดคุณทันที</p>
+          </div>
+        </div>
+
+        <div class="pad" style="flex:1">
+          <div id="mainZone" style="display:flex;flex-direction:column;gap:12px">
+            <div class="btnzone">
+              <div class="ring">
+                <svg class="prog" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="46" fill="none" stroke="#e2ebef" stroke-width="6"/>
+                  <circle id="arc" cx="50" cy="50" r="46" fill="none" stroke="#e0524a" stroke-width="6" stroke-linecap="round"
+                    stroke-dasharray="289" stroke-dashoffset="289"/>
+                </svg>
+                <button class="big" id="sosBtn"><span class="sos">SOS</span><span class="sub">กดค้างไว้</span></button>
+              </div>
+            </div>
+            <div class="hint" id="hint">แตะค้างจนวงกลมครบรอบ</div>
+
+            <div class="quick">
+              <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="qt"><b>ไกด์ สมชาย</b><span>หัวหน้าทัวร์</span></span></a>
+              <a class="q" href="#"><span class="qi red"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg></span><span class="qt"><b>119</b><span>รถพยาบาล</span></span></a>
+              <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><span class="qt"><b>112</b><span>ตำรวจเกาหลี</span></span></a>
+              <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span class="qt"><b>ทีมงาน มายด์</b><span>รถบัสคันที่ 1</span></span></a>
+            </div>
+
+            <div class="sheet">
+              <span class="lbl">ข้อความเพิ่มเติม (ถ้ามี)</span>
+              <textarea class="inp" rows="2" placeholder="เช่น อยู่หน้าร้าน 7-11 ตรงข้ามวัด"></textarea>
+              <div class="geo"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg> พิกัดล่าสุด: Myeongdong, Seoul · ±12 ม.</div>
+            </div>
+          </div>
+
+          <div class="panel" id="panel">
+            <div class="search"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> ค้นหาชื่อหรือเบอร์…</div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:linear-gradient(135deg,#0bbfec,#077c99)"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M20 21v-2a4 4 0 0 0-3-3.9M4 21v-2a4 4 0 0 1 3-3.9"/><circle cx="12" cy="7" r="4"/></svg></span><b>ไกด์ / หัวหน้าทัวร์</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>สมชาย (พี่ชาย) <span class="pill">หัวหน้าทัวร์</span></b><span>081-234-5678</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>Kim Ji-woo (ไกด์ท้องถิ่น)</b><span>+82-10-2345-6789</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:#3f7f93"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><b>ทีมงาน</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>มายด์ (ผู้ช่วย) <span class="pill">รถคันที่ 1</span></b><span>082-111-2233</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>โบว์ (ผู้ช่วย)</b><span>083-444-5566</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:var(--danger)"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M12 5v14M5 12h14"/></svg></span><b>โรงพยาบาล / การแพทย์</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>รถพยาบาลฉุกเฉิน (เกาหลี)</b><span>119</span></span><span class="call red"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>รพ. Seoul National <span class="pill">2.1 กม.</span></b><span>+82-2-2072-2114</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:#0f2b35"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><b>หน่วยงานราชการ</b><span class="n">3</span></div>
+              <a class="row" href="#"><span class="rt"><b>สถานทูตไทย ณ กรุงโซล</b><span>+82-2-795-3098</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>ตำรวจ (เกาหลี)</b><span>112</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>1155 ตำรวจท่องเที่ยว (ไทย)</b><span>+66-2-134-5555</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+          </div>
+
+          <button class="toggle" id="toggle">
+            <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--brand)"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+            <span id="toggleLabel">เบอร์ฉุกเฉินทั้งหมด</span>
+            <span class="cnt"><span id="toggleCount">9</span><svg class="ic chev" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M18 15l-6-6-6 6"/></svg></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>reuse ได้ทันที:</b> การ์ด/อินพุต/แถวเบอร์ ใช้ token เดิม (<code>surface, line-subtle, brand-lighter, success-bg</code>) — ไม่ต้องเขียนสีใหม่ และ theme switcher ของแอปจะเปลี่ยนตามอัตโนมัติ</div>
+  </div>
+
+  <!-- LIGHT: expanded (static) -->
+  <div class="col">
+    <div class="tag"><b>พื้นขาว — เปิดแผงเบอร์</b><span>อ่านง่ายกว่าฉบับพื้นเข้มชัดเจน โดยเฉพาะเบอร์โทรตัวเลข</span></div>
+    <div class="phone">
+      <div class="scr">
+        <div class="topband" style="padding-bottom:14px">
+          <div class="bar">
+            <span class="back"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> ทัวร์เกาหลี 5 วัน</span>
+            <span class="live"><i class="dot"></i> ออนไลน์ · GPS พร้อม</span>
+          </div>
+          <div class="tb-txt"><h2 style="font-size:18px">เบอร์ติดต่อฉุกเฉิน</h2><p>แตะเพื่อโทรออกทันที · ใช้ได้แม้ไม่มีเน็ต</p></div>
+        </div>
+        <div class="pad" style="flex:1">
+          <div class="panel open">
+            <div class="search"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> ค้นหาชื่อหรือเบอร์…</div>
+            <div class="off"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px;flex:none"><path d="M1 1l22 22M16.7 11.7a6 6 0 0 0-8.4 0M5 8.5a11 11 0 0 1 4-2.3M19 8.5a11 11 0 0 0-3-1.9M12 20h.01"/></svg> ออฟไลน์อยู่ — แสดงเบอร์ที่บันทึกไว้ล่าสุด</div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:linear-gradient(135deg,#0bbfec,#077c99)"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M20 21v-2a4 4 0 0 0-3-3.9M4 21v-2a4 4 0 0 1 3-3.9"/><circle cx="12" cy="7" r="4"/></svg></span><b>ไกด์ / หัวหน้าทัวร์</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>สมชาย (พี่ชาย) <span class="pill">หัวหน้าทัวร์</span></b><span>081-234-5678</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>Kim Ji-woo (ไกด์ท้องถิ่น)</b><span>+82-10-2345-6789</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:#3f7f93"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><b>ทีมงาน</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>มายด์ (ผู้ช่วย) <span class="pill">รถคันที่ 1</span></b><span>082-111-2233</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>โบว์ (ผู้ช่วย)</b><span>083-444-5566</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:var(--danger)"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M12 5v14M5 12h14"/></svg></span><b>โรงพยาบาล / การแพทย์</b><span class="n">2</span></div>
+              <a class="row" href="#"><span class="rt"><b>รถพยาบาลฉุกเฉิน (เกาหลี)</b><span>119</span></span><span class="call red"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>รพ. Seoul National <span class="pill">2.1 กม.</span></b><span>+82-2-2072-2114</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+            <div class="g">
+              <div class="gh"><span class="gic" style="background:#0f2b35"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><b>หน่วยงานราชการ</b><span class="n">3</span></div>
+              <a class="row" href="#"><span class="rt"><b>สถานทูตไทย ณ กรุงโซล</b><span>+82-2-795-3098</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+              <a class="row" href="#"><span class="rt"><b>ตำรวจ (เกาหลี)</b><span>112</span></span><span class="call"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            </div>
+          </div>
+          <button class="toggle open" style="margin-top:12px">
+            <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--danger)"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+            กลับไปหน้าปุ่ม SOS
+            <span class="cnt"><svg class="ic chev" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M18 15l-6-6-6 6"/></svg></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>ข้อเสียเดียวของพื้นขาว:</b> ตอนกลางคืนจะแสบตากว่า — แก้ด้วยการให้หน้านี้ตามระบบ dark mode ของแอป (มี <code>ColorModeToggle</code> อยู่แล้ว) ก็จบ</div>
+  </div>
+
+  <!-- DARK reference -->
+  <div class="col">
+    <div class="tag"><b>พื้นเข้ม (ของเดิม) — ไว้เทียบ</b><span>ยังสวย ดูพรีเมียม แต่แลกด้วยการอ่านกลางแดดและงาน dark variant เพิ่ม</span></div>
+    <div class="phone dark">
+      <div class="dscr">
+        <div class="bar" style="color:#eaf3f6">
+          <span class="back"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> ทัวร์เกาหลี 5 วัน</span>
+          <span class="live"><i class="dot"></i> ออนไลน์ · GPS พร้อม</span>
+        </div>
+        <div class="head"><h2>ต้องการความช่วยเหลือ?</h2><p>กดค้าง 2 วินาที — ทีมงานจะเห็นพิกัดคุณทันที</p></div>
+        <div class="btnzone">
+          <div class="ring">
+            <svg class="prog" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#e0524a" stroke-width="6" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289"/>
+            </svg>
+            <button class="big"><span class="sos">SOS</span><span class="sub">กดค้างไว้</span></button>
+          </div>
+        </div>
+        <div class="hint">แตะค้างจนวงกลมครบรอบ</div>
+        <div class="quick">
+          <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="qt"><b>ไกด์ สมชาย</b><span>หัวหน้าทัวร์</span></span></a>
+          <a class="q" href="#"><span class="qi red"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg></span><span class="qt"><b>119</b><span>รถพยาบาล</span></span></a>
+          <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><span class="qt"><b>112</b><span>ตำรวจเกาหลี</span></span></a>
+          <a class="q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span class="qt"><b>ทีมงาน มายด์</b><span>รถบัสคันที่ 1</span></span></a>
+        </div>
+        <div class="sheet">
+          <span class="lbl">ข้อความเพิ่มเติม (ถ้ามี)</span>
+          <textarea class="inp" rows="2" placeholder="เช่น อยู่หน้าร้าน 7-11 ตรงข้ามวัด"></textarea>
+          <div class="geo"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg> พิกัดล่าสุด: Myeongdong, Seoul · ±12 ม.</div>
+        </div>
+        <button class="toggle">
+          <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+          เบอร์ฉุกเฉินทั้งหมด<span class="cnt">9 <svg class="ic chev" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M18 15l-6-6-6 6"/></svg></span>
+        </button>
+      </div>
+    </div>
+    <div class="note"><b>เก็บไว้ใช้ได้:</b> ถ้าอยากได้ความรู้สึก "โหมดพิเศษ" ให้ใช้พื้นเข้มเฉพาะตอนแอปอยู่ dark mode — โค้ดชุดเดียวกัน เปลี่ยนแค่ token</div>
+  </div>
+</div>
+
+<div class="verdict">
+  <h3>สรุปเหตุผล</h3>
+  <div class="vgrid">
+    <div class="vcol">
+      <h4>พื้นขาวชนะเรื่อง <span class="win">ใช้จริง</span></h4>
+      <ul>
+        <li>ใช้กลางแจ้ง/กลางแดด — จอมือถือกลางแดด UI เข้มจะจมหมด</li>
+        <li>ตัวเลขเบอร์โทรอ่านง่ายกว่าบนพื้นสว่าง</li>
+        <li>ต่อเนื่องกับหน้าอื่นในแอป ผู้ใช้ไม่สะดุด</li>
+        <li>reuse component เดิมได้หมด ไม่ต้อง maintain สองชุดสี</li>
+        <li>ปุ่มแดงบนพื้นขาว contrast สูงกว่าแดงบนพื้น teal เข้ม</li>
+      </ul>
+    </div>
+    <div class="vcol">
+      <h4>พื้นเข้มชนะเรื่อง <span style="background:var(--brand-lighter);color:var(--brand);border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:800">อารมณ์</span></h4>
+      <ul>
+        <li>สื่อว่า "เข้าโหมดฉุกเฉินแล้ว" ชัดกว่า</li>
+        <li>สบายตากว่าตอนกลางคืน</li>
+        <li>ดูพรีเมียม แตกต่างจากแอปทัวร์ทั่วไป</li>
+      </ul>
+    </div>
+    <div class="vcol">
+      <h4>ทางที่แนะนำ</h4>
+      <ul>
+        <li>ใช้พื้นขาวเป็นค่าเริ่มต้น</li>
+        <li>คงแถบหัวแดงไว้ เพื่อบอกว่าเป็นโหมดฉุกเฉิน</li>
+        <li>ผูกพื้นเข้มเข้ากับ dark mode ของแอป (มี <code>ColorModeToggle</code> แล้ว) ได้ทั้งสองอย่างโดยไม่ต้องเลือก</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var C=289,HOLD=2000;
+  var btn=document.getElementById('sosBtn'),arc=document.getElementById('arc'),hint=document.getElementById('hint');
+  var raf=null,timer=null,start=0;
+  function tick(){var e=Date.now()-start,p=Math.min(1,e/HOLD);
+    arc.setAttribute('stroke-dashoffset',C*(1-p));
+    hint.textContent='กำลังกดค้าง… '+Math.round(p*100)+'%';hint.classList.add('on');
+    if(e<HOLD)raf=requestAnimationFrame(tick);}
+  function down(){start=Date.now();raf=requestAnimationFrame(tick);
+    timer=setTimeout(function(){up();hint.textContent='ส่งสัญญาณ SOS แล้ว ✓ ทีมงานได้รับพิกัดของคุณ';hint.classList.add('on');},HOLD);}
+  function up(){cancelAnimationFrame(raf);clearTimeout(timer);arc.setAttribute('stroke-dashoffset',C);
+    hint.classList.remove('on');hint.textContent='แตะค้างจนวงกลมครบรอบ';}
+  btn.addEventListener('pointerdown',down);btn.addEventListener('pointerup',up);
+  btn.addEventListener('pointerleave',up);btn.addEventListener('contextmenu',function(e){e.preventDefault()});
+
+  var t=document.getElementById('toggle'),panel=document.getElementById('panel'),
+      main=document.getElementById('mainZone'),head=document.getElementById('head'),
+      lab=document.getElementById('toggleLabel'),cnt=document.getElementById('toggleCount');
+  t.addEventListener('click',function(){
+    var open=panel.classList.toggle('open');
+    t.classList.toggle('open',open);
+    main.style.display=open?'none':'flex';
+    head.querySelector('h2').textContent=open?'เบอร์ติดต่อฉุกเฉิน':'ต้องการความช่วยเหลือ?';
+    head.querySelector('h2').style.fontSize=open?'18px':'20px';
+    head.querySelector('p').textContent=open?'แตะเพื่อโทรออกทันที · ใช้ได้แม้ไม่มีเน็ต':'กดค้าง 2 วินาที — ทีมงานจะเห็นพิกัดคุณทันที';
+    lab.textContent=open?'กลับไปหน้าปุ่ม SOS':'เบอร์ฉุกเฉินทั้งหมด';
+    cnt.style.display=open?'none':'';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOS ฉุกเฉิน (ฝั่งลูกทัวร์) — 3 แนวทางออกแบบใหม่</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#077c99; --brand-hover:#066b84; --brand-deep:#05576b;
+  --brand-light:#d4e8ed; --brand-lighter:#f2f8fa; --brand-start:#0bbfec;
+  --surface:#fff; --surface-muted:#f6f9fb; --surface-sunken:#eef4f7;
+  --ink:#0f2b35; --ink-muted:#4e6670; --ink-faint:#5a6f79;
+  --line-subtle:#e8eff2; --line:#d7e3e8; --line-strong:#b9ccd4;
+  --success-bg:#dcfce7; --success-text:#15803d;
+  --warning-bg:#fef3c7; --warning-text:#b45309;
+  --danger:#dc2626; --danger-deep:#991b1b; --danger-bright:#f43f3f;
+  --danger-bg:#fee2e2; --danger-text:#b91c1c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif;background:#e9eef1;color:var(--ink);padding:28px 20px 70px}
+.page-head{max-width:1320px;margin:0 auto 26px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{color:var(--ink-muted);font-size:14px;margin-top:6px;max-width:78ch;line-height:1.6}
+.grid{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:26px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px}
+.tag b{font-size:16px;font-weight:800;display:block}
+.tag span{font-size:12.5px;color:var(--ink-muted);display:block;margin-top:3px;line-height:1.55}
+.phone{background:var(--surface-muted);border-radius:28px;padding:14px 12px 18px;box-shadow:0 10px 30px rgba(15,43,53,.11);border:1px solid var(--line)}
+.phone.dark{background:#170b0b;border-color:#3b1414}
+.scr{display:flex;flex-direction:column;gap:12px}
+.h1{font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;padding:2px 4px 0}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.note{font-size:12px;color:var(--ink-muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:9px 11px;line-height:1.6}
+.note b{color:var(--ink)}
+
+/* ===================== A : PANIC MODE ===================== */
+.a-wrap{background:radial-gradient(120% 90% at 50% 0%,#e11d1d 0%,#b31212 45%,#7f0d0d 100%);border-radius:22px;padding:16px 14px 14px;color:#fff;display:flex;flex-direction:column;gap:14px;min-height:600px}
+.a-bar{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
+.a-bar .back{display:inline-flex;align-items:center;gap:5px;opacity:.85}
+.a-live{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:4px 10px;font-size:11px}
+.dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.a-head{text-align:center;padding:2px 8px}
+.a-head h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.a-head p{font-size:13px;opacity:.82;margin-top:5px;line-height:1.5}
+.a-btnzone{display:grid;place-items:center;padding:6px 0 2px;position:relative}
+.a-ring{position:relative;width:232px;height:232px;display:grid;place-items:center}
+.a-ring::before{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,255,255,.16);animation:halo 2.4s ease-out infinite}
+@keyframes halo{0%{transform:scale(.86);opacity:.9}100%{transform:scale(1.12);opacity:0}}
+.a-ring svg.prog{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.a-big{width:180px;height:180px;border-radius:50%;border:none;cursor:pointer;color:#b91c1c;
+  background:radial-gradient(120% 120% at 35% 25%,#fff 0%,#ffe9e9 55%,#ffd0d0 100%);
+  box-shadow:0 14px 40px rgba(0,0,0,.34),inset 0 -6px 14px rgba(185,28,28,.14);
+  display:grid;place-items:center;gap:2px;user-select:none;transition:transform .12s}
+.a-big:active{transform:scale(.96)}
+.a-big .sos{font-size:44px;font-weight:800;letter-spacing:.04em;line-height:1}
+.a-big .sub{font-size:11.5px;font-weight:700;color:#c2410c;letter-spacing:.03em}
+.a-hint{text-align:center;font-size:12.5px;font-weight:600;opacity:.9;margin-top:4px}
+.a-quick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.a-q{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:11px 12px;backdrop-filter:blur(6px);text-decoration:none;color:#fff}
+.a-q .qi{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.9);color:#b91c1c;display:grid;place-items:center;flex:none;font-size:16px}
+.a-q .qt{min-width:0}
+.a-q b{display:block;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-q span{font-size:11px;opacity:.8}
+.a-sheet{margin-top:auto;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px 13px;display:flex;flex-direction:column;gap:9px}
+.a-sheet .lbl{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.a-input{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 12px;color:#fff;font-family:inherit;font-size:13px;resize:none}
+.a-input::placeholder{color:rgba(255,255,255,.55)}
+.a-geo{display:flex;align-items:center;gap:7px;font-size:11.5px;opacity:.85}
+.a-more{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:700;opacity:.85;padding:4px}
+
+/* ===================== B : TRIAGE ===================== */
+.b-card{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;box-shadow:0 4px 16px rgba(15,43,53,.08);overflow:hidden}
+.b-hero{padding:15px 16px;background:linear-gradient(135deg,#f87171 0%,#dc2626 55%,#991b1b 100%);color:#fff;position:relative;overflow:hidden}
+.b-hero::after{content:"";position:absolute;right:-40px;top:-50px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.1)}
+.b-hero .eb{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.8}
+.b-hero h2{font-size:18px;font-weight:800;margin-top:3px}
+.b-hero p{font-size:12px;opacity:.88;margin-top:4px}
+.b-body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:13px}
+.sec-lbl{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.b-types{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.b-t{border:1.5px solid var(--line);background:var(--surface-muted);border-radius:14px;padding:11px 10px;cursor:pointer;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:5px;transition:.15s}
+.b-t .ti{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line-subtle);color:var(--ink-muted)}
+.b-t b{font-size:13px;font-weight:700}
+.b-t small{font-size:10.5px;color:var(--ink-muted);line-height:1.35}
+.b-t.on{border-color:var(--danger);background:var(--danger-bg);box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+.b-t.on .ti{background:var(--danger);border-color:var(--danger);color:#fff}
+.b-t.on b{color:var(--danger-text)}
+.b-note{width:100%;border:1px solid var(--line);background:var(--surface-sunken);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;resize:none;color:var(--ink)}
+.b-attach{display:flex;gap:7px}
+.b-a{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px dashed var(--line-strong);background:var(--surface);border-radius:11px;padding:9px;font-size:12px;font-weight:700;color:var(--ink-muted);cursor:pointer;font-family:inherit}
+.b-geo{display:flex;align-items:center;gap:9px;background:var(--brand-lighter);border:1px solid var(--brand-light);border-radius:13px;padding:10px 12px}
+.b-geo .gi{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.b-geo b{font-size:12.5px;font-weight:700;display:block}
+.b-geo span{font-size:11px;color:var(--ink-muted)}
+.b-send{width:100%;border:none;border-radius:15px;padding:15px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 20px rgba(185,28,28,.28)}
+.b-send small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px}
+.b-sendwrap{display:flex;flex-direction:column;gap:6px}
+.b-hold{text-align:center;font-size:11px;color:var(--ink-faint)}
+/* after-send state */
+.b-status{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;box-shadow:0 4px 16px rgba(15,43,53,.08);padding:15px}
+.b-badge{display:inline-flex;align-items:center;gap:7px;background:var(--success-bg);color:var(--success-text);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800}
+.tl{margin-top:13px;display:flex;flex-direction:column}
+.tl-row{display:flex;gap:11px;position:relative;padding-bottom:15px}
+.tl-row:last-child{padding-bottom:0}
+.tl-row::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
+.tl-row:last-child::before{display:none}
+.tl-dot{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--success-bg);color:var(--success-text);font-size:11px;font-weight:800;z-index:1;border:2px solid var(--surface);box-shadow:0 0 0 2px var(--success-bg)}
+.tl-dot.wait{background:var(--surface-sunken);color:var(--ink-faint);box-shadow:0 0 0 2px var(--line-subtle)}
+.tl-dot.now{background:var(--warning-bg);color:var(--warning-text);box-shadow:0 0 0 2px var(--warning-bg)}
+.tl b{font-size:13px;font-weight:700;display:block}
+.tl span{font-size:11.5px;color:var(--ink-muted)}
+.b-resp{display:flex;align-items:center;gap:10px;margin-top:13px;padding:11px;background:var(--surface-muted);border:1px solid var(--line-subtle);border-radius:14px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.b-resp .call{margin-left:auto;background:var(--brand);color:#fff;border:none;border-radius:11px;padding:9px 13px;font-size:12.5px;font-weight:800;font-family:inherit;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.b-cancel{width:100%;margin-top:11px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-muted);cursor:pointer}
+
+/* ===================== C : CALM / CONTACT-FIRST ===================== */
+.c-strip{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#0bbfec,#077c99);color:#fff;border-radius:18px;padding:13px 14px}
+.c-strip .ci{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}
+.c-strip b{font-size:13.5px;font-weight:800;display:block}
+.c-strip span{font-size:11.5px;opacity:.88}
+.c-prime{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;box-shadow:0 4px 16px rgba(15,43,53,.08);padding:14px;display:flex;flex-direction:column;gap:11px}
+.c-guide{display:flex;align-items:center;gap:11px}
+.c-guide .av{width:46px;height:46px;font-size:15px;background:linear-gradient(135deg,#0bbfec,#077c99)}
+.c-guide .gt{flex:1;min-width:0}
+.c-guide .gt b{font-size:15px;font-weight:800;display:block}
+.c-guide .gt span{font-size:11.5px;color:var(--ink-muted)}
+.c-onl{display:inline-flex;align-items:center;gap:5px;background:var(--success-bg);color:var(--success-text);border-radius:999px;padding:3px 9px;font-size:10.5px;font-weight:800;margin-top:4px}
+.c-acts{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.c-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:13px;padding:13px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--brand);text-decoration:none}
+.c-btn.pri{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(7,124,153,.25)}
+.c-sos{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5f5,#ffe4e4);border:1.5px solid #fecaca;border-radius:18px;padding:13px 14px}
+.c-sos .sbtn{width:64px;height:64px;border-radius:50%;flex:none;border:none;cursor:pointer;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:800;box-shadow:0 8px 18px rgba(185,28,28,.3);user-select:none}
+.c-sos .st b{font-size:13.5px;font-weight:800;color:var(--danger-text);display:block}
+.c-sos .st span{font-size:11.5px;color:#9f1239;opacity:.85;line-height:1.45;display:block;margin-top:2px}
+.c-groups{display:flex;flex-direction:column;gap:11px}
+.c-g{background:var(--surface);border:1px solid var(--line-subtle);border-radius:18px;box-shadow:0 2px 8px rgba(15,43,53,.05);overflow:hidden}
+.c-gh{display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--surface-muted);border-bottom:1px solid var(--line-subtle)}
+.c-gh .gic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.c-gh b{font-size:12px;font-weight:800;letter-spacing:.02em}
+.c-gh .cnt{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ink-faint);background:var(--surface);border:1px solid var(--line-subtle);border-radius:999px;padding:2px 8px}
+.c-row{display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1px solid var(--line-subtle);text-decoration:none;color:inherit}
+.c-row:last-child{border-bottom:none}
+.c-row .rt{flex:1;min-width:0}
+.c-row .rt b{font-size:13.5px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-row .rt span{font-size:11.5px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.c-call{width:38px;height:38px;border-radius:50%;background:var(--success-bg);color:var(--success-text);display:grid;place-items:center;flex:none}
+.c-tagpill{font-size:9.5px;font-weight:800;border-radius:999px;padding:2px 7px;background:var(--brand-lighter);color:var(--brand);margin-left:6px}
+.c-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:10px 12px;color:var(--ink-faint);font-size:13px}
+.c-off{display:flex;align-items:center;gap:8px;background:var(--warning-bg);border:1px solid #fde68a;color:var(--warning-text);border-radius:13px;padding:9px 12px;font-size:11.5px;font-weight:600;line-height:1.45}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>SOS ฉุกเฉิน (ฝั่งลูกทัวร์) — 3 แนวทางออกแบบใหม่</h1>
+  <p>ทั้งสามแบบยังใช้ data/logic เดิม (hold 2 วิ → geolocation → insert <code>sos_alerts</code> → offline queue, และรายชื่อจาก <code>v_tour_emergency_contacts</code> + <code>v_tour_staff</code>) เปลี่ยนเฉพาะโครงหน้าจอและลำดับความสำคัญ</p>
+</div>
+
+<div class="grid">
+
+  <!-- ============ A ============ -->
+  <div class="col">
+    <div class="tag"><b>A · Panic Mode — เต็มจอสีแดง</b>
+      <span>ทั้งหน้าจอกลายเป็นโหมดฉุกเฉิน ปุ่มใหญ่กลางจอ นิ้วโป้งกดได้โดยไม่ต้องอ่าน มีปุ่มโทรด่วน 4 ปุ่มรออยู่ใต้ปุ่ม เผื่อกรณีเน็ตหลุด</span></div>
+    <div class="phone dark">
+      <div class="a-wrap">
+        <div class="a-bar">
+          <span class="back"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> ทัวร์เกาหลี 5 วัน</span>
+          <span class="a-live"><i class="dot"></i> ออนไลน์ · GPS พร้อม</span>
+        </div>
+
+        <div class="a-head">
+          <h2>ต้องการความช่วยเหลือ?</h2>
+          <p>กดค้าง 2 วินาที — ทีมงานจะเห็นพิกัดคุณทันที</p>
+        </div>
+
+        <div class="a-btnzone">
+          <div class="a-ring">
+            <svg class="prog" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="6"/>
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="289" stroke-dashoffset="202"/>
+            </svg>
+            <button class="a-big">
+              <span class="sos">SOS</span>
+              <span class="sub">กดค้างไว้</span>
+            </button>
+          </div>
+        </div>
+        <div class="a-hint">กำลังกดค้าง… 30%</div>
+
+        <div class="a-quick">
+          <a class="a-q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span>
+            <span class="qt"><b>ไกด์ สมชาย</b><span>หัวหน้าทัวร์</span></span></a>
+          <a class="a-q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="qt"><b>1669</b><span>เรียกรถพยาบาล</span></span></a>
+          <a class="a-q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg></span>
+            <span class="qt"><b>1155</b><span>ตำรวจท่องเที่ยว</span></span></a>
+          <a class="a-q" href="#"><span class="qi"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span class="qt"><b>ทีมงาน มายด์</b><span>รถบัสคันที่ 1</span></span></a>
+        </div>
+
+        <div class="a-sheet">
+          <span class="lbl">ข้อความเพิ่มเติม (ถ้ามี)</span>
+          <textarea class="a-input" rows="2" placeholder="เช่น อยู่หน้าร้าน 7-11 ตรงข้ามวัด"></textarea>
+          <div class="a-geo"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg>
+            พิกัดล่าสุด: Myeongdong, Seoul · แม่นยำ ±12 ม.</div>
+        </div>
+
+        <div class="a-more"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M6 9l6 6 6-6"/></svg> เบอร์ฉุกเฉินทั้งหมด (12)</div>
+      </div>
+    </div>
+    <div class="note"><b>ข้อดี:</b> ตื่นตระหนกก็ยังกดถูก · ปุ่มโทรอยู่ใน 1 หน้าจอ ไม่ต้องเลื่อน<br><b>ข้อควรระวัง:</b> หน้าจอแดงทั้งจอ อาจดูน่ากลัวถ้าผู้ใช้แค่กดเข้ามาดูเฉย ๆ</div>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="col">
+    <div class="tag"><b>B · Triage — เลือกประเภทเหตุ + ติดตามสถานะ</b>
+      <span>ให้เลือกประเภทเหตุก่อนส่ง ทีมงานฝั่ง SOSMonitor จะจัดลำดับได้ทันที และหลังส่งแล้วเปลี่ยนเป็นหน้าติดตามสถานะ (ผู้ใช้ไม่ต้องกดซ้ำ)</span></div>
+    <div class="phone">
+      <div class="scr">
+        <div class="h1"><svg class="ic" viewBox="0 0 24 24" style="color:var(--danger)"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg> SOS ฉุกเฉิน</div>
+
+        <div class="b-card">
+          <div class="b-hero">
+            <div class="eb">Emergency</div>
+            <h2>เกิดอะไรขึ้น?</h2>
+            <p>เลือกประเภทให้ทีมงานรู้ว่าต้องเตรียมอะไรมา</p>
+          </div>
+          <div class="b-body">
+            <div>
+              <div class="sec-lbl">ประเภทเหตุ</div>
+              <div class="b-types">
+                <button class="b-t on"><span class="ti"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M19 14c1.5-1.5 2-3.3 2-5a7 7 0 1 0-14 0c0 1.7.5 3.5 2 5l5 6 5-6z" style="display:none"/><path d="M12 8v8M8 12h8"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg></span><b>เจ็บป่วย / บาดเจ็บ</b><small>ต้องการยา หรือหมอ</small></button>
+                <button class="b-t"><span class="ti"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span><b>หลงทาง / หาคณะไม่เจอ</b><small>ตกรถ คลาดกลุ่ม</small></button>
+                <button class="b-t"><span class="ti"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><b>ไม่ปลอดภัย</b><small>ถูกคุกคาม ขโมย</small></button>
+                <button class="b-t"><span class="ti"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span><b>อื่น ๆ</b><small>เรื่องเร่งด่วนอื่น</small></button>
+              </div>
+            </div>
+
+            <div>
+              <div class="sec-lbl">รายละเอียด</div>
+              <textarea class="b-note" rows="2" placeholder="เช่น เพื่อนเป็นลม อยู่หน้าร้าน 7-11 ตรงข้ามวัด"></textarea>
+              <div class="b-attach" style="margin-top:7px">
+                <button class="b-a"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> แนบรูป</button>
+                <button class="b-a"><svg class="ic" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg> อัดเสียง 10 วิ</button>
+              </div>
+            </div>
+
+            <div class="b-geo">
+              <span class="gi"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg></span>
+              <span><b>ส่งพิกัดปัจจุบันไปด้วย</b><span>Myeongdong, Seoul · ±12 ม. · อัปเดต 3 วิที่แล้ว</span></span>
+            </div>
+
+            <div class="b-sendwrap">
+              <button class="b-send"><svg class="ic" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span>ส่งสัญญาณขอความช่วยเหลือ</span></button>
+              <div class="b-hold">กดค้าง 2 วินาที เพื่อป้องกันการกดพลาด</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-lbl" style="margin:4px 2px -4px">↓ หน้าจอหลังส่งสำเร็จ</div>
+
+        <div class="b-status">
+          <span class="b-badge"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M20 6L9 17l-5-5"/></svg> ส่งสัญญาณแล้ว · 14:32</span>
+          <div class="tl">
+            <div class="tl-row"><span class="tl-dot"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <span><b>ทีมงานได้รับสัญญาณ</b><span>14:32 · ส่งพิกัดพร้อมข้อความแล้ว</span></span></div>
+            <div class="tl-row"><span class="tl-dot now">•</span>
+              <span><b>ไกด์กำลังเดินทางมา</b><span>คาดว่าถึงใน ~6 นาที</span></span></div>
+            <div class="tl-row"><span class="tl-dot wait">3</span>
+              <span><b>พบตัว / ปิดเคส</b><span>รอทีมงานยืนยัน</span></span></div>
+          </div>
+          <div class="b-resp">
+            <span class="av">สม</span>
+            <span><b style="font-size:13px">ไกด์ สมชาย</b><span style="font-size:11.5px;color:var(--ink-muted)">กำลังมาหาคุณ</span></span>
+            <button class="call"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg> โทร</button>
+          </div>
+          <button class="b-cancel">ยกเลิกสัญญาณ (ปลอดภัยแล้ว)</button>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>ข้อดี:</b> ทีมงานได้บริบททันที จัดลำดับเคสได้ · ผู้ใช้เห็นว่า “มีคนกำลังมา” ลดการกดซ้ำ<br><b>ต้องเพิ่ม:</b> คอลัมน์ <code>category</code> / <code>status</code> ใน <code>sos_alerts</code> + ปุ่มอัปเดตสถานะใน SOSMonitor</div>
+  </div>
+
+  <!-- ============ C ============ -->
+  <div class="col">
+    <div class="tag"><b>C · Contact-First — โทรมาก่อน SOS รอง</b>
+      <span>ความจริงคือ 90% ของเคสแก้ได้ด้วยการโทรหาไกด์ แบบนี้จึงดันเบอร์ขึ้นบนสุด จัดกลุ่มชัด ค้นหาได้ แล้ววาง SOS เป็นการ์ดรองที่ยังเด่นพอ</span></div>
+    <div class="phone">
+      <div class="scr">
+        <div class="h1"><svg class="ic" viewBox="0 0 24 24" style="color:var(--danger)"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg> ช่วยเหลือฉุกเฉิน</div>
+
+        <div class="c-strip">
+          <span class="ci"><svg class="ic" viewBox="0 0 24 24" style="width:19px;height:19px"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg></span>
+          <span><b>คุณอยู่ที่ Myeongdong, Seoul</b><span>ทัวร์เกาหลี 5 วัน · รถบัสคันที่ 1</span></span>
+        </div>
+
+        <div class="c-prime">
+          <div class="c-guide">
+            <span class="av">สม</span>
+            <span class="gt"><b>ไกด์ สมชาย</b><span>หัวหน้าทัวร์ · 081-234-5678</span><br><span class="c-onl"><i class="dot" style="width:6px;height:6px"></i> ตอบได้ตอนนี้</span></span>
+          </div>
+          <div class="c-acts">
+            <a class="c-btn pri" href="#"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg> โทรหาไกด์</a>
+            <a class="c-btn" href="#"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg> LINE</a>
+          </div>
+        </div>
+
+        <div class="c-sos">
+          <button class="sbtn">SOS</button>
+          <span class="st"><b>โทรไม่ติด? กดค้าง 2 วิ</b>
+            <span>ส่งพิกัดหาทีมงานทุกคนพร้อมกัน ใช้เมื่อเร่งด่วนจริง ๆ</span></span>
+        </div>
+
+        <div class="c-off"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;flex:none"><path d="M1 1l22 22M16.7 11.7a6 6 0 0 0-8.4 0M5 8.5a11 11 0 0 1 4-2.3M19 8.5a11 11 0 0 0-3-1.9M12 20h.01"/></svg>
+          ออฟไลน์อยู่ — แสดงเบอร์ที่บันทึกไว้ล่าสุด สัญญาณ SOS จะส่งอัตโนมัติเมื่อเน็ตกลับมา</div>
+
+        <div class="c-search"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> ค้นหาชื่อหรือเบอร์…</div>
+
+        <div class="c-groups">
+          <div class="c-g">
+            <div class="c-gh"><span class="gic" style="background:var(--brand)"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><b>ทีมงานทัวร์</b><span class="cnt">3</span></div>
+            <a class="c-row" href="#"><span class="rt"><b>มายด์ (ผู้ช่วย) <span class="c-tagpill">รถคันที่ 1</span></b><span>082-111-2233</span></span><span class="c-call"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            <a class="c-row" href="#"><span class="rt"><b>โบว์ (ผู้ช่วย)</b><span>083-444-5566</span></span><span class="c-call"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+          </div>
+
+          <div class="c-g">
+            <div class="c-gh"><span class="gic" style="background:#dc2626"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg></span><b>โรงพยาบาล / การแพทย์</b><span class="cnt">2</span></div>
+            <a class="c-row" href="#"><span class="rt"><b>รถพยาบาลฉุกเฉิน (เกาหลี)</b><span>119</span></span><span class="c-call" style="background:var(--danger-bg);color:var(--danger-text)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            <a class="c-row" href="#"><span class="rt"><b>รพ. Seoul National <span class="c-tagpill">2.1 กม.</span></b><span>+82-2-2072-2114</span></span><span class="c-call"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+          </div>
+
+          <div class="c-g">
+            <div class="c-gh"><span class="gic" style="background:#0f2b35"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 2l9 5v6c0 5-3.8 8.3-9 9-5.2-.7-9-4-9-9V7l9-5z"/></svg></span><b>หน่วยงานราชการ</b><span class="cnt">2</span></div>
+            <a class="c-row" href="#"><span class="rt"><b>สถานทูตไทย ณ กรุงโซล</b><span>+82-2-795-3098</span></span><span class="c-call"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+            <a class="c-row" href="#"><span class="rt"><b>ตำรวจ (เกาหลี)</b><span>112</span></span><span class="c-call"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>ข้อดี:</b> ใกล้เคียงพฤติกรรมจริงที่สุด · ใช้งานได้เต็มที่แม้ออฟไลน์ · ลด SOS ปลอมจากการกดเล่น<br><b>ข้อควรระวัง:</b> ปุ่ม SOS เล็กลง เคสเร่งด่วนจริงต้องเลื่อนสายตาหาแป๊บนึง</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 import TextField from '../../components/common/TextField'
 import TextAreaField from '../../components/common/TextAreaField'
 
@@ -286,14 +287,13 @@ export default function ItineraryBuilder() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-          <Icon name="map" size={24} className="text-brand-hover" />
-          {t('staff.itineraryBuilder.title')}
-        </h1>
-        <p className="mt-1 text-sm text-ink-muted">{t('staff.itineraryBuilder.subtitle')}</p>
-
+    <div className="min-h-screen">
+      <StaffHeader
+        icon="map"
+        title={t('staff.itineraryBuilder.title')}
+        subtitle={t('staff.itineraryBuilder.subtitle')}
+      />
+      <div className="mx-auto max-w-md p-4">
         {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
         {error && <p className="mt-4 text-danger">{error}</p>}
 

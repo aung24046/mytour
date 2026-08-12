@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 
@@ -157,12 +158,9 @@ export default function LocationMonitor() {
   );
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">
-          {t('staff.locationMonitor.title')}
-        </h1>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader icon="location" title={t('staff.locationMonitor.title')} />
+      <div className="mx-auto max-w-md p-4">
         {loadingSession && <p className="mt-2 text-ink-muted">{t('common.loading')}</p>}
 
         {!loadingSession && !session && (

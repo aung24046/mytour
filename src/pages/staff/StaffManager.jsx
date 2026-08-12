@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 
 // แยกเป็น 2 อย่าง:
@@ -286,7 +287,7 @@ export default function StaffManager() {
       return
     }
 
-    if (member.id === mySession?.id) {
+    if (member.id === mySession?.staff?.id) {
       window.alert(t('staff.staffManager.cannotDeleteSelf'))
       return
     }
@@ -311,11 +312,13 @@ export default function StaffManager() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.staffManager.title')}</h1>
-        <p className="mb-3 text-sm text-ink-muted">{t('staff.staffManager.subtitle')}</p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="briefcase"
+        title={t('staff.staffManager.title')}
+        subtitle={t('staff.staffManager.subtitle')}
+      />
+      <div className="mx-auto max-w-md p-4">
         {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
         {error && <p className="text-danger">{error}</p>}
 
@@ -514,7 +517,7 @@ export default function StaffManager() {
                         <div className="min-w-0">
                           <p className="font-medium text-ink">
                             {member.name}
-                            {member.id === mySession?.id && (
+                            {member.id === mySession?.staff?.id && (
                               <span className="ml-1.5 text-xs font-normal text-brand">
                                 {t('staff.staffManager.you')}
                               </span>

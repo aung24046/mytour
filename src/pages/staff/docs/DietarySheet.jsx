@@ -60,22 +60,24 @@ export default function DietarySheet() {
   const rows = useMemo(
     () =>
       guests
+        // resolveList คืนเป็นรายการที่แกะแล้ว (ตัดวงเล็บอังกฤษ + คำนำหน้า "อื่นๆ โปรดระบุ:")
+        // เดิมใช้ resolve ที่ต่อทุกอย่างเป็นสตริงเดียว ช่องเลยกลายเป็นกำแพงข้อความ
         .map((g) => ({
           id: g.id,
           name: `${g.nickname || g.name}${g.nickname ? ` (${g.name})` : ''}`,
           gender: formatGender(g.gender),
-          allergy: custom.resolve(g, 'food_allergy'),
-          dietary: custom.resolve(g, 'dietary'),
-          medical: custom.resolve(g, 'medical_condition'),
+          allergy: custom.resolveList(g, 'food_allergy'),
+          dietary: custom.resolveList(g, 'dietary'),
+          medical: custom.resolveList(g, 'medical_condition'),
         }))
         // resolver ตัดคำตอบ "ไม่มี" ออกให้แล้ว เหลือว่าง = คนนี้กินได้ทุกอย่าง
-        .filter((r) => r.allergy || r.dietary),
+        .filter((r) => r.allergy.length > 0 || r.dietary.length > 0),
     [guests, custom]
   )
 
   const counts = useMemo(() => {
-    const withAllergy = rows.filter((r) => r.allergy).length
-    const withDietary = rows.filter((r) => r.dietary).length
+    const withAllergy = rows.filter((r) => r.allergy.length > 0).length
+    const withDietary = rows.filter((r) => r.dietary.length > 0).length
     return {
       total: guests.length,
       normal: guests.length - rows.length,
@@ -92,7 +94,13 @@ export default function DietarySheet() {
         name: 'ข้อจำกัดด้านอาหาร',
         rows: [
           ['ชื่อ', 'เพศ', 'แพ้อาหาร', 'ข้อจำกัด', 'โรคประจำตัว'],
-          ...rows.map((r) => [r.name, r.gender, r.allergy, r.dietary, r.medical]),
+          ...rows.map((r) => [
+            r.name,
+            r.gender,
+            r.allergy.join(', '),
+            r.dietary.join(', '),
+            r.medical.join(', '),
+          ]),
         ],
         colWidths: [30, 8, 34, 34, 34],
       },
@@ -126,15 +134,18 @@ export default function DietarySheet() {
 
       <table className="doc-table mt-3 w-full border-collapse text-[9pt]" style={{ tableLayout: 'fixed' }}>
         <colgroup>
-          <col style={{ width: '30%' }} />
-          <col style={{ width: '32%' }} />
-          <col style={{ width: '38%' }} />
+          <col style={{ width: '26%' }} />
+          <col style={{ width: '26%' }} />
+          <col style={{ width: '26%' }} />
+          <col style={{ width: '22%' }} />
         </colgroup>
         <thead>
           <tr>
             <th className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left font-medium">ชื่อ</th>
+            {/* แยกสามอย่างที่เคยกองรวมกัน: แพ้ = ห้ามเด็ดขาด · ไม่ทาน = ปรับเมนูได้ · สุขภาพ = ไว้ให้ทีมงานรู้ */}
             <th className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left font-medium">แพ้อาหาร</th>
-            <th className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left font-medium">ข้อจำกัด / ข้อควรทราบ</th>
+            <th className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left font-medium">ไม่ทาน / ข้อจำกัด</th>
+            <th className="border border-gray-300 bg-gray-100 px-1.5 py-1 text-left font-medium">สุขภาพ</th>
           </tr>
         </thead>
         <tbody>
@@ -145,16 +156,19 @@ export default function DietarySheet() {
                 {r.gender && <span className="text-gray-500"> ({r.gender})</span>}
               </td>
               <td className="border border-gray-300 px-1.5 py-1 align-top font-medium text-red-800">
-                {r.allergy || '—'}
+                <ItemList items={r.allergy} />
               </td>
               <td className="border border-gray-300 px-1.5 py-1 align-top">
-                {[r.dietary, r.medical].filter(Boolean).join(' · ') || '—'}
+                <ItemList items={r.dietary} />
+              </td>
+              <td className="border border-gray-300 px-1.5 py-1 align-top text-gray-600">
+                <ItemList items={r.medical} />
               </td>
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={3} className="border border-gray-300 px-1.5 py-3 text-center text-gray-400">
+              <td colSpan={4} className="border border-gray-300 px-1.5 py-3 text-center text-gray-400">
                 ไม่มีลูกทัวร์ที่มีข้อจำกัดด้านอาหาร
               </td>
             </tr>
@@ -164,6 +178,21 @@ export default function DietarySheet() {
 
       <DocumentFooter org={ctx.org} summary={`รวม ${counts.total} ท่าน`} />
     </DocumentShell>
+  )
+}
+
+// หนึ่งข้อ = หนึ่งบรรทัด — ร้านอาหารกวาดตาหาของที่ต้องเตรียมได้เร็วกว่าอ่านสตริงยาว
+function ItemList({ items }) {
+  if (!items || items.length === 0) return <span className="text-gray-400">—</span>
+  return (
+    <ul className="m-0 list-none p-0">
+      {items.map((item, i) => (
+        <li key={`${item}-${i}`} className="flex gap-1 leading-snug">
+          <span aria-hidden="true">·</span>
+          <span style={{ overflowWrap: 'anywhere' }}>{item}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

@@ -6,6 +6,7 @@ import { useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { cleanForSave, normalizeList } from '../../lib/hotelFacilities'
 import { toTimeInput, toTimeStorage } from '../../lib/timeFormat'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
@@ -424,12 +425,19 @@ export default function RoomMap() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="mx-auto max-w-md">
+    <div className="min-h-screen">
+      <StaffHeader icon="bed" title={t('staff.roomMap.title')} />
+      <div className="mx-auto max-w-md p-4">
         <div className="hero-gradient mb-3 flex items-center justify-between rounded-card p-5 shadow-brand">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/70">MyTour</p>
-            <h1 className="text-2xl font-extrabold text-white">{t('staff.roomMap.title')}</h1>
+            {/* ชื่อหน้าอยู่บนแถบหัวเรื่องแล้ว การ์ดนี้จึงโชว์ "โรงแรมที่กำลังจัดอยู่" แทน
+                ซึ่งเป็นข้อมูลที่ต้องเหลือบดูตลอดเวลาจัดห้อง */}
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+              {t('staff.roomMap.title')}
+            </p>
+            <p className="text-2xl font-extrabold text-white">
+              {activeHotel?.name ?? '—'}
+            </p>
           </div>
           {activeHotel && (
             <div className="text-right">

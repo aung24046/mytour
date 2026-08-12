@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
+import { fetchAllRows } from '../../lib/fetchAll'
 import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import DynamicField from '../../components/common/DynamicField'
 import StatusBadge from '../../components/common/StatusBadge'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 import { groupFieldsByCategory, CATEGORY_STYLE } from '../../lib/formFieldGroups'
 import { genderTextClass } from '../../lib/genderColor'
+import { formatFieldLabel, formatFieldValue, hasValue } from '../../lib/guestFieldDisplay'
 
 const CORE_FIELD_KEYS = [
   'name',
@@ -48,6 +51,56 @@ function avatarClasses(gender) {
   return 'bg-surface-sunken text-ink-muted'
 }
 
+// หนึ่งคำถาม-หนึ่งคำตอบ — ป้ายบรรทัดบน ค่าบรรทัดล่าง
+// เลือกโครงนี้เพราะป้ายคำถามจริงยาวได้ถึงสองสามบรรทัด ถ้าจับคู่ซ้าย-ขวาแบบเดิม
+// ป้ายจะดันค่าจนเหลือความกว้างไม่กี่ตัวอักษร แล้วตัดบรรทัดเป็นขั้นบันได
+function FieldRow({ field, raw, warn, locale, t }) {
+  const view = formatFieldValue(field, raw, { locale })
+  const valueClass = warn && view.kind !== 'empty' ? 'text-warning-text' : 'text-ink'
+
+  return (
+    <div className="px-3 py-2">
+      <p className="text-[11px] leading-snug text-ink-faint">{formatFieldLabel(field)}</p>
+
+      {view.kind === 'empty' && (
+        <p className="mt-0.5 text-sm text-ink-faint">{t('staff.guestManager.noValue')}</p>
+      )}
+
+      {view.kind === 'text' && (
+        <p
+          className={`mt-0.5 text-sm font-medium ${valueClass} ${view.mono ? 'tabular-nums' : ''} ${
+            view.multiline ? 'whitespace-pre-line' : ''
+          }`}
+        >
+          {view.text}
+        </p>
+      )}
+
+      {view.kind === 'duration' && (
+        <p className={`mt-0.5 text-sm font-medium tabular-nums ${valueClass}`}>
+          {view.hours > 0 && `${view.hours} ${t('common.hoursShort')} `}
+          {view.minutes > 0 && `${view.minutes} ${t('common.minutesShort')}`}
+        </p>
+      )}
+
+      {view.kind === 'chips' && (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {view.chips.map((chip, i) => (
+            <span
+              key={`${chip}-${i}`}
+              className={`rounded-pill px-2 py-0.5 text-xs font-medium ${
+                warn ? 'bg-warning-bg text-warning-text' : 'bg-surface-sunken text-ink'
+              }`}
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function GuestManager() {
   const tourId = useActiveTourId()
   const { t, i18n } = useTranslation()
@@ -66,6 +119,11 @@ export default function GuestManager() {
   const [filterBus, setFilterBus] = useState('all')
   const [filterBirthdayMonth, setFilterBirthdayMonth] = useState(false)
   const [expandedId, setExpandedId] = useState(null)
+  // ซ่อนช่องที่ยังไม่กรอกเป็นค่าเริ่มต้น — ฟอร์มมี 20 กว่าคำถาม แต่ส่วนใหญ่กรอกไม่ครบ
+  // ถ้าโชว์หมดจะเป็นรายการ "ไม่ระบุ" ยาวเหยียดจนหาข้อมูลจริงไม่เจอ  key = `${guestId}::${category}`
+  const [showEmptyFields, setShowEmptyFields] = useState({})
+  const toggleEmptyFields = (guestId, category) =>
+    setShowEmptyFields((prev) => ({ ...prev, [`${guestId}::${category}`]: !prev[`${guestId}::${category}`] }))
 
   // แก้ไขข้อมูลลูกทัวร์ — รองรับกรณีฟอร์มมีคำถามเพิ่ม/เปลี่ยนแปลงหลังลูกทัวร์คนนี้ลงทะเบียนไปแล้ว
   const [editingId, setEditingId] = useState(null)
@@ -92,7 +150,11 @@ export default function GuestManager() {
         // เฉพาะฟอร์มลงทะเบียน — คำตอบแบบประเมินไม่ใช่ข้อมูลประจำตัวลูกทัวร์
         .eq('form_type', 'registration')
         .order('sort_order', { ascending: true }),
-      supabase.from('guest_form_responses').select('guest_id, field_id, value'),
+      // ⚠️ ต้องแบ่งหน้า — ตารางนี้เกิน 1000 แถวแล้ว (PostgREST คืนได้สูงสุด 1000 ต่อคำขอ)
+      //    เดิมดึงรวดเดียวจึงได้มาไม่ครบ และได้คนละชุดทุกครั้งเพราะไม่ได้เรียงลำดับ
+      fetchAllRows(() => supabase.from('guest_form_responses').select('guest_id, field_id, value'), {
+        orderBy: 'id',
+      }),
       supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name', { ascending: true }),
       supabase.from('bus_seats').select('bus_id, guest_id').eq('tour_id', tourId).not('guest_id', 'is', null),
       supabase.from('v_tour_staff').select('id, guest_id').eq('tour_id', tourId).not('guest_id', 'is', null),
@@ -360,13 +422,13 @@ export default function GuestManager() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.guestManager.title')}</h1>
-        <p className="mb-3 text-sm text-ink-muted">
-          {t('staff.guestManager.subtitle', { count: guests.length })}
-        </p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="people"
+        title={t('staff.guestManager.title')}
+        subtitle={t('staff.guestManager.subtitle', { count: guests.length })}
+      />
+      <div className="mx-auto max-w-md p-4">
         {loading && <p className="text-ink-muted">{t('common.loading')}</p>}
         {error && <p className="text-danger">{error}</p>}
 
@@ -499,9 +561,31 @@ export default function GuestManager() {
                     {isExpanded && editingId !== guest.id && (
                       <div className="mt-3 flex flex-col gap-2.5 border-t border-line-subtle pt-3">
                         {groupFieldsByCategory(activeFields).map(({ category, fields: groupFields }) => {
-                          const hasData = groupFields.some((f) => String(getFieldValue(guest, f) || '').trim())
-                          const warn = category === 'health' && hasData
+                          // ป้ายคำถามในฟอร์มจริงยาวเป็นประโยค ("ต้องการเข้าร่วม Farewell Party มีค่าใช้จ่าย…")
+                          // จึงวางป้ายไว้บรรทัดบนแล้วค่าอยู่บรรทัดล่าง แทนการดันค่าไปชิดขวา
+                          // ซึ่งทำให้ทั้งป้ายและค่าตัดบรรทัดชนกันจนอ่านไม่ออก
+                          const filled = groupFields.filter((f) => hasValue(f, getFieldValue(guest, f)))
+                          const emptyCount = groupFields.length - filled.length
+                          const showAll = !!showEmptyFields[`${guest.id}::${category}`]
+                          const rows = showAll ? groupFields : filled
+                          const warn = category === 'health' && filled.length > 0
                           const st = warn ? HEALTH_WARNING_STYLE : CATEGORY_STYLE[category] || CATEGORY_STYLE.other
+
+                          if (filled.length === 0 && !showAll) {
+                            return (
+                              <button
+                                key={category}
+                                type="button"
+                                onClick={() => toggleEmptyFields(guest.id, category)}
+                                className="flex items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2 text-left text-xs text-ink-faint"
+                              >
+                                <Icon name={st.icon} size={14} color={st.iconColor} />
+                                {t(`guest.register.category.${category}`)} ·{' '}
+                                {t('staff.guestManager.allEmpty', { count: groupFields.length })}
+                              </button>
+                            )
+                          }
+
                           return (
                             <div key={category} className="overflow-hidden rounded-xl border border-line-subtle">
                               <div className="flex items-center gap-2 px-3 py-2" style={{ background: st.tint }}>
@@ -511,26 +595,29 @@ export default function GuestManager() {
                                   {warn && ` · ${t('staff.guestManager.healthWarning')}`}
                                 </span>
                               </div>
-                              <div className="px-3 py-1.5">
-                                {groupFields.map((field) => {
-                                  const value = getFieldValue(guest, field)
-                                  const isWarnField = warn && String(value || '').trim()
-                                  return (
-                                    <div key={field.id} className="flex justify-between gap-3 py-1 text-sm">
-                                      <span className="shrink-0 text-ink-faint">{field.label}</span>
-                                      <span
-                                        className={`min-w-0 flex-1 text-right ${
-                                          isWarnField ? 'font-semibold text-warning-text' : 'text-ink'
-                                        }`}
-                                      >
-                                        {value || (
-                                          <span className="text-ink-faint">{t('staff.guestManager.noValue')}</span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  )
-                                })}
+                              <div className="divide-y divide-line-subtle">
+                                {rows.map((field) => (
+                                  <FieldRow
+                                    key={field.id}
+                                    field={field}
+                                    raw={getFieldValue(guest, field)}
+                                    warn={warn}
+                                    locale={i18n.language}
+                                    t={t}
+                                  />
+                                ))}
                               </div>
+                              {emptyCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleEmptyFields(guest.id, category)}
+                                  className="w-full border-t border-line-subtle bg-surface-muted px-3 py-1.5 text-[11px] font-semibold text-ink-faint"
+                                >
+                                  {showAll
+                                    ? t('staff.guestManager.hideEmpty')
+                                    : t('staff.guestManager.showEmpty', { count: emptyCount })}
+                                </button>
+                              )}
                             </div>
                           )
                         })}

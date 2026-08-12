@@ -8,6 +8,7 @@ import { playWinAlert, primeWinAlert } from '../../lib/winAlert'
 import { useNumberReveal } from '../../lib/useNumberReveal'
 import NumberReveal from '../../components/common/NumberReveal'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 import StatusBadge from '../../components/common/StatusBadge'
@@ -363,11 +364,9 @@ export default function BingoHost() {
       : null
 
   return (
-    // pb-28 — เผื่อที่ให้ปุ่ม "หน้าหลัก" แบบลอยที่มุมซ้ายล่าง (HomeButton ใน App.jsx)
-    // ไม่ให้ทับการ์ดใบล่างสุด
-    <div className="min-h-screen bg-surface-muted p-4 pb-28">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.bingoHost.title')}</h1>
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader icon="target" title={t('staff.bingoHost.title')} />
+      <div className="mx-auto max-w-md p-4">
 
         {loadingGames && <p className="mt-2 text-ink-muted">{t('common.loading')}</p>}
 

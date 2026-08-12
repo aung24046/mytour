@@ -72,18 +72,33 @@ export default function GuestManifest() {
     }
   }, [tourId])
 
+  // คอลัมน์มาตรฐาน + คำถามทุกข้อในฟอร์มลงทะเบียนของทริปนี้
+  const available = useMemo(
+    () => [...AVAILABLE_COLUMNS.guest_manifest, ...custom.fieldColumns],
+    [custom.fieldColumns]
+  )
+
   useEffect(() => {
-    if (ctx.presets.length === 0 || columns.length > 0) return
+    // รอให้คำถามของทริปโหลดเสร็จก่อน ไม่งั้น hydrateColumns จะตัดคอลัมน์คำถาม
+    // ในชุดที่บันทึกไว้ทิ้งทั้งหมด เพราะตอนนั้นยังไม่รู้ว่าทริปนี้มีคำถามอะไรบ้าง
+    if (!custom.loaded || ctx.presets.length === 0 || columns.length > 0) return
     setPresets(ctx.presets)
     const def = ctx.presets.find((p) => p.is_default) ?? ctx.presets[0]
-    setColumns(hydrateColumns(def.columns ?? []))
-  }, [ctx.presets, columns.length])
+    const knownKeys = new Set(available.map((c) => c.key))
+    setColumns(hydrateColumns(def.columns ?? [], { knownKeys }))
+  }, [ctx.presets, columns.length, custom.loaded, available])
 
   const rows = useMemo(
     () =>
       guests.map((g, i) => {
         const r = (key) => custom.resolve(g, key)
+        // ทุกคำถามต้องมีค่าใน row เสมอ แม้ยังไม่ถูกเลือกเป็นคอลัมน์
+        // เพราะตัวนับ "มีคนกรอกกี่คน" อ่านจาก row เพื่อตัดสินว่าจะซ่อนข้อไหน
+        const fieldValues = Object.fromEntries(
+          custom.fieldColumns.map((c) => [c.key, r(c.key)])
+        )
         return {
+          ...fieldValues,
           _id: g.id,
           index: String(i + 1),
           title: g.title,
@@ -109,7 +124,7 @@ export default function GuestManifest() {
     [guests, custom]
   )
 
-  const availableKeys = useMemo(() => AVAILABLE_COLUMNS.guest_manifest.map((c) => c.key), [])
+  const availableKeys = useMemo(() => available.map((c) => c.key), [available])
   const fillCounts = useColumnFillCounts(rows, availableKeys)
   const fillCountsWithTotal = useMemo(
     () => ({ ...fillCounts, __total: rows.length }),
@@ -160,7 +175,7 @@ export default function GuestManifest() {
       toolbar={
         <ColumnPicker
           docType={DOC_TYPES.GUEST_MANIFEST}
-          available={AVAILABLE_COLUMNS.guest_manifest}
+          available={available}
           selected={columns}
           onChange={setColumns}
           presets={presets}

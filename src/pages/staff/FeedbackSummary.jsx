@@ -7,6 +7,7 @@ import { useActiveTourId } from '../../lib/staffSession'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 import DynamicField from '../../components/common/DynamicField'
 import { nextSlipNumber, slipNo, slipPrefix } from '../../lib/feedbackPaper'
 
@@ -171,11 +172,13 @@ export default function FeedbackSummary() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-ink">{t('staff.feedbackSummary.title')}</h1>
-        <p className="mt-1 text-sm text-ink-muted">{t('staff.feedbackSummary.subtitle')}</p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="star"
+        title={t('staff.feedbackSummary.title')}
+        subtitle={t('staff.feedbackSummary.subtitle')}
+      />
+      <div className="mx-auto max-w-md p-4">
         {loading && <p className="mt-4 text-ink-muted">{t('common.loading')}</p>}
         {error && <p className="mt-4 text-danger">{error}</p>}
 

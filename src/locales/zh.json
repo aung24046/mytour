@@ -270,6 +270,24 @@
       "contactsTitle": "紧急联系电话",
       "offlineNotice": "离线中 — 显示本机保存的最新号码",
       "noContacts": "暂无紧急联系电话",
+      "headline": "需要帮助吗？",
+      "holdHint": "长按直到圆环走完一圈",
+      "holdingPercent": "长按中… {{percent}}%",
+      "statusOnline": "在线",
+      "statusOffline": "离线",
+      "gpsReady": "GPS 就绪",
+      "gpsSearching": "定位中",
+      "gpsOff": "无定位",
+      "locationPrefix": "最新位置",
+      "locationNone": "尚未获取位置 — 按下 SOS 时会自动请求授权",
+      "accuracy": "±{{meters}} 米",
+      "quickTitle": "快速拨打",
+      "contactsToggle": "全部紧急电话",
+      "contactsBack": "返回 SOS 按钮",
+      "contactsSubtitle": "点击立即拨打 · 无网络也可使用",
+      "searchPlaceholder": "搜索姓名或号码…",
+      "searchEmpty": "没有匹配的联系人",
+      "holdCta": "长按",
       "category": {
         "guide": "导游 / 领队",
         "staff": "工作人员",
@@ -412,7 +430,10 @@
       "editGuest": "编辑信息",
       "deleteGuest": "删除此客人",
       "confirmDelete": "确定要删除“{{name}}”的报名信息吗？此操作无法撤销。",
-      "duplicatePhone": "本次行程已有其他客人使用该手机号。"
+      "duplicatePhone": "本次行程已有其他客人使用该手机号。",
+      "showEmpty": "显示 {{count}} 个未填写项",
+      "hideEmpty": "隐藏未填写项",
+      "allEmpty": "{{count}} 项均未填写 — 点击查看"
     },
     "luggageManager": {
       "title": "行李管理",
@@ -460,8 +481,8 @@
       "confirmDeleteTag": "确定要删除标签 {{code}} 吗？此操作无法撤销。"
     },
     "printExport": {
-      "title": "打印与导出",
-      "subtitle": "打印行李标签或客人腕带的二维码标签",
+      "title": "行李吊牌 / 手环",
+      "subtitle": "打印行李吊牌或旅客手环的二维码贴纸",
       "modeLabel": "标签类型",
       "mode": {
         "luggage": "行李标签",
@@ -550,7 +571,35 @@
       "message": "消息",
       "send": "发送",
       "history": "历史记录",
-      "deactivate": "取消公告"
+      "deactivate": "取消公告",
+      "liveLabel": "团员现在看到的",
+      "sentAgo": "{{time}}发送",
+      "sentBy": "由 {{name}}",
+      "editMessage": "修改内容",
+      "closeAnnouncement": "关闭公告",
+      "readLabel": "已阅读",
+      "readCount": "{{read}} / {{total}} 人",
+      "notSeenHint": "尚未看到 · 点击拨打",
+      "andMore": "+ 还有 {{count}} 人",
+      "newAnnouncement": "新公告 · 将替换上方公告",
+      "placeholder": "输入公告内容…",
+      "shortcuts": "快捷短语",
+      "manageShortcuts": "管理快捷短语",
+      "sentToday": "已发送",
+      "noneLive": "目前没有正在发布的公告",
+      "noHistory": "本团还没有发送过公告",
+      "saveEdit": "保存修改",
+      "cancelEdit": "取消",
+      "shortcutsTitle": "快捷短语",
+      "shortcutsHint": "点击编辑 · 拖动左侧手柄调整顺序",
+      "addShortcut": "添加快捷短语",
+      "shortcutPlaceholder": "例如：可以上车了",
+      "deleteShortcut": "删除此快捷短语",
+      "shortcutsSaved": "已保存",
+      "noGuests": "本团还没有团员报名",
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前"
     },
     "seatMap": {
       "title": "巴士座位图",
@@ -610,7 +659,9 @@
       "uncheckedGuest": "已取消「{{name}}」签到",
       "legendChecked": "已签到",
       "legendNotChecked": "未到",
-      "legendGenderEdge": "边框 = 男/女"
+      "legendGenderEdge": "边框 = 男/女",
+      "unassignedPickHint": "点击姓名即可安排到此座位 — 系统会自动将其加入 {{bus}}",
+      "unassignedSeatHint": "点击空座位后从虚线区域选择即可"
     },
     "roomMap": {
       "title": "房间图",
@@ -869,7 +920,23 @@
       "dietary": "饮食限制",
       "medical": "健康状况",
       "none": "暂无数据",
-      "peopleCount": "{{count}} 人"
+      "peopleCount": "{{count}} 人",
+      "view": {
+        "tier": "按限制",
+        "person": "按人"
+      },
+      "tier": {
+        "allergy": "过敏",
+        "condition": "慢性病",
+        "preference": "饮食偏好",
+        "info": "健康信息"
+      },
+      "selfWritten": "自行填写",
+      "merged": "合并 {{count}} 条",
+      "mergedFrom": "原始回答",
+      "conflictTitle": "{{count}} 人回答矛盾",
+      "conflictBody": "同时勾选了「无」和其他限制 — 系统按填写的限制计算，点击查看名单并向旅客确认。",
+      "noneCount": "另有 {{count}} 人没有任何限制"
     },
     "expenseTracker": {
       "title": "支出记录",
@@ -911,8 +978,40 @@
         "accommodation": "住宿",
         "entrance": "门票",
         "tip": "小费",
+        "equipment": "装备物料",
         "misc": "其他"
-      }
+      },
+      "modeQuick": "逐笔录入",
+      "modeBatch": "批量录入",
+      "today": "今天",
+      "yesterday": "昨天",
+      "pickDate": "选择日期",
+      "sumTip": "可以相加，例如 120+80",
+      "addDescription": "+ 说明",
+      "addReceipt": "+ 收据",
+      "removePhoto": "删除照片",
+      "saveWithAmount": "保存 {{amount}} ฿",
+      "savedToast": "已保存 {{count}} 笔",
+      "undo": "撤销",
+      "batchPasteHint": "输入金额后按 Enter 换行 — 也可以直接从 Google 表格复制一整列粘贴到第一格",
+      "batchRowAmount": "金额",
+      "batchRowNote": "说明（可选）",
+      "batchRemoveRow": "删除此行",
+      "batchInvalidRows": "有 {{count}} 行金额无法识别 — 这些行不会被保存",
+      "batchSaveAll": "全部保存 {{count}} 笔 · {{amount}} ฿",
+      "plusChunk": "+ 相加",
+      "backspace": "删除最后一位",
+      "todayTotal": "今天 {{amount}} ฿",
+      "seeList": "查看全部记录",
+      "bucketAdd": "+ 添加",
+      "bucketCommit": "录入",
+      "bucketUpdate": "更新",
+      "bucketDelete": "删除",
+      "bucketHint": "点击分类录入金额 · 也可把表格内容整段粘贴到说明栏",
+      "entryCount": "{{count}} 笔",
+      "bucketEmpty": "暂无",
+      "toggleKeyboard": "切换到设备键盘",
+      "todayLabel": "今天"
     },
     "supplierManager": {
       "title": "供应商管理",
@@ -943,7 +1042,23 @@
         "attraction": "景点",
         "shop": "商店",
         "other": "其他"
-      }
+      },
+      "filterUsedInTrip": "本团使用",
+      "filterAllSuppliers": "全部",
+      "filterHighRating": "★ 4 星以上",
+      "callAction": "拨打电话",
+      "lineAction": "LINE 联系",
+      "supplierCount": "{{count}} 家",
+      "noPhone": "暂无电话",
+      "detailsTitle": "详情",
+      "ratingLabel": "评分",
+      "addToTrip": "加入本团",
+      "removeFromTrip": "移出本团",
+      "noneInTrip": "本团还没有选择供应商",
+      "moreFields": "+ 联系人、LINE、地址、备注",
+      "fewerFields": "收起其他栏位",
+      "namePlaceholder": "餐厅／酒店／车行名称",
+      "phonePlaceholder": "08x-xxx-xxxx"
     },
     "feedbackSummary": {
       "title": "满意度问卷汇总",
@@ -983,6 +1098,11 @@
       "noContacts": "此分类暂无联系电话",
       "guideNumbersTitle": "导游／工作人员电话",
       "guideNumbersHint": "自动从员工表读取 — 请到\"团队管理\"页面开启/关闭\"对客人可见\"",
+      "quickTitle": "SOS 页面的快速拨打号码",
+      "quickHint": "最多可标记 {{max}} 个号码 — 会显示为旅客 SOS 按钮下方的拨打按钮",
+      "quickEmptyHint": "尚未标记 — 系统会自动选择，导游优先",
+      "quickToggle": "设为快速拨打号码",
+      "quickFull": "最多 {{max}} 个，请先取消一个",
       "category": {
         "guide": "导游 / 领队",
         "staff": "工作人员",
@@ -1109,7 +1229,7 @@
     },
     "documentHub": {
       "title": "文件",
-      "subtitle": "打印 A4 / A5 文件，供合作方与存档使用"
+      "subtitle": "打印本次行程的所有文件、标签与表单"
     }
   }
 }

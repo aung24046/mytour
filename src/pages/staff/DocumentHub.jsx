@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveOrgId, useActiveTourId } from '../../lib/staffSession'
 import { can } from '../../lib/permissions'
 import Icon from '../../components/common/Icon'
+import StaffHeader from '../../components/common/StaffHeader'
 
 // หน้ารวมเอกสารรูปเล่ม — แยกจาก /staff/print ที่เป็นป้ายสติกเกอร์กับ QR
 //
@@ -53,6 +54,18 @@ const GROUPS = [
     ],
   },
   {
+    // ป้ายสติกเกอร์เคยเป็นเมนูแยก (/staff/print) — ยุบเข้ามาที่นี่เมื่อ ส.ค. 2569
+    // เพราะมันคืองานเดียวกัน (เอาข้อมูลออกเป็นแผ่น) ต่างกันแค่ขนาดกระดาษ
+    title: 'หน้างาน',
+    hint: 'ใช้ตอนรวมพลและระหว่างเดินทาง',
+    docs: [
+      { to: 'join-poster', name: 'โปสเตอร์ QR เข้าร่วมทริป', icon: 'ticket', tint: '#0f6e56', meta: 'A4 ตั้ง', cap: 'document.print' },
+      { to: 'signature-sheet', name: 'ใบเซ็นชื่อ', icon: 'edit', tint: '#3c3489', meta: 'A4 นอน', cap: 'document.print' },
+      { to: 'name-tag', name: 'ป้ายชื่อคล้องคอ', icon: 'people', tint: '#185fa5', meta: '4 ใบ/แผ่น', cap: 'document.print' },
+      { to: 'labels', name: 'ป้ายกระเป๋า / สายรัดข้อมือ', icon: 'luggage', tint: '#854f0b', meta: 'สติกเกอร์', cap: 'print.export' },
+    ],
+  },
+  {
     title: 'ปิดทริป',
     hint: 'เก็บเข้าแฟ้มและส่งบัญชี',
     docs: [
@@ -83,7 +96,6 @@ function pushRecent(to) {
 }
 
 export default function DocumentHub() {
-  const navigate = useNavigate()
   const session = getStaffSession()
   const orgId = useActiveOrgId()
   const tourId = useActiveTourId()
@@ -180,36 +192,25 @@ export default function DocumentHub() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="mx-auto max-w-md">
-        {/* หัวเรื่อง — บอกทริปที่กำลังทำงานอยู่ */}
-        <div className="mb-3 flex items-center gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-lg text-ink-muted shadow-card"
-            aria-label="ย้อนกลับ"
-          >
-            ←
-          </button>
-
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold leading-tight text-ink">เอกสาร</h1>
-            <p className="truncate text-xs text-ink-muted">
-              {tour?.name ?? 'กำลังโหลด…'}
-              {guestCount != null && ` · ${guestCount} ท่าน`}
-            </p>
-          </div>
-
-          {can(session, 'org.profile') && (
+    <div className="min-h-screen">
+      {/* หัวเรื่อง — บอกทริปที่กำลังทำงานอยู่ */}
+      <StaffHeader
+        icon="fileText"
+        title="เอกสาร"
+        subtitle={`${tour?.name ?? 'กำลังโหลด…'}${guestCount != null ? ` · ${guestCount} ท่าน` : ''}`}
+        actions={
+          can(session, 'org.profile') ? (
             <Link
               to="/staff/company-profile"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface shadow-card"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface shadow-card"
               aria-label="ข้อมูลบริษัท"
             >
               <Icon name="settings" size={18} className="text-ink-muted" />
             </Link>
-          )}
-        </div>
+          ) : null
+        }
+      />
+      <div className="mx-auto max-w-md p-4">
 
         {!orgReady && can(session, 'org.profile') && (
           <Link

@@ -7,6 +7,7 @@ import { genderTextClass, genderBgClass, genderBorderClass, genderEdgeClass } fr
 import { useCheckinEvent } from '../../lib/useCheckinEvent'
 import BottomSheet from '../../components/common/BottomSheet'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import Icon from '../../components/common/Icon'
 import TextField from '../../components/common/TextField'
@@ -186,6 +187,14 @@ export default function SeatMap() {
     return guests.filter((g) => g.bus_id === selectedSeat.bus_id && !occupiedGuestIds.has(g.id))
   }, [guests, selectedSeat, occupiedGuestIds])
 
+  // คนที่ยังไม่ถูกจับลงคันไหนเลย — เดิมไม่โผล่ในลิสต์นี้ ทีมงานจึงต้องออกไปโหมด
+  // "จับลงคัน" ก่อนแล้วค่อยกลับมาจัดที่นั่ง กลายเป็นสองต่อทั้งที่ assignGuest()
+  // เซ็ต guests.bus_id ให้อยู่แล้ว — เลือกจากตรงนี้ได้เลย จบในหน้าจอเดียว
+  const sheetUnassignedGuests = useMemo(() => {
+    if (!selectedSeat) return []
+    return guests.filter((g) => !g.bus_id && !occupiedGuestIds.has(g.id))
+  }, [guests, selectedSeat, occupiedGuestIds])
+
   // ----- โหมดจับลงคัน -----
   // seat ที่ลูกทัวร์แต่ละคนนั่งอยู่ (ใช้เตือนก่อนย้ายคัน)
   const seatByGuestId = useMemo(() => {
@@ -211,6 +220,12 @@ export default function SeatMap() {
   }, [guests, poolSearch])
 
   const assignedGuestCount = useMemo(() => guests.filter((g) => g.bus_id).length, [guests])
+
+  // คนที่ยังไม่มีทั้งคันและที่นั่ง — ใช้เตือนในโหมดจัดที่นั่งว่ายังมีคนตกค้าง
+  const unseatedNoBusCount = useMemo(
+    () => guests.filter((g) => !g.bus_id && !occupiedGuestIds.has(g.id)).length,
+    [guests, occupiedGuestIds]
+  )
 
   function openGuestSheet(guest) {
     setSelectedGuest(guest)
@@ -596,13 +611,10 @@ export default function SeatMap() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="mx-auto max-w-md">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-            <Icon name="seat" size={24} filled />
-            {t('staff.seatMap.title')}
-          </h1>
+    <div className="min-h-screen">
+      <StaffHeader icon="seat" title={t('staff.seatMap.title')} />
+      <div className="mx-auto max-w-md p-4">
+        <div className="mb-3 flex items-center justify-end gap-2">
           {mode === 'assign' && guests.length > 0 && (
             <span className="inline-flex shrink-0 items-baseline gap-1 rounded-pill bg-brand-lighter px-3 py-1.5">
               <span className="text-xs text-ink-muted">{t('staff.seatMap.onBusLabel')}</span>
@@ -711,6 +723,24 @@ export default function SeatMap() {
                   className="shrink-0 rounded-pill border border-dashed border-brand/40 px-3 py-2 text-sm font-semibold text-brand"
                 >
                   + {t('staff.seatMap.addBus')}
+                </button>
+              </div>
+            )}
+
+            {/* เตือนว่ายังมีคนไม่ได้จับลงคัน — เดิมต้องสลับไปโหมด "จับลงคัน" ถึงจะรู้
+                ตอนนี้จัดที่นั่งให้ได้เลยจากในนี้ (ดูโซนเส้นประในแผ่นเลือกคน) */}
+            {mode === 'seats' && activeBus && unseatedNoBusCount > 0 && (
+              <div className="mt-2 flex items-center gap-2 rounded-control border border-dashed border-warning/50 bg-warning-bg/40 px-3 py-2">
+                <Icon name="alert" size={14} className="shrink-0 text-warning-text" />
+                <p className="min-w-0 flex-1 text-[11.5px] leading-snug text-warning-text">
+                  {t('staff.seatMap.unassignedTitle', { count: unseatedNoBusCount })} ·{' '}
+                  {t('staff.seatMap.unassignedSeatHint')}
+                </p>
+                <button
+                  onClick={() => setMode('assign')}
+                  className="shrink-0 rounded-pill bg-surface px-2.5 py-1 text-[11px] font-bold text-brand ring-1 ring-line-subtle"
+                >
+                  {t('staff.seatMap.modeAssign')}
                 </button>
               </div>
             )}
@@ -1296,6 +1326,7 @@ export default function SeatMap() {
               </span>
             </div>
 
+            {/* โซนที่ 1 — คนที่อยู่ในคันนี้แล้ว แค่ยังไม่มีที่นั่ง */}
             {sheetSeatableGuests.length === 0 ? (
               <p className="mt-2 rounded-control bg-surface-sunken px-3 py-4 text-center text-sm text-ink-faint">
                 {t('staff.seatMap.noSeatableGuests')}
@@ -1312,6 +1343,35 @@ export default function SeatMap() {
                     {g.nickname || g.name}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* โซนที่ 2 — คนที่ยังไม่ได้จับลงคันไหนเลย
+                แยกกรอบเส้นประ + ป้ายเตือน เพื่อให้เห็นชัดว่าการกดตรงนี้
+                "ย้ายเข้าคันนี้ด้วย" ไม่ใช่แค่จัดที่นั่งเฉย ๆ */}
+            {sheetUnassignedGuests.length > 0 && (
+              <div className="mt-3 rounded-control border border-dashed border-warning/50 bg-warning-bg/40 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
+                    <Icon name="alert" size={13} className="text-warning-text" />
+                    {t('staff.seatMap.unassignedTitle', { count: sheetUnassignedGuests.length })}
+                  </p>
+                </div>
+                <p className="mt-1 text-[11px] leading-snug text-warning-text/90">
+                  {t('staff.seatMap.unassignedPickHint', { bus: activeBus?.name ?? '' })}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {sheetUnassignedGuests.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => assignGuest(g.id)}
+                      disabled={assigning}
+                      className={`rounded-lg border border-dashed border-line-strong px-3 py-2 text-sm font-semibold ${genderBgClass(g.gender)}`}
+                    >
+                      {g.nickname || g.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

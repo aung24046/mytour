@@ -17,6 +17,7 @@ const CATEGORY_LABELS = {
   accommodation: 'ที่พัก',
   entrance: 'ค่าเข้าชม',
   tip: 'ทิป',
+  equipment: 'อุปกรณ์',
   misc: 'อื่นๆ',
 }
 

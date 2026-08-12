@@ -270,6 +270,24 @@
       "contactsTitle": "Emergency contacts",
       "offlineNotice": "Offline — showing the last numbers saved on this device",
       "noContacts": "No emergency contacts yet",
+      "headline": "Need help?",
+      "holdHint": "Hold until the ring completes",
+      "holdingPercent": "Holding… {{percent}}%",
+      "statusOnline": "Online",
+      "statusOffline": "Offline",
+      "gpsReady": "GPS ready",
+      "gpsSearching": "Locating",
+      "gpsOff": "No location",
+      "locationPrefix": "Last location",
+      "locationNone": "No location yet — we'll ask for permission when you press SOS",
+      "accuracy": "±{{meters}} m",
+      "quickTitle": "Quick call",
+      "contactsToggle": "All emergency numbers",
+      "contactsBack": "Back to the SOS button",
+      "contactsSubtitle": "Tap to call right away · works without internet",
+      "searchPlaceholder": "Search name or number…",
+      "searchEmpty": "No contacts match your search",
+      "holdCta": "Hold",
       "category": {
         "guide": "Guide / Tour lead",
         "staff": "Staff",
@@ -412,7 +430,10 @@
       "editGuest": "Edit info",
       "deleteGuest": "Delete this guest",
       "confirmDelete": "Delete \"{{name}}\"'s registration? This can't be undone.",
-      "duplicatePhone": "Another guest on this trip already uses this phone number."
+      "duplicatePhone": "Another guest on this trip already uses this phone number.",
+      "showEmpty": "Show {{count}} empty fields",
+      "hideEmpty": "Hide empty fields",
+      "allEmpty": "All {{count}} fields empty — tap to view"
     },
     "luggageManager": {
       "title": "Manage luggage",
@@ -460,8 +481,8 @@
       "confirmDeleteTag": "Delete tag {{code}}? This can't be undone."
     },
     "printExport": {
-      "title": "Print & Export",
-      "subtitle": "Print QR labels for luggage tags or guest wristbands",
+      "title": "Luggage tags / wristbands",
+      "subtitle": "Print QR stickers for luggage tags or guest wristbands",
       "modeLabel": "Label type",
       "mode": {
         "luggage": "Luggage tag",
@@ -550,7 +571,35 @@
       "message": "Message",
       "send": "Send",
       "history": "History",
-      "deactivate": "Deactivate"
+      "deactivate": "Deactivate",
+      "liveLabel": "Guests are seeing this now",
+      "sentAgo": "Sent {{time}}",
+      "sentBy": "by {{name}}",
+      "editMessage": "Edit message",
+      "closeAnnouncement": "Close announcement",
+      "readLabel": "Opened",
+      "readCount": "{{read}} / {{total}} guests",
+      "notSeenHint": "Not seen yet · tap to call",
+      "andMore": "+ {{count}} more",
+      "newAnnouncement": "New announcement · replaces the one above",
+      "placeholder": "Type your announcement…",
+      "shortcuts": "Shortcuts",
+      "manageShortcuts": "Manage shortcuts",
+      "sentToday": "Already sent",
+      "noneLive": "No announcement is live right now",
+      "noHistory": "No announcements sent on this trip yet",
+      "saveEdit": "Save changes",
+      "cancelEdit": "Cancel",
+      "shortcutsTitle": "Shortcuts",
+      "shortcutsHint": "Tap to edit · drag the handle to reorder",
+      "addShortcut": "Add shortcut",
+      "shortcutPlaceholder": "e.g. You can board the bus now",
+      "deleteShortcut": "Delete this shortcut",
+      "shortcutsSaved": "Saved",
+      "noGuests": "No guests registered on this trip yet",
+      "justNow": "just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} hr ago"
     },
     "seatMap": {
       "title": "Bus seat map",
@@ -610,7 +659,9 @@
       "uncheckedGuest": "Undid check-in for \"{{name}}\"",
       "legendChecked": "checked in",
       "legendNotChecked": "not yet",
-      "legendGenderEdge": "edge = m/f"
+      "legendGenderEdge": "edge = m/f",
+      "unassignedPickHint": "Tap a name to seat them here — they'll be moved onto {{bus}} automatically",
+      "unassignedSeatHint": "Tap an empty seat and pick from the dashed zone"
     },
     "roomMap": {
       "title": "Room map",
@@ -869,7 +920,23 @@
       "dietary": "Dietary restrictions",
       "medical": "Medical conditions",
       "none": "No data yet",
-      "peopleCount": "{{count}} pax"
+      "peopleCount": "{{count}} pax",
+      "view": {
+        "tier": "By restriction",
+        "person": "By person"
+      },
+      "tier": {
+        "allergy": "Allergies",
+        "condition": "Medical conditions",
+        "preference": "Food preferences",
+        "info": "Health info"
+      },
+      "selfWritten": "typed in",
+      "merged": "{{count}} answers merged",
+      "mergedFrom": "Original answers",
+      "conflictTitle": "{{count}} contradictory answers",
+      "conflictBody": "Ticked \"none\" alongside a real restriction — we counted the restriction. Tap to see who and confirm with them.",
+      "noneCount": "{{count}} more guests have no restrictions"
     },
     "expenseTracker": {
       "title": "Expense tracker",
@@ -911,8 +978,40 @@
         "accommodation": "Accommodation",
         "entrance": "Entrance fees",
         "tip": "Tips",
+        "equipment": "Equipment",
         "misc": "Misc"
-      }
+      },
+      "modeQuick": "One at a time",
+      "modeBatch": "Batch entry",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "pickDate": "Pick date",
+      "sumTip": "You can add up, e.g. 120+80",
+      "addDescription": "+ Description",
+      "addReceipt": "+ Receipt",
+      "removePhoto": "Remove photo",
+      "saveWithAmount": "Save {{amount}} ฿",
+      "savedToast": "Saved {{count}} entries",
+      "undo": "Undo",
+      "batchPasteHint": "Type an amount and press Enter for the next row — or paste a column straight from Google Sheets into the first box",
+      "batchRowAmount": "Amount",
+      "batchRowNote": "Description (optional)",
+      "batchRemoveRow": "Remove this row",
+      "batchInvalidRows": "{{count}} rows have an unreadable amount — they will not be saved",
+      "batchSaveAll": "Save all {{count}} entries · {{amount}} ฿",
+      "plusChunk": "+ Add",
+      "backspace": "Delete last digit",
+      "todayTotal": "Today {{amount}} ฿",
+      "seeList": "See all entries",
+      "bucketAdd": "+ Add",
+      "bucketCommit": "Enter",
+      "bucketUpdate": "Update",
+      "bucketDelete": "Delete",
+      "bucketHint": "Tap a category to enter amounts · paste a whole block from Sheets into the description box",
+      "entryCount": "{{count}} entries",
+      "bucketEmpty": "None yet",
+      "toggleKeyboard": "Switch to device keyboard",
+      "todayLabel": "Today"
     },
     "supplierManager": {
       "title": "Supplier manager",
@@ -943,7 +1042,23 @@
         "attraction": "Attraction",
         "shop": "Shop",
         "other": "Other"
-      }
+      },
+      "filterUsedInTrip": "In this trip",
+      "filterAllSuppliers": "All",
+      "filterHighRating": "★ 4 and up",
+      "callAction": "Call",
+      "lineAction": "Chat on LINE",
+      "supplierCount": "{{count}} suppliers",
+      "noPhone": "No phone yet",
+      "detailsTitle": "Details",
+      "ratingLabel": "Rating",
+      "addToTrip": "Add to this trip",
+      "removeFromTrip": "Remove from this trip",
+      "noneInTrip": "No suppliers picked for this trip yet",
+      "moreFields": "+ Contact, LINE, address, notes",
+      "fewerFields": "Hide extra fields",
+      "namePlaceholder": "Restaurant / hotel / garage name",
+      "phonePlaceholder": "08x-xxx-xxxx"
     },
     "feedbackSummary": {
       "title": "Feedback summary",
@@ -983,6 +1098,11 @@
       "noContacts": "No contacts in this category yet",
       "guideNumbersTitle": "Guide / staff numbers",
       "guideNumbersHint": "Pulled automatically from the Staff table — toggle \"Shown to guests\" on the Manage Staff page",
+      "quickTitle": "Quick-call numbers on the SOS page",
+      "quickHint": "Star up to {{max}} numbers — they appear as call buttons under the guest's SOS button",
+      "quickEmptyHint": "None starred — we pick automatically, guides first",
+      "quickToggle": "Pin as a quick-call number",
+      "quickFull": "Up to {{max}} numbers. Unpin one first.",
       "category": {
         "guide": "Guide / Tour lead",
         "staff": "Staff",
@@ -1109,7 +1229,7 @@
     },
     "documentHub": {
       "title": "Documents",
-      "subtitle": "Print A4 / A5 documents for partners and filing"
+      "subtitle": "Print every document, label and form for this trip"
     }
   }
 }

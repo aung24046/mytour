@@ -11,6 +11,7 @@ import {
 import { can } from '../../lib/permissions'
 import { clearTourCache } from '../../lib/TourContext'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import TextField from '../../components/common/TextField'
 import SelectField from '../../components/common/SelectField'
@@ -387,15 +388,14 @@ export default function TourManager() {
   const cloneSources = tours.filter((t) => t.status !== 'cancelled')
 
   return (
-    <div className="min-h-screen bg-surface-muted pb-24">
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="briefcase"
+        title="จัดการทริป"
+        subtitle={`${session?.staff?.name ?? ''} · ${session?.orgRole === 'owner' ? 'เจ้าของ' : 'แอดมิน'}`}
+      />
       <div className="mx-auto max-w-2xl px-4 py-5">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-extrabold text-ink">จัดการทริป</h1>
-            <p className="mt-0.5 text-sm text-ink-muted">
-              {session?.staff?.name} · {session?.orgRole === 'owner' ? 'เจ้าของ' : 'แอดมิน'}
-            </p>
-          </div>
+        <div className="mb-4 flex items-start justify-end gap-3">
           {canCreate && (
             <Button fullWidth={false} onClick={() => setCreateOpen(true)} disabled={busy}>
               + สร้างทริป

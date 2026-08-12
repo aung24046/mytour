@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { useTourId } from '../../lib/TourContext'
+import { getGuestId } from '../../lib/guestSession'
 import Icon from './Icon'
 
 // แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่ — อัปเดตเองไม่ต้อง refresh หน้า
@@ -111,6 +112,37 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
       clearInterval(poll)
     }
   }, [tourId])
+
+  // บันทึกว่า "คนนี้เห็นประกาศนี้แล้ว" — ทีมงานใช้ตัวเลขนี้ตัดสินใจว่าต้องตามใครต่อ
+  //
+  // นับตอนแบนเนอร์ถูกเรนเดอร์จริง ไม่ใช่ตอนโหลดข้อมูล — ถ้านับตอนโหลด คนที่กดปิด
+  // ประกาศไปแล้วหรือเปิดหน้าที่ไม่มีแบนเนอร์ก็จะถูกนับว่าเห็น ทั้งที่ยังไม่เห็น
+  //
+  // ยิงแบบ fire-and-forget: ล้มเหลวก็ปล่อย (ออฟไลน์ / ยังไม่ลงทะเบียน) ห้ามให้ประกาศ
+  // ที่ต้องรีบสื่อสารพังเพราะการเก็บสถิติ
+  useEffect(() => {
+    if (!announcement || !tourId) return
+    const guestId = getGuestId(tourId)
+    if (!guestId) return
+
+    let cancelled = false
+    async function markRead() {
+      const { error } = await supabase
+        .from('announcement_reads')
+        .upsert(
+          { announcement_id: announcement.id, guest_id: guestId },
+          { onConflict: 'announcement_id,guest_id', ignoreDuplicates: true }
+        )
+      if (error && !cancelled) {
+        console.warn('[AnnouncementBanner] บันทึกการอ่านไม่สำเร็จ', error)
+      }
+    }
+    markRead()
+
+    return () => {
+      cancelled = true
+    }
+  }, [announcement, tourId])
 
   if (!announcement || announcement.id === dismissedId) return null
 

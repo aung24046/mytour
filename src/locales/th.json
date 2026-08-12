@@ -270,6 +270,24 @@
       "contactsTitle": "เบอร์ติดต่อฉุกเฉิน",
       "offlineNotice": "ออฟไลน์ — แสดงเบอร์ที่บันทึกไว้ในเครื่องล่าสุด",
       "noContacts": "ยังไม่มีเบอร์ติดต่อฉุกเฉิน",
+      "headline": "ต้องการความช่วยเหลือ?",
+      "holdHint": "แตะค้างจนวงกลมครบรอบ",
+      "holdingPercent": "กำลังกดค้าง… {{percent}}%",
+      "statusOnline": "ออนไลน์",
+      "statusOffline": "ออฟไลน์",
+      "gpsReady": "GPS พร้อม",
+      "gpsSearching": "กำลังหาพิกัด",
+      "gpsOff": "ไม่มีพิกัด",
+      "locationPrefix": "พิกัดล่าสุด",
+      "locationNone": "ยังไม่ได้รับพิกัด — กด SOS ระบบจะขออนุญาตให้อัตโนมัติ",
+      "accuracy": "±{{meters}} ม.",
+      "quickTitle": "โทรด่วน",
+      "contactsToggle": "เบอร์ฉุกเฉินทั้งหมด",
+      "contactsBack": "กลับไปหน้าปุ่ม SOS",
+      "contactsSubtitle": "แตะเพื่อโทรออกทันที · ใช้ได้แม้ไม่มีเน็ต",
+      "searchPlaceholder": "ค้นหาชื่อหรือเบอร์…",
+      "searchEmpty": "ไม่พบเบอร์ที่ตรงกับคำค้น",
+      "holdCta": "กดค้างไว้",
       "category": {
         "guide": "ไกด์ / หัวหน้าทัวร์",
         "staff": "ทีมงาน",
@@ -412,7 +430,10 @@
       "editGuest": "แก้ไขข้อมูล",
       "deleteGuest": "ลบลูกทัวร์คนนี้",
       "confirmDelete": "ต้องการลบข้อมูลลงทะเบียนของ \"{{name}}\" ใช่ไหม? ข้อมูลจะหายถาวร",
-      "duplicatePhone": "เบอร์นี้มีลูกทัวร์คนอื่นในทริปนี้ใช้อยู่แล้ว"
+      "duplicatePhone": "เบอร์นี้มีลูกทัวร์คนอื่นในทริปนี้ใช้อยู่แล้ว",
+      "showEmpty": "แสดงช่องที่ยังไม่กรอก ({{count}})",
+      "hideEmpty": "ซ่อนช่องที่ยังไม่กรอก",
+      "allEmpty": "ยังไม่กรอกทั้ง {{count}} ช่อง — แตะเพื่อดู"
     },
     "luggageManager": {
       "title": "จัดการกระเป๋า",
@@ -460,8 +481,8 @@
       "confirmDeleteTag": "ลบ Tag {{code}} ใช่ไหม? ลบแล้วกู้คืนไม่ได้"
     },
     "printExport": {
-      "title": "พิมพ์และส่งออก",
-      "subtitle": "พิมพ์ label QR สำหรับ tag กระเป๋า หรือสายรัดข้อมือลูกทัวร์",
+      "title": "ป้ายกระเป๋า / สายรัดข้อมือ",
+      "subtitle": "พิมพ์สติกเกอร์ QR ติดกระเป๋าหรือสายรัดข้อมือลูกทัวร์",
       "modeLabel": "ประเภท Label",
       "mode": {
         "luggage": "Tag กระเป๋า",
@@ -550,7 +571,35 @@
       "message": "ข้อความ",
       "send": "ส่งประกาศ",
       "history": "ประวัติประกาศ",
-      "deactivate": "ยกเลิกประกาศ"
+      "deactivate": "ยกเลิกประกาศ",
+      "liveLabel": "ลูกทัวร์เห็นอยู่ตอนนี้",
+      "sentAgo": "ส่งเมื่อ {{time}}",
+      "sentBy": "โดย {{name}}",
+      "editMessage": "แก้ข้อความ",
+      "closeAnnouncement": "ปิดประกาศ",
+      "readLabel": "เปิดอ่านแล้ว",
+      "readCount": "{{read}} / {{total}} คน",
+      "notSeenHint": "ยังไม่เห็น · แตะเพื่อโทร",
+      "andMore": "+ อีก {{count}} คน",
+      "newAnnouncement": "ประกาศใหม่ · จะแทนที่อันบน",
+      "placeholder": "พิมพ์ข้อความประกาศ…",
+      "shortcuts": "ข้อความลัด",
+      "manageShortcuts": "จัดการข้อความลัด",
+      "sentToday": "ที่ส่งไปแล้ว",
+      "noneLive": "ตอนนี้ยังไม่มีประกาศที่ออกอากาศอยู่",
+      "noHistory": "ยังไม่เคยส่งประกาศในทริปนี้",
+      "saveEdit": "บันทึกการแก้ไข",
+      "cancelEdit": "ยกเลิก",
+      "shortcutsTitle": "ข้อความลัด",
+      "shortcutsHint": "แตะเพื่อแก้ข้อความ · ลากปุ่มซ้ายเพื่อสลับลำดับ",
+      "addShortcut": "เพิ่มข้อความลัด",
+      "shortcutPlaceholder": "เช่น ขึ้นรถได้เลยครับ",
+      "deleteShortcut": "ลบข้อความลัดนี้",
+      "shortcutsSaved": "บันทึกแล้ว",
+      "noGuests": "ทริปนี้ยังไม่มีลูกทัวร์ลงทะเบียน",
+      "justNow": "เมื่อสักครู่",
+      "minutesAgo": "{{count}} นาทีที่แล้ว",
+      "hoursAgo": "{{count}} ชม.ที่แล้ว"
     },
     "seatMap": {
       "title": "ผังที่นั่งรถบัส",
@@ -610,7 +659,9 @@
       "uncheckedGuest": "ยกเลิกเช็คอิน \"{{name}}\"",
       "legendChecked": "เช็คแล้ว",
       "legendNotChecked": "ยังไม่มา",
-      "legendGenderEdge": "ขอบ = ช/ญ"
+      "legendGenderEdge": "ขอบ = ช/ญ",
+      "unassignedPickHint": "แตะชื่อเพื่อจัดลงที่นั่งนี้ — ระบบจะย้ายเข้า {{bus}} ให้อัตโนมัติ",
+      "unassignedSeatHint": "แตะที่นั่งว่างแล้วเลือกจากโซนเส้นประได้เลย"
     },
     "roomMap": {
       "title": "ผังห้องพัก",
@@ -869,7 +920,23 @@
       "dietary": "ข้อจำกัดด้านอาหาร",
       "medical": "ข้อมูลสุขภาพ/โรคประจำตัว",
       "none": "ยังไม่มีข้อมูล",
-      "peopleCount": "{{count}} คน"
+      "peopleCount": "{{count}} คน",
+      "view": {
+        "tier": "ตามข้อจำกัด",
+        "person": "รายคน"
+      },
+      "tier": {
+        "allergy": "อาการแพ้",
+        "condition": "โรคประจำตัว",
+        "preference": "ความชอบด้านอาหาร",
+        "info": "ข้อมูลสุขภาพ"
+      },
+      "selfWritten": "ระบุเอง",
+      "merged": "รวม {{count}} คำตอบ",
+      "mergedFrom": "คำตอบเดิม",
+      "conflictTitle": "{{count}} คนตอบขัดกัน",
+      "conflictBody": "ติ๊ก \"ไม่มี\" พร้อมกับข้อจำกัดอื่น — ระบบนับตามข้อจำกัดที่ระบุ แตะเพื่อดูรายชื่อและยืนยันกับลูกทัวร์",
+      "noneCount": "อีก {{count}} คนไม่มีข้อจำกัดใด ๆ"
     },
     "expenseTracker": {
       "title": "บันทึกรายจ่าย",
@@ -911,8 +978,40 @@
         "accommodation": "ที่พัก",
         "entrance": "ค่าเข้าชม",
         "tip": "ทิป",
+        "equipment": "อุปกรณ์",
         "misc": "อื่นๆ"
-      }
+      },
+      "modeQuick": "ทีละรายการ",
+      "modeBatch": "ลงหลายรายการ",
+      "today": "วันนี้",
+      "yesterday": "เมื่อวาน",
+      "pickDate": "เลือกวัน",
+      "sumTip": "บวกกันได้ เช่น 120+80",
+      "addDescription": "+ รายละเอียด",
+      "addReceipt": "+ ใบเสร็จ",
+      "removePhoto": "ลบรูป",
+      "saveWithAmount": "บันทึก {{amount}} ฿",
+      "savedToast": "บันทึกแล้ว {{count}} รายการ",
+      "undo": "เลิกทำ",
+      "batchPasteHint": "พิมพ์จำนวนแล้วกด Enter ลงแถวถัดไป — หรือก๊อปคอลัมน์จาก Google Sheet มาวางในช่องแรกได้เลย",
+      "batchRowAmount": "จำนวน",
+      "batchRowNote": "รายละเอียด (ถ้ามี)",
+      "batchRemoveRow": "ลบแถวนี้",
+      "batchInvalidRows": "มี {{count}} แถวที่อ่านจำนวนเงินไม่ออก — แถวนั้นจะไม่ถูกบันทึก",
+      "batchSaveAll": "บันทึกทั้งหมด {{count}} รายการ · {{amount}} ฿",
+      "plusChunk": "+ บวก",
+      "backspace": "ลบตัวสุดท้าย",
+      "todayTotal": "วันนี้ {{amount}} ฿",
+      "seeList": "ดูรายการทั้งหมด",
+      "bucketAdd": "+ เพิ่ม",
+      "bucketCommit": "ลง",
+      "bucketUpdate": "อัปเดต",
+      "bucketDelete": "ลบ",
+      "bucketHint": "แตะหมวดเพื่อลงเลข · ก๊อปจากชีตมาวางในช่องรายละเอียดได้ทั้งก้อน",
+      "entryCount": "{{count}} รายการ",
+      "bucketEmpty": "ยังไม่มี",
+      "toggleKeyboard": "สลับไปใช้คีย์บอร์ดของเครื่อง",
+      "todayLabel": "วันนี้"
     },
     "supplierManager": {
       "title": "จัดการ Supplier",
@@ -943,7 +1042,23 @@
         "attraction": "สถานที่ท่องเที่ยว",
         "shop": "ร้านค้า",
         "other": "อื่นๆ"
-      }
+      },
+      "filterUsedInTrip": "ใช้ในทริปนี้",
+      "filterAllSuppliers": "ทั้งหมด",
+      "filterHighRating": "★ 4 ขึ้นไป",
+      "callAction": "โทรหา",
+      "lineAction": "คุยทางไลน์",
+      "supplierCount": "{{count}} เจ้า",
+      "noPhone": "ยังไม่มีเบอร์",
+      "detailsTitle": "รายละเอียด",
+      "ratingLabel": "ให้ดาว",
+      "addToTrip": "ดึงเข้าทริปนี้",
+      "removeFromTrip": "เอาออกจากทริปนี้",
+      "noneInTrip": "ทริปนี้ยังไม่ได้เลือกคู่ค้าไว้",
+      "moreFields": "+ ผู้ติดต่อ ไลน์ ที่อยู่ โน้ต",
+      "fewerFields": "ซ่อนข้อมูลเพิ่มเติม",
+      "namePlaceholder": "ชื่อร้าน / โรงแรม / อู่รถ",
+      "phonePlaceholder": "08x-xxx-xxxx"
     },
     "feedbackSummary": {
       "title": "สรุปผล Feedback",
@@ -983,6 +1098,11 @@
       "noContacts": "ยังไม่มีเบอร์ติดต่อในหมวดนี้",
       "guideNumbersTitle": "เบอร์ไกด์ / ทีมงาน",
       "guideNumbersHint": "ดึงจากตาราง Staff อัตโนมัติ — ไปเปิด/ปิดที่หน้า \"จัดการทีมงาน\" (toggle \"แสดงให้ลูกทัวร์เห็น\")",
+      "quickTitle": "เบอร์โทรด่วนบนหน้า SOS",
+      "quickHint": "ปักดาวได้สูงสุด {{max}} เบอร์ — จะขึ้นเป็นปุ่มโทรใต้ปุ่ม SOS ของลูกทัวร์",
+      "quickEmptyHint": "ยังไม่ได้ปักดาว — ระบบจะเลือกให้อัตโนมัติโดยเอาไกด์ขึ้นก่อน",
+      "quickToggle": "ปักเป็นเบอร์โทรด่วน",
+      "quickFull": "ปักได้สูงสุด {{max}} เบอร์ ถอดอันเดิมออกก่อน",
       "category": {
         "guide": "ไกด์ / หัวหน้าทัวร์",
         "staff": "ทีมงาน",
@@ -1109,7 +1229,7 @@
     },
     "documentHub": {
       "title": "เอกสาร",
-      "subtitle": "พิมพ์เอกสารรูปเล่ม A4 / A5 สำหรับส่งคู่ค้าและเก็บเข้าแฟ้ม"
+      "subtitle": "พิมพ์เอกสาร ป้าย และแบบฟอร์มทั้งหมดของทริป"
     }
   }
 }

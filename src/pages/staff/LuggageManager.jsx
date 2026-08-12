@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useActiveTourId } from '../../lib/staffSession'
 import { genderTextClass } from '../../lib/genderColor'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
 import QrScanner from '../../components/common/QrScanner'
@@ -349,17 +350,17 @@ export default function LuggageManager() {
   }, [luggage, listSearch, statusFilter, guestById])
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-bold text-ink">{t('staff.luggageManager.title')}</h1>
-        <p className="mb-3 text-sm text-ink-muted">
-          {t('staff.luggageManager.summary', {
-            total: counts.total,
-            loaded: counts.loaded,
-            unassigned: counts.unassigned,
-          })}
-        </p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="luggage"
+        title={t('staff.luggageManager.title')}
+        subtitle={t('staff.luggageManager.summary', {
+          total: counts.total,
+          loaded: counts.loaded,
+          unassigned: counts.unassigned,
+        })}
+      />
+      <div className="mx-auto max-w-md p-4">
         <div className="mb-3 flex flex-wrap gap-2">
           {MODES.map((m) => (
             <button

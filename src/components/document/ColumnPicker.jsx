@@ -2,16 +2,19 @@ import { useMemo, useState } from 'react'
 
 import { supabase } from '../../lib/supabase'
 import { useActiveOrgId } from '../../lib/staffSession'
-import { COLUMN_LABELS, SENSITIVE_KEYS } from '../../lib/documentData'
+import { columnLabel, isFieldColumn, isSensitiveColumn } from '../../lib/documentData'
 import { decideOrientation, exceedsLandscape, OVERFLOW } from '../../lib/printProfiles'
 import Card from '../../components/common/Card'
 
 // เลือกคอลัมน์ของเอกสาร + บันทึกเป็นชุดไว้ใช้ซ้ำ (DataSpec §9)
 //
-// สองกลไกทำงานคู่กัน:
-//   1. ซ่อนอัตโนมัติ — คอลัมน์ที่ไม่มีใครกรอกเลย (0/26) จะจางและไม่ติ๊กให้
+// สามกลไกทำงานคู่กัน:
+//   1. ซ่อนอัตโนมัติ — คอลัมน์มาตรฐานที่ไม่มีใครกรอกเลย (0/26) จะจางและไม่ติ๊กให้
 //      แต่ยังแสดงพร้อมตัวนับ เพื่อให้เห็นว่าทำไมมันหาย ไม่ใช่หายเงียบ
-//   2. Preset — เก็บชุดคอลัมน์ไว้ใช้ซ้ำ ไม่ต้องติ๊กใหม่ทุกทริป
+//      "เลขพาสปอร์ตไม่มีใครกรอก" คือเรื่องที่หัวหน้าทัวร์ต้องรู้ก่อนถึงสนามบิน
+//   2. ยุบทิ้ง — คอลัมน์ที่มาจากคำถามในฟอร์มและไม่มีใครตอบเลย จะถูกซ่อนออกจากรายการ
+//      เหลือแค่บรรทัดสรุปให้กดคลี่ ทริปหนึ่งมีคำถามได้ 30 ข้อ ถ้าโชว์หมดจะหาอะไรไม่เจอ
+//   3. Preset — เก็บชุดคอลัมน์ไว้ใช้ซ้ำ ไม่ต้องติ๊กใหม่ทุกทริป
 //
 // แนวกระดาษไม่ให้ผู้ใช้เลือก — คำนวณจากความกว้างรวมแล้วบอกเหตุผล (§9.3)
 export default function ColumnPicker({
@@ -27,8 +30,21 @@ export default function ColumnPicker({
   const orgId = useActiveOrgId()
   const [savingName, setSavingName] = useState(null)
   const [saveError, setSaveError] = useState(null)
+  const [showEmptyFields, setShowEmptyFields] = useState(false)
 
   const selectedKeys = useMemo(() => new Set(selected.map((c) => c.key)), [selected])
+
+  const groups = useMemo(() => {
+    const standard = available.filter((c) => !isFieldColumn(c.key))
+    const form = available.filter((c) => isFieldColumn(c.key))
+
+    // ที่ติ๊กไว้ต้องโผล่เสมอแม้จะไม่มีใครตอบ — ไม่งั้นจะกลายเป็นคอลัมน์ผี
+    // ที่อยู่บนกระดาษแต่หาถอดออกในรายการไม่เจอ
+    const isEmpty = (c) => fillCounts?.[c.key] === 0 && !selectedKeys.has(c.key)
+    const emptyCount = form.filter(isEmpty).length
+    const visibleForm = showEmptyFields ? form : form.filter((c) => !isEmpty(c))
+    return { standard, form, visibleForm, emptyCount }
+  }, [available, fillCounts, selectedKeys, showEmptyFields])
 
   const orientation = useMemo(() => decideOrientation(selected), [selected])
   const tooWide = useMemo(() => exceedsLandscape(selected), [selected])
@@ -43,22 +59,26 @@ export default function ColumnPicker({
       // ถ้าไม่เติม คอลัมน์ที่เพิ่งติ๊กจะได้หัวตารางว่างเปล่า
       onChange([
         ...selected,
-        {
-          ...col,
-          label: col.label ?? COLUMN_LABELS[col.key] ?? col.key,
-          sensitive: SENSITIVE_KEYS.has(col.key),
-        },
+        { ...col, label: columnLabel(col), sensitive: isSensitiveColumn(col) },
       ])
     }
   }
 
   function applyPreset(preset) {
+    // preset เก็บที่ระดับ org แต่คำถามผูกกับทริป — ข้อที่ทริปนี้ไม่ได้ถาม ต้องตัดทิ้ง
+    const availableByKey = new Map(available.map((c) => [c.key, c]))
     onChange(
-      (preset.columns ?? []).map((c) => ({
-        ...c,
-        label: COLUMN_LABELS[c.key] ?? c.key,
-        sensitive: c.sensitive ?? SENSITIVE_KEYS.has(c.key),
-      }))
+      (preset.columns ?? [])
+        .filter((c) => !isFieldColumn(c.key) || availableByKey.has(c.key))
+        .map((c) => {
+          // label ของคำถามเอาจากทริปปัจจุบันก่อน (แอดมินอาจแก้ข้อความคำถามไปแล้ว)
+          const live = availableByKey.get(c.key)
+          return {
+            ...c,
+            label: columnLabel(live ?? c),
+            sensitive: c.sensitive ?? isSensitiveColumn(live ?? c),
+          }
+        })
     )
   }
 
@@ -70,9 +90,12 @@ export default function ColumnPicker({
     setSaveError(null)
 
     // เก็บเฉพาะ key + นโยบาย — label มาจาก COLUMN_LABELS ตอนอ่านกลับ
+    // ยกเว้นคอลัมน์คำถาม ที่ไม่มีใน COLUMN_LABELS จึงต้องเก็บ label ติดไปด้วย
+    // ไว้ใช้เป็นตัวสำรองถ้าอ่าน preset ตอนที่ยังโหลดคำถามของทริปไม่เสร็จ
     const columns = selected.map((c) => ({
       key: c.key,
       overflow: c.overflow ?? OVERFLOW.WRAP,
+      ...(isFieldColumn(c.key) ? { label: columnLabel(c) } : {}),
       ...(c.sensitive ? { sensitive: true } : {}),
     }))
 
@@ -96,7 +119,41 @@ export default function ColumnPicker({
     onPresetsChange?.([...presets.filter((p) => p.id !== data.id), data])
   }
 
-  const sensitiveSelected = selected.filter((c) => SENSITIVE_KEYS.has(c.key))
+  const sensitiveSelected = selected.filter((c) => isSensitiveColumn(c))
+
+  function renderRow(col) {
+    const isOn = selectedKeys.has(col.key)
+    const count = fillCounts?.[col.key]
+    const empty = count === 0
+    return (
+      <label
+        key={col.key}
+        className={`flex items-center gap-3 py-2 ${empty && !isOn ? 'opacity-55' : ''}`}
+      >
+        <input
+          type="checkbox"
+          checked={isOn}
+          disabled={col.locked}
+          onChange={() => toggle(col)}
+          className="h-4 w-4 accent-brand"
+        />
+        <span className="flex-1 text-sm text-ink">{columnLabel(col)}</span>
+
+        {isSensitiveColumn(col) && (
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+            ข้อมูลอ่อนไหว
+          </span>
+        )}
+        {col.locked ? (
+          <span className="text-[11px] text-ink-faint">ล็อกไว้</span>
+        ) : count != null ? (
+          <span className="text-[11px] text-ink-faint">
+            {empty ? 'ไม่มีข้อมูล' : 'กรอกแล้ว'} · {count}/{fillCounts.__total ?? '—'}
+          </span>
+        ) : null}
+      </label>
+    )
+  }
 
   return (
     <Card>
@@ -127,47 +184,30 @@ export default function ColumnPicker({
 
       <div className="mb-2 flex items-center justify-between text-sm">
         <span className="text-ink-muted">
-          เลือก {selected.length} จาก {available.length} คอลัมน์
+          {/* นับจากที่มองเห็นจริง — บอก "จาก 42" ทั้งที่โชว์ 20 บรรทัดจะงงกว่าเดิม */}
+          เลือก {selected.length} จาก {groups.standard.length + groups.visibleForm.length} คอลัมน์
         </span>
       </div>
 
-      <div className="mb-3 divide-y divide-black/5">
-        {available.map((col) => {
-          const isOn = selectedKeys.has(col.key)
-          const count = fillCounts?.[col.key]
-          const empty = count === 0
-          return (
-            <label
-              key={col.key}
-              className={`flex items-center gap-3 py-2 ${empty && !isOn ? 'opacity-55' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={isOn}
-                disabled={col.locked}
-                onChange={() => toggle(col)}
-                className="h-4 w-4 accent-brand"
-              />
-              <span className="flex-1 text-sm text-ink">
-                {COLUMN_LABELS[col.key] ?? col.key}
-              </span>
+      <div className="mb-3 divide-y divide-black/5">{groups.standard.map(renderRow)}</div>
 
-              {SENSITIVE_KEYS.has(col.key) && (
-                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">
-                  ข้อมูลอ่อนไหว
-                </span>
-              )}
-              {col.locked ? (
-                <span className="text-[11px] text-ink-faint">ล็อกไว้</span>
-              ) : count != null ? (
-                <span className="text-[11px] text-ink-faint">
-                  {empty ? 'ไม่มีข้อมูล' : 'กรอกแล้ว'} · {count}/{fillCounts.__total ?? '—'}
-                </span>
-              ) : null}
-            </label>
-          )
-        })}
-      </div>
+      {groups.form.length > 0 && (
+        <div className="mb-3">
+          <p className="mb-1 mt-1 text-xs font-semibold text-ink-faint">คำถามจากฟอร์มลงทะเบียน</p>
+          <div className="divide-y divide-black/5">{groups.visibleForm.map(renderRow)}</div>
+
+          {groups.emptyCount > 0 && (
+            <button
+              onClick={() => setShowEmptyFields((v) => !v)}
+              className="mt-1 text-xs text-ink-faint underline decoration-dotted"
+            >
+              {showEmptyFields
+                ? `ซ่อนคำถามที่ไม่มีใครตอบ ${groups.emptyCount} ข้ออีกครั้ง`
+                : `ซ่อนคำถามที่ไม่มีใครตอบ ${groups.emptyCount} ข้อ · แสดง`}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* แนวกระดาษคำนวณเอง — บอกเหตุผลด้วยเพื่อไม่ให้รู้สึกว่าระบบเปลี่ยนมั่ว */}
       {tooWide ? (
@@ -186,7 +226,7 @@ export default function ColumnPicker({
 
       {sensitiveSelected.length > 0 && (
         <p className="mt-2 text-xs text-ink-muted">
-          เอกสารนี้มีข้อมูลอ่อนไหว {sensitiveSelected.map((c) => COLUMN_LABELS[c.key]).join(' · ')} —
+          เอกสารนี้มีข้อมูลอ่อนไหว {sensitiveSelected.map((c) => columnLabel(c)).join(' · ')} —
           ตรวจก่อนส่งออกนอกองค์กร
         </p>
       )}

@@ -24,6 +24,9 @@ import DocumentShell, { defaultPrint } from '../../../components/document/Docume
 import DocumentFooter from '../../../components/document/DocumentFooter'
 import ColumnPicker from '../../../components/document/ColumnPicker'
 
+/** คอลัมน์ที่ย้ายไปอยู่ "หัวกลุ่มของห้อง" แล้ว — ไม่พิมพ์ซ้ำเป็นคอลัมน์ */
+const ROOM_KEYS = ['room_number', 'floor', 'room_type', 'max_guests', 'room_note']
+
 // ใบจัดห้องพัก (DataSpec §1) — ส่งโรงแรมล่วงหน้า
 // จัดกลุ่มตามโรงแรม แล้วเรียงตามเลขห้อง โรงแรมใหม่ขึ้นหน้าใหม่เสมอ
 export default function RoomingList() {
@@ -125,13 +128,24 @@ export default function RoomingList() {
           .map((a) => guestById[a.guest_id])
           .filter(Boolean)
 
+        // หัวกลุ่มของห้อง — ข้อมูลห้องทั้งหมดอยู่บรรทัดเดียวเต็มความกว้าง
+        // เดิมวางเป็นคอลัมน์แล้วเว้นว่างในบรรทัดที่ 2 เป็นต้นไป ทำให้คนที่พักห้องเดียวกัน
+        // ดูไม่ออกว่าเป็นกลุ่มเดียวกัน โดยเฉพาะตอนห้องคาบเกี่ยวหน้ากระดาษ
+        const groupLabel = [
+          room.room_number ? `ห้อง ${room.room_number}` : 'ห้อง (ยังไม่ระบุเลข)',
+          room.floor ? `ชั้น ${room.floor}` : '',
+          room.room_type ?? '',
+          room.max_guests ? `พักได้ ${room.max_guests} ท่าน` : '',
+          occupants.length ? `${occupants.length} ท่าน` : '',
+          room.note ?? '',
+        ]
+          .filter(Boolean)
+          .join(' · ')
+
         if (occupants.length === 0) {
           out.push({
             _id: `${room.id}-empty`,
-            room_number: room.room_number,
-            floor: room.floor,
-            room_type: `${room.room_type ?? ''}${room.max_guests ? ` · ${room.max_guests} ท่าน` : ''}`,
-            room_note: room.note ?? '',
+            _group: groupLabel,
             name: '(ว่าง)',
           })
           continue
@@ -140,14 +154,12 @@ export default function RoomingList() {
         occupants.forEach((g, i) => {
           out.push({
             _id: `${room.id}-${g.id}`,
-            // เลขห้อง/ชั้น/ประเภทแสดงครั้งเดียวต่อห้อง — อ่านง่ายกว่าซ้ำทุกบรรทัด
-            room_number: i === 0 ? room.room_number : '',
-            floor: i === 0 ? room.floor : '',
-            room_type:
-              i === 0
-                ? `${room.room_type ?? ''}${room.max_guests ? ` · ${room.max_guests} ท่าน` : ''}`
-                : '',
-            room_note: i === 0 ? (room.note ?? '') : '',
+            _group: i === 0 ? groupLabel : undefined,
+            // คงข้อมูลห้องไว้ในทุกแถวเพื่อไฟล์ Excel (ตารางพิมพ์ไม่ได้ใช้ — ดู tableColumns)
+            room_number: room.room_number,
+            floor: room.floor,
+            room_type: `${room.room_type ?? ''}${room.max_guests ? ` · ${room.max_guests} ท่าน` : ''}`,
+            room_note: room.note ?? '',
             name: g.name,
             nickname: g.nickname,
             name_en: g.name_en,
@@ -179,7 +191,12 @@ export default function RoomingList() {
     [fillCounts, allRows.length]
   )
 
-  const orientation = useMemo(() => decideOrientation(columns), [columns])
+  // ข้อมูลห้องขึ้นไปอยู่บนหัวกลุ่มแล้ว จึงไม่ต้องมีเป็นคอลัมน์ซ้ำในตาราง
+  // (ยังเก็บไว้ใน `columns` เพื่อให้ ColumnPicker กับไฟล์ Excel เห็นเหมือนเดิม)
+  const tableColumns = useMemo(() => columns.filter((c) => !ROOM_KEYS.includes(c.key)), [columns])
+
+  // แนวกระดาษคำนวณจากคอลัมน์ที่พิมพ์จริง — ถ้ายังนับคอลัมน์ห้องด้วยจะสลับเป็นแนวนอนทั้งที่ไม่จำเป็น
+  const orientation = useMemo(() => decideOrientation(tableColumns), [tableColumns])
   const meta = DOC_TITLES.rooming_list
 
   // แยกชีตต่อโรงแรม — ตรงกับที่พิมพ์ออกมาแยกหน้า
@@ -257,7 +274,7 @@ export default function RoomingList() {
           </div>
 
           <DocumentTable
-            columns={columns}
+            columns={tableColumns}
             rows={rowsByHotel[hotel.id] ?? []}
             emptyText="โรงแรมนี้ยังไม่ได้จัดห้อง"
           />

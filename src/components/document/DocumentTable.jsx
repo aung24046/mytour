@@ -96,6 +96,25 @@ export default function DocumentTable({
         <tbody>
           {renderRows.map(({ row, markers, subrowText }, i) => (
             <Fragment key={row._id ?? i}>
+              {/* แถวหัวกลุ่ม — ใช้เมื่อหลายแถวเป็นของสิ่งเดียวกัน เช่นผู้พักในห้องเดียวกัน
+                  วางข้อมูลของกลุ่ม (เลขห้อง/ชั้น/ประเภท) ไว้บรรทัดเดียวเต็มความกว้าง
+                  แทนที่จะปล่อยคอลัมน์ซ้ำหรือเว้นว่างในทุกบรรทัด ซึ่งอ่านแล้วไม่เป็นก้อน */}
+              {row._group && (
+                <tr className="doc-row-group">
+                  <td
+                    colSpan={plan.visibleCols.length + (showNoteColumn ? 1 : 0)}
+                    className="border border-gray-300 bg-gray-100 px-1.5 py-1 font-medium"
+                    style={{
+                      printColorAdjust: 'exact',
+                      WebkitPrintColorAdjust: 'exact',
+                      // ห้ามหัวกลุ่มค้างท้ายหน้าโดยที่สมาชิกกลุ่มไปอยู่หน้าถัดไป
+                      breakAfter: 'avoid',
+                    }}
+                  >
+                    {row._group}
+                  </td>
+                </tr>
+              )}
               <tr className="doc-row-group">
                 {plan.visibleCols.map((col) => (
                   <td

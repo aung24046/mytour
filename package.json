@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node src/lib/__tests__/themes.test.mjs && node src/lib/__tests__/theme-apply.test.mjs && node src/lib/__tests__/contrast.test.mjs"
+    "test": "node src/lib/__tests__/themes.test.mjs && node src/lib/__tests__/theme-apply.test.mjs && node src/lib/__tests__/contrast.test.mjs && node src/lib/__tests__/dietary.test.mjs && node src/lib/__tests__/guest-field-display.test.mjs && node src/lib/__tests__/fetch-all.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

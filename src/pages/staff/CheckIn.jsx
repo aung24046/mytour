@@ -9,6 +9,7 @@ import { saveCache, loadCache } from '../../lib/offlineCache'
 import { genderTextClass } from '../../lib/genderColor'
 import { useCheckinEvent } from '../../lib/useCheckinEvent'
 import Card from '../../components/common/Card'
+import StaffHeader from '../../components/common/StaffHeader'
 import Button from '../../components/common/Button'
 import BottomSheet from '../../components/common/BottomSheet'
 import QrScanner from '../../components/common/QrScanner'
@@ -291,13 +292,13 @@ export default function CheckIn() {
   const responsesByGuestId = useMemo(() => buildResponsesByGuestId(responses), [responses])
 
   return (
-    <div className="min-h-screen bg-surface-muted p-4">
-      <div className="mx-auto max-w-md">
-        <h1 className="text-xl font-bold text-ink">{t('staff.checkIn.title')}</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          {t('staff.checkIn.summary', { checkedIn: checkedInCount, total: guests.length })}
-        </p>
-
+    <div className="min-h-screen bg-surface-muted">
+      <StaffHeader
+        icon="check"
+        title={t('staff.checkIn.title')}
+        subtitle={t('staff.checkIn.summary', { checkedIn: checkedInCount, total: guests.length })}
+      />
+      <div className="mx-auto max-w-md p-4">
         <button
           onClick={() => setEventPickerOpen(true)}
           className="mt-2 flex w-full items-center justify-between rounded-xl border border-brand-light bg-brand-lighter px-3 py-2.5 text-left"
