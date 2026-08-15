@@ -287,6 +287,10 @@ const RENDER = {
     </>
   ),
 
+  plus: (c) => (
+    <path d="M12 5.2 V18.8 M5.2 12 H18.8" fill="none" stroke={c.color} {...S} />
+  ),
+
   // ══ สถานะ ══════════════════════════════════════════════════════════
   // ต่างกันที่รูปทรง ไม่ได้ต่างแค่สี — คนตาบอดสีต้องแยกออกเหมือนกัน
   checkCircle: (c) => (
@@ -563,6 +567,11 @@ export default function Icon({
   ...props
 }) {
   const [hovered, setHovered] = useState(false)
+  // ชื่อที่สะกดผิดจะตกมาที่ compass แล้วเงียบ — เคยทำให้ไอคอนผิดหลุดไปโดยไม่มีใครเห็น
+  // เตือนตอน dev เพื่อให้จับได้ตั้งแต่เขียนโค้ด ส่วน production ยังไม่พัง แค่ใช้ตัวสำรอง
+  if (import.meta.env?.DEV && !RENDER[name]) {
+    console.warn(`[Icon] ไม่รู้จักไอคอนชื่อ "${name}" — ใช้ compass แทน`)
+  }
   const renderFn = RENDER[name] || RENDER.compass
   const isFilled = filled || (interactive && hovered)
   // ⚠️ เส้นรายละเอียดของไอคอนแบบทึบเป็นสีขาวตายตัว ไม่ตามธีม

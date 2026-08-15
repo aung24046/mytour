@@ -226,10 +226,38 @@ export default function RoomBoard({
         </p>
       )}
 
+      {/* หัวข้อห้องพัก + ปุ่มเพิ่มห้อง
+          ปุ่มนี้ต้องอยู่นอกลูปของชั้นเสมอ — เดิมวางไว้ในตารางของแต่ละชั้น
+          ทริปใหม่ที่ยังไม่มีห้องเลยจึงไม่มีชั้นให้วน ทำให้ไม่มีปุ่มสร้างห้องทั้งหน้า */}
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-ink">
+          {t('staff.roomMap.rooms')}
+          {rooms.length > 0 && <span className="text-ink-faint"> · {rooms.length}</span>}
+        </h2>
+        <button
+          onClick={onAddRooms}
+          className="inline-flex items-center gap-1 rounded-control bg-brand-lighter px-3 py-1.5 text-xs font-semibold text-brand"
+        >
+          <Icon name="plus" size={14} />
+          {t('staff.roomMap.addRooms')}
+        </button>
+      </div>
+
       {/* ผังห้องแบ่งตามชั้น */}
-      <div className="mt-3 flex flex-col gap-3">
+      <div className="mt-2 flex flex-col gap-3">
         {rooms.length === 0 && (
-          <p className="text-sm text-ink-faint">{t('staff.roomMap.noRooms')}</p>
+          <button
+            onClick={onAddRooms}
+            className="rounded-card border border-dashed border-brand/40 px-4 py-6 text-center"
+          >
+            <span className="flex justify-center text-brand">
+              <Icon name="bed" size={26} />
+            </span>
+            <p className="mt-2 text-sm text-ink-muted">{t('staff.roomMap.noRooms')}</p>
+            <p className="mt-1 text-xs font-semibold text-brand">
+              + {t('staff.roomMap.addRooms')}
+            </p>
+          </button>
         )}
 
         {floors.map(([floorKey, floorRooms]) => {
@@ -282,13 +310,6 @@ export default function RoomBoard({
                     </button>
                   )
                 })}
-
-                <button
-                  onClick={onAddRooms}
-                  className="rounded-control border border-dashed border-brand/40 p-2 text-center text-[11px] font-semibold text-brand"
-                >
-                  + {t('staff.roomMap.addRoomsShort')}
-                </button>
               </div>
             </div>
           )
