@@ -1,6 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import Icon from './Icon'
+import BackButton from './BackButton'
 
 // แถบหัวเรื่องของหน้าฝั่งทีมงาน — ปักบนสุด มีปุ่มย้อนกลับในตัว
 //
@@ -37,7 +37,6 @@ export default function StaffHeader({
   className = '',
 }) {
   const { pathname } = useLocation()
-  const { t } = useTranslation()
   const target = backTo === undefined ? defaultBackTo(pathname) : backTo
 
   return (
@@ -46,26 +45,7 @@ export default function StaffHeader({
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
       <div className="mx-auto flex max-w-md items-center gap-2.5">
-        {target && (
-          <Link
-            to={target}
-            aria-label={t('common.back')}
-            className="-ml-1.5 flex h-9 w-9 flex-none items-center justify-center rounded-full text-ink-muted transition active:scale-95 hover:bg-surface-sunken hover:text-ink"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
-        )}
+        <BackButton to={target} />
 
         {icon && (
           <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-brand-lighter text-brand">

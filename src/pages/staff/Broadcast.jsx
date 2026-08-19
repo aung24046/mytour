@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
 import { useActiveTourId, useActiveOrgId, getStaffSession } from '../../lib/staffSession'
+import { parseMeetPointInput, meetPointMapsUrl, MEET_COLUMNS } from '../../lib/meetPoint'
 import Icon from '../../components/common/Icon'
 import StaffHeader from '../../components/common/StaffHeader'
 
@@ -41,6 +42,15 @@ export default function Broadcast() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState(null)
 
+  // จุดนัดพบที่จะแนบไปกับประกาศ — ว่างไว้ก็ได้ ประกาศทั่วไปไม่ต้องมีหมุด
+  const [meetLat, setMeetLat] = useState(null)
+  const [meetLng, setMeetLng] = useState(null)
+  const [meetLabel, setMeetLabel] = useState('')
+  const [meetTime, setMeetTime] = useState('')
+  const [meetInput, setMeetInput] = useState('')
+  const [meetError, setMeetError] = useState(null)
+  const [pinning, setPinning] = useState(false)
+
   const [editingLive, setEditingLive] = useState(false)
   const [editText, setEditText] = useState('')
   const [showAllPending, setShowAllPending] = useState(false)
@@ -53,7 +63,7 @@ export default function Broadcast() {
       const [annRes, guestRes, staffRes, tplRes] = await Promise.all([
         supabase
           .from('announcements')
-          .select('id, message, is_active, created_at, staff_id')
+          .select(`id, message, is_active, created_at, staff_id, ${MEET_COLUMNS}`)
           .eq('tour_id', tourId)
           .order('created_at', { ascending: false })
           .limit(20),
@@ -163,6 +173,58 @@ export default function Broadcast() {
   const liveReadCount = live ? (readCountByAnnouncement[live.id] ?? 0) : 0
   const readPercent = guests.length > 0 ? Math.round((liveReadCount / guests.length) * 100) : 0
 
+  const hasPin = meetLat != null && meetLng != null
+
+  /** ปักตรงที่ทีมงานยืนอยู่ — วิธีที่แม่นและเร็วที่สุด เพราะคนกดยืนอยู่จุดนัดพบจริงตอนนั้น */
+  function pinHere() {
+    if (!navigator.geolocation) {
+      setMeetError(t('staff.broadcast.meet.noGeo'))
+      return
+    }
+    setPinning(true)
+    setMeetError(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMeetLat(pos.coords.latitude)
+        setMeetLng(pos.coords.longitude)
+        setMeetInput('')
+        setPinning(false)
+      },
+      (err) => {
+        console.warn('[Broadcast] pin here failed', err)
+        setMeetError(t('staff.broadcast.meet.geoFailed'))
+        setPinning(false)
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    )
+  }
+
+  /** วางลิงก์ Google Maps หรือพิกัดดิบ — ไว้เตรียมล่วงหน้า หรือให้คนที่อยู่คนละที่ตั้งให้ */
+  function applyMeetInput(raw) {
+    setMeetInput(raw)
+    if (!raw.trim()) {
+      setMeetError(null)
+      return
+    }
+    const point = parseMeetPointInput(raw)
+    if (point) {
+      setMeetLat(point.lat)
+      setMeetLng(point.lng)
+      setMeetError(null)
+    } else {
+      setMeetError(t('staff.broadcast.meet.parseFailed'))
+    }
+  }
+
+  function clearMeet() {
+    setMeetLat(null)
+    setMeetLng(null)
+    setMeetLabel('')
+    setMeetTime('')
+    setMeetInput('')
+    setMeetError(null)
+  }
+
   async function handleSend(e) {
     e.preventDefault()
     const text = message.trim()
@@ -180,11 +242,17 @@ export default function Broadcast() {
       .eq('is_active', true)
     if (closeError) console.warn('[Broadcast] close previous failed', closeError)
 
+    // ส่งคอลัมน์หมุดเฉพาะตอนมีพิกัดจริง — ถ้าไม่มีพิกัด ป้ายชื่อกับเวลาก็ไม่มีที่แสดง
+    // (MeetPointCard เรนเดอร์จากพิกัดเป็นหลัก) การส่งไปครึ่งเดียวจะกลายเป็นข้อมูลที่ไม่มีใครเห็น
     const { error: insertError } = await supabase.from('announcements').insert({
       tour_id: tourId,
       message: text,
       is_active: true,
       staff_id: me?.id ?? null,
+      meet_lat: hasPin ? meetLat : null,
+      meet_lng: hasPin ? meetLng : null,
+      meet_label: hasPin ? meetLabel.trim() || null : null,
+      meet_time: hasPin && meetTime ? meetTime : null,
     })
 
     if (insertError) {
@@ -192,6 +260,7 @@ export default function Broadcast() {
       setSendError(insertError.message ?? t('common.error'))
     } else {
       setMessage('')
+      clearMeet()
       load({ silent: true })
     }
     setSending(false)
@@ -296,6 +365,15 @@ export default function Broadcast() {
                           {staffById[live.staff_id]?.name &&
                             ` · ${t('staff.broadcast.sentBy', { name: staffById[live.staff_id].name })}`}
                         </p>
+                        {/* ทีมงานต้องเห็นว่าประกาศที่ออกอยู่แนบหมุดไปด้วยหรือเปล่า
+                            ไม่งั้นจะส่งซ้ำเพราะไม่แน่ใจว่าลูกทัวร์ได้จุดนัดพบไปแล้วหรือยัง */}
+                        {live.meet_lat != null && (
+                          <p className="mt-1 flex items-center gap-1 text-[11px] font-bold opacity-90">
+                            <Icon name="location" size={12} />
+                            {live.meet_label?.trim() || t('staff.broadcast.meet.attached')}
+                            {live.meet_time ? ` · ${live.meet_time}` : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -414,6 +492,84 @@ export default function Broadcast() {
                 placeholder={t('staff.broadcast.placeholder')}
                 className="w-full rounded-card border border-transparent bg-surface p-3 text-[15px] leading-relaxed text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
               />
+
+              {/* ── จุดนัดพบ (ไม่บังคับ) ──────────────────────────────
+                  ปล่อยว่างได้ ประกาศทั่วไปไม่ต้องมีหมุด
+                  จะโผล่ให้กรอกชื่อ/เวลาก็ต่อเมื่อปักพิกัดแล้ว เพราะการ์ดฝั่งลูกทัวร์
+                  เรนเดอร์จากพิกัด ถ้ากรอกแต่ชื่อกับเวลาจะกลายเป็นข้อมูลที่ไม่มีใครเห็น */}
+              <div className="mt-2 rounded-card bg-surface p-3">
+                <p className="text-xs font-semibold text-ink-muted">
+                  {t('staff.broadcast.meet.title')}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-ink-faint">
+                  {t('staff.broadcast.meet.hint')}
+                </p>
+
+                {!hasPin ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={pinHere}
+                      disabled={pinning}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-control bg-brand py-2.5 text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-50"
+                    >
+                      <Icon name="location" size={16} />
+                      {pinning
+                        ? t('staff.broadcast.meet.pinning')
+                        : t('staff.broadcast.meet.pinHere')}
+                    </button>
+                    <input
+                      value={meetInput}
+                      onChange={(e) => applyMeetInput(e.target.value)}
+                      placeholder={t('staff.broadcast.meet.pastePlaceholder')}
+                      className="mt-2 w-full rounded-control border border-line bg-surface-sunken px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-2 flex items-center gap-2 rounded-control bg-success-bg px-3 py-2">
+                      <Icon name="location" size={15} className="shrink-0 text-success-text" />
+                      <a
+                        href={meetPointMapsUrl(meetLat, meetLng)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 flex-1 truncate text-xs font-semibold text-success-text underline"
+                      >
+                        {meetLat.toFixed(5)}, {meetLng.toFixed(5)}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={clearMeet}
+                        className="shrink-0 text-xs font-bold text-ink-muted"
+                      >
+                        {t('common.delete')}
+                      </button>
+                    </div>
+
+                    <input
+                      value={meetLabel}
+                      onChange={(e) => setMeetLabel(e.target.value)}
+                      maxLength={80}
+                      placeholder={t('staff.broadcast.meet.labelPlaceholder')}
+                      className="mt-2 w-full rounded-control border border-line bg-surface-sunken px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-brand focus:outline-none"
+                    />
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-ink-muted">
+                        {t('staff.broadcast.meet.timeLabel')}
+                      </span>
+                      <input
+                        type="time"
+                        value={meetTime}
+                        onChange={(e) => setMeetTime(e.target.value)}
+                        className="rounded-control border border-line bg-surface-sunken px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {meetError && <p className="mt-1.5 text-xs text-danger">{meetError}</p>}
+              </div>
 
               {sendError && <p className="mt-1 text-sm text-danger">{sendError}</p>}
 

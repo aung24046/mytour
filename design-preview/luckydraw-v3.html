@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สุ่มรายชื่อ v3 — ห้องสุ่ม · ชื่อเล่นนำ · เลือกรางวัล · อนิเมชันยาวขึ้น</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Chakra+Petch:wght@400;600;700&family=Kanit:wght@400;500;600;700;800&family=Mitr:wght@400;500;600;700&family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* ── สกิน 1 · ป้ายไฟ LED (ค่าเริ่มต้น) ───────────────────────── */
+body[data-skin="led"]{
+  --page:#070a10; --paper:#111823; --paper2:#0c121b;
+  --ink:#e8f3f5; --ink2:#8fa3ad; --ink3:#5d6f7a;
+  --line:#1e2a38; --line2:#2b3b4c;
+  --hot:#ff4d8d; --cool:#2be8c8; --gold:#ffb020;
+  --stage-bg:#05080d; --stage-ink:#eafcf8;
+  --disp:'Chakra Petch',sans-serif; --body:'IBM Plex Sans Thai',sans-serif;
+  --mono:'IBM Plex Mono',monospace; --r:6px;
+}
+/* ── สกิน 3 · ป้ายพลิกสนามบิน ────────────────────────────────── */
+body[data-skin="board"]{
+  --page:#15181d; --paper:#1c2026; --paper2:#181b21;
+  --ink:#edeff2; --ink2:#9aa3ae; --ink3:#6b7480;
+  --line:#282d35; --line2:#39404a;
+  --hot:#ff6b35; --cool:#e8b44a; --gold:#e8b44a;
+  --stage-bg:#101317; --stage-ink:#f2f4f7;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif;
+  --mono:'IBM Plex Mono',monospace; --r:3px;
+}
+
+/* ══ ธีมสว่างสามตัว + มรกต-ทอง ═══════════════════════════════════
+   3 · มรกต-ทอง — เขียวเข้ม กรอบทองคู่ นิ่งและหรู เหมาะลูกค้าองค์กร
+   4 · ฟ้าใส — ขาวอมฟ้า โปร่ง สะอาด อ่านง่ายที่สุดในชุด
+   5 · กระดาษกราฟ — ขาวนวลลายตาราง หมึกดำ-แดง เป็นระเบียบจริงจัง
+   6 · ลูกกวาด — พาสเทลชมพู-พีช-มินต์ สนุก เหมาะงานเลี้ยงครอบครัว     */
+body[data-skin="emerald"]{
+  --page:#03150f; --paper:#0a251c; --paper2:#071d16;
+  --ink:#f3ecdc; --ink2:#a8bdaf; --ink3:#74907f;
+  --line:#123528; --line2:#1d4a37;
+  --hot:#c1683a; --cool:#d4af37; --gold:#e8c86a;
+  --stage-bg:#052018; --stage-ink:#f6f0e2;
+  --disp:'Kanit',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace; --r:4px;
+}
+/* ── สว่าง 1 · ฟ้าใส ── โปร่ง มน อ่านง่าย เวทีขาวอมฟ้ามีเส้นขอบฟ้า */
+body[data-skin="sky"]{
+  --page:#e4ecf5; --paper:#fff; --paper2:#f1f6fb;
+  --ink:#10243f; --ink2:#4a627f; --ink3:#8397ad;
+  --line:#e3ebf3; --line2:#cfdcea;
+  --hot:#f2724b; --cool:#1d7fd8; --gold:#e08b12;
+  --stage-bg:linear-gradient(178deg,#dcebfa 0%,#f4f9ff 58%,#ffffff 100%); --stage-ink:#0d2039;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace; --r:14px;
+}
+/* ── สว่าง 2 · กระดาษกราฟ ── ลายตาราง หมึกดำ-แดง มุมคม เป็นระเบียบ */
+body[data-skin="grid"]{
+  --page:#e8e6df; --paper:#fdfcf8; --paper2:#f4f2ea;
+  --ink:#1a1a18; --ink2:#565550; --ink3:#8b8981;
+  --line:#e6e3d8; --line2:#cfcbbc;
+  --hot:#d6402c; --cool:#1a1a18; --gold:#b07d09;
+  --stage-bg:#fbfaf5; --stage-ink:#1a1a18;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace; --r:2px;
+}
+/* ── สว่าง 3 · ลูกกวาด ── พาสเทล มุมโค้งใหญ่ วงกลมสีลอย สนุก */
+body[data-skin="candy"]{
+  --page:#fae7ec; --paper:#fffdfe; --paper2:#fdf1f4;
+  --ink:#4a2340; --ink2:#8a5e7d; --ink3:#b78ea8;
+  --line:#f7e2e9; --line2:#eec7d5;
+  --hot:#e0417a; --cool:#e0417a; --gold:#f0a03c;
+  --stage-bg:linear-gradient(168deg,#ffe8ef 0%,#fff3e6 52%,#e6f7f2 100%); --stage-ink:#4a2340;
+  --disp:'Mitr',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace; --r:26px;
+}
+
+body{font-family:var(--body);background:var(--page);color:var(--ink);padding:0 0 56px}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── แถบสลับ ── */
+.bar{position:sticky;top:0;z-index:40;background:#111823;color:#e8f3f5;padding:10px 20px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #26313f}
+.bar .k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7e919c;font-family:'IBM Plex Mono',monospace}
+.bar .grp{display:flex;align-items:center;gap:8px}
+.bar button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:12.5px;font-weight:600;background:transparent;border:1px solid #2f3c4b;color:#a9bcc6;padding:6px 13px;border-radius:8px;cursor:pointer}
+.bar button.on{background:#2be8c8;border-color:#2be8c8;color:#05202a;font-weight:700}
+.bar button.off{opacity:.28;cursor:not-allowed}
+.bar .note{margin-left:auto;font-size:11.5px;color:#6d7f8a}
+
+.wrap{max-width:1520px;margin:0 auto;padding:20px 20px 0;display:grid;grid-template-columns:352px minmax(0,1fr) 274px;gap:20px;align-items:start}
+@media(max-width:1320px){.wrap{grid-template-columns:344px minmax(0,1fr)}}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+
+/* ══ HOST ══ */
+.host{position:sticky;top:62px;max-height:calc(100vh - 80px);overflow:auto;padding-right:2px}
+.host::-webkit-scrollbar{width:5px}.host::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.eyebrow{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.eyebrow a{cursor:pointer;color:var(--cool);letter-spacing:.03em;font-family:var(--body);font-size:11.5px;font-weight:700;text-transform:none}
+
+.brandhd{display:flex;align-items:center;gap:10px;padding:2px 2px 12px}
+.brandhd .mk{width:36px;height:36px;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:15px;flex:none;background:var(--cool);color:#fff;border-radius:var(--r)}
+body[data-skin="led"] .brandhd .mk{background:transparent;border:1.5px solid var(--cool);color:var(--cool);box-shadow:0 0 12px rgba(43,232,200,.3)}
+body[data-skin="board"] .brandhd .mk{background:transparent;border:1px solid var(--hot);color:var(--hot);font-family:var(--mono);font-size:12px}
+.brandhd b{font-family:var(--disp);font-size:18px;font-weight:800;display:block;line-height:1.2}
+.brandhd span{font-size:11.5px;color:var(--ink2)}
+
+/* ห้องสุ่ม */
+.rooms{display:flex;flex-wrap:wrap;gap:6px}
+.room{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:7px 12px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;border-radius:var(--r);font-family:var(--body)}
+.room.on{background:var(--cool);border-color:var(--cool);color:#fff}
+body[data-skin="led"] .room.on,body[data-skin="board"] .room.on{color:#05202a}
+.room .b{font-family:var(--mono);font-size:10px;opacity:.75}
+.room .live{width:6px;height:6px;border-radius:50%;background:var(--hot);animation:blink 1.1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.roomadd{display:flex;gap:6px;margin-top:9px}
+.roomadd input{flex:1;font-family:var(--body);font-size:12.5px;padding:8px 11px;border:1px solid var(--line2);background:transparent;color:var(--ink);border-radius:var(--r)}
+.roomadd input:focus{outline:none;border-color:var(--cool)}
+.roomadd button{padding:0 14px;font-family:var(--body);font-size:12.5px;font-weight:700;border:1px solid var(--line2);background:transparent;color:var(--cool);cursor:pointer;border-radius:var(--r)}
+
+.count{display:flex;align-items:baseline;gap:10px}
+.count b{font-family:var(--mono);font-size:36px;font-weight:600;line-height:1;color:var(--cool)}
+.count span{font-size:12px;color:var(--ink2);line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font-size:12.5px;font-weight:600;padding:6px 11px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;user-select:none;border-radius:var(--r)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+body[data-skin="led"] .chip.on{background:var(--cool);border-color:var(--cool);color:#05202a}
+
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font-family:var(--body);font-size:13px;font-weight:600;padding:9px 4px;cursor:pointer;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:var(--r)}
+.seg button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+body[data-skin="led"] .seg button.on{background:var(--cool);border-color:var(--cool);color:#05202a}
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:11px;font-size:13px;font-weight:600}
+.stepper .g{display:flex;gap:4px;align-items:center}
+.stepper button{width:29px;height:29px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:16px;cursor:pointer;border-radius:var(--r)}
+.stepper .v{min-width:32px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600}
+
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0;padding-bottom:1px}.row:first-child{padding-top:1px}
+.row b{font-size:12.5px;font-weight:600;display:block}
+.row i{font-style:normal;font-size:11px;color:var(--ink3);display:block;margin-top:2px;line-height:1.4}
+.sw{width:39px;height:22px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;margin-top:2px;transition:.18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--paper);transition:.18s}
+.sw.on{background:var(--cool)}.sw.on::after{transform:translateX(17px)}
+
+/* ตัวแก้รายชื่อในห้อง */
+.editor{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.editor.open{display:block}
+.ehd{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--ink3);margin-bottom:8px}
+.ehd a{color:var(--cool);cursor:pointer;font-weight:700}
+.elist{max-height:236px;overflow:auto;margin:0 -4px;padding:0 4px}
+.elist::-webkit-scrollbar{width:5px}.elist::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.eli{display:flex;align-items:center;gap:9px;padding:6px 7px;border-radius:calc(var(--r) / 2);cursor:pointer;font-size:12.5px}
+.eli:hover{background:var(--paper2)}
+.eli .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line2);flex:none;display:grid;place-items:center;color:#fff}
+.eli.on .cb{background:var(--cool);border-color:var(--cool)}
+.eli .cb svg{opacity:0}.eli.on .cb svg{opacity:1}
+.eli .nm{flex:1;min-width:0}
+.eli .nm b{display:block;font-weight:700;line-height:1.3}
+.eli .nm span{display:block;font-size:10.5px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eli.off .nm{opacity:.42}
+.eli.off .nm b{text-decoration:line-through}
+.eli .tg{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:999px;background:var(--paper2);color:var(--ink3);white-space:nowrap}
+.eli .rm{border:0;background:transparent;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 4px}
+.eli.hid{display:none}
+
+/* รางวัล — เลือกได้ว่ากำลังสุ่มชิ้นไหน */
+.pz{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);margin-bottom:6px;border-radius:var(--r);font-size:12.5px;cursor:pointer;transition:.15s}
+.pz:hover{border-color:var(--line2)}
+.pz.cur{border-color:var(--gold);border-width:1.5px}
+body[data-skin="led"] .pz.cur,body[data-skin="board"] .pz.cur{background:rgba(232,180,74,.08)}
+.pz.done{opacity:.42}
+.pz .rd{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--line2);flex:none;display:grid;place-items:center}
+.pz.cur .rd{border-color:var(--gold)}
+.pz.cur .rd::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.pz .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pz .q{font-family:var(--mono);font-size:10.5px;color:var(--ink3)}
+.pz.cur .q{color:var(--gold)}
+.pz .st{border:0;background:transparent;color:var(--ink3);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;font-family:var(--body);border-radius:5px}
+.pz .st:hover{color:var(--ink);background:var(--paper2)}
+.pz .st.ok{color:var(--cool);font-size:15px}
+.pz.ed{cursor:default;gap:6px;padding:7px 8px}
+.pz .ename{flex:1;min-width:0;font-family:var(--body);font-size:12.5px;font-weight:600;padding:6px 9px;
+  border:1px solid var(--line2);background:var(--paper2);color:var(--ink);border-radius:calc(var(--r) / 2)}
+.pz .ename:focus{outline:none;border-color:var(--cool)}
+.pz .eqty{display:flex;align-items:center;gap:2px;flex:none;font-family:var(--mono);font-size:12px}
+.pz .eqty span{min-width:18px;text-align:center;font-weight:600}
+.pzadd{display:flex;gap:6px;margin-top:8px}
+.pzadd input{flex:1;font-family:var(--body);font-size:12.5px;padding:8px 11px;border:1px solid var(--line2);background:transparent;color:var(--ink);border-radius:var(--r)}
+.pzadd input:focus{outline:none;border-color:var(--cool)}
+.pzadd button{padding:0 13px;font-size:12.5px;font-weight:700;border:1px solid var(--line2);background:transparent;color:var(--cool);cursor:pointer;border-radius:var(--r);font-family:var(--body)}
+
+.go{width:100%;border:0;padding:16px;font-family:var(--disp);font-size:17px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:var(--r);background:var(--cool);color:#fff}
+body[data-skin="led"] .go{color:#04181f;box-shadow:0 0 22px rgba(43,232,200,.32)}
+body[data-skin="board"] .go{background:var(--hot);color:#160a04;letter-spacing:.05em}
+.go:disabled{background:var(--line2);color:var(--ink3);box-shadow:none;cursor:not-allowed}
+.mini{display:flex;gap:6px;margin-top:8px}
+.mini button{flex:1;font-family:var(--body);font-size:12px;font-weight:600;padding:9px 4px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;border-radius:var(--r)}
+
+.hist{max-height:200px;overflow:auto}
+.hrow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.hrow:last-child{border-bottom:0}
+.hrow .no{font-family:var(--mono);font-size:10px;color:var(--ink3);width:18px}
+.hrow .nm{flex:1;min-width:0}
+.hrow .nm b{font-weight:700;display:block;line-height:1.25}
+.hrow .nm span{font-size:10.5px;color:var(--ink3);display:block}
+.hrow .tag{font-size:10px;font-weight:700;color:var(--gold);white-space:nowrap}
+.none{font-size:12.5px;color:var(--ink3);text-align:center;padding:14px 0;line-height:1.6}
+
+/* ══ STAGE ══ */
+.stagebox{border-radius:var(--r);overflow:hidden}
+body[data-skin="board"] .stagebox{border:1px solid #282d35}
+/* หัวเวทีลอยไว้ด้านบน แถบยืนยันลอยไว้ด้านล่าง — พื้นที่ตรงกลางจึงว่างจริง
+   ชื่อผู้ชนะเลยอยู่กึ่งกลางจอพอดีไม่ว่าจะมีป้ายรางวัลหรือไม่ */
+.st-head{position:absolute;top:0;left:0;right:0;z-index:3;padding:26px 22px 0;display:flex;flex-direction:column;align-items:center}
+.stage{position:relative;background:var(--stage-bg);color:var(--stage-ink);min-height:660px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:140px 30px 126px;overflow:hidden;text-align:center}
+.stage:fullscreen{min-height:100vh}
+body[data-skin="led"] .stage{background-image:radial-gradient(rgba(120,160,180,.13) 1.1px,transparent 1.2px);background-size:11px 11px}
+body[data-skin="led"] .stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 34px) top/100% 3px no-repeat,
+             repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 34px) bottom/100% 3px no-repeat;
+  opacity:.5;animation:march 1.1s linear infinite}
+@keyframes march{to{background-position:34px 0,-34px 100%}}
+body[data-skin="board"] .stage{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 46px)}
+body[data-skin="board"] .stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border-top:2px solid var(--hot)}
+
+/* ── ลายเซ็นของธีมสว่าง ───────────────────────────────────────── */
+/* ฟ้าใส: เดิมเป็นเส้นขอบฟ้าพาดกลางจอ ซึ่งไปพาดทับตัวอักษรพอดี
+   เปลี่ยนเป็นวงแสงฟ้านุ่มอยู่หลังชื่อ + ริ้วแสงเฉียงจางๆ ให้จอมีน้ำหนักขึ้น */
+body[data-skin="sky"] .stage::before{content:"";position:absolute;left:50%;top:50%;width:118%;padding-top:78%;
+  transform:translate(-50%,-50%);border-radius:50%;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(29,127,216,.20) 0%,rgba(29,127,216,.09) 42%,transparent 68%)}
+body[data-skin="sky"] .stage::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(122deg,rgba(255,255,255,.55) 0 42px,transparent 42px 128px);opacity:.5}
+body[data-skin="sky"] .stage{background:linear-gradient(176deg,#a8d2f7 0%,#cfe6fb 34%,#eef6ff 68%,#fff 100%)}
+body[data-skin="sky"] .win-nick{text-shadow:0 6px 34px rgba(16,58,110,.16)}
+body[data-skin="sky"] .st-pz{background:var(--cool);color:#fff}
+
+/* กระดาษกราฟ: ตารางกราฟจริงทั้งเวที + กรอบเส้นเดี่ยว */
+body[data-skin="grid"] .stage{background-image:
+  repeating-linear-gradient(0deg,rgba(26,26,24,.07) 0 1px,transparent 1px 26px),
+  repeating-linear-gradient(90deg,rgba(26,26,24,.07) 0 1px,transparent 1px 26px)}
+body[data-skin="grid"] .stage::before{content:"";position:absolute;inset:18px;z-index:1;pointer-events:none;
+  border:1px solid rgba(26,26,24,.22)}
+body[data-skin="grid"] .st-pz{background:var(--hot);color:#fff}
+body[data-skin="grid"] .win-seq{opacity:.6}
+
+/* ลูกกวาด: วงกลมพาสเทลลอยอยู่หลังเวที */
+body[data-skin="candy"] .stage::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle 120px at 12% 22%,rgba(224,65,122,.13),transparent 70%),
+    radial-gradient(circle 90px at 86% 16%,rgba(240,160,60,.16),transparent 70%),
+    radial-gradient(circle 150px at 78% 88%,rgba(93,199,175,.16),transparent 70%),
+    radial-gradient(circle 70px at 22% 82%,rgba(224,65,122,.10),transparent 70%)}
+body[data-skin="candy"] .st-pz{background:var(--hot);color:#fff}
+/* Mitr ที่น้ำหนัก 700–800 ตันเกินไป ลดลงมาที่ 500–600 แล้วคลายระยะตัวอักษร */
+body[data-skin="candy"] .win-nick{font-weight:600;letter-spacing:-.005em}
+body[data-skin="candy"] .win-full{font-weight:400}
+body[data-skin="candy"] .gwin b,body[data-skin="candy"] .gmw b,
+body[data-skin="candy"] .gwn,body[data-skin="candy"] .ec.win{font-weight:600;letter-spacing:0}
+body[data-skin="candy"] .ec,body[data-skin="candy"] .brandhd b,
+body[data-skin="candy"] .go,body[data-skin="candy"] .cfm button{font-weight:500}
+
+/* ── ธีมสว่างทั้งหมด: พื้นการ์ดกับเส้นขอบเดิมเป็นสีขาวโปร่ง จะจมหายบนพื้นสว่าง ── */
+body[data-light="1"] .gwin{background:rgba(255,255,255,.62);border-color:rgba(0,0,0,.12)}
+body[data-light="1"] .ec{background:rgba(255,255,255,.5);border-color:rgba(0,0,0,.13)}
+body[data-light="1"] .flap{background:rgba(0,0,0,.055);color:var(--stage-ink)}
+body[data-light="1"] .flap::after{background:rgba(0,0,0,.14)}
+body[data-light="1"] .board.sub .flap{background:rgba(0,0,0,.035);color:var(--ink2)}
+body[data-light="1"] .win-hero .rule{opacity:.26}
+body[data-light="1"] .cfm .n{border-color:rgba(0,0,0,.32)!important}
+body[data-light="1"] .cfm .y{color:#fff}
+body[data-light="1"] .ec.hot,body[data-light="1"] .gec.hot{color:#fff}
+body[data-light="1"] .ec.duel,body[data-light="1"] .ec.win,
+body[data-light="1"] .gec.duel,body[data-light="1"] .gec.win{color:#2b1c00}
+body[data-light="1"] .glive{color:var(--stage-ink)}
+body[data-light="1"] .gmw,body[data-light="1"] .grow{border-color:rgba(0,0,0,.14)}
+body[data-light="1"] .gsh{background:var(--ink)}
+body[data-light="1"] .wheelbox .hub{color:var(--ink)}
+
+/* มรกต-ทอง: กรอบเส้นทองคู่ */
+body[data-skin="emerald"] .stage::before{content:"";position:absolute;inset:15px;z-index:1;pointer-events:none;
+  border:1px solid rgba(212,175,55,.5)}
+body[data-skin="emerald"] .stage::after{content:"";position:absolute;inset:22px;z-index:1;pointer-events:none;
+  border:1px solid rgba(212,175,55,.16)}
+body[data-skin="emerald"] .st-pz{background:transparent;border:1px solid var(--cool);color:var(--gold)}
+body[data-skin="emerald"] .win-hero .rule{background:var(--cool);opacity:.55}
+body[data-skin="emerald"] .win-nick{letter-spacing:-.01em}
+/* ตัวอักษรบนพื้นสีเข้มของธีม (cool = ทอง/ส้ม) ต้องเป็นสีเข้ม ไม่ใช่ขาว */
+body[data-skin="emerald"] .go,body[data-skin="emerald"] .gtop,
+body[data-skin="emerald"] .mwho .av,body[data-skin="emerald"] .room.on,
+body[data-skin="emerald"] .chip.on,body[data-skin="emerald"] .seg button.on,
+body[data-skin="emerald"] .cfm .y{color:#04140f}
+body[data-skin="emerald"] .chip.on,body[data-skin="emerald"] .seg button.on{background:var(--cool);border-color:var(--cool)}
+
+#cfti{position:absolute;inset:0;pointer-events:none;z-index:6}
+.st-room{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.45;margin-bottom:6px}
+.st-top{font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;opacity:.6;margin-bottom:14px}
+.st-pz{display:none;align-items:center;gap:9px;font-family:var(--disp);font-size:15px;font-weight:700;padding:8px 18px;border-radius:999px;background:var(--gold);color:#2b1c00}
+.st-pz.show{display:inline-flex}
+body[data-skin="led"] .st-pz{background:transparent;border:1px solid var(--gold);color:var(--gold);box-shadow:0 0 16px rgba(255,176,32,.22)}
+body[data-skin="board"] .st-pz{background:transparent;border:1px solid var(--line2);color:var(--gold);font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;border-radius:2px}
+.st-pz em{font-style:normal;font-family:var(--mono);font-size:12px;opacity:.7}
+
+#anim{position:relative;z-index:3;width:100%;max-width:900px;min-height:220px;display:flex;align-items:center;justify-content:center}
+/* ว่างเมื่อไหร่ต้องยุบทิ้ง ไม่งั้นมันกินที่ 220px แล้วดันชื่อผู้ชนะลงล่าง */
+#anim:empty{display:none;min-height:0}
+
+/* สล็อต */
+.slot{height:140px;overflow:hidden;width:100%;
+  -webkit-mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent)}
+.slot .r div{height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap}
+.slot .r div b{font-family:var(--disp);font-size:60px;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.slot .r div span{font-size:15px;opacity:.55;margin-top:3px}
+.slot .r div.dim{opacity:.28}
+body[data-skin="led"] .slot .r div:last-child b{text-shadow:0 0 26px var(--cool)}
+
+/* วงล้อ */
+.wheelbox{position:relative;width:346px;height:346px}
+.wheelbox svg{width:100%;height:100%;display:block}
+.wheelbox .spin{transform-origin:50% 50%}
+.wheelbox .pin{position:absolute;top:-7px;left:50%;transform:translateX(-50%);z-index:2;width:0;height:0;
+  border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--gold);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.wheelbox .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;
+  background:var(--stage-bg);border:2px solid var(--gold);color:var(--gold);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:13px;color:var(--gold)}
+@media(max-width:640px){.wheelbox{width:262px;height:262px}}
+
+/* คัดออก */
+/* ตารางชื่อระหว่างคัดออก — ช่องกว้างเท่ากันหมด อ่านเป็นแถวเป็นแนว ไม่ปุปะ */
+.elim{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:9px;width:100%;padding:2px}
+.ec{font-family:var(--disp);line-height:1.6;font-size:clamp(16px,2vw,26px);font-weight:700;padding:10px 12px;border:1px solid rgba(255,255,255,.18);border-radius:var(--r);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
+  transition:opacity .4s,transform .4s,filter .4s,background .2s}
+.ec.hot{background:var(--cool);color:#04181f;border-color:var(--cool)}
+.ec.duel{background:var(--gold);color:#2b1c00;border-color:var(--gold);transform:scale(1.12)}
+.ec.out{opacity:.1;transform:scale(.88);filter:blur(.7px)}
+.ec.win{background:var(--gold);color:#2b1c00;border-color:var(--gold);font-weight:800;font-size:clamp(22px,3vw,38px);padding:14px 12px}
+.elim.multi .ec.win{font-size:clamp(19px,2.4vw,30px);padding:12px 12px}
+.gelim.multi .gec.win{font-size:12.5px;padding:4px 9px}
+
+/* ผลลัพธ์ */
+#out{position:relative;z-index:3;width:100%;max-width:960px;display:none}
+#out.show{display:block}
+.pop{animation:pop .5s cubic-bezier(.2,1.35,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.pop,.flap{animation:none}}
+/* ── หน้าประกาศรางวัล ─────────────────────────────────────────────
+   ชื่อเล่นสั้นมาก (2–4 ตัว) ปล่อยไว้เดี่ยวๆ กลางจอกว้างๆ จะโล่ง
+   จึงขนาบด้วยเส้นยาวเต็มความกว้าง แล้วปิดท้ายด้วยแถวข้อมูลตัวโต
+   ซึ่งทีมงานใช้จริงตอนตามหาตัวคนชนะบนรถ                            */
+.win{display:flex;flex-direction:column;align-items:center;width:100%}
+/* สัดส่วนสามชั้น: ป้ายลำดับเล็ก → ชื่อเล่นยักษ์ขนาบเส้น → ชื่อจริงกลาง
+   ระยะห่างผูกกับขนาดตัวอักษร (em) ทุกช่วง สัดส่วนจึงคงที่ทุกความกว้างจอ */
+.win-seq{font-family:var(--mono);font-size:clamp(11px,1.1vw,13px);letter-spacing:.34em;text-transform:uppercase;opacity:.42}
+.win-hero{display:flex;align-items:center;gap:clamp(20px,3.4vw,52px);width:100%;margin-top:clamp(16px,2.6vw,38px)}
+.win-hero .rule{flex:1;height:1px;background:currentColor;opacity:.18}
+/* สระ+วรรณยุกต์ซ้อนสองชั้น (ปิ๊ก, มิ้น) ล้นกรอบ em ขึ้นไปราว .3em
+   ต้องเผื่อ half-leading ให้พอ = line-height ราว 1.5 ไม่ใช่ 1.1 แบบตัวลาติน */
+.win-nick{font-family:var(--disp);font-size:clamp(58px,11.5vw,152px);font-weight:800;letter-spacing:-.045em;line-height:1.62;white-space:nowrap}
+.win-full{font-size:clamp(20px,2.5vw,36px);font-weight:500;opacity:.55;margin-top:clamp(4px,.6vw,10px);letter-spacing:.01em;line-height:1.6}
+body[data-skin="led"] .win-nick{text-shadow:0 0 40px rgba(43,232,200,.5)}
+body[data-skin="led"] .win-full{font-family:var(--mono);letter-spacing:.14em;color:var(--cool);opacity:.75}
+body[data-skin="led"] .win-hero .rule{background:var(--cool);opacity:.32}
+@media(max-width:760px){.win-hero .rule{display:none}}
+
+/* ป้ายพลิก */
+.board{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;perspective:600px}
+/* ป้ายเที่ยวบินจริงเป็นช่องเกือบจัตุรัส — เดิม min-width .78em กับ line-height 1.62
+   ทำให้ช่องผอมสูง ขยายความกว้างและลดระยะบน-ล่างให้สัดส่วนใกล้ของจริง */
+.flap{display:inline-block;min-width:1.16em;text-align:center;padding:4px 13px;background:#22272f;border-radius:2px;position:relative;
+  font-family:var(--disp);font-size:clamp(40px,8.6vw,96px);font-weight:600;line-height:1.62;color:var(--stage-ink);
+  animation:flapin .34s cubic-bezier(.3,1.15,.5,1) both;transform-origin:50% 0}
+.flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.55)}
+.flap.sp{background:transparent;min-width:.34em;padding-left:0;padding-right:0}
+@keyframes flapin{from{transform:rotateX(-92deg);opacity:0}to{transform:none;opacity:1}}
+/* แถวที่สอง = ชื่อจริงเต็ม พลิกตามหลังชื่อเล่น ตัวเล็กและจางกว่า */
+.board.sub{margin-top:9px}
+.board.sub{gap:3px}
+.board.sub .flap{font-size:clamp(18px,3vw,36px);min-width:1.16em;padding:3px 7px;background:#1b1f26;color:var(--ink2);font-weight:500;line-height:1.62}
+.board-meta{display:flex;justify-content:center;margin-top:20px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase}
+.board-meta span{padding:7px 18px;border-left:1px solid var(--line2);color:var(--ink2)}
+.board-meta span:first-child{border-left:0}
+.board-meta span b{color:var(--gold);font-weight:600}
+
+/* ผลลัพธ์แบบสุ่มหลายคน — ใช้ภาษาเดียวกับหน้าประกาศเดี่ยว ชื่อเล่นนำ ตัวโต */
+.gridw{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:13px;width:100%}
+.gwin{padding:18px 14px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;
+  opacity:0;transform:translateY(14px);border-radius:var(--r);
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.17)}
+.gwin.in{animation:gin .42s cubic-bezier(.2,1.3,.5,1) forwards}
+@keyframes gin{to{opacity:1;transform:none}}
+.gwin i{font-family:var(--mono);font-style:normal;font-size:11px;letter-spacing:.2em;opacity:.4;margin-bottom:9px}
+.gwin b{font-family:var(--disp);font-size:clamp(26px,3.2vw,44px);font-weight:800;display:block;line-height:1.62;letter-spacing:-.03em}
+.gwin span{font-size:clamp(12.5px,1.3vw,16px);opacity:.55;display:block;margin-top:7px}
+body[data-skin="led"] .gwin{border-color:rgba(43,232,200,.28)}
+body[data-skin="led"] .gwin b{text-shadow:0 0 22px rgba(43,232,200,.35)}
+/* ล้างจออนิเมชันแบบค่อยๆ จาง ไม่ให้ชื่อหายวับตอนสลับไปหน้าผลลัพธ์ */
+#anim.fade{transition:opacity .38s;opacity:0}
+
+.cfm{position:absolute;bottom:52px;left:0;right:0;z-index:7;display:none;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 20px}
+.cfm.show{display:flex}
+.cfm button{font-family:var(--disp);font-size:15px;font-weight:700;padding:12px 24px;border:0;cursor:pointer;border-radius:var(--r);background:var(--cool);color:#fff}
+body[data-skin="led"] .cfm .y,body[data-skin="board"] .cfm .y{color:#04181f}
+.cfm .n{background:transparent;border:1px solid rgba(255,255,255,.3)!important;color:var(--stage-ink)}
+.st-foot{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:13px 22px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;opacity:.45}
+
+/* ══ GUEST ══ */
+.guest{position:sticky;top:62px}
+.gsh{background:var(--ink);border-radius:26px;padding:8px}
+body[data-skin="led"] .gsh{background:#1b2532;border:1px solid #2b3b4c}
+body[data-skin="board"] .gsh{background:#0c0e12;border:1px solid #282d35}
+.gscr{background:var(--paper2);border-radius:20px;overflow:hidden;min-height:610px;display:flex;flex-direction:column}
+.gtop{background:var(--cool);color:#fff;padding:11px 14px;font-family:var(--disp);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+body[data-skin="led"] .gtop{color:#04181f}
+body[data-skin="board"] .gtop{background:var(--paper);color:var(--ink);border-bottom:1px solid var(--line);font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.gtabs{display:flex;background:var(--paper);border-bottom:1px solid var(--line)}
+.gtabs button{flex:1;border:0;background:transparent;font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--ink3);padding:10px 4px;cursor:pointer;border-bottom:2px solid transparent;position:relative}
+.gtabs button.on{color:var(--ink);border-bottom-color:var(--cool)}
+.gtabs .dot{position:absolute;top:7px;right:14px;width:6px;height:6px;border-radius:50%;background:var(--hot);display:none}
+.gtabs button.alert .dot{display:block}
+.gbody{flex:1;padding:10px;overflow:auto;max-height:560px;display:flex;flex-direction:column;gap:9px}
+.gsel{width:100%;font-family:var(--body);font-size:12.5px;padding:7px 9px;border:1px solid var(--line2);background:var(--paper);color:var(--ink);border-radius:var(--r)}
+.gpane{display:none;flex-direction:column;gap:9px}.gpane.on{display:flex}
+
+.glive{background:var(--stage-bg);color:var(--stage-ink);border-radius:var(--r);padding:12px 10px;text-align:center;overflow:hidden;min-height:186px;display:flex;flex-direction:column;justify-content:center}
+body[data-skin="led"] .glive{background-image:radial-gradient(rgba(120,160,180,.14) 1px,transparent 1.1px);background-size:9px 9px}
+body[data-skin="board"] .glive{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 22px)}
+.gs{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;opacity:.5;margin-bottom:8px}
+.gs i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--hot);margin-right:5px;animation:blink 1.1s infinite}
+#gAnim{min-height:96px;display:flex;align-items:center;justify-content:center;transition:opacity .38s}
+#gAnim:empty{min-height:0;display:none}
+/* มินิ: สล็อต */
+.gslot{height:46px;overflow:hidden;width:100%;
+  -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.gslot .r div{height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap}
+.gslot .r div b{font-family:var(--disp);font-size:21px;font-weight:800;line-height:1.1}
+.gslot .r div span{font-size:9.5px;opacity:.5}
+.gslot .r div.dim{opacity:.3}
+/* มินิ: วงล้อ */
+.gwheel{position:relative;width:130px;height:130px}
+.gwheel svg{width:100%;height:100%;display:block}
+.gwheel .spin{transform-origin:50% 50%}
+.gwheel .pin{position:absolute;top:-4px;left:50%;transform:translateX(-50%);z-index:2;width:0;height:0;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-top:14px solid var(--gold)}
+/* มินิ: คัดออก */
+/* เดิมตัดที่ 96px ทำให้ชื่อครึ่งล่างหายไปเลย ลูกทัวร์เห็นแค่แถวบน */
+.gelim{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:4px;width:100%}
+.gec{font-size:10.5px;line-height:1.6;font-weight:600;padding:4px 5px;border:1px solid rgba(255,255,255,.18);border-radius:calc(var(--r) / 2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;transition:opacity .4s,transform .4s}
+.gec.hot{background:var(--cool);color:#04181f;border-color:var(--cool)}
+.gec.duel{background:var(--gold);color:#2b1c00;border-color:var(--gold)}
+.gec.out{opacity:.1;transform:scale(.85)}
+.gec.win{background:var(--gold);color:#2b1c00;border-color:var(--gold);font-size:15px;font-weight:800;padding:6px 13px}
+
+.gwn{font-family:var(--disp);font-size:26px;font-weight:800;line-height:1.62}
+.gwf{font-size:11.5px;opacity:.55;margin-top:2px}
+.gpzt{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.1em;margin-top:7px}
+.gmany{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px}
+.gmw{border:1px solid rgba(255,255,255,.16);border-radius:var(--r);padding:8px 6px;opacity:0;transform:translateY(8px);
+  transition:opacity .35s,transform .35s}
+.gmw.in{opacity:1;transform:none}
+.gmw.me{background:var(--gold);color:#2b1c00;border-color:var(--gold)}
+.gmw i{display:block;font-family:var(--mono);font-style:normal;font-size:8.5px;letter-spacing:.16em;opacity:.45}
+.gmw b{display:block;font-family:var(--disp);font-size:16px;font-weight:800;line-height:1.62;margin-top:3px}
+.gmw span{display:block;font-size:9px;opacity:.55;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow{display:flex;align-items:center;gap:7px;padding:6px 9px;margin-top:5px;font-size:12px;font-weight:600;text-align:left;border:1px solid rgba(255,255,255,.14);border-radius:var(--r)}
+.grow.me{background:var(--gold);color:#2b1c00;border-color:var(--gold)}
+.grow i{font-family:var(--mono);font-style:normal;font-size:9.5px;opacity:.55}
+
+.mcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.mwho{display:flex;align-items:center;gap:10px}
+.mwho .av{width:38px;height:38px;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:14px;flex:none;background:var(--cool);color:#fff;border-radius:var(--r)}
+body[data-skin="led"] .mwho .av,body[data-skin="board"] .mwho .av{color:#04181f}
+.mwho b{font-size:15px;font-weight:800;display:block;line-height:1.2}
+.mwho span{font-size:11px;color:var(--ink3)}
+.mstat{margin-top:11px;padding:10px 12px;font-size:12.5px;font-weight:600;display:flex;gap:8px;align-items:center;line-height:1.4;border-radius:var(--r)}
+.mstat.win{background:rgba(22,163,74,.13);color:#16a34a}
+.mstat.pend{background:rgba(232,180,74,.15);color:var(--gold)}
+.mstat.idle{background:var(--paper2);color:var(--ink3)}
+.mpz{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:6px;font-size:12px;font-weight:600;border:1px solid var(--gold);color:var(--gold);border-radius:var(--r)}
+.mpz em{font-style:normal;margin-left:auto;font-family:var(--mono);font-size:10px;opacity:.7}
+</style>
+</head>
+<body data-skin="led" data-light="">
+
+<div class="bar">
+  <div class="grp"><span class="k">ดีไซน์</span>
+    <button class="on" data-skin="led">ป้ายไฟ LED</button>
+    <button data-skin="board">ป้ายพลิก</button>
+    <button data-skin="emerald">มรกต-ทอง</button>
+    <button data-skin="sky">ฟ้าใส</button>
+    <button data-skin="grid">กระดาษกราฟ</button>
+    <button data-skin="candy">ลูกกวาด</button>
+  </div>
+  <div class="grp"><span class="k">อนิเมชัน</span>
+    <button class="on" data-anim="slot">สล็อต</button>
+    <button data-anim="wheel">วงล้อ</button>
+    <button data-anim="elim">คัดออก</button>
+  </div>
+  <div class="note">มือถือลูกทัวร์เล่นอนิเมชันแบบเดียวกับจอใหญ่ · แต่ละห้องสุ่มแยกรางวัลและประวัติของตัวเอง</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══ HOST ══ -->
+  <div class="host">
+    <div class="brandhd">
+      <div class="mk">สุ่ม</div>
+      <div><b>สุ่มรายชื่อ</b><span>ทริปเชียงใหม่ 3 วัน 2 คืน</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">ห้องสุ่ม</div>
+      <div class="rooms" id="rooms"></div>
+      <div class="roomadd">
+        <input type="text" id="roomName" placeholder="ชื่อห้องใหม่ เช่น รถคัน 3">
+        <button id="roomAdd">สร้าง</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:8px;line-height:1.5">
+        แต่ละห้องมีรายชื่อ รางวัล และประวัติของตัวเอง เล่นพร้อมกันคนละคันได้โดยไม่ชนกัน
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow"><span>รายชื่อในห้องนี้</span><a id="tglList">แก้ไขรายชื่อ</a></div>
+      <div class="count"><b id="poolN">0</b><span>คนในกลุ่มสุ่ม<br><span id="poolNote" style="color:var(--ink3)"></span></span></div>
+      <div class="chips" id="chips">
+        <div class="chip" data-f="checkin">เช็คอินแล้ว</div>
+        <div class="chip" data-f="bus1">รถคัน 1</div>
+        <div class="chip" data-f="bus2">รถคัน 2</div>
+        <div class="chip" data-f="female">ผู้หญิง</div>
+      </div>
+      <div class="editor" id="editor">
+        <div class="ehd">
+          <span id="eCount">—</span>
+          <span><a data-all="1">เลือกทั้งหมด</a> · <a data-all="0">ล้างทั้งหมด</a></span>
+        </div>
+        <div class="elist" id="elist"></div>
+        <div class="pzadd" style="margin-top:8px">
+          <input type="text" id="addName" placeholder="เพิ่มคนนอกระบบ เช่น พี่คนขับ">
+          <button id="addBtn">เพิ่ม</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">โหมด</div>
+      <div class="seg" id="modeSeg">
+        <button class="on" data-m="one">สุ่มทีละคน</button>
+        <button data-m="many">สุ่มหลายคน</button>
+      </div>
+      <div class="stepper" id="cntRow" style="display:none">
+        <span>จำนวนที่สุ่ม</span>
+        <div class="g"><button id="dec">−</button><div class="v" id="cntV">3</div><button id="inc">+</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow"><span>รางวัล</span><a id="tglPz">ปิดโหมดรางวัล</a></div>
+      <div id="pzBox">
+        <div id="pzList"></div>
+        <div class="pzadd">
+          <input type="text" id="pzName" placeholder="ชื่อรางวัล">
+          <button id="pzAdd">เพิ่ม</button>
+        </div>
+      </div>
+      <div id="pzHint" style="font-size:11px;color:var(--ink3);margin-top:8px;line-height:1.5"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">กติกา</div>
+      <div class="row"><div><b>ไม่สุ่มซ้ำคนเดิม</b><i>ตัดคนที่เคยถูกสุ่มในห้องนี้</i></div><div class="sw on" data-r="nodup"></div></div>
+      <div class="row"><div><b>ต้องยืนยันผู้ชนะ</b><i>ถ้าคนไม่อยู่ กดสุ่มใหม่ได้</i></div><div class="sw on" data-r="confirm"></div></div>
+      <div class="row"><div><b>เสียงและคอนเฟตตี้</b><i>รัวกลอง เสียงชนะ สั่นมือถือ</i></div><div class="sw on" data-r="fx"></div></div>
+    </div>
+
+    <button class="go" id="go"><span id="goTxt">สุ่มเลย</span></button>
+    <div class="mini">
+      <button id="undo">ย้อนกลับ</button>
+      <button id="fs">เต็มจอ</button>
+      <button id="reset">ล้างห้องนี้</button>
+    </div>
+
+    <div class="card" style="margin-top:10px">
+      <div class="eyebrow"><span>ผู้โชคดีในห้องนี้</span><span id="histN">0</span></div>
+      <div class="hist" id="hist"></div>
+    </div>
+  </div>
+
+  <!-- ══ STAGE ══ -->
+  <div>
+    <div class="stagebox">
+      <div class="stage" id="stage">
+        <canvas id="cfti"></canvas>
+        <div class="st-head">
+          <div class="st-room" id="stRoom">—</div>
+          <div class="st-top" id="stTop">พร้อมสุ่ม</div>
+          <div class="st-pz" id="stPz"></div>
+        </div>
+        <div id="anim"></div>
+        <div id="out"></div>
+        <div class="cfm" id="cfm">
+          <button class="y" id="cfY">ยืนยัน รับรางวัลแล้ว</button>
+          <button class="n" id="cfN">ไม่อยู่ — สุ่มใหม่</button>
+        </div>
+        <div class="st-foot">
+          <span>สุ่มจาก <b id="footPool">0</b> รายชื่อ</span>
+          <span id="footSeed">seed —</span>
+          <span>รอบที่ <b id="footRound">0</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GUEST ══ -->
+  <div class="guest">
+    <div class="gsh"><div class="gscr">
+      <div class="gtop">สุ่มรางวัล</div>
+      <div class="gtabs">
+        <button class="on" data-t="live">ถ่ายทอดสด</button>
+        <button data-t="mine">ของฉัน<span class="dot"></span></button>
+      </div>
+      <div class="gbody">
+        <select class="gsel" id="gRoom"></select>
+        <select class="gsel" id="gWho"></select>
+        <div class="gpane on" id="paneLive">
+          <div class="glive">
+            <div class="gs" id="gSt">รอผลการสุ่ม</div>
+            <div id="gAnim"></div>
+            <div id="gOut"></div>
+          </div>
+          <div id="gRows"></div>
+        </div>
+        <div class="gpane" id="paneMine"></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+/* ═══ ข้อมูลจำลอง ═══ */
+const GUESTS=[
+ {n:'สมชาย ใจดี',k:'ชาย',g:'m',seat:'A1',bus:1,ci:1},{n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',seat:'A2',bus:1,ci:1},
+ {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',seat:'A3',bus:1,ci:1},{n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',seat:'A4',bus:1,ci:1},
+ {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',seat:'B1',bus:1,ci:0},{n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',seat:'B2',bus:1,ci:1},
+ {n:'วีระ ชัยมงคล',k:'โจ',g:'m',seat:'B3',bus:1,ci:1},{n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',seat:'B4',bus:1,ci:1},
+ {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',seat:'C1',bus:1,ci:1},{n:'จันทิมา บุญมา',k:'จัน',g:'f',seat:'C2',bus:1,ci:0},
+ {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',seat:'C3',bus:1,ci:1},{n:'สุภาวดี พรหมมา',k:'แนน',g:'f',seat:'C4',bus:1,ci:1},
+ {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',seat:'D1',bus:2,ci:1},{n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',seat:'D2',bus:2,ci:1},
+ {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',seat:'D3',bus:2,ci:1},{n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',seat:'D4',bus:2,ci:1},
+ {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',seat:'E1',bus:2,ci:1},{n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',seat:'E2',bus:2,ci:0},
+ {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',seat:'E3',bus:2,ci:1},{n:'อารียา สมบูรณ์',k:'อาร์',g:'f',seat:'E4',bus:2,ci:1},
+ {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',seat:'F1',bus:2,ci:1},{n:'สุนิสา แก้วใส',k:'นิด',g:'f',seat:'F2',bus:2,ci:1},
+];
+const $=i=>document.getElementById(i);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NK=w=>w.k||w.n;                       // ชื่อเล่น = ชื่อหลักที่ประกาศ
+const FN=w=>w.n;                            // ชื่อจริง = ชื่อรอง
+
+let pzSeq=0;
+const mkPrizes=()=>[
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 3 · กระเป๋าเดินทาง',q:3,left:3},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 2 · หูฟังไร้สาย',q:2,left:2},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 1 · ทีวี 43 นิ้ว',q:1,left:1}];
+let roomSeq=0;
+function mkRoom(name,f){return {id:'r'+(++roomSeq),name,filters:Object.assign({checkin:true,bus1:false,bus2:false,female:false},f||{}),
+  off:new Set(),          // คนที่ถูกติ๊กออกจากห้องนี้
+  extra:[],               // คนนอกระบบที่เพิ่มเข้ามาเอง เช่น คนขับ ไกด์ท้องถิ่น
+  prizes:mkPrizes(),pzId:null,results:[],round:0,pending:null,last:null,seed:'—',feed:null}}
+
+const S={skin:'led',anim:'slot',mode:'one',count:3,busy:false,
+  rules:{nodup:true,confirm:true,fx:true},
+  rooms:[mkRoom('รถคัน 1',{bus1:true}),mkRoom('รถคัน 2',{bus2:true})],roomId:null};
+S.roomId=S.rooms[0].id;
+const R=()=>S.rooms.find(r=>r.id===S.roomId);
+const PAL={
+ led:{seg:['#0e2029','#132b36'],win:'#0d2f33',stroke:'#223947',txt:'#eafcf8',cf:['#2be8c8','#ffb020','#ff4d8d','#ffffff']},
+ board:{seg:['#1a1e24','#20252c'],win:'#2a2119',stroke:'#39404a',txt:'#edeff2',cf:['#ff6b35','#e8b44a','#edeff2','#9aa3ae']},
+ emerald:{seg:['#0a2a20','#0d3529'],win:'#164434',stroke:'#1d5540',txt:'#f3ecdc',cf:['#d4af37','#e8c86a','#f3ecdc','#c1683a']},
+ sky:{seg:['#eaf3fc','#dbe9f8'],win:'#c9e0f7',stroke:'#b7cee6',txt:'#10243f',cf:['#1d7fd8','#f2724b','#e08b12','#ffffff']},
+ grid:{seg:['#fbfaf5','#f0eee5'],win:'#f6e0da',stroke:'#cfcbbc',txt:'#1a1a18',cf:['#d6402c','#1a1a18','#b07d09','#ffffff']},
+ candy:{seg:['#fff2f6','#ffe6ee'],win:'#ffd9e6',stroke:'#eec7d5',txt:'#4a2340',cf:['#e0417a','#f0a03c','#5dc7af','#ffffff']}};
+
+/* ═══ pool / รางวัล ═══ */
+/* ตัวกรองใช้กับลูกทัวร์ในระบบ · คนที่เพิ่มเองไม่ผ่านตัวกรอง แต่ติ๊กออกได้เหมือนกัน */
+function inFilter(p,f){
+  if(p.custom)return true;
+  if(f.checkin&&!p.ci)return false;
+  if(f.bus1&&p.bus!==1)return false;
+  if(f.bus2&&p.bus!==2)return false;
+  if(f.female&&p.g!=='f')return false;
+  return true;
+}
+function members(room){return [...GUESTS,...(room||R()).extra]}
+function pool(room){
+  const r=room||R();
+  return members(r).filter(p=>{
+    if(!inFilter(p,r.filters))return false;
+    if(r.off.has(p.n))return false;
+    if(S.rules.nodup&&r.results.some(x=>x.n===p.n))return false;
+    return true})}
+function curPz(room){
+  const r=room||R();
+  if(r.usePz===false)return null;            // ปิดโหมดรางวัล = สุ่มเฉยๆ ไม่ผูกของ
+  const sel=r.prizes.find(p=>p.id===r.pzId&&p.left>0);
+  return sel||r.prizes.find(p=>p.left>0)||null;
+}
+
+/* ═══ render host ═══ */
+function renderRooms(){
+  $('rooms').innerHTML=S.rooms.map(r=>`<button class="room ${r.id===S.roomId?'on':''}" data-room="${r.id}">
+    ${S.busy&&r.id===S.roomId?'<span class="live"></span>':''}${esc(r.name)}
+    <span class="b">${r.results.length}</span></button>`).join('');
+  $('rooms').querySelectorAll('.room').forEach(b=>b.onclick=()=>{if(S.busy)return;switchRoom(b.dataset.room)});
+}
+function renderPz(){
+  const r=R(),cp=curPz(),on=r.usePz!==false;
+  $('tglPz').textContent=on?'ปิดโหมดรางวัล':'เปิดโหมดรางวัล';
+  $('pzBox').style.opacity=on?1:.35;
+  $('pzBox').style.pointerEvents=on?'auto':'none';
+  $('pzHint').textContent=on?'แตะรายการเพื่อเลือกชิ้นที่กำลังสุ่ม · ✎ แก้ไข · ✕ ลบ'
+    :'ปิดอยู่ — สุ่มได้ตามปกติแต่จะไม่ผูกรางวัล เหมาะกับสุ่มคนออกมาเล่นกิจกรรม';
+  $('pzList').innerHTML=r.prizes.map(p=>{
+    if(r.editId===p.id) return `<div class="pz cur ed" data-pz="${p.id}">
+      <input class="ename" data-f="name" value="${esc(p.n)}" placeholder="ชื่อรางวัล">
+      <div class="eqty"><button class="st" data-act="qdec">−</button>
+        <span data-qty>${p.q}</span><button class="st" data-act="qinc">+</button></div>
+      <button class="st ok" data-act="save">✓</button>
+      <button class="st" data-act="cancel">✕</button></div>`;
+    return `<div class="pz ${cp===p?'cur':''} ${p.left===0?'done':''}" data-pz="${p.id}">
+      <span class="rd"></span>
+      <span class="nm">${esc(p.n)}</span>
+      <span class="q">${p.left===0?'หมด':'เหลือ '+p.left+'/'+p.q}</span>
+      <button class="st" data-act="edit" title="แก้ไข">✎</button>
+      <button class="st" data-act="del" title="ลบ">✕</button></div>`}).join('')
+    ||'<div class="none">ยังไม่มีรางวัล — สุ่มได้แต่จะไม่ผูกรางวัล</div>';
+
+  $('pzList').querySelectorAll('.pz').forEach(el=>{
+    const id=el.dataset.pz,p=r.prizes.find(x=>x.id===id);
+    el.onclick=e=>{
+      const act=e.target.dataset.act;
+      if(act==='edit'){r.editId=id;refresh();
+        const inp=$('pzList').querySelector('.ename');inp?.focus();inp?.select();return}
+      if(act==='del'){r.prizes=r.prizes.filter(x=>x.id!==id);if(r.pzId===id)r.pzId=null;r.editId=null;refresh();return}
+      if(act==='qinc'||act==='qdec'){
+        const s=el.querySelector('[data-qty]');
+        let v=Math.max(1,Math.min(99,+s.textContent+(act==='qinc'?1:-1)));
+        s.textContent=v;return}
+      if(act==='save'){savePz(el,p);return}
+      if(act==='cancel'){r.editId=null;refresh();return}
+      if(r.editId===id)return;                       // กำลังแก้อยู่ อย่าเผลอเปลี่ยนการเลือก
+      r.pzId=id;refresh()};
+    const inp=el.querySelector('.ename');
+    if(inp)inp.onkeydown=e=>{if(e.key==='Enter')savePz(el,p);if(e.key==='Escape'){r.editId=null;refresh()}};
+  });
+}
+function savePz(el,p){
+  const r=R(),name=el.querySelector('.ename').value.trim();
+  const q=+el.querySelector('[data-qty]').textContent;
+  const used=p.q-p.left;                              // จ่ายไปแล้วกี่ชิ้น
+  if(name)p.n=name;
+  p.q=q;p.left=Math.max(0,q-used);                    // ปรับจำนวนแล้วยอดคงเหลือต้องหักของที่จ่ายไปแล้ว
+  r.editId=null;refresh();
+}
+const CHECK='<svg class="ic" style="font-size:11px" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>';
+function renderEditor(){
+  const r=R(),all=members(r);
+  const shown=all.filter(p=>inFilter(p,r.filters));
+  const inPool=shown.filter(p=>!r.off.has(p.n)).length;
+  $('eCount').textContent=`อยู่ในกลุ่ม ${inPool} จาก ${shown.length} คนที่ผ่านตัวกรอง`;
+  const sc=$('elist').scrollTop;                    // ติ๊กแล้ว list ต้องไม่เด้งกลับหัว
+  $('elist').innerHTML=all.map(p=>{
+    const on=!r.off.has(p.n),pass=inFilter(p,r.filters);
+    const tags=[p.custom?'เพิ่มเอง':'',(!p.custom&&!p.ci)?'ยังไม่เช็คอิน':''].filter(Boolean);
+    return `<div class="eli ${on?'on':'off'} ${pass?'':'hid'}" data-n="${esc(p.n)}">
+      <span class="cb">${CHECK}</span>
+      <span class="nm"><b>${esc(NK(p))}</b><span>${esc(FN(p))}</span></span>
+      ${tags.map(t=>`<span class="tg">${t}</span>`).join('')}
+      ${p.custom?'<button class="rm" data-rm="1" title="ลบออกจากรายชื่อ">✕</button>':''}</div>`}).join('');
+  $('elist').scrollTop=sc;
+  $('elist').querySelectorAll('.eli').forEach(el=>el.onclick=e=>{
+    const n=el.dataset.n;
+    if(e.target.dataset.rm){r.extra=r.extra.filter(x=>x.n!==n);r.off.delete(n);refresh();return}
+    r.off.has(n)?r.off.delete(n):r.off.add(n);refresh()});
+}
+function renderHist(){
+  const r=R();
+  $('hist').innerHTML=r.results.length?[...r.results].reverse().map((x,i)=>{
+    const no=r.results.length-i;
+    return `<div class="hrow"><span class="no">${String(no).padStart(2,'0')}</span>
+      <span class="nm"><b>${esc(x.k)}</b><span>${esc(x.n)}</span></span>
+      ${x.pz?`<span class="tag">${esc(x.pz.split('·')[0].trim())}</span>`:''}</div>`}).join('')
+    :'<div class="none">ยังไม่มีการสุ่มในห้องนี้</div>';
+}
+function refresh(){
+  const r=R(),p=pool();
+  $('poolN').textContent=p.length;$('footPool').textContent=p.length;
+  const bits=[];
+  if(r.results.length)bits.push(`ตัดผู้ที่ถูกสุ่มแล้ว ${r.results.length}`);
+  if(r.off.size)bits.push(`ติ๊กออกเอง ${r.off.size}`);
+  if(r.extra.length)bits.push(`เพิ่มเอง ${r.extra.length}`);
+  $('poolNote').textContent=bits.length?bits.join(' · '):`จากทั้งหมด ${members(r).length} คน`;
+  $('go').disabled=S.busy||p.length<(S.mode==='many'?S.count:1);
+  $('goTxt').textContent=S.mode==='many'?`สุ่ม ${S.count} คน`:'สุ่มเลย';
+  $('histN').textContent=r.results.length+' คน';
+  $('stRoom').textContent=r.name;
+  $('footRound').textContent=r.round;$('footSeed').textContent='seed '+r.seed;
+  document.querySelectorAll('#chips .chip').forEach(c=>c.classList.toggle('on',!!r.filters[c.dataset.f]));
+  const cp=curPz();
+  $('stPz').className='st-pz'+(cp?' show':'');
+  if(cp)$('stPz').innerHTML=`${esc(cp.n)} <em>เหลือ ${cp.left}</em>`;
+  renderRooms();renderPz();renderEditor();
+}
+function switchRoom(id){
+  S.roomId=id;const r=R();
+  $('cfm').classList.remove('show');$('out').innerHTML='';$('out').classList.remove('show');$('anim').innerHTML='';
+  $('stTop').textContent=r.results.length?'ห้องนี้สุ่มไปแล้ว '+r.results.length+' คน':'พร้อมสุ่ม';
+  if(r.last)renderWinner(r.last);
+  renderHist();refresh();renderMine();
+}
+
+/* ═══ เสียง ═══ */
+let ctx=null;
+function ac(){if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)()}catch{return null}}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return ctx}
+function beep(a,f,at,d,t='triangle',v=.25){const o=a.createOscillator(),g=a.createGain();o.type=t;o.frequency.value=f;
+ g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(v,at+.02);g.gain.exponentialRampToValueAtTime(.0001,at+d);
+ o.connect(g).connect(a.destination);o.start(at);o.stop(at+d+.02)}
+function roll(sec){const a=ac();if(!a||!S.rules.fx)return;
+ const n=Math.floor(a.sampleRate*sec),b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);
+ for(let i=0;i<n;i++){const e=(Math.sin(i/a.sampleRate*2*Math.PI*17)+1)/2;d[i]=(Math.random()*2-1)*e*.55}
+ const s=a.createBufferSource();s.buffer=b;const g=a.createGain(),lp=a.createBiquadFilter();
+ lp.type='lowpass';lp.frequency.value=1400;g.gain.setValueAtTime(.03,a.currentTime);
+ g.gain.exponentialRampToValueAtTime(.26,a.currentTime+sec*.9);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
+ s.connect(lp).connect(g).connect(a.destination);s.start()}
+function fanfare(){const a=ac();if(!a||!S.rules.fx)return;const t=a.currentTime;
+ beep(a,660,t,.14);beep(a,880,t+.16,.14);beep(a,1175,t+.32,.3);beep(a,1568,t+.34,.34,'sine',.16);
+ try{navigator.vibrate?.([120,60,120,60,240])}catch{}}
+function tick(f=1800,v=.07){const a=ac();if(!a||!S.rules.fx)return;beep(a,f,a.currentTime,.03,'square',v)}
+
+/* ═══ คอนเฟตตี้ ═══ */
+const cv=$('cfti'),cx=cv.getContext('2d');let ps=[],raf=null;
+function sizeCv(){const b=cv.getBoundingClientRect();cv.width=b.width;cv.height=b.height}
+addEventListener('resize',sizeCv);setTimeout(sizeCv,80);
+function boom(){if(!S.rules.fx)return;sizeCv();const c=PAL[S.skin].cf;
+ for(let i=0;i<130;i++)ps.push({x:cv.width/2+(Math.random()-.5)*180,y:cv.height*.5,vx:(Math.random()-.5)*15,
+  vy:-Math.random()*16-5,s:5+Math.random()*7,c:c[i%c.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,l:1});
+ if(!raf)raf=requestAnimationFrame(cfLoop)}
+function cfLoop(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.l>0);
+ ps.forEach(p=>{p.vy+=.42;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.vx*=.99;if(p.y>cv.height+30)p.l=0;
+  cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore()});
+ raf=ps.length?requestAnimationFrame(cfLoop):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ═══════════ อนิเมชัน ═══════════
+   ทุกแบบเล่นสองจังหวะ: พุ่งเร็ว → เกือบหยุดผิดคน → คืบต่อช้าๆ เข้าคนจริง
+   ตัวเดียวกันนี้ถูกเรียกทั้งบนจอใหญ่และบนมือถือลูกทัวร์พร้อมกัน
+   ═══════════════════════════════════════════════════════ */
+const MS={slot:7000,wheel:7600,elim:8200};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function animSlot(el,wins,ms,mini){
+  return new Promise(res=>{
+    const win=wins[0],p=pool(),st=[],H=mini?46:140;
+    for(let i=0;i<34;i++)st.push(p[Math.floor(Math.random()*p.length)]||win);
+    st.push(win);
+    el.innerHTML=`<div class="${mini?'gslot':'slot'}"><div class="r">${st.map((w,i)=>
+      `<div class="${i===st.length-1?'':'dim'}"><b>${esc(NK(w))}</b><span>${esc(FN(w))}</span></div>`).join('')}</div></div>`;
+    const r=el.querySelector('.r');r.getBoundingClientRect();
+    const tk=setInterval(()=>{if(!mini)tick(1750)},90);
+    // จังหวะ 1 — พุ่งไปหยุดที่คนก่อนหน้า
+    r.style.transition=`transform ${ms*.72}ms cubic-bezier(.02,.72,.10,1)`;
+    r.style.transform=`translateY(-${(st.length-2)*H}px)`;
+    setTimeout(()=>{
+      clearInterval(tk);
+      // จังหวะ 2 — คืบอีกหนึ่งชื่อ ช้าๆ
+      r.style.transition=`transform ${ms*.28}ms cubic-bezier(.32,.02,.18,1)`;
+      r.style.transform=`translateY(-${(st.length-1)*H}px)`;
+      if(!mini)setTimeout(()=>tick(1200,.09),ms*.28*.8);
+      setTimeout(res,ms*.28+40);
+    },ms*.72+30);
+  });
+}
+
+function animWheel(el,wins,ms,mini){
+  return new Promise(res=>{
+    const win=wins[0],others=pool().filter(x=>x!==win);
+    const seg=[win,...others.sort(()=>Math.random()-.5).slice(0,mini?7:11)];
+    const n=seg.length,a=360/n,RAD=150,C=170,P=PAL[S.skin];
+    const paths=seg.map((w,i)=>{
+      const s=(i*a-90)*Math.PI/180,e=((i+1)*a-90)*Math.PI/180;
+      const x1=C+RAD*Math.cos(s),y1=C+RAD*Math.sin(s),x2=C+RAD*Math.cos(e),y2=C+RAD*Math.sin(e);
+      const mid=i*a+a/2-90,tx=C+RAD*.62*Math.cos(mid*Math.PI/180),ty=C+RAD*.62*Math.sin(mid*Math.PI/180);
+      const lbl=NK(w).length>9?NK(w).slice(0,8)+'…':NK(w);
+      return `<path d="M${C},${C} L${x1},${y1} A${RAD},${RAD} 0 0,1 ${x2},${y2} Z" fill="${i===0?P.win:P.seg[i%2]}" stroke="${P.stroke}" stroke-width="1"/>
+        <text x="${tx}" y="${ty}" fill="${P.txt}" font-size="${mini?16:14}" font-weight="600" text-anchor="middle"
+          dominant-baseline="middle" font-family="IBM Plex Sans Thai,sans-serif"
+          transform="rotate(${mid+90} ${tx} ${ty})">${esc(lbl)}</text>`}).join('');
+    el.innerHTML=`<div class="${mini?'gwheel':'wheelbox'}"><div class="pin"></div>
+      <svg viewBox="0 0 340 340"><g class="spin">${paths}
+        <circle cx="170" cy="170" r="150" fill="none" stroke="var(--gold)" stroke-width="3"/></g></svg>
+      ${mini?'':'<div class="hub">สุ่ม</div>'}</div>`;
+    const g=el.querySelector('.spin');g.getBoundingClientRect();
+    const base=360*7-a/2;
+    const tk=setInterval(()=>{if(!mini)tick(1500,.05)},110);
+    // จังหวะ 1 — หมุนแรงแล้วเกือบหยุดคาขอบช่อง
+    g.style.transition=`transform ${ms*.74}ms cubic-bezier(.04,.72,.06,1)`;
+    g.style.transform=`rotate(${base-a*.44}deg)`;
+    setTimeout(()=>{
+      clearInterval(tk);
+      // จังหวะ 2 — คืบเข้าช่องผู้ชนะช้าๆ
+      g.style.transition=`transform ${ms*.26}ms cubic-bezier(.3,.02,.2,1)`;
+      g.style.transform=`rotate(${base}deg)`;
+      if(!mini)setTimeout(()=>tick(1200,.09),ms*.26*.75);
+      setTimeout(res,ms*.26+40);
+    },ms*.74+30);
+  });
+}
+
+/* คัดออก — รองรับผู้ชนะหลายคน: หรี่ชื่อทิ้งจนเหลือตามจำนวนที่ตั้งไว้พอดี */
+function animElim(el,wins,ms,mini){
+  return new Promise(res=>{
+    const p=pool(),C=mini?'gec':'ec',names=new Set(wins.map(w=>w.n)),multi=wins.length>1;
+    el.innerHTML=`<div class="${mini?'gelim':'elim'}${multi?' multi':''}">${p.map(w=>
+      `<div class="${C}" data-n="${esc(w.n)}">${esc(NK(w))}</div>`).join('')}</div>`;
+    const cells=[...el.querySelectorAll('.'+C)];
+    const winCells=cells.filter(c=>names.has(c.dataset.n));
+    const others=cells.filter(c=>!names.has(c.dataset.n)).sort(()=>Math.random()-.5);
+    const done=()=>{winCells.forEach((c,i)=>setTimeout(()=>c.classList.add('win'),i*110));
+      setTimeout(res,winCells.length*110+80)};
+    if(!others.length){done();return}                  // สุ่มทั้งกลุ่มพอดี ไม่มีใครต้องถูกคัด
+
+    const lastRival=others[others.length-1];
+    const T1=ms*.72;
+    let scan=setInterval(()=>{
+      cells.forEach(c=>c.classList.remove('hot'));
+      const alive=cells.filter(c=>!c.classList.contains('out'));
+      alive[Math.floor(Math.random()*alive.length)]?.classList.add('hot');
+    },110);
+    others.slice(0,-1).forEach((c,i,arr)=>{
+      const t=T1*Math.pow((i+1)/arr.length,2.1);       // ท้ายๆ ห่างขึ้นเรื่อยๆ
+      setTimeout(()=>{c.classList.remove('hot');c.classList.add('out');if(!mini)tick(880+i*38,.05)},t);
+    });
+    // ช่วงดวล — เหลือผู้ชนะ N คน + คู่แข่งคนสุดท้าย ไล่ไฟวนให้ลุ้นว่าใครจะร่วง
+    setTimeout(()=>{
+      clearInterval(scan);cells.forEach(c=>c.classList.remove('hot'));
+      const ring=[...winCells,lastRival];
+      let f=0;const duel=setInterval(()=>{
+        ring.forEach((c,i)=>c.classList.toggle('duel',i===f%ring.length));
+        if(!mini)tick(1000+(f%2)*260,.08);f++;
+      },Math.max(190,300-ring.length*18));
+      setTimeout(()=>{
+        clearInterval(duel);ring.forEach(c=>c.classList.remove('duel'));
+        lastRival.classList.add('out');
+        setTimeout(done,420);
+      },ms-T1-420);
+    },T1+120);
+  });
+}
+const ANIM={slot:animSlot,wheel:animWheel,elim:animElim};
+
+/* ═══ ผลลัพธ์บนเวที ═══ */
+function flaps(text,step=55,offset=0){
+  let seg;try{seg=[...new Intl.Segmenter('th',{granularity:'grapheme'}).segment(text)].map(s=>s.segment)}
+  catch{seg=Array.from(text)}
+  return seg.map((ch,i)=>ch.trim()===''?'<span class="flap sp"></span>'
+    :`<span class="flap" style="animation-delay:${offset+i*step}ms">${esc(ch)}</span>`).join('');
+}
+function renderWinner(w,seq){
+  const r=R();
+  const n=String(seq??r.lastSeq??r.results.length+1).padStart(2,'0');
+  if(S.skin==='board'){
+    const nickLen=Array.from(NK(w)).length;
+    $('out').innerHTML=`<div class="win">
+      <div class="win-seq">ผู้โชคดีลำดับที่ ${n}</div>
+      <div class="board">${flaps(NK(w),55,0)}</div>
+      <div class="board sub">${flaps(FN(w),34,nickLen*55+220)}</div></div>`;
+  }else{
+    $('out').innerHTML=`<div class="win pop">
+      <div class="win-seq">ผู้โชคดีลำดับที่ ${n}</div>
+      <div class="win-hero"><span class="rule"></span>
+        <span class="win-nick">${esc(NK(w))}</span>
+        <span class="rule"></span></div>
+      <div class="win-full">${esc(FN(w))}</div></div>`;
+  }
+  $('out').classList.add('show');
+}
+function renderMany(ws){
+  const pz=curPz(),pzs=pz?pz.n.split('·')[0].trim():null;
+  $('out').innerHTML=`<div class="win">
+    <div class="win-seq">ผู้โชคดี ${ws.length} คน${pzs?' · '+esc(pzs):''}</div>
+    <div class="gridw">${ws.map((w,i)=>`<div class="gwin"><i>${String(i+1).padStart(2,'0')}</i>
+      <b>${esc(NK(w))}</b><span>${esc(FN(w))}</span></div>`).join('')}</div>
+  </div>`;
+  $('out').classList.add('show');
+  [...$('out').querySelectorAll('.gwin')].forEach((el,i)=>setTimeout(()=>{el.classList.add('in');tick()},i*190));
+}
+
+/* ═══ สุ่ม ═══ */
+function pickN(list,n){const l=[...list],o=[];while(o.length<n&&l.length)o.push(...l.splice(Math.floor(Math.random()*l.length),1));return o}
+async function draw(){
+  if(S.busy)return;const r=R(),p=pool();const need=S.mode==='many'?S.count:1;
+  if(p.length<need)return;
+  S.busy=true;refresh();
+  $('cfm').classList.remove('show');$('out').classList.remove('show');$('out').innerHTML='';
+  r.round++;r.seed=Math.random().toString(36).slice(2,8).toUpperCase();
+  $('footRound').textContent=r.round;$('footSeed').textContent='seed '+r.seed;
+  const ws=pickN(p,need),lead=ws[0],ms=MS[S.anim];
+  $('stTop').textContent=S.mode==='many'?`กำลังสุ่ม ${need} คน`:'กำลังสุ่ม';
+  roll(ms/1000);
+
+  // จอใหญ่ + มือถือลูกทัวร์ที่อยู่ห้องเดียวกัน เล่นอนิเมชันเดียวกันพร้อมกัน
+  const sameRoom=$('gRoom').value===r.id;
+  if(sameRoom){$('gSt').innerHTML='<i></i>กำลังสุ่ม';$('gOut').innerHTML='';try{navigator.vibrate?.(30)}catch{}}
+  await Promise.all([
+    ANIM[S.anim]($('anim'),ws,ms,false),
+    sameRoom?ANIM[S.anim]($('gAnim'),ws,ms,true):Promise.resolve()
+  ]);
+  await sleep(S.anim==='elim'?900:200);         // ค้างให้เห็นผลบนจออนิเมชันก่อน
+  $('anim').classList.add('fade');$('gAnim').style.opacity='0';
+  await sleep(380);
+  $('anim').innerHTML='';$('anim').classList.remove('fade');
+  $('gAnim').innerHTML='';$('gAnim').style.opacity='';
+  if(S.mode==='many'){r.last=null;renderMany(ws);$('stTop').textContent=`ผู้โชคดี ${need} คน`}
+  else{r.last=lead;r.lastSeq=r.results.length+1;renderWinner(lead);$('stTop').textContent='ผู้โชคดี'}
+  fanfare();boom();
+  r.feed={ws,pz:curPz(),at:Date.now()};
+  if(sameRoom)gReveal(ws);
+  r.pending={ws,pz:curPz()};
+  if(S.rules.confirm&&S.mode==='one'){$('cfm').classList.add('show');S.busy=false;refresh();renderMine()}
+  else commit();
+}
+function commit(){
+  const r=R(),{ws,pz}=r.pending||{};if(!ws)return;
+  // รางวัลเหลือน้อยกว่าจำนวนคนที่สุ่ม — คนที่เกินมาต้องไม่ถูกติดป้ายรางวัลที่ไม่มีจริง
+  ws.forEach(w=>{const got=pz&&pz.left>0?pz:null;
+    r.results.push({n:w.n,k:w.k,seat:w.seat,bus:w.bus,pz:got?got.n:null,t:new Date()});
+    if(got)got.left--});
+  $('cfm').classList.remove('show');r.pending=null;S.busy=false;
+  renderHist();renderMine();refresh();
+  if(ME()&&ws.some(w=>w.n===ME())){try{navigator.vibrate?.([200,80,200])}catch{}}
+}
+
+/* ═══ มือถือลูกทัวร์ ═══ */
+const ME=()=>$('gWho').value;
+const gRoom=()=>S.rooms.find(r=>r.id===$('gRoom').value)||R();
+function gReveal(ws){
+  const me=ME(),pz=curPz(gRoom());
+  $('gSt').textContent=ws.length>1?`ผู้โชคดี ${ws.length} คน`:'ผู้โชคดี';
+  if(ws.length>1){
+    // สุ่มหลายคน — โชว์ทุกชื่อไล่ขึ้นทีละใบเหมือนจอใหญ่ ไม่ใช่โชว์แค่คนแรก
+    $('gOut').innerHTML=`${pz?`<div class="gpzt" style="margin:0 0 8px">${esc(pz.n)}</div>`:''}
+      <div class="gmany">${ws.map((w,i)=>`<div class="gmw ${w.n===me?'me':''}">
+        <i>${String(i+1).padStart(2,'0')}</i><b>${esc(NK(w))}</b><span>${esc(FN(w))}</span></div>`).join('')}</div>`;
+    [...$('gOut').querySelectorAll('.gmw')].forEach((el,i)=>setTimeout(()=>el.classList.add('in'),i*190));
+  }else{
+    $('gOut').innerHTML=`<div class="gwn">${esc(NK(ws[0]))}</div><div class="gwf">${esc(FN(ws[0]))}</div>
+      ${pz?`<div class="gpzt">${esc(pz.n)}</div>`:''}`;
+  }
+  $('gRows').innerHTML='';
+  renderMine();
+}
+function renderGuestRoom(){
+  const r=gRoom();
+  $('gSt').textContent='รอผลการสุ่ม';$('gAnim').innerHTML='';$('gRows').innerHTML='';
+  if(r.feed){const w=r.feed.ws[0];
+    $('gOut').innerHTML=`<div class="gwn">${esc(NK(w))}</div><div class="gwf">${esc(FN(w))}</div>
+      ${r.feed.pz?`<div class="gpzt">${esc(r.feed.pz.n)}</div>`:''}`;
+    $('gSt').textContent='ผลล่าสุดของห้องนี้';
+  }else $('gOut').innerHTML=`<div class="gwn" style="opacity:.3">—</div><div class="gwf">ยังไม่เริ่มสุ่ม</div>`;
+  renderMine();
+}
+function renderMine(){
+  const me=ME(),P=$('paneMine'),tab=document.querySelector('.gtabs [data-t="mine"]'),r=gRoom();
+  if(!me){P.innerHTML='<div class="mcard"><div class="none">เลือกชื่อด้านบน<br>เพื่อดูมุมมองลูกทัวร์</div></div>';tab.classList.remove('alert');return}
+  const g=GUESTS.find(x=>x.n===me),wins=r.results.filter(x=>x.n===me);
+  const pend=!!(r.pending&&r.pending.ws.some(w=>w.n===me));
+  let cls='idle',txt=`ยังไม่ถูกสุ่มใน${r.name} — ลุ้นรอบต่อไป`;
+  if(wins.length){cls='win';txt=`คุณได้รับรางวัลแล้ว ${wins.length} ชิ้น`}
+  else if(pend){cls='pend';txt='คุณถูกสุ่มแล้ว! รอทีมงานกดยืนยัน'}
+  let h=`<div class="mcard"><div class="mwho"><div class="av">${esc(NK(g).slice(0,2))}</div>
+    <div><b>${esc(NK(g))}</b><span>${esc(FN(g))}</span></div></div>
+    <div class="mstat ${cls}">${txt}</div>`;
+  wins.forEach(w=>h+=`<div class="mpz">${esc(w.pz||'ออกมาเล่นกิจกรรม')}<em>${w.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</em></div>`);
+  if(pend&&r.pending.pz)h+=`<div class="mpz" style="opacity:.6">${esc(r.pending.pz.n)}<em>รอยืนยัน</em></div>`;
+  h+=`</div><div class="mcard"><div class="eyebrow" style="margin:0 0 7px">ห้องที่กำลังดู</div>
+    <div style="font-size:14px;font-weight:700">${esc(r.name)}</div>
+    <div style="font-size:11.5px;color:var(--ink3);margin-top:3px">สุ่มไปแล้ว ${r.results.length} คน · ${r.prizes.filter(p=>p.left>0).length} รางวัลยังไม่หมด</div></div>`;
+  P.innerHTML=h;
+  tab.classList.toggle('alert',(!!wins.length||pend)&&!tab.classList.contains('on'));
+}
+function fillRooms(){
+  const v=$('gRoom').value;
+  $('gRoom').innerHTML=S.rooms.map(r=>`<option value="${r.id}">ห้อง: ${esc(r.name)}</option>`).join('');
+  $('gRoom').value=S.rooms.some(r=>r.id===v)?v:S.rooms[0].id;
+}
+
+/* ═══ สลับสกิน/อนิเมชัน ═══ */
+const LIGHT=new Set(['sky','grid','candy']);   // ธีมพื้นสว่าง ต้องกลับคอนทราสต์การ์ด/ปุ่ม
+function applySkin(s){S.skin=s;document.body.dataset.skin=s;
+  document.body.dataset.light=LIGHT.has(s)?'1':'';
+  document.querySelectorAll('.bar [data-skin]').forEach(b=>b.classList.toggle('on',b.dataset.skin===s));
+  const r=R();if(r.last)renderWinner(r.last);setTimeout(sizeCv,60)}
+document.querySelectorAll('.bar [data-skin]').forEach(b=>b.onclick=()=>applySkin(b.dataset.skin));
+document.querySelectorAll('.bar [data-anim]').forEach(b=>b.onclick=()=>{
+  if(S.busy||b.disabled)return;S.anim=b.dataset.anim;syncAnim();ac()});
+
+/* ═══ bind ═══ */
+document.querySelectorAll('#chips .chip').forEach(c=>c.onclick=()=>{const r=R(),f=c.dataset.f;
+  if(f==='bus1'&&!r.filters.bus1)r.filters.bus2=false;
+  if(f==='bus2'&&!r.filters.bus2)r.filters.bus1=false;
+  r.filters[f]=!r.filters[f];ac();refresh()});
+document.querySelectorAll('.sw').forEach(s=>s.onclick=()=>{S.rules[s.dataset.r]=!S.rules[s.dataset.r];
+  s.classList.toggle('on',S.rules[s.dataset.r]);refresh()});
+/* สล็อตกับวงล้อเฉลยได้ทีละชื่อ ใช้กับสุ่มหลายคนไม่ได้ — สลับให้เป็นคัดออกอัตโนมัติ */
+function syncAnim(){
+  const many=S.mode==='many';
+  if(many)S.anim='elim';
+  document.querySelectorAll('.bar [data-anim]').forEach(b=>{
+    const lock=many&&b.dataset.anim!=='elim';
+    b.classList.toggle('off',lock);b.disabled=lock;
+    b.title=lock?'ใช้ได้เฉพาะโหมดสุ่มทีละคน':'';
+    b.classList.toggle('on',b.dataset.anim===S.anim);
+  });
+}
+$('modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.mode=b.dataset.m;
+  [...$('modeSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('cntRow').style.display=S.mode==='many'?'flex':'none';syncAnim();refresh()};
+$('inc').onclick=()=>{S.count=Math.min(8,S.count+1);$('cntV').textContent=S.count;refresh()};
+$('dec').onclick=()=>{S.count=Math.max(2,S.count-1);$('cntV').textContent=S.count;refresh()};
+$('roomAdd').onclick=()=>{const v=$('roomName').value.trim();if(!v)return;
+  const r=mkRoom(v);S.rooms.push(r);$('roomName').value='';fillRooms();switchRoom(r.id)};
+$('roomName').onkeydown=e=>{if(e.key==='Enter')$('roomAdd').click()};
+$('tglList').onclick=()=>{const o=$('editor').classList.toggle('open');
+  $('tglList').textContent=o?'ซ่อนรายชื่อ':'แก้ไขรายชื่อ'};
+$('editor').querySelectorAll('.ehd a').forEach(a=>a.onclick=()=>{
+  const r=R(),on=a.dataset.all==='1';
+  members(r).forEach(p=>{if(!inFilter(p,r.filters))return;on?r.off.delete(p.n):r.off.add(p.n)});
+  refresh()});
+$('addBtn').onclick=()=>{const v=$('addName').value.trim();if(!v)return;
+  const r=R();
+  if(members(r).some(p=>p.n===v)){r.off.delete(v);$('addName').value='';refresh();return}
+  r.extra.push({n:v,k:v,custom:true});$('addName').value='';
+  $('editor').classList.add('open');$('tglList').textContent='ซ่อนรายชื่อ';refresh()};
+$('addName').onkeydown=e=>{if(e.key==='Enter')$('addBtn').click()};
+$('tglPz').onclick=()=>{const r=R();r.usePz=r.usePz===false;r.editId=null;refresh()};
+$('pzAdd').onclick=()=>{const v=$('pzName').value.trim();if(!v)return;
+  R().prizes.unshift({id:'p'+(++pzSeq),n:v,q:1,left:1});$('pzName').value='';refresh()};
+$('pzName').onkeydown=e=>{if(e.key==='Enter')$('pzAdd').click()};
+$('go').onclick=()=>{ac();draw()};
+$('cfY').onclick=()=>{tick();commit()};
+$('cfN').onclick=()=>{R().pending=null;$('cfm').classList.remove('show');renderMine();draw()};
+$('undo').onclick=()=>{const r=R();if(!r.results.length)return;const x=r.results.pop();
+  const p=r.prizes.find(y=>y.n===x.pz);if(p&&p.left<p.q)p.left++;renderHist();renderMine();refresh()};
+$('reset').onclick=()=>{const r=R();r.results=[];r.round=0;r.pending=null;r.last=null;r.feed=null;r.seed='—';
+  r.prizes.forEach(p=>p.left=p.q);
+  $('out').classList.remove('show');$('out').innerHTML='';$('anim').innerHTML='';
+  $('cfm').classList.remove('show');$('stTop').textContent='พร้อมสุ่ม';
+  renderHist();renderGuestRoom();refresh()};
+$('fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('stage').requestFullscreen?.().then(sizeCv);
+document.querySelectorAll('.gtabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.gtabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('paneLive').classList.toggle('on',b.dataset.t==='live');
+  $('paneMine').classList.toggle('on',b.dataset.t==='mine');
+  if(b.dataset.t==='mine')b.classList.remove('alert')});
+$('gWho').innerHTML='<option value="">— จำลองมุมมองลูกทัวร์ —</option>'+
+  GUESTS.map(p=>`<option value="${esc(p.n)}">${esc(p.k)} — ${esc(p.n)}</option>`).join('');
+$('gWho').onchange=renderMine;
+$('gRoom').onchange=renderGuestRoom;
+
+applySkin(S.skin);fillRooms();syncAnim();renderHist();renderGuestRoom();refresh();renderMine();
+</script>
+</body>
+</html>

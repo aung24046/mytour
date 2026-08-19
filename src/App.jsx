@@ -8,6 +8,9 @@ import MyQR from './pages/guest/MyQR.jsx'
 import MyRoom from './pages/guest/MyRoom.jsx'
 import MySeat from './pages/guest/MySeat.jsx'
 import BingoCard from './pages/guest/BingoCard.jsx'
+import GuestGames from './pages/guest/Games.jsx'
+import GuestLuckyDraw from './pages/guest/LuckyDraw.jsx'
+import GuestQuiz from './pages/guest/Quiz.jsx'
 import ShareLocation from './pages/guest/ShareLocation.jsx'
 import BagLookup from './pages/guest/BagLookup.jsx'
 import SOS from './pages/guest/SOS.jsx'
@@ -25,6 +28,14 @@ import SeatMap from './pages/staff/SeatMap.jsx'
 import RoomMap from './pages/staff/RoomMap.jsx'
 import LocationMonitor from './pages/staff/LocationMonitor.jsx'
 import BingoHost from './pages/staff/BingoHost.jsx'
+import Games from './pages/staff/Games.jsx'
+import LuckyDraw from './pages/staff/LuckyDraw.jsx'
+import LuckyDrawStage from './pages/staff/LuckyDrawStage.jsx'
+import QuizManager from './pages/staff/QuizManager.jsx'
+import QuizBuilder from './pages/staff/QuizBuilder.jsx'
+import QuizHost from './pages/staff/QuizHost.jsx'
+import QuizStage from './pages/staff/QuizStage.jsx'
+import QuizReport from './pages/staff/QuizReport.jsx'
 import FormBuilder from './pages/staff/FormBuilder.jsx'
 import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
@@ -168,6 +179,9 @@ function App() {
           <Route path="my-qr" element={<MyQR />} />
           <Route path="my-room" element={<MyRoom />} />
           <Route path="my-seat" element={<MySeat />} />
+          <Route path="games" element={<GuestGames />} />
+          <Route path="lucky-draw" element={<GuestLuckyDraw />} />
+          <Route path="quiz" element={<GuestQuiz />} />
           <Route path="bingo" element={<BingoCard />} />
           <Route path="share-location" element={<ShareLocation />} />
           <Route path="sos" element={<SOS />} />
@@ -209,7 +223,37 @@ function App() {
           path="/staff/location-monitor"
           element={staffRoute('location.monitor', <LocationMonitor />)}
         />
+        {/* หน้ารวมเกม — บิงโกยังเข้าลิงก์ตรงได้เหมือนเดิม ของเก่าที่บุ๊กมาร์กไว้ไม่พัง */}
+        <Route path="/staff/games" element={staffRoute('bingo.host', <Games />)} />
         <Route path="/staff/bingo-host" element={staffRoute('bingo.host', <BingoHost />)} />
+        <Route path="/staff/lucky-draw" element={staffRoute('bingo.host', <LuckyDraw />)} />
+        {/* จอโปรเจกเตอร์ — เปิดแท็บแยก ไม่มีปุ่มสั่งงาน สั่งจากมือถือทีมงานอย่างเดียว */}
+        {/* จอเวทีสองหน้านี้ตั้งใจไม่มี RequireRole — เปิดบนโน้ตบุ๊กโรงแรมหรือจอในรถ
+            ซึ่งไม่มีใครล็อกอินไว้ ถ้า guard ไว้จะโดน redirect ไป /staff/login
+            แล้ว hash ที่พา token มา (stageUrl()) หายไปพร้อมกัน = ต้องกลับไปก็อปลิงก์ใหม่
+            ทั้งสองหน้าไม่มีปุ่มสั่งงานแม้แต่ปุ่มเดียว และ RPC ที่แตะข้อมูลปิด
+            ยังตรวจ token อยู่เหมือนเดิม */}
+        <Route
+          path="/staff/lucky-draw/stage"
+          element={
+            <StaffTourLayout>
+              <LuckyDrawStage />
+            </StaffTourLayout>
+          }
+        />
+        <Route path="/staff/quiz" element={staffRoute('quiz.host', <QuizManager />)} />
+        <Route path="/staff/quiz/builder/:setId" element={staffRoute('quiz.edit', <QuizBuilder />)} />
+        <Route path="/staff/quiz/host/:sessionId" element={staffRoute('quiz.host', <QuizHost />)} />
+        {/* จอใหญ่ — เปิดแท็บแยก รับ token ผ่าน #t= ไม่มีปุ่มสั่งงาน */}
+        <Route
+          path="/staff/quiz/stage/:sessionId"
+          element={
+            <StaffTourLayout>
+              <QuizStage />
+            </StaffTourLayout>
+          }
+        />
+        <Route path="/staff/quiz/report/:sessionId" element={staffRoute('quiz.host', <QuizReport />)} />
         <Route path="/staff/form-builder" element={staffRoute('form.assign', <FormBuilder />)} />
         <Route
           path="/staff/itinerary-builder"

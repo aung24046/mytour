@@ -56,6 +56,40 @@ const RENDER = {
       <circle cx="12" cy="12" r="1.9" fill={c.detail} stroke="none" />
     </>
   ),
+  game: (c) => (
+    <>
+      <path d="M7.6 7.4 H16.4 A4.4 4.4 0 0 1 20.7 10.9 L21.6 15.4 A2.8 2.8 0 0 1 18.9 18.8 A2.8 2.8 0 0 1 16.6 17.5 L15.7 16.2 H8.3 L7.4 17.5 A2.8 2.8 0 0 1 5.1 18.8 A2.8 2.8 0 0 1 2.4 15.4 L3.3 10.9 A4.4 4.4 0 0 1 7.6 7.4 Z" fill={c.body} stroke={c.color} {...S} />
+      <line x1="6.6" y1="11.8" x2="9.8" y2="11.8" stroke={c.detail} {...S} />
+      <line x1="8.2" y1="10.2" x2="8.2" y2="13.4" stroke={c.detail} {...S} />
+      <circle cx="15.4" cy="13.2" r="1" fill={c.detail} stroke="none" />
+      <circle cx="17.6" cy="11" r="1" fill={c.detail} stroke="none" />
+    </>
+  ),
+  bolt: (c) => (
+    <path d="M13.6 2.6 L5.4 13.2 H10.7 L9.7 21.4 L18.6 10.4 H13.3 Z" fill={c.body} stroke={c.color} {...S} />
+  ),
+  gift: (c) => (
+    <>
+      <path d="M4.2 10.4 H19.8 V18.6 A2 2 0 0 1 17.8 20.6 H6.2 A2 2 0 0 1 4.2 18.6 Z" fill={c.body} stroke={c.color} {...S} />
+      <rect x="3.2" y="6.6" width="17.6" height="3.8" rx="1.2" fill={c.body} stroke={c.color} {...S} />
+      <line x1="12" y1="6.6" x2="12" y2="20.6" stroke={c.detail} {...S} />
+      <path d="M12 6.6 C12 6.6 11 3.4 8.8 3.4 A1.9 1.9 0 0 0 8.8 6.6 Z" fill="none" stroke={c.color} {...S} />
+      <path d="M12 6.6 C12 6.6 13 3.4 15.2 3.4 A1.9 1.9 0 0 1 15.2 6.6 Z" fill="none" stroke={c.color} {...S} />
+    </>
+  ),
+  // ลูกศรกางสี่มุม = เปิดจอเต็ม ใช้เป็นเส้นเสมอ ไม่มีสถานะทึบ
+  expand: (c) => (
+    <>
+      <path d="M8.4 3.6 H5.4 A1.8 1.8 0 0 0 3.6 5.4 V8.4" fill="none" stroke={c.color} {...S} />
+      <path d="M15.6 3.6 H18.6 A1.8 1.8 0 0 1 20.4 5.4 V8.4" fill="none" stroke={c.color} {...S} />
+      <path d="M8.4 20.4 H5.4 A1.8 1.8 0 0 1 3.6 18.6 V15.6" fill="none" stroke={c.color} {...S} />
+      <path d="M15.6 20.4 H18.6 A1.8 1.8 0 0 0 20.4 18.6 V15.6" fill="none" stroke={c.color} {...S} />
+    </>
+  ),
+  // ลูกศรบอกว่ากดเข้าไปได้ — ไม่มีสถานะทึบ ใช้เป็นเส้นเสมอ
+  chevronRight: (c) => (
+    <path d="M9.6 5.6 L16 12 L9.6 18.4" fill="none" stroke={c.color} {...S} />
+  ),
   location: (c) => (
     <>
       <path d="M12 20.8 C12 20.8 5.2 14.6 5.2 9.9 A6.8 6.8 0 0 1 18.8 9.9 C18.8 14.6 12 20.8 12 20.8 Z" fill={c.body} stroke={c.color} {...S} />

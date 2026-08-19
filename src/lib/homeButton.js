@@ -14,6 +14,11 @@ const HIDE_GUEST_PAGES = [
   'my-room',
   'my-seat',
   'bingo',
+  // ส่วนเกม — มีปุ่มย้อนกลับบนหัวเรื่องแล้ว (BackButton) และปุ่มลอยไปทับ
+  // แถบเมนูล่าง/ปุ่มในเกมด้วย
+  'games',
+  'lucky-draw',
+  'quiz',
   'share-location',
   'trip-guide',
   'feedback',

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สุ่มรายชื่อ — เมนูสตาฟ แบบแท็บล่าง (ปรับตามที่สั่ง)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#e4ecf5; --paper:#fff; --paper2:#f1f6fb; --sunken:#e8f0f8;
+  --ink:#10243f; --ink2:#4a627f; --ink3:#8397ad;
+  --line:#e3ebf3; --line2:#cfdcea;
+  --cool:#1d7fd8; --cool2:#1567b3; --hot:#f2724b; --gold:#e08b12; --ok:#16a34a; --bad:#d64545;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--body);background:var(--page);color:var(--ink);padding:26px 18px 60px}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:390px minmax(0,1fr);gap:34px;align-items:start}
+@media(max-width:880px){.wrap{grid-template-columns:1fr;max-width:400px}}
+
+.side h1{font-family:var(--disp);font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+.side p{font-size:13.5px;color:var(--ink2);line-height:1.7}
+.side h3{font-family:var(--disp);font-size:14.5px;font-weight:700;margin:20px 0 8px}
+.side ol,.side ul{margin-left:17px;font-size:13px;color:var(--ink2);line-height:1.85}
+.side .flag{background:#fff8ec;border:1px solid #f2d9a8;border-radius:14px;padding:13px 15px;margin-top:10px}
+.side .flag b{display:block;font-size:13px;color:#8a5a06;margin-bottom:4px}
+.side .flag p{font-size:12.5px;color:#7a5a2a;line-height:1.65}
+.side code{background:var(--sunken);padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:11.5px;color:var(--cool2)}
+
+/* ── มือถือ ── */
+.ph{background:#0d1b2a;border-radius:36px;padding:9px;box-shadow:0 16px 38px rgba(16,36,63,.24)}
+.scr{background:var(--paper2);border-radius:28px;overflow:hidden;height:748px;display:flex;flex-direction:column;position:relative}
+.nav{background:var(--paper);padding:10px 12px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line);flex:none}
+.nav .t{flex:1;min-width:0}
+.nav .t b{font-family:var(--disp);font-size:15px;font-weight:700;display:block;line-height:1.25}
+.nav .t span{font-size:10.5px;color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.themesel{position:relative;display:flex;align-items:center;background:var(--sunken);border-radius:10px;padding:0 9px 0 8px;height:34px;flex:none}
+.themesel .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.12) inset}
+.themesel select{appearance:none;-webkit-appearance:none;background:transparent;border:0;font-family:var(--body);font-size:12px;font-weight:600;
+  color:var(--ink);padding:0 16px 0 7px;height:34px;cursor:pointer;max-width:112px}
+.themesel select:focus{outline:none}
+.themesel .cv{position:absolute;right:7px;pointer-events:none;color:var(--ink2);font-size:12px;display:flex}
+.iconbtn{border:0;background:var(--sunken);width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--ink2);cursor:pointer;flex:none}
+.iconbtn:active{background:var(--line2)}
+
+.body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.body::-webkit-scrollbar{width:0}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px}
+.lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lbl a{font-family:var(--body);font-size:11px;letter-spacing:0;text-transform:none;color:var(--cool);font-weight:700;cursor:pointer;white-space:nowrap}
+.hint{font-size:11px;color:var(--ink3);line-height:1.55;margin-top:8px}
+
+.stat{display:flex;align-items:baseline;gap:9px}
+.stat b{font-family:var(--mono);font-size:33px;font-weight:600;color:var(--cool);line-height:1}
+.stat span{font-size:12px;color:var(--ink2);line-height:1.4}
+.pill{display:inline-flex;align-items:center;gap:7px;background:#fff8ec;border:1px solid #f2d9a8;color:#8a5a06;font-size:12px;font-weight:700;padding:7px 12px;border-radius:999px}
+.pill.off{background:var(--sunken);border-color:var(--line2);color:var(--ink3)}
+
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 11px;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:999px;cursor:pointer}
+.fchip.on{background:var(--cool);border-color:var(--cool);color:#fff}
+.fchip .e{opacity:.75;font-size:11px}
+
+.seg{display:flex;background:var(--sunken);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--ink2);padding:9px 4px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(16,36,63,.13)}
+.seg button:disabled{opacity:.3}
+.step{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:12.5px;font-weight:600}
+.step .g{display:flex;gap:3px;align-items:center;background:var(--sunken);border-radius:11px;padding:3px}
+.step button{width:31px;height:31px;border:0;background:var(--paper);border-radius:8px;font-size:17px;cursor:pointer;color:var(--ink);box-shadow:0 1px 2px rgba(16,36,63,.12)}
+.step .v{min-width:32px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600}
+
+.li{display:flex;align-items:center;gap:9px;padding:10px 11px;background:var(--paper);border:1px solid var(--line);border-radius:13px;margin-bottom:6px;cursor:pointer}
+.li.on{border-color:var(--cool);background:#f2f8ff;border-width:1.5px}
+.li .rd{width:17px;height:17px;border-radius:50%;border:1.6px solid var(--line2);flex:none;display:grid;place-items:center}
+.li.on .rd{border-color:var(--cool)}
+.li.on .rd::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--cool)}
+.li .cb{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--line2);flex:none;display:grid;place-items:center;color:#fff}
+.li.on .cb{background:var(--cool);border-color:var(--cool)}
+.li .cb .ic{opacity:0}.li.on .cb .ic{opacity:1}
+.li .nm{flex:1;font-size:13px;font-weight:600;min-width:0}
+.li .nm em{font-style:normal;font-weight:400;font-size:10.5px;color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li.off .nm{opacity:.42}.li.off .nm b{text-decoration:line-through}
+.li .q{font-family:var(--mono);font-size:10.5px;color:var(--ink3);white-space:nowrap}
+.li .act{border:0;background:transparent;color:var(--ink3);cursor:pointer;font-size:13.5px;padding:4px 5px;border-radius:7px}
+.li .act:active{background:var(--sunken)}
+.li.done{opacity:.45}
+.li .tg{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:999px;background:var(--sunken);color:var(--ink3);white-space:nowrap}
+.li.ed{background:#f2f8ff;border-color:var(--cool);border-width:1.5px;flex-wrap:wrap;gap:7px;cursor:default}
+.li.ed .full{flex-basis:100%}
+.edbar{display:flex;gap:6px;flex-basis:100%;margin-top:2px}
+.edbar button{flex:1;border:1px solid var(--line2);background:var(--paper);font-family:var(--body);font-size:12px;font-weight:700;
+  padding:8px 4px;border-radius:10px;cursor:pointer;color:var(--ink2)}
+.edbar .save{background:var(--cool);border-color:var(--cool);color:#fff}
+.edbar .del{color:var(--bad);border-color:#f3c9c9}
+
+.inp{flex:1;min-width:0;font-family:var(--body);font-size:12.5px;font-weight:600;padding:8px 10px;border:1px solid var(--line2);
+  background:var(--paper);color:var(--ink);border-radius:10px}
+.inp:focus{outline:none;border-color:var(--cool)}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow button{padding:0 13px;font-family:var(--body);font-size:12.5px;font-weight:700;border:1px solid var(--line2);background:var(--paper);color:var(--cool);border-radius:10px;cursor:pointer}
+.qty{display:flex;align-items:center;gap:2px;background:var(--sunken);border-radius:9px;padding:2px;flex:none;font-family:var(--mono);font-size:12px}
+.qty button{width:26px;height:26px;border:0;background:var(--paper);border-radius:7px;cursor:pointer;font-size:15px;color:var(--ink)}
+.qty span{min-width:20px;text-align:center;font-weight:600}
+
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tgl:last-child{border-bottom:0}
+.tgl b{font-size:12.5px;font-weight:600;display:block}
+.tgl i{font-style:normal;font-size:10.5px;color:var(--ink3);display:block;margin-top:1px;line-height:1.4}
+.sw{width:42px;height:24px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:.18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:var(--ok)}.sw.on::after{transform:translateX(18px)}
+
+.win{background:linear-gradient(168deg,#1b4f86,#0e2b4c);border-radius:16px;padding:15px 13px;text-align:center;color:#fff}
+.win .k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;opacity:.6}
+.win .n{font-family:var(--disp);font-size:32px;font-weight:700;line-height:1.62}
+.win .f{font-size:11.5px;opacity:.65}
+.win .p{font-family:var(--mono);font-size:10px;color:#ffc76b;letter-spacing:.08em;margin-top:6px}
+.win .cfm{display:flex;gap:7px;margin-top:12px}
+.win .cfm button{flex:1;border:0;font-family:var(--body);font-size:12.5px;font-weight:700;padding:10px 6px;border-radius:11px;cursor:pointer}
+.win .cfm .y{background:var(--ok);color:#fff}
+.win .cfm .n2{background:rgba(255,255,255,.14);color:#fff}
+.empty{text-align:center;color:var(--ink3);font-size:12px;padding:18px 10px;line-height:1.7}
+
+.hist .h{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.hist .h:last-child{border-bottom:0}
+.hist .h .no{font-family:var(--mono);font-size:10px;color:var(--ink3);width:17px}
+.hist .h .nm{flex:1;font-weight:600;min-width:0}
+.hist .h .nm em{font-style:normal;font-weight:400;font-size:10.5px;color:var(--ink3);display:block}
+.hist .h .tg{font-size:10px;font-weight:700;color:var(--gold);white-space:nowrap}
+.minirow{display:flex;gap:6px;margin-top:9px}
+.minirow button{flex:1;border:1px solid var(--line2);background:var(--paper);color:var(--ink2);font-family:var(--body);font-size:11.5px;font-weight:600;padding:9px 4px;border-radius:11px;cursor:pointer}
+.minirow button.danger{color:var(--bad)}
+
+.go{width:100%;border:0;background:var(--cool);color:#fff;font-family:var(--disp);font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;border-radius:15px;padding:17px;font-size:17px;
+  box-shadow:0 6px 16px rgba(29,127,216,.3)}
+.go:active{background:var(--cool2)}
+.go:disabled{background:var(--line2);color:var(--ink3);box-shadow:none}
+
+.tabbar{flex:none;display:flex;background:var(--paper);border-top:1px solid var(--line);padding:5px 3px 9px}
+.tabbar button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:var(--body);font-size:9.5px;font-weight:600;color:var(--ink3);padding:6px 1px;cursor:pointer;border-radius:10px;position:relative}
+.tabbar button .ic{font-size:18px}
+.tabbar button.on{color:var(--cool)}
+.tabbar .badge{position:absolute;top:2px;right:calc(50% - 19px);background:var(--hot);color:#fff;font-family:var(--mono);font-size:8.5px;
+  min-width:14px;height:14px;border-radius:99px;display:grid;place-items:center;padding:0 3px}
+
+/* ── หน้ารวมเกม ── */
+.game{display:flex;align-items:center;gap:13px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:15px 14px;cursor:pointer}
+.game:active{border-color:var(--cool)}
+.game .tile{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:#fff;flex:none;font-size:23px}
+.game .tx{flex:1;min-width:0}
+.game .tx b{font-family:var(--disp);font-size:16px;font-weight:700;display:block;line-height:1.3}
+.game .tx span{font-size:11.5px;color:var(--ink3);display:block;margin-top:2px;line-height:1.45}
+.game .tx .live{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--ok);margin-top:5px}
+.game .tx .live i{width:6px;height:6px;border-radius:50%;background:var(--ok);display:block;animation:bl 1.2s infinite}
+@keyframes bl{50%{opacity:.25}}
+.game .cv{color:var(--ink3);font-size:17px}
+.soon{border-style:dashed;opacity:.72;cursor:default}
+.soon .tile{background:var(--sunken);color:var(--ink3)}
+
+/* ── หน้าบิงโก (ตัวอย่างพอให้เห็นว่าอยู่ใต้เมนูเดียวกัน) ── */
+.ball{width:96px;height:96px;border-radius:50%;background:linear-gradient(160deg,#1b4f86,#0e2b4c);color:#fff;
+  display:grid;place-items:center;font-family:var(--mono);font-size:38px;font-weight:600;margin:4px auto 0;box-shadow:0 8px 18px rgba(16,36,63,.22)}
+.called{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.called span{font-family:var(--mono);font-size:11px;background:var(--sunken);color:var(--ink2);padding:4px 7px;border-radius:7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><div class="ph"><div class="scr" id="P"></div></div></div>
+
+  <div class="side">
+    <h1>แบบ B · แท็บล่าง + เมนูเกม</h1>
+    <p>เปิดมาเจอหน้า <b>เกม</b> ก่อน แล้วเลือกเข้าบิงโกหรือสุ่มรายชื่อ · ปรับตามที่สั่งครบทั้ง 5 ข้อ กดใช้งานได้จริงทุกปุ่ม</p>
+
+    <h3>เมนูเกม</h3>
+    <p>รวมบิงโกกับสุ่มรายชื่อไว้ที่เดียว แต่ละการ์ดบอกสถานะสดว่ากำลังเล่นอยู่กี่ห้อง สุ่มไปแล้วกี่คน รางวัลเหลือเท่าไหร่ — สตาฟรู้ทันทีว่าอะไรค้างอยู่โดยไม่ต้องกดเข้าไปดู มีช่องเผื่อเกมใหม่ในอนาคตด้วย</p>
+
+    <h3>ต้องแก้อะไรในโค้ดจริง</h3>
+    <ul>
+      <li><code>Dashboard.jsx</code> — ในกลุ่ม <code>duringTrip</code> เปลี่ยนรายการ <code>bingoHost</code> เป็น <code>{ to:'/staff/games', key:'games', icon:'game' }</code></li>
+      <li><code>App.jsx</code> — เพิ่ม route <code>/staff/games</code> และย้าย <code>/staff/bingo-host</code> ให้อยู่ใต้เมนูนี้ (ยังเข้าลิงก์ตรงได้เหมือนเดิม ไม่พังของเก่า)</li>
+      <li><code>Icon.jsx</code> — เพิ่มไอคอน <code>game</code></li>
+      <li><code>th.json / en.json</code> — เพิ่มคีย์ <code>games</code></li>
+    </ul>
+
+    <h3>ที่แก้ไป (ตามที่สั่ง)</h3>
+    <ol>
+      <li><b>สุ่มกี่คน + รูปแบบการเฉลย</b> ย้ายมาอยู่หน้าสุ่ม ใต้การ์ดสถานะ ปรับแล้วกดสุ่มได้ทันทีไม่ต้องสลับแท็บ</li>
+      <li><b>ธีมจอใหญ่</b> เป็นดรอปดาวน์มุมบนขวา มีจุดสีนำหน้าให้เห็นว่าเลือกอันไหน ถัดมาเป็นปุ่มขยายเต็มจอ</li>
+      <li><b>ห้องสุ่ม</b> ย้ายไปแท็บตั้งค่า แต่ละห้องกด ✎ แก้ชื่อได้ ปุ่มลบย้ายเข้าไปอยู่ในโหมดแก้ไข</li>
+      <li><b>ตัวกรอง</b> เลือกได้ทีละอัน — ทั้งหมด / รถคัน 1 / รถคัน 2 / กลุ่มพิเศษ (กด ✎ เปลี่ยนชื่อได้ และติ๊กเลือกสมาชิกเองทั้งหมด)</li>
+      <li><b>ปุ่มเปิดปิดรางวัล</b> เป็นสวิตช์เลื่อน</li>
+    </ol>
+
+    <h3>สองเรื่องที่ขอแย้ง</h3>
+    <div class="flag">
+      <b>ตัวกรอง "เช็คอินแล้ว" หายไป</b>
+      <p>พอเหลือ 4 ตัวเลือกแบบเลือกทีละอัน ตัวกรองเช็คอินก็หลุดไป ซึ่งเสี่ยง — สุ่มได้ชื่อคนที่ยังไม่ขึ้นรถแล้วประกาศหน้าเวที จะเสียจังหวะทันที ผมเลยแยกออกมาเป็นสวิตช์ "นับเฉพาะคนที่เช็คอินแล้ว" ไว้ใต้แถวตัวกรอง เปิดไว้เป็นค่าเริ่มต้น ทำงานร่วมกับตัวกรองได้ทุกอัน ถ้าไม่ชอบบอกได้ ผมถอดออกให้</p>
+    </div>
+    <div class="flag">
+      <b>ปุ่มลบที่ย้ายเข้าโหมดแก้ไข</b>
+      <p>ผมทำให้เหมือนกันหมดทั้งห้อง รางวัล และคนที่เพิ่มเอง ไม่ใช่แค่ห้อง เพราะถ้าห้องต้องกด ✎ ก่อนลบ แต่รางวัลลบได้เลยจากหน้าแรก มันจะจำยากและเสี่ยงกดพลาดตอนอยู่หน้างาน</p>
+    </div>
+
+    <h3>ที่คงไว้เหมือนเดิม</h3>
+    <ul>
+      <li>แท็บสุ่ม / รายชื่อ / รางวัล / ประวัติ / ตั้งค่า</li>
+      <li>ยืนยันผู้ชนะ · ไม่อยู่แล้วสุ่มใหม่ · ย้อนกลับ · ล้างห้อง · ใบเซ็นรับรางวัล</li>
+      <li>สุ่มหลายคนบังคับใช้แบบคัดออกอัตโนมัติ</li>
+      <li>เพิ่มคนนอกระบบ และแก้ชื่อเล่นที่จะประกาศบนจอ</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ═══════════ ข้อมูล ═══════════ */
+const GUESTS=[
+ {n:'สมชาย ใจดี',k:'ชาย',g:'m',bus:1,ci:1},{n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',bus:1,ci:1},
+ {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',bus:1,ci:1},{n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',bus:1,ci:1},
+ {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',bus:1,ci:0},{n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',bus:1,ci:1},
+ {n:'วีระ ชัยมงคล',k:'โจ',g:'m',bus:1,ci:1},{n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',bus:1,ci:1},
+ {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',bus:1,ci:1},{n:'จันทิมา บุญมา',k:'จัน',g:'f',bus:1,ci:0},
+ {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',bus:1,ci:1},{n:'สุภาวดี พรหมมา',k:'แนน',g:'f',bus:1,ci:1},
+ {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',bus:2,ci:1},{n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',bus:2,ci:1},
+ {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',bus:2,ci:1},{n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',bus:2,ci:1},
+ {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',bus:2,ci:1},{n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',bus:2,ci:0},
+ {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',bus:2,ci:1},{n:'อารียา สมบูรณ์',k:'อาร์',g:'f',bus:2,ci:1},
+ {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',bus:2,ci:1},{n:'สุนิสา แก้วใส',k:'นิด',g:'f',bus:2,ci:1}];
+const THEMES=[['led','ป้ายไฟ LED','#2be8c8'],['board','ป้ายพลิก','#ff6b35'],['emerald','มรกต-ทอง','#d4af37'],
+ ['sky','ฟ้าใส','#1d7fd8'],['grid','กระดาษกราฟ','#d6402c'],['candy','ลูกกวาด','#e0417a']];
+const ANIMS=[['slot','สล็อต'],['wheel','วงล้อ'],['elim','คัดออก']];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=i=>document.getElementById(i);
+const CHECK='<svg class="ic" style="font-size:12px" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>';
+const I={bolt:'M13 2 4 14h6l-1 8 9-12h-6l1-8Z',gift:'M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6',
+ people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9',
+ clock:'M12 8v5l3 2M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5',
+ gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4Z',
+ expand:'M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3',
+ chevron:'m6 9 6 6 6-6',back:'m15 18-6-6 6-6',right:'m9 18 6-6-6-6',
+ game:'M6 12h4M8 10v4M15 13h.01M18 11h.01M17.3 5H6.7A4.7 4.7 0 0 0 2 9.7l-.9 6A3.6 3.6 0 0 0 4.7 20c1.2 0 2.3-.6 3-1.6L9 17h6l1.3 1.4c.7 1 1.8 1.6 3 1.6a3.6 3.6 0 0 0 3.6-4.3l-.9-6A4.7 4.7 0 0 0 17.3 5Z',
+ bingo:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z',
+ plus:'M12 5v14M5 12h14'};
+const svg=(d,sz)=>`<svg class="ic"${sz?` style="font-size:${sz}"`:''} viewBox="0 0 24 24"><path d="${d}"/></svg>`;
+
+let pzSeq=0,roomSeq=0;
+const mkPz=()=>[{id:'p'+(++pzSeq),n:'รางวัลที่ 3 · กระเป๋าเดินทาง',q:3,left:3},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 2 · หูฟังไร้สาย',q:2,left:2},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 1 · ทีวี 43 นิ้ว',q:1,left:1}];
+const mkRoom=(name,filter)=>({id:'r'+(++roomSeq),name,filter:filter||'all',
+  customName:'กลุ่มพิเศษ',custom:new Set(),      // ตัวกรอง Custom — ตั้งสมาชิกเองทั้งหมด
+  off:new Set(),extra:[],nick:{},
+  prizes:mkPz(),pzId:null,usePz:true,results:[],pending:null,last:null});
+
+const S={rooms:[mkRoom('รถคัน 1','bus1'),mkRoom('รถคัน 2','bus2')],rid:null,
+  mode:'one',count:3,anim:'slot',theme:'led',checkinOnly:true,
+  rules:{nodup:true,confirm:true,fx:true},
+  screen:'hub',tab:'draw',editPz:null,editP:null,editRoom:null,editFilter:false};
+S.rid=S.rooms[0].id;
+
+const R=()=>S.rooms.find(r=>r.id===S.rid);
+const NK=(r,p)=>r.nick[p.n]||p.k||p.n;
+const members=r=>[...GUESTS,...r.extra];
+function fOpts(r){return [['all','ทั้งหมด'],['bus1','รถคัน 1'],['bus2','รถคัน 2'],['custom',r.customName]]}
+/* ตัวกรองเลือกได้ทีละอัน · Custom = เซ็ตที่ตั้งเอง · สวิตช์เช็คอินทำงานทับอีกชั้น */
+function passFilter(r,p){
+  if(r.filter==='custom')return r.custom.has(p.n);
+  if(p.custom)return true;
+  if(r.filter==='bus1')return p.bus===1;
+  if(r.filter==='bus2')return p.bus===2;
+  return true;
+}
+function visible(r){return members(r).filter(p=>passFilter(r,p))}
+function pool(){const r=R();
+  return visible(r).filter(p=>!r.off.has(p.n)
+    &&!(S.checkinOnly&&!p.custom&&!p.ci)
+    &&!(S.rules.nodup&&r.results.some(x=>x.n===p.n)))}
+function curPz(){const r=R();if(!r.usePz)return null;
+  return r.prizes.find(p=>p.id===r.pzId&&p.left>0)||r.prizes.find(p=>p.left>0)||null}
+const needCnt=()=>S.mode==='many'?S.count:1;
+const A=v=>`data-a="${v}"`;
+
+/* ═══════════ หน้าจอ ═══════════ */
+function vDraw(){const r=R(),p=pool(),cp=curPz(),many=S.mode==='many';
+  return `<div class="card"><div class="lbl">พร้อมสุ่ม</div>
+      <div class="stat"><b>${p.length}</b><span>คนใน${esc(r.name)}<br>
+        <span style="color:var(--ink3)">${fOpts(r).find(f=>f[0]===r.filter)[1]}${S.checkinOnly?' · เฉพาะที่เช็คอินแล้ว':''}</span></span></div>
+      <div style="margin-top:11px">${cp?`<span class="pill">${svg(I.gift,'14px')}${esc(cp.n)} · เหลือ ${cp.left}</span>`
+        :'<span class="pill off">ไม่ผูกรางวัล</span>'}</div></div>
+
+    <div class="card"><div class="lbl">สุ่มกี่คน</div>
+      <div class="seg"><button class="${!many?'on':''}" ${A('mode:one')}>สุ่มทีละคน</button>
+        <button class="${many?'on':''}" ${A('mode:many')}>สุ่มหลายคน</button></div>
+      ${many?`<div class="step"><span>จำนวนที่สุ่ม</span><div class="g">
+        <button ${A('cnt:-1')}>−</button><span class="v">${S.count}</span><button ${A('cnt:1')}>+</button></div></div>`:''}
+      <div class="lbl" style="margin:15px 0 9px">รูปแบบการเฉลย</div>
+      <div class="seg">${ANIMS.map(([k,t])=>`<button class="${S.anim===k?'on':''}" ${many&&k!=='elim'?'disabled':''} ${A('anim:'+k)}>${t}</button>`).join('')}</div>
+      ${many?'<div class="hint">สุ่มหลายคนใช้แบบคัดออกเท่านั้น สล็อตกับวงล้อเฉลยได้ทีละชื่อ</div>':''}</div>
+
+    ${vResult()}
+    <button class="go" ${A('draw')} style="margin-top:auto" ${p.length<needCnt()||r.pending?'disabled':''}>
+      ${svg(I.bolt,'19px')}${r.pending?'รอยืนยันผู้ชนะ':(many?'สุ่ม '+S.count+' คน':'สุ่มเลย')}</button>`}
+
+function vResult(){const r=R();
+  if(r.pending){const w=r.pending.ws[0];
+    return `<div class="win"><div class="k">รอยืนยัน</div>
+      <div class="n">${esc(w.k)}</div><div class="f">${esc(w.n)}</div>
+      ${r.pending.pz?`<div class="p">${esc(r.pending.pz.n)}</div>`:''}
+      <div class="cfm"><button class="y" ${A('cf-yes')}>ยืนยัน รับแล้ว</button>
+        <button class="n2" ${A('cf-no')}>ไม่อยู่ สุ่มใหม่</button></div></div>`}
+  if(!r.last)return '<div class="card"><div class="empty">ยังไม่มีการสุ่มในห้องนี้<br>กดปุ่มด้านล่างเพื่อเริ่ม</div></div>';
+  const ws=r.last,pz=r.results[r.results.length-1]?.pz;
+  return `<div class="win"><div class="k">${ws.length>1?'ผู้โชคดี '+ws.length+' คน':'ผู้โชคดี'}</div>
+    <div class="n">${esc(ws[0].k)}</div><div class="f">${esc(ws[0].n)}</div>
+    ${ws.length>1?`<div class="f" style="margin-top:6px">+ ${ws.slice(1).map(w=>esc(w.k)).join(' · ')}</div>`:''}
+    ${pz?`<div class="p">${esc(pz)}</div>`:''}</div>`}
+
+function vList(){const r=R(),vis=visible(r),cus=r.filter==='custom';
+  return `<div class="card">
+    <div class="lbl">ตัวกรอง</div>
+    <div class="fchips">${fOpts(r).map(([k,t])=>`<span class="fchip ${r.filter===k?'on':''}" ${A('filter:'+k)}>${esc(t)}
+      ${k==='custom'?`<span class="e" ${A('filter-edit')}>✎</span>`:''}</span>`).join('')}</div>
+    ${S.editFilter?`<div class="addrow"><input class="inp" id="fName" value="${esc(r.customName)}">
+      <button ${A('filter-save')}>บันทึกชื่อ</button></div>`:''}
+    <div class="tgl" style="margin-top:11px;border:0;padding-bottom:0">
+      <div><b>นับเฉพาะคนที่เช็คอินแล้ว</b><i>กันสุ่มโดนคนที่ยังไม่ขึ้นรถ</i></div>
+      <div class="sw ${S.checkinOnly?'on':''}" ${A('checkin')}></div></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl"><span>${cus?'ติ๊กเลือกสมาชิกของกลุ่มนี้':'อยู่ในกลุ่มสุ่ม'} ${pool().length} / ${vis.length} คน</span>
+      <span><a ${A('all:1')}>เลือกทั้งหมด</a> · <a ${A('all:0')}>ล้าง</a></span></div>
+    ${(cus?members(r):vis).map(p=>{
+      if(S.editP===p.n)return `<div class="li ed">
+        <input class="inp" id="eNick" value="${esc(NK(r,p))}" placeholder="ชื่อเล่นที่จะประกาศ">
+        ${p.custom?`<input class="inp full" id="eFull" value="${esc(p.n)}" placeholder="ชื่อ-นามสกุล">`:''}
+        <div class="edbar"><button class="save" ${A('p-save:'+esc(p.n))}>บันทึก</button>
+          <button ${A('p-cancel')}>ยกเลิก</button>
+          ${p.custom?`<button class="del" ${A('p-del:'+esc(p.n))}>ลบ</button>`:''}</div></div>`;
+      const on=cus?r.custom.has(p.n):!r.off.has(p.n);
+      return `<div class="li ${on?'on':'off'}" ${A('off:'+esc(p.n))}>
+        <span class="cb">${CHECK}</span>
+        <span class="nm"><b>${esc(NK(r,p))}</b><em>${esc(p.n)}</em></span>
+        ${p.custom?'<span class="tg">เพิ่มเอง</span>':(!p.ci?'<span class="tg">ยังไม่เช็คอิน</span>':'')}
+        <button class="act" ${A('p-edit:'+esc(p.n))}>✎</button></div>`}).join('')
+      ||'<div class="empty">ยังไม่มีใครในกลุ่มนี้<br>ติ๊กเลือกจากรายชื่อด้านบน</div>'}
+    <div class="addrow"><input class="inp" id="newP" placeholder="เพิ่มคนนอกระบบ เช่น พี่คนขับ">
+      <button ${A('p-new')}>เพิ่ม</button></div>
+    <div class="hint">แตะแถวเพื่อ${cus?'ใส่/เอาออกจากกลุ่ม':'เอาออก/ใส่กลับ'} · ✎ แก้ชื่อเล่นที่จะประกาศบนจอ (ปุ่มลบอยู่ในโหมดแก้ไข)</div>
+  </div>`}
+
+function vPz(){const r=R(),cp=curPz();
+  return `<div class="card">
+    <div class="tgl" style="border:0;padding:0 0 11px"><div><b>ผูกรางวัลกับการสุ่ม</b>
+      <i>${r.usePz?'ผู้ถูกสุ่มจะได้รับรางวัลที่เลือกไว้':'ปิดอยู่ — สุ่มได้แต่ไม่ผูกของ เหมาะกับสุ่มคนออกมาเล่นกิจกรรม'}</i></div>
+      <div class="sw ${r.usePz?'on':''}" ${A('pz-toggle')}></div></div>
+    <div style="${r.usePz?'':'opacity:.4;pointer-events:none'}">
+      ${r.prizes.map(p=>{
+        if(S.editPz===p.id)return `<div class="li ed">
+          <input class="inp" id="ePzN" value="${esc(p.n)}" placeholder="ชื่อรางวัล">
+          <div class="qty"><button ${A('pz-q:'+p.id+':-1')}>−</button><span id="ePzQ">${p.q}</span><button ${A('pz-q:'+p.id+':1')}>+</button></div>
+          <div class="edbar"><button class="save" ${A('pz-save:'+p.id)}>บันทึก</button>
+            <button ${A('pz-cancel')}>ยกเลิก</button>
+            <button class="del" ${A('pz-del:'+p.id)}>ลบ</button></div></div>`;
+        return `<div class="li ${cp===p?'on':''} ${p.left===0?'done':''}" ${A('pz:'+p.id)}>
+          <span class="rd"></span><span class="nm">${esc(p.n)}</span>
+          <span class="q">${p.left===0?'หมด':p.left+'/'+p.q}</span>
+          <button class="act" ${A('pz-edit:'+p.id)}>✎</button></div>`}).join('')
+        ||'<div class="empty">ยังไม่มีรางวัล</div>'}
+      <div class="addrow"><input class="inp" id="newPz" placeholder="ชื่อรางวัลใหม่">
+        <button ${A('pz-new')}>เพิ่ม</button></div>
+      <div class="hint">แตะเพื่อเลือกชิ้นที่กำลังสุ่ม · ✎ แก้ชื่อ จำนวน และลบ</div>
+    </div></div>`}
+
+function vHist(){const r=R();
+  return `<div class="card">
+    <div class="lbl"><span>ผู้โชคดีใน${esc(r.name)}</span><span>${r.results.length} คน</span></div>
+    ${r.results.length?`<div class="hist">${[...r.results].reverse().map((x,i)=>`<div class="h">
+      <span class="no">${String(r.results.length-i).padStart(2,'0')}</span>
+      <span class="nm">${esc(x.k)}<em>${esc(x.n)}</em></span>
+      ${x.pz?`<span class="tg">${esc(x.pz.split('·')[0].trim())}</span>`:''}</div>`).join('')}</div>`
+      :'<div class="empty">ยังไม่มีการสุ่มในห้องนี้</div>'}
+    <div class="minirow"><button ${A('undo')}>ย้อนกลับ</button>
+      <button ${A('export')}>ใบเซ็นรับ</button>
+      <button class="danger" ${A('reset')}>ล้างห้อง</button></div></div>`}
+
+function vSet(){
+  return `<div class="card"><div class="lbl">ห้องสุ่ม</div>
+    ${S.rooms.map(x=>{
+      if(S.editRoom===x.id)return `<div class="li ed">
+        <input class="inp" id="eRoom" value="${esc(x.name)}" placeholder="ชื่อห้อง">
+        <div class="edbar"><button class="save" ${A('room-save:'+x.id)}>บันทึก</button>
+          <button ${A('room-cancel')}>ยกเลิก</button>
+          ${S.rooms.length>1?`<button class="del" ${A('room-del:'+x.id)}>ลบห้อง</button>`:''}</div></div>`;
+      return `<div class="li ${x.id===S.rid?'on':''}" ${A('room:'+x.id)}>
+        <span class="rd"></span><span class="nm">${esc(x.name)}<em>สุ่มแล้ว ${x.results.length} คน</em></span>
+        <button class="act" ${A('room-edit:'+x.id)}>✎</button></div>`}).join('')}
+    <div class="addrow"><input class="inp" id="newRoom" placeholder="ชื่อห้องใหม่ เช่น รถคัน 3">
+      <button ${A('room-new')}>สร้าง</button></div>
+    <div class="hint">แต่ละห้องมีรายชื่อ รางวัล และประวัติของตัวเอง เล่นพร้อมกันคนละคันได้ · ✎ แก้ชื่อและลบ</div></div>
+
+  <div class="card"><div class="lbl">กติกา</div>
+    ${[['nodup','ไม่สุ่มซ้ำคนเดิม','ตัดคนที่เคยถูกสุ่มในห้องนี้'],
+       ['confirm','ต้องยืนยันผู้ชนะ','ถ้าคนไม่อยู่ กดสุ่มใหม่ได้ทันที'],
+       ['fx','เสียงและคอนเฟตตี้','รัวกลอง เสียงชนะ สั่นมือถือ']]
+      .map(([k,t,d])=>`<div class="tgl"><div><b>${t}</b><i>${d}</i></div>
+        <div class="sw ${S.rules[k]?'on':''}" ${A('rule:'+k)}></div></div>`).join('')}</div>`}
+
+/* ═══ หน้ารวมเกม — ประตูเดียวก่อนเข้าบิงโกหรือสุ่มรายชื่อ ═══ */
+const BINGO={rooms:2,cards:18,last:47,called:[7,19,23,31,42,47],waiting:1};
+function vHub(){
+  const drawn=S.rooms.reduce((a,r)=>a+r.results.length,0);
+  const pzLeft=S.rooms.reduce((a,r)=>a+r.prizes.reduce((b,p)=>b+p.left,0),0);
+  return `<div class="game" ${A('go:bingo')}>
+      <div class="tile" style="background:linear-gradient(150deg,#f2724b,#d6402c)">${svg(I.bingo)}</div>
+      <div class="tx"><b>บิงโก</b><span>แจกใบบิงโกให้ลูกทัวร์ แล้วประกาศเลขจากมือถือ</span>
+        ${BINGO.rooms?`<span class="live"><i></i>กำลังเล่น ${BINGO.rooms} ห้อง · ${BINGO.cards} ใบ</span>`:''}</div>
+      <span class="cv">${svg(I.right,'17px')}</span></div>
+
+    <div class="game" ${A('go:draw')}>
+      <div class="tile" style="background:linear-gradient(150deg,#1d7fd8,#1567b3)">${svg(I.bolt)}</div>
+      <div class="tx"><b>สุ่มรายชื่อ</b><span>จับรางวัล หรือสุ่มคนออกมาเล่นกิจกรรม</span>
+        <span class="live" style="color:var(--ink3)"><i style="background:var(--ink3);animation:none"></i>สุ่มแล้ว ${drawn} คน · รางวัลเหลือ ${pzLeft} ชิ้น</span></div>
+      <span class="cv">${svg(I.right,'17px')}</span></div>
+
+    <div class="game soon">
+      <div class="tile">${svg(I.plus)}</div>
+      <div class="tx"><b>เกมอื่นๆ</b><span>ใบ้คำ · ทายเพลง · ควิซระหว่างทาง — เพิ่มเข้ามาในเมนูนี้ได้ทีหลัง</span></div></div>
+
+    <div class="hint" style="padding:0 4px">เมนูนี้แทนที่ปุ่ม "บิงโก" เดิมในหมวดระหว่างทริปของหน้าหลัก
+      ทำให้เกมทั้งหมดอยู่ที่เดียว และเพิ่มเกมใหม่ได้โดยไม่ทำให้เมนูหน้าหลักยาวขึ้น</div>`}
+
+function vBingo(){
+  return `<div class="card"><div class="lbl"><span>ห้องที่กำลังเล่น</span><span>${BINGO.cards} ใบ</span></div>
+      <div class="li on"><span class="rd"></span><span class="nm">รอบเย็น รถคัน 1<em>12 ใบ · ประกาศไปแล้ว ${BINGO.called.length} เลข</em></span></div>
+      <div class="li"><span class="rd"></span><span class="nm">รอบเย็น รถคัน 2<em>6 ใบ · ยังไม่เริ่ม</em></span></div></div>
+    <div class="card" style="text-align:center"><div class="lbl" style="justify-content:center">เลขล่าสุด</div>
+      <div class="ball">${BINGO.last}</div>
+      <div class="called">${BINGO.called.map(n=>`<span>${n}</span>`).join('')}</div></div>
+    ${BINGO.waiting?`<div class="win"><div class="k">มีคนกดบิงโก</div><div class="n">มิ้น</div>
+      <div class="f">นภัสสร ทองคำ · รอตรวจใบ</div>
+      <div class="cfm"><button class="y">ตรวจแล้วถูกต้อง</button><button class="n2">ไม่ถูก</button></div></div>`:''}
+    <button class="go" style="margin-top:auto">${svg(I.bolt,'19px')}ประกาศเลขถัดไป</button>
+    <div class="hint" style="text-align:center">ตัวอย่างพอให้เห็นว่าอยู่ใต้เมนูเดียวกัน — ของจริงคือหน้า BingoHost ที่มีอยู่แล้ว</div>`}
+
+const TABS=[['draw','สุ่ม',I.bolt],['list','รายชื่อ',I.people],['pz','รางวัล',I.gift],
+  ['hist','ประวัติ',I.clock],['set','ตั้งค่า',I.gear]];
+function render(){
+  const r=R(),p=pool(),th=THEMES.find(t=>t[0]===S.theme);
+  if(S.screen==='hub'){
+    $('P').innerHTML=`
+      <div class="nav">
+        <button class="iconbtn" title="กลับหน้าหลัก">${svg(I.back,'16px')}</button>
+        <div class="t"><b>เกม</b><span>ทริปเชียงใหม่ 3 วัน 2 คืน</span></div>
+      </div>
+      <div class="body">${vHub()}</div>`;
+    return;
+  }
+  if(S.screen==='bingo'){
+    $('P').innerHTML=`
+      <div class="nav">
+        <button class="iconbtn" ${A('go:hub')} title="กลับไปหน้าเกม">${svg(I.back,'16px')}</button>
+        <div class="t"><b>บิงโก</b><span>เกม · ทริปเชียงใหม่</span></div>
+      </div>
+      <div class="body">${vBingo()}</div>`;
+    return;
+  }
+  const view={draw:vDraw,list:vList,pz:vPz,hist:vHist,set:vSet}[S.tab]();
+  $('P').innerHTML=`
+    <div class="nav">
+      <button class="iconbtn" ${A('go:hub')} title="กลับไปหน้าเกม">${svg(I.back,'16px')}</button>
+      <div class="t"><b>${TABS.find(t=>t[0]===S.tab)[1]}</b><span>${esc(r.name)} · ${p.length} คนในกลุ่ม</span></div>
+      ${S.tab==='draw'?`<div class="themesel"><span class="dot" style="background:${th[2]}"></span>
+          <select ${A('theme')} id="themeSel">${THEMES.map(([k,t])=>`<option value="${k}" ${k===S.theme?'selected':''}>${t}</option>`).join('')}</select>
+          <span class="cv">${svg(I.chevron,'12px')}</span></div>
+        <button class="iconbtn" ${A('stage')} title="เปิดจอใหญ่เต็มจอ">${svg(I.expand,'16px')}</button>`:''}
+    </div>
+    <div class="body">${view}</div>
+    <div class="tabbar">${TABS.map(([k,t,d])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">
+      ${svg(d)}${t}${k==='hist'&&r.results.length?`<span class="badge">${r.results.length}</span>`:''}</button>`).join('')}</div>`;
+}
+
+/* ═══════════ การกระทำ ═══════════ */
+const val=id=>($(id)?$(id).value.trim():'');
+function act(v){
+  const r=R(),[k,a,b]=v.split(':');
+  switch(k){
+    case 'go':S.screen=a;S.editPz=S.editP=S.editRoom=null;S.editFilter=false;break;
+    case 'room':S.rid=a;S.editPz=S.editP=S.editRoom=null;break;
+    case 'room-edit':S.editRoom=a;break;
+    case 'room-cancel':S.editRoom=null;break;
+    case 'room-save':{const n=val('eRoom');if(n)S.rooms.find(x=>x.id===a).name=n;S.editRoom=null;break}
+    case 'room-del':if(S.rooms.length>1){S.rooms=S.rooms.filter(x=>x.id!==a);if(S.rid===a)S.rid=S.rooms[0].id}
+      S.editRoom=null;break;
+    case 'room-new':{const n=val('newRoom');if(!n)return;const nr=mkRoom(n);S.rooms.push(nr);S.rid=nr.id;break}
+    case 'filter':r.filter=a;S.editFilter=false;break;
+    case 'filter-edit':r.filter='custom';S.editFilter=!S.editFilter;break;
+    case 'filter-save':{const n=val('fName');if(n)r.customName=n;S.editFilter=false;break}
+    case 'checkin':S.checkinOnly=!S.checkinOnly;break;
+    case 'off':if(r.filter==='custom')r.custom.has(a)?r.custom.delete(a):r.custom.add(a);
+               else r.off.has(a)?r.off.delete(a):r.off.add(a);break;
+    case 'all':{const on=a==='1';
+      if(r.filter==='custom')members(r).forEach(p=>on?r.custom.add(p.n):r.custom.delete(p.n));
+      else visible(r).forEach(p=>on?r.off.delete(p.n):r.off.add(p.n));break}
+    case 'p-new':{const n=val('newP');if(!n)return;
+      if(members(r).some(p=>p.n===n))r.off.delete(n);
+      else{r.extra.push({n,k:n,custom:true});if(r.filter==='custom')r.custom.add(n)}
+      $('newP').value='';break}
+    case 'p-edit':S.editP=a;break;
+    case 'p-cancel':S.editP=null;break;
+    case 'p-save':{const nick=val('eNick'),full=val('eFull');
+      if(nick)r.nick[a]=nick;
+      if(full&&full!==a){const p=r.extra.find(x=>x.n===a);
+        if(p){r.nick[full]=nick||r.nick[a];delete r.nick[a];
+          if(r.custom.delete(a))r.custom.add(full);
+          if(r.off.delete(a))r.off.add(full);
+          p.n=full;p.k=nick||full}}
+      S.editP=null;break}
+    case 'p-del':r.extra=r.extra.filter(x=>x.n!==a);r.off.delete(a);r.custom.delete(a);delete r.nick[a];S.editP=null;break;
+    case 'pz':r.pzId=a;break;
+    case 'pz-toggle':r.usePz=!r.usePz;break;
+    case 'pz-new':{const n=val('newPz');if(!n)return;r.prizes.unshift({id:'p'+(++pzSeq),n,q:1,left:1});$('newPz').value='';break}
+    case 'pz-edit':S.editPz=a;break;
+    case 'pz-cancel':S.editPz=null;break;
+    case 'pz-del':r.prizes=r.prizes.filter(x=>x.id!==a);if(r.pzId===a)r.pzId=null;S.editPz=null;break;
+    case 'pz-q':{const el=$('ePzQ');if(el)el.textContent=Math.max(1,Math.min(99,+el.textContent+ +b));return 'noRender'}
+    case 'pz-save':{const p=r.prizes.find(x=>x.id===a),n=val('ePzN'),q=+($('ePzQ')?.textContent||p.q),used=p.q-p.left;
+      if(n)p.n=n;p.q=q;p.left=Math.max(0,q-used);S.editPz=null;break}
+    case 'mode':S.mode=a;if(a==='many')S.anim='elim';break;
+    case 'cnt':S.count=Math.max(2,Math.min(8,S.count+ +a));break;
+    case 'anim':if(S.mode==='many'&&a!=='elim')return;S.anim=a;break;
+    case 'theme':S.theme=$('themeSel').value;break;
+    case 'rule':S.rules[a]=!S.rules[a];break;
+    case 'draw':draw();break;
+    case 'cf-yes':commit();break;
+    case 'cf-no':r.pending=null;draw();break;
+    case 'undo':{if(!r.results.length)break;const x=r.results.pop();
+      const p=r.prizes.find(y=>y.n===x.pz);if(p&&p.left<p.q)p.left++;
+      if(r.last&&r.last.length===1&&r.last[0].n===x.n)r.last=null;break}
+    case 'reset':r.results=[];r.last=null;r.pending=null;r.prizes.forEach(p=>p.left=p.q);break;
+    case 'export':exportSheet(r);break;
+    case 'stage':alert('เปิดจอใหญ่บนอุปกรณ์ที่ต่อโปรเจกเตอร์\n(ของจริงคือหน้า /staff/lucky-draw/stage ธีม: '
+      +THEMES.find(t=>t[0]===S.theme)[1]+')');break;
+  }
+}
+function draw(){const r=R(),p=pool(),n=Math.min(needCnt(),p.length);if(!n)return;
+  const l=[...p],ws=[];while(ws.length<n)ws.push(...l.splice(Math.floor(Math.random()*l.length),1));
+  r.pending={ws:ws.map(w=>({n:w.n,k:NK(r,w)})),pz:curPz()};
+  if(S.rules.confirm&&S.mode==='one')return;
+  commit();
+}
+function commit(){const r=R(),{ws,pz}=r.pending||{};if(!ws)return;
+  ws.forEach(w=>{const got=pz&&pz.left>0?pz:null;
+    r.results.push({n:w.n,k:w.k,pz:got?got.n:null});if(got)got.left--});
+  r.last=ws;r.pending=null;
+}
+function exportSheet(r){
+  if(!r.results.length){alert('ยังไม่มีผู้ได้รางวัลในห้องนี้');return}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ใบเซ็นรับรางวัล</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>body{font-family:'Noto Sans Thai',sans-serif;padding:32px;color:#10243f}
+  h1{font-size:19px}p{font-size:13px;color:#4a627f;margin:4px 0 16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid #cfdcea;padding:8px 10px;text-align:left}th{background:#f1f6fb}
+  td.s{height:40px;width:180px}</style></head><body>
+  <h1>ใบเซ็นรับรางวัล — ${esc(r.name)}</h1><p>พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} · ${r.results.length} คน</p>
+  <table><tr><th>#</th><th>ชื่อเล่น</th><th>ชื่อ-นามสกุล</th><th>รางวัล</th><th>ลายเซ็น</th></tr>
+  ${r.results.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.k)}</td><td>${esc(x.n)}</td><td>${esc(x.pz||'')}</td><td class="s"></td></tr>`).join('')}
+  </table></body></html>`);
+  w.document.close();
+}
+
+$('P').addEventListener('click',e=>{
+  const tab=e.target.closest('[data-tab]');
+  if(tab){S.tab=tab.dataset.tab;S.editPz=S.editP=S.editRoom=null;S.editFilter=false;render();return}
+  const t=e.target.closest('[data-a]');if(!t)return;
+  if(t.tagName==='SELECT')return;                 // select ใช้ change ไม่ใช่ click
+  if(act(t.dataset.a)==='noRender')return;
+  render();
+});
+$('P').addEventListener('change',e=>{
+  const t=e.target.closest('[data-a]');if(!t||t.tagName!=='SELECT')return;
+  act(t.dataset.a);render();
+});
+
+render();
+</script>
+</body>
+</html>

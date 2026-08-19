@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyTour — สุ่มรายชื่อ (Lucky Draw) prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#077c99; --brand-hover:#066b84; --brand-deep:#05576b;
+  --brand-light:#d4e8ed; --brand-lighter:#f2f8fa; --brand-start:#0bbfec;
+  --accent:#f97362; --accent-bg:#fff1ee; --accent-text:#c23b2c;
+  --surface:#fff; --surface-muted:#f6f9fb; --surface-sunken:#eef4f7;
+  --ink:#0f2b35; --ink-muted:#4e6670; --ink-faint:#5a6f79;
+  --line-subtle:#e8eff2; --line:#d7e3e8; --line-strong:#b9ccd4;
+  --success-bg:#dcfce7; --success-text:#15803d;
+  --warning-bg:#fef3c7; --warning-text:#b45309;
+  --gold:#f5b83d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif;background:#e9eef1;color:var(--ink);padding:26px 20px 60px}
+.page-head{max-width:1300px;margin:0 auto 22px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{color:var(--ink-muted);font-size:14px;margin-top:6px;max-width:78ch;line-height:1.6}
+.wrap{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:392px 1fr;gap:24px;align-items:start}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+.lbl{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ══ HOST PANEL ══ */
+.phone{background:var(--surface-muted);border-radius:26px;padding:14px 12px 20px;box-shadow:0 10px 30px rgba(15,43,53,.10);border:1px solid var(--line);position:sticky;top:20px}
+.hd{display:flex;align-items:center;gap:9px;padding:2px 6px 12px}
+.hd b{font-size:20px;font-weight:800}
+.hd .sub{font-size:12px;color:var(--ink-muted);margin-top:1px}
+.card{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;padding:15px;margin-bottom:11px;box-shadow:0 2px 10px rgba(15,43,53,.05)}
+
+.pool{display:flex;align-items:center;gap:13px}
+.pool-n{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.03em;color:var(--brand)}
+.pool-t{font-size:13px;color:var(--ink-muted);line-height:1.45}
+.pool-t b{color:var(--ink);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.chip{font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);cursor:pointer;user-select:none;transition:.15s}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+.seg{display:flex;background:var(--surface-sunken);border-radius:13px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink-muted);padding:9px 4px;border-radius:10px;cursor:pointer;transition:.15s}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(15,43,53,.10)}
+
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:13px}
+.stepper .t{font-size:13.5px;font-weight:600}
+.stepper .g{display:flex;align-items:center;gap:2px;background:var(--surface-sunken);border-radius:11px;padding:3px}
+.stepper button{width:32px;height:32px;border:0;background:var(--surface);border-radius:9px;font-size:18px;font-weight:700;color:var(--ink);cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(15,43,53,.10)}
+.stepper .v{width:42px;text-align:center;font-size:16px;font-weight:800}
+
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-subtle)}
+.row:last-child{border-bottom:0;padding-bottom:2px}
+.row:first-child{padding-top:2px}
+.row .tx b{font-size:13.5px;font-weight:700;display:block}
+.row .tx span{font-size:11.5px;color:var(--ink-muted);line-height:1.4;display:block;margin-top:2px}
+.sw{width:44px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;flex:none;transition:.18s;margin-top:2px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--success-text)}
+.sw.on::after{transform:translateX(18px)}
+
+.go{width:100%;border:0;border-radius:16px;padding:17px;font-family:inherit;font-size:17px;font-weight:800;color:#fff;background:var(--brand);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 14px rgba(7,124,153,.32);transition:.15s}
+.go:hover{background:var(--brand-hover)}
+.go:disabled{background:var(--line-strong);box-shadow:none;cursor:not-allowed}
+.mini{display:flex;gap:8px;margin-top:9px}
+.mini button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:11px 6px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.mini button:hover{border-color:var(--line-strong);color:var(--ink)}
+
+.hist{max-height:220px;overflow:auto}
+.hi{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-subtle);font-size:13px}
+.hi:last-child{border-bottom:0}
+.hi .n{width:24px;height:24px;border-radius:50%;background:var(--surface-sunken);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--ink-muted);flex:none}
+.hi .nm{font-weight:700;flex:1}
+.hi .tm{font-size:11px;color:var(--ink-faint)}
+.hi .rr{font-size:10.5px;font-weight:700;color:var(--warning-text);background:var(--warning-bg);padding:2px 7px;border-radius:999px}
+.empty{font-size:12.5px;color:var(--ink-faint);text-align:center;padding:16px 0}
+
+/* ══ STAGE ══ */
+.stage-wrap{border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(15,43,53,.20);border:1px solid rgba(0,0,0,.08)}
+.stage-bar{background:#062f3b;color:rgba(255,255,255,.62);font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.stage-bar .dots{display:flex;gap:6px}
+.stage-bar .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22);display:block}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 0%,#0a6d87 0%,#05455a 48%,#032c3a 100%);min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 28px;overflow:hidden;text-align:center}
+.stage::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(60% 40% at 50% 108%,rgba(11,191,236,.30),transparent 70%);pointer-events:none}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:5}
+.st-eyebrow{position:relative;z-index:2;font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:22px}
+.prize{position:relative;z-index:2;display:inline-flex;align-items:center;gap:9px;background:rgba(245,184,61,.16);border:1px solid rgba(245,184,61,.42);color:var(--gold);font-size:14px;font-weight:800;padding:8px 17px;border-radius:999px;margin-bottom:26px}
+
+/* reel */
+.reel-mask{position:relative;z-index:2;height:132px;overflow:hidden;width:100%;max-width:760px;
+  -webkit-mask-image:linear-gradient(transparent,#000 24%,#000 76%,transparent);
+          mask-image:linear-gradient(transparent,#000 24%,#000 76%,transparent)}
+.reel{will-change:transform}
+.reel div{height:132px;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:800;letter-spacing:-.03em;color:#fff;white-space:nowrap}
+.reel div.dim{color:rgba(255,255,255,.34)}
+@media(max-width:700px){.reel div{font-size:40px}.reel div,.reel-mask{height:96px}}
+
+/* winner */
+.winner{position:relative;z-index:2;display:none;flex-direction:column;align-items:center;animation:pop .5s cubic-bezier(.2,1.4,.5,1)}
+.winner.show{display:flex}
+@keyframes pop{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}
+.w-name{font-size:74px;font-weight:800;color:#fff;letter-spacing:-.035em;line-height:1.06;text-shadow:0 4px 30px rgba(11,191,236,.5)}
+.w-nick{font-size:26px;font-weight:700;color:var(--gold);margin-top:6px}
+.w-meta{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.w-meta span{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.17);color:rgba(255,255,255,.9);font-size:14px;font-weight:600;padding:7px 15px;border-radius:999px}
+@media(max-width:700px){.w-name{font-size:42px}.w-nick{font-size:19px}}
+
+/* multi grid */
+.grid-w{position:relative;z-index:2;display:none;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;width:100%;max-width:840px}
+.grid-w.show{display:grid}
+.gw{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;text-align:left;opacity:0;transform:translateY(14px) scale(.94)}
+.gw.in{animation:gin .42s cubic-bezier(.2,1.3,.5,1) forwards}
+@keyframes gin{to{opacity:1;transform:none}}
+.gw i{width:32px;height:32px;border-radius:50%;background:var(--gold);color:#3d2a06;display:grid;place-items:center;font-size:14px;font-weight:800;font-style:normal;flex:none}
+.gw b{color:#fff;font-size:19px;font-weight:800;display:block;line-height:1.25}
+.gw span{color:rgba(255,255,255,.62);font-size:12.5px;display:block;margin-top:1px}
+
+.st-foot{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:rgba(255,255,255,.48);font-weight:600}
+.st-foot b{color:rgba(255,255,255,.8)}
+
+/* notes */
+.notes{max-width:1300px;margin:26px auto 0;background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;padding:20px 22px}
+.notes h3{font-size:15px;font-weight:800;margin-bottom:10px}
+.notes ul{margin-left:18px;color:var(--ink-muted);font-size:13.5px;line-height:1.9}
+.notes code{background:var(--surface-sunken);padding:1px 6px;border-radius:5px;font-size:12.5px;color:var(--brand-deep)}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>สุ่มรายชื่อ — Lucky Draw (prototype)</h1>
+  <p>ต้นแบบเวอร์ชันแรก: สุ่มทีละคน และสุ่มหลายคนพร้อมกัน · ซ้ายคือหน้าคุมของสตาฟบนมือถือ ขวาคือจอใหญ่ที่ฉายให้ลูกทัวร์ดู · กดปุ่ม "สุ่มเลย" ได้เลย มีเสียงและอนิเมชันจริง</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ══════ HOST ══════ -->
+  <div class="phone">
+    <div class="hd">
+      <svg class="ic" style="font-size:22px;color:var(--brand)" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4M4.9 19.1l2.9-2.9M16.2 7.8l2.9-2.9"/></svg>
+      <div><b>สุ่มรายชื่อ</b><div class="sub">ทริปเชียงใหม่ 3 วัน 2 คืน</div></div>
+    </div>
+
+    <!-- pool -->
+    <div class="card">
+      <div class="lbl">รายชื่อที่จะสุ่ม</div>
+      <div class="pool">
+        <div class="pool-n" id="poolN">0</div>
+        <div class="pool-t">คนอยู่ในกลุ่มสุ่ม<br><b id="poolNote">จากลูกทัวร์ทั้งหมด 24 คน</b></div>
+      </div>
+      <div class="chips">
+        <div class="chip on" data-f="checkin">เช็คอินแล้วเท่านั้น</div>
+        <div class="chip" data-f="bus1">รถคัน 1</div>
+        <div class="chip" data-f="bus2">รถคัน 2</div>
+        <div class="chip" data-f="female">เฉพาะผู้หญิง</div>
+      </div>
+    </div>
+
+    <!-- mode -->
+    <div class="card">
+      <div class="lbl">โหมด</div>
+      <div class="seg">
+        <button class="on" data-m="one">สุ่มทีละคน</button>
+        <button data-m="many">สุ่มหลายคน</button>
+      </div>
+      <div class="stepper" id="cntRow" style="display:none">
+        <div class="t">จำนวนที่สุ่ม</div>
+        <div class="g">
+          <button id="dec">−</button><div class="v" id="cntV">3</div><button id="inc">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- rules -->
+    <div class="card">
+      <div class="lbl">กติกา</div>
+      <div class="row">
+        <div class="tx"><b>ไม่สุ่มซ้ำคนเดิม</b><span>คนที่เคยถูกสุ่มในทริปนี้จะถูกตัดออก</span></div>
+        <div class="sw on" data-r="nodup"></div>
+      </div>
+      <div class="row">
+        <div class="tx"><b>ยกเว้นทีมงาน</b><span>สตาฟ 3 คน ไม่ถูกสุ่ม</span></div>
+        <div class="sw on" data-r="nostaff"></div>
+      </div>
+      <div class="row">
+        <div class="tx"><b>เสียง &amp; อนิเมชัน</b><span>รัวกลอง เสียงชนะ และคอนเฟตตี้</span></div>
+        <div class="sw on" data-r="fx"></div>
+      </div>
+    </div>
+
+    <button class="go" id="go">
+      <svg class="ic" style="font-size:19px" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+      สุ่มเลย
+    </button>
+    <div class="mini">
+      <button id="reroll">
+        <svg class="ic" style="font-size:15px" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2M18 3v5h-5M6 21v-5h5"/></svg>
+        สุ่มใหม่แทนคนนี้
+      </button>
+      <button id="reset">
+        <svg class="ic" style="font-size:15px" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+        ล้างประวัติ
+      </button>
+    </div>
+
+    <!-- history -->
+    <div class="card" style="margin-top:11px">
+      <div class="lbl">ผู้โชคดีรอบนี้</div>
+      <div class="hist" id="hist"><div class="empty">ยังไม่มีการสุ่ม</div></div>
+    </div>
+  </div>
+
+  <!-- ══════ STAGE ══════ -->
+  <div>
+    <div class="stage-wrap">
+      <div class="stage-bar">
+        <span>จอใหญ่ · /staff/lucky-draw/stage</span>
+        <span class="dots"><i></i><i></i><i></i></span>
+      </div>
+      <div class="stage">
+        <canvas id="confetti"></canvas>
+        <div class="st-eyebrow" id="eyebrow">พร้อมสุ่มแล้ว</div>
+        <div class="prize" id="prize">
+          <svg class="ic" style="font-size:16px" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6"/></svg>
+          รางวัลที่ 3 · กระเป๋าเดินทาง
+        </div>
+
+        <div class="reel-mask" id="reelMask">
+          <div class="reel" id="reel"></div>
+        </div>
+
+        <div class="winner" id="winner">
+          <div class="w-name" id="wName">—</div>
+          <div class="w-nick" id="wNick"></div>
+          <div class="w-meta" id="wMeta"></div>
+        </div>
+
+        <div class="grid-w" id="gridW"></div>
+
+        <div class="st-foot">
+          <span>สุ่มจาก <b id="footPool">0</b> รายชื่อ</span>
+          <span>รอบที่ <b id="footRound">0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>สิ่งที่ต้นแบบนี้ยังไม่ได้ทำ (ไว้ทำตอนลงโค้ดจริง)</h3>
+      <ul>
+        <li>ตารางจริง <code>draw_sessions</code> / <code>draw_prizes</code> / <code>draw_results</code> — ตอนนี้เก็บใน memory ล้วน</li>
+        <li>Realtime ฝั่งลูกทัวร์ — หน้า <code>/t/:code/lucky-draw</code> เด้งเต็มจอเมื่อตัวเองถูกสุ่ม</li>
+        <li>เก็บ seed ของทุกรอบเพื่อตรวจย้อนหลัง และ log ทุกครั้งที่กด "สุ่มใหม่แทนคนนี้"</li>
+        <li>Export ผู้ได้รางวัลเข้า DocumentHub → ต่อกับ <code>SignatureSheet</code> เป็นใบเซ็นรับรางวัล</li>
+        <li>โหมดแบ่งกลุ่ม / จับคู่ / สุ่มลำดับคิว (เฟส 3)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ mock data ═══════════ */
+const GUESTS = [
+  {n:'สมชาย ใจดี',k:'ชาย',g:'m',seat:'A1',bus:1,ci:1},
+  {n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',seat:'A2',bus:1,ci:1},
+  {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',seat:'A3',bus:1,ci:1},
+  {n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',seat:'A4',bus:1,ci:1},
+  {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',seat:'B1',bus:1,ci:0},
+  {n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',seat:'B2',bus:1,ci:1},
+  {n:'วีระ ชัยมงคล',k:'โจ',g:'m',seat:'B3',bus:1,ci:1},
+  {n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',seat:'B4',bus:1,ci:1},
+  {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',seat:'C1',bus:1,ci:1},
+  {n:'จันทิมา บุญมา',k:'จัน',g:'f',seat:'C2',bus:1,ci:0},
+  {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',seat:'C3',bus:1,ci:1},
+  {n:'สุภาวดี พรหมมา',k:'แนน',g:'f',seat:'C4',bus:1,ci:1},
+  {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',seat:'D1',bus:2,ci:1},
+  {n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',seat:'D2',bus:2,ci:1},
+  {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',seat:'D3',bus:2,ci:1},
+  {n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',seat:'D4',bus:2,ci:1},
+  {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',seat:'E1',bus:2,ci:1},
+  {n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',seat:'E2',bus:2,ci:0},
+  {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',seat:'E3',bus:2,ci:1},
+  {n:'อารียา สมบูรณ์',k:'อาร์',g:'f',seat:'E4',bus:2,ci:1},
+  {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',seat:'F1',bus:2,ci:1},
+  {n:'สุนิสา แก้วใส',k:'นิด',g:'f',seat:'F2',bus:2,ci:1},
+  {n:'ภาณุพงศ์ ยอดเยี่ยม',k:'ภาณุ',g:'m',seat:'F3',bus:2,ci:1,staff:1},
+  {n:'ดวงใจ รุ่งเรือง',k:'ดาว',g:'f',seat:'F4',bus:2,ci:1,staff:1},
+];
+
+const S = {mode:'one', count:3, filters:{checkin:true,bus1:false,bus2:false,female:false},
+           rules:{nodup:true,nostaff:true,fx:true}, drawn:[], round:0, busy:false};
+
+/* ═══════════ pool ═══════════ */
+function pool(){
+  const f=S.filters;
+  return GUESTS.filter(p=>{
+    if(f.checkin && !p.ci) return false;
+    if(f.bus1 && p.bus!==1) return false;
+    if(f.bus2 && p.bus!==2) return false;
+    if(f.female && p.g!=='f') return false;
+    if(S.rules.nostaff && p.staff) return false;
+    if(S.rules.nodup && S.drawn.some(d=>d.p.n===p.n)) return false;
+    return true;
+  });
+}
+function refresh(){
+  const p=pool();
+  poolN.textContent=p.length; footPool.textContent=p.length;
+  const bits=[];
+  if(S.rules.nodup&&S.drawn.length) bits.push('ตัดคนที่ถูกสุ่มแล้ว '+S.drawn.length);
+  if(S.rules.nostaff) bits.push('ตัดทีมงาน');
+  poolNote.textContent = bits.length? bits.join(' · ') : 'จากลูกทัวร์ทั้งหมด '+GUESTS.length+' คน';
+  go.disabled = p.length===0 || S.busy || (S.mode==='many' && p.length<S.count);
+  reroll.style.opacity = S.drawn.length? 1 : .4;
+}
+
+/* ═══════════ audio ═══════════ */
+let ctx=null;
+function ac(){ if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)()}catch{return null}} if(ctx.state==='suspended')ctx.resume().catch(()=>{}); return ctx;}
+function beep(a,f,at,d,type='triangle',vol=.25){
+  const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(vol,at+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,at+d);
+  o.connect(g).connect(a.destination);o.start(at);o.stop(at+d+.02);
+}
+function drumroll(sec){                    // รัวกลอง = noise buffer วนซ้ำ + ไล่ความดังขึ้น
+  const a=ac(); if(!a||!S.rules.fx) return;
+  const n=a.sampleRate*sec, buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++){ const env=(Math.sin(i/a.sampleRate*2*Math.PI*17)+1)/2; d[i]=(Math.random()*2-1)*env*.55; }
+  const src=a.createBufferSource();src.buffer=buf;
+  const g=a.createGain(),lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1400;
+  g.gain.setValueAtTime(.03,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(.30,a.currentTime+sec*.85);
+  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
+  src.connect(lp).connect(g).connect(a.destination);src.start();
+}
+function fanfare(){
+  const a=ac(); if(!a||!S.rules.fx) return; const t=a.currentTime;
+  beep(a,660,t,.14);beep(a,880,t+.16,.14);beep(a,1175,t+.32,.30);
+  beep(a,1568,t+.34,.34,'sine',.16);
+  try{navigator.vibrate?.([120,60,120,60,240])}catch{}
+}
+function tick(){ const a=ac(); if(!a||!S.rules.fx)return; beep(a,1800,a.currentTime,.03,'square',.07); }
+
+/* ═══════════ confetti ═══════════ */
+const cv=confetti, cx=cv.getContext('2d'); let parts=[],raf=null;
+function sizeCv(){ const r=cv.getBoundingClientRect(); cv.width=r.width; cv.height=r.height; }
+addEventListener('resize',sizeCv); setTimeout(sizeCv,60);
+function boom(){
+  if(!S.rules.fx) return; sizeCv();
+  const cols=['#f5b83d','#0bbfec','#f97362','#ffffff','#7ee787'];
+  for(let i=0;i<130;i++) parts.push({
+    x:cv.width/2+(Math.random()-.5)*160, y:cv.height*.52,
+    vx:(Math.random()-.5)*14, vy:-Math.random()*15-5,
+    s:5+Math.random()*7, c:cols[i%cols.length], r:Math.random()*6, vr:(Math.random()-.5)*.4, life:1
+  });
+  if(!raf) raf=requestAnimationFrame(loop);
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life>0);
+  parts.forEach(p=>{
+    p.vy+=.42; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.vx*=.99;
+    if(p.y>cv.height+30) p.life=0;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();
+  });
+  if(parts.length) raf=requestAnimationFrame(loop); else {raf=null;cx.clearRect(0,0,cv.width,cv.height)}
+}
+
+/* ═══════════ reel ═══════════ */
+const RH=()=>innerWidth<=700?96:132;
+function spin(winnerName, ms){
+  return new Promise(res=>{
+    const p=pool(), strip=[];
+    for(let i=0;i<26;i++) strip.push(p[Math.floor(Math.random()*p.length)]?.n || '—');
+    strip.push(winnerName);
+    reel.innerHTML = strip.map((n,i)=>`<div class="${i===strip.length-1?'':'dim'}">${n}</div>`).join('');
+    reel.style.transition='none'; reel.style.transform='translateY(0)';
+    reel.offsetHeight;                                   // force reflow
+    const ticker = setInterval(tick, 70);
+    reel.style.transition=`transform ${ms}ms cubic-bezier(.12,.62,.16,1)`;
+    reel.style.transform=`translateY(-${(strip.length-1)*RH()}px)`;
+    setTimeout(()=>{clearInterval(ticker); res()}, ms+40);
+  });
+}
+function pick(list){ return list[Math.floor(Math.random()*list.length)]; }
+
+/* ═══════════ draw ═══════════ */
+async function draw(replaceLast=false){
+  if(S.busy) return;
+  const p = pool(); if(!p.length) return;
+  S.busy=true; refresh(); go.disabled=true;
+  winner.classList.remove('show'); gridW.classList.remove('show'); gridW.innerHTML='';
+  reelMask.style.display='block';
+  S.round++; footRound.textContent=S.round;
+
+  if(S.mode==='one'){
+    const w = pick(p);
+    eyebrow.textContent = replaceLast? 'สุ่มใหม่แทนคนเดิม…' : 'กำลังสุ่ม…';
+    drumroll(3.4);
+    await spin(w.n, 3400);
+    reelMask.style.display='none';
+    wName.textContent=w.n; wNick.textContent='"'+w.k+'"';
+    wMeta.innerHTML=`<span>ที่นั่ง ${w.seat}</span><span>รถคัน ${w.bus}</span><span>เช็คอินแล้ว</span>`;
+    winner.classList.add('show'); eyebrow.textContent='ผู้โชคดี';
+    fanfare(); boom();
+    if(replaceLast) S.drawn.pop();
+    S.drawn.push({p:w, t:new Date(), rr:replaceLast});
+  }else{
+    const shuffled=[...p].sort(()=>Math.random()-.5).slice(0,S.count);
+    eyebrow.textContent=`กำลังสุ่ม ${S.count} คน…`;
+    drumroll(2.6);
+    await spin(shuffled[0].n, 2600);
+    reelMask.style.display='none';
+    gridW.classList.add('show');
+    shuffled.forEach((w,i)=>{
+      const el=document.createElement('div'); el.className='gw';
+      el.innerHTML=`<i>${i+1}</i><div><b>${w.n}</b><span>"${w.k}" · ที่นั่ง ${w.seat} · รถ ${w.bus}</span></div>`;
+      gridW.appendChild(el);
+      setTimeout(()=>{el.classList.add('in'); tick()}, i*280);
+    });
+    setTimeout(()=>{eyebrow.textContent=`ผู้โชคดี ${S.count} คน`; fanfare(); boom()}, shuffled.length*280+180);
+    shuffled.forEach(w=>S.drawn.push({p:w,t:new Date(),rr:false}));
+  }
+  renderHist(); S.busy=false; refresh();
+}
+
+function renderHist(){
+  if(!S.drawn.length){ hist.innerHTML='<div class="empty">ยังไม่มีการสุ่ม</div>'; return; }
+  hist.innerHTML = [...S.drawn].reverse().map((d,i)=>{
+    const no=S.drawn.length-i;
+    const tm=d.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="hi"><div class="n">${no}</div><div class="nm">${d.p.n}</div>
+      ${d.rr?'<div class="rr">สุ่มแทน</div>':''}<div class="tm">${tm}</div></div>`;
+  }).join('');
+}
+
+/* ═══════════ bind ═══════════ */
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.f;
+  if(f==='bus1'&&!S.filters.bus1) S.filters.bus2=false;
+  if(f==='bus2'&&!S.filters.bus2) S.filters.bus1=false;
+  S.filters[f]=!S.filters[f];
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',S.filters[x.dataset.f]));
+  refresh(); ac();
+});
+document.querySelectorAll('.sw').forEach(s=>s.onclick=()=>{
+  const r=s.dataset.r; S.rules[r]=!S.rules[r]; s.classList.toggle('on',S.rules[r]); refresh();
+});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  S.mode=b.dataset.m;
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));
+  cntRow.style.display = S.mode==='many'?'flex':'none';
+  refresh();
+});
+inc.onclick=()=>{S.count=Math.min(10,S.count+1);cntV.textContent=S.count;refresh()};
+dec.onclick=()=>{S.count=Math.max(2,S.count-1);cntV.textContent=S.count;refresh()};
+go.onclick=()=>{ac();draw(false)};
+reroll.onclick=()=>{ if(!S.drawn.length||S.busy) return; ac(); S.mode='one';
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='one'));
+  cntRow.style.display='none'; draw(true); };
+reset.onclick=()=>{S.drawn=[];S.round=0;footRound.textContent=0;renderHist();
+  winner.classList.remove('show');gridW.classList.remove('show');gridW.innerHTML='';
+  reelMask.style.display='block';reel.innerHTML='<div>พร้อมสุ่ม</div>';
+  reel.style.transition='none';reel.style.transform='translateY(0)';
+  eyebrow.textContent='พร้อมสุ่มแล้ว';refresh()};
+
+reel.innerHTML='<div>พร้อมสุ่ม</div>';
+refresh(); renderHist();
+</script>
+</body>
+</html>

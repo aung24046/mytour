@@ -25,8 +25,11 @@ const GROUPS = [
       { to: '/staff/check-in', key: 'checkIn', icon: 'check' },
       { to: '/staff/broadcast', key: 'broadcast', icon: 'megaphone' },
       { to: '/staff/sos-monitor', key: 'sosMonitor', icon: 'alert' },
-      { to: '/staff/location-monitor', key: 'locationMonitor', icon: 'location' },
-      { to: '/staff/bingo-host', key: 'bingoHost', icon: 'target' },
+      // ซ่อนเมนู "ติดตามตำแหน่ง" เมื่อ 19 ส.ค. 2026 — หน้ายังอยู่ที่ /staff/location-monitor
+      // แต่ฟีเจอร์เก็บพิกัดได้เฉพาะตอนลูกทัวร์เปิดแอปค้างไว้ ซึ่งไม่เกิดขึ้นจริงตอนเดินเที่ยว
+      // { to: '/staff/location-monitor', key: 'locationMonitor', icon: 'location' },
+      // รวมบิงโกและเกมอื่นไว้หลังเมนูเดียว — เพิ่มเกมใหม่ได้โดยเมนูหน้าหลักไม่ยาวขึ้น
+      { to: '/staff/games', key: 'games', icon: 'game' },
     ],
   },
   {

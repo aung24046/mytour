@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { useTourId } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
+import { hasMeetPoint, MEET_COLUMNS } from '../../lib/meetPoint'
 import Icon from './Icon'
+import MeetPointCard from './MeetPointCard'
 
 // แสดงประกาศด่วนล่าสุดที่ยัง is_active=true อยู่ — อัปเดตเองไม่ต้อง refresh หน้า
 //
@@ -37,7 +39,7 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
     async function loadLatest() {
       const { data, error } = await supabase
         .from('announcements')
-        .select('id, message, is_active, created_at')
+        .select(`id, message, is_active, created_at, ${MEET_COLUMNS}`)
         .eq('tour_id', tourId)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
@@ -144,42 +146,60 @@ export default function AnnouncementBanner({ variant = 'strip' }) {
     }
   }, [announcement, tourId])
 
-  if (!announcement || announcement.id === dismissedId) return null
+  if (!announcement) return null
+
+  // ⚠️ หมุดจุดนัดพบต้องรอดจากการกดปิด ส่วนตัวข้อความปิดได้ตามเดิม
+  //    ลูกทัวร์กด × เพราะอ่านประกาศจบแล้ว ไม่ได้แปลว่าไม่ต้องการจุดนัดพบอีก
+  //    ซึ่งเขาจะกลับมาเปิดดูอีกหลายรอบตลอดช่วงที่เดินเล่น
+  const meet = hasMeetPoint(announcement) ? announcement : null
+  const messageHidden = announcement.id === dismissedId
+
+  if (messageHidden && !meet) return null
 
   if (variant === 'box') {
     return (
-      <div className="mt-4 flex items-start gap-3 rounded-card bg-warning-bg p-4 text-warning-ink shadow-card ring-1 ring-line-subtle">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-warning-ink/10">
-          <Icon name="megaphone" size={20} filled />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-wide text-warning-ink/70">
-            {t('guest.home.announcementLabel')}
-          </p>
-          <p className="mt-0.5 text-sm font-semibold leading-snug">{announcement.message}</p>
-        </div>
-        <button
-          onClick={() => setDismissedId(announcement.id)}
-          className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
-          aria-label="close"
-        >
-          ×
-        </button>
-      </div>
+      <>
+        {!messageHidden && (
+          <div className="mt-4 flex items-start gap-3 rounded-card bg-warning-bg p-4 text-warning-ink shadow-card ring-1 ring-line-subtle">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-warning-ink/10">
+              <Icon name="megaphone" size={20} filled />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-wide text-warning-ink/70">
+                {t('guest.home.announcementLabel')}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold leading-snug">{announcement.message}</p>
+            </div>
+            <button
+              onClick={() => setDismissedId(announcement.id)}
+              className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
+              aria-label="close"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {meet && <MeetPointCard announcement={meet} />}
+      </>
     )
   }
 
   return (
-    <div className="sticky top-0 z-10 flex items-start gap-2.5 bg-warning-bg px-4 py-3 text-sm font-semibold text-warning-ink shadow-md">
-      <Icon name="megaphone" size={17} filled className="mt-px shrink-0" />
-      <span className="flex-1 leading-snug">{announcement.message}</span>
-      <button
-        onClick={() => setDismissedId(announcement.id)}
-        className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
-        aria-label="close"
-      >
-        ×
-      </button>
+    <div className="sticky top-0 z-10 shadow-md">
+      {!messageHidden && (
+        <div className="flex items-start gap-2.5 bg-warning-bg px-4 py-3 text-sm font-semibold text-warning-ink">
+          <Icon name="megaphone" size={17} filled className="mt-px shrink-0" />
+          <span className="flex-1 leading-snug">{announcement.message}</span>
+          <button
+            onClick={() => setDismissedId(announcement.id)}
+            className="shrink-0 rounded-full px-1.5 text-lg leading-none font-bold text-warning-ink/80 transition hover:bg-warning-ink/10"
+            aria-label="close"
+          >
+            ×
+          </button>
+        </div>
+      )}
+      {meet && <MeetPointCard announcement={meet} compact />}
     </div>
   )
 }

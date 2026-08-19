@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สุ่มรายชื่อ — เมนูสตาฟบนมือถือ 3 แบบ (ฟังก์ชันครบ)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#e4ecf5; --paper:#fff; --paper2:#f1f6fb; --sunken:#e8f0f8;
+  --ink:#10243f; --ink2:#4a627f; --ink3:#8397ad;
+  --line:#e3ebf3; --line2:#cfdcea;
+  --cool:#1d7fd8; --cool2:#1567b3; --hot:#f2724b; --gold:#e08b12; --ok:#16a34a; --bad:#d64545;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--body);background:var(--page);color:var(--ink);padding:26px 18px 70px}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+.head{max-width:1240px;margin:0 auto 22px}
+.head h1{font-family:var(--disp);font-size:23px;font-weight:700;letter-spacing:-.01em}
+.head p{color:var(--ink2);font-size:13.5px;margin-top:6px;max-width:84ch;line-height:1.65}
+.row{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;align-items:start}
+@media(max-width:1080px){.row{grid-template-columns:1fr;max-width:400px}}
+.col h2{font-family:var(--disp);font-size:16px;font-weight:700;display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.col h2 em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:.14em}
+.col .lede{font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:13px;min-height:4.8em}
+
+/* ── โครงมือถือ ── */
+.ph{background:#0d1b2a;border-radius:34px;padding:9px;box-shadow:0 14px 34px rgba(16,36,63,.22)}
+.scr{background:var(--paper2);border-radius:26px;overflow:hidden;height:700px;display:flex;flex-direction:column;position:relative}
+.nav{background:var(--paper);padding:10px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);flex:none;z-index:5}
+.nav .t{flex:1;min-width:0}
+.nav .t b{font-family:var(--disp);font-size:14.5px;font-weight:700;display:block;line-height:1.25}
+.nav .t span{font-size:10.5px;color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav .gear{border:0;background:var(--sunken);width:31px;height:31px;border-radius:50%;display:grid;place-items:center;color:var(--ink2);cursor:pointer;font-size:15px}
+.body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.body::-webkit-scrollbar{width:0}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px}
+.lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lbl a{font-family:var(--body);font-size:11px;letter-spacing:0;text-transform:none;color:var(--cool);font-weight:700;cursor:pointer;white-space:nowrap}
+.hint{font-size:11px;color:var(--ink3);line-height:1.55;margin-top:8px}
+
+.stat{display:flex;align-items:baseline;gap:9px}
+.stat b{font-family:var(--mono);font-size:32px;font-weight:600;color:var(--cool);line-height:1}
+.stat span{font-size:12px;color:var(--ink2);line-height:1.4}
+.pill{display:inline-flex;align-items:center;gap:7px;background:#fff8ec;border:1px solid #f2d9a8;color:#8a5a06;font-size:12px;font-weight:700;padding:7px 12px;border-radius:999px}
+.pill.off{background:var(--sunken);border-color:var(--line2);color:var(--ink3)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;font-weight:600;padding:6px 10px;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:999px;cursor:pointer}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .sw2{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
+
+.seg{display:flex;background:var(--sunken);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--ink2);padding:9px 4px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(16,36,63,.13)}
+.seg button:disabled{opacity:.35}
+.step{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:12.5px;font-weight:600}
+.step .g{display:flex;gap:3px;align-items:center;background:var(--sunken);border-radius:11px;padding:3px}
+.step button{width:31px;height:31px;border:0;background:var(--paper);border-radius:8px;font-size:17px;cursor:pointer;color:var(--ink);box-shadow:0 1px 2px rgba(16,36,63,.12)}
+.step .v{min-width:32px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:600}
+
+.li{display:flex;align-items:center;gap:9px;padding:10px 11px;background:var(--paper);border:1px solid var(--line);border-radius:13px;margin-bottom:6px;cursor:pointer}
+.li.on{border-color:var(--cool);background:#f2f8ff;border-width:1.5px}
+.li .rd{width:17px;height:17px;border-radius:50%;border:1.6px solid var(--line2);flex:none;display:grid;place-items:center}
+.li.on .rd{border-color:var(--cool)}
+.li.on .rd::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--cool)}
+.li .cb{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--line2);flex:none;display:grid;place-items:center;color:#fff}
+.li.on .cb{background:var(--cool);border-color:var(--cool)}
+.li .cb .ic{opacity:0}.li.on .cb .ic{opacity:1}
+.li .nm{flex:1;font-size:13px;font-weight:600;min-width:0}
+.li .nm em{font-style:normal;font-weight:400;font-size:10.5px;color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li.off .nm{opacity:.42}.li.off .nm b{text-decoration:line-through}
+.li .q{font-family:var(--mono);font-size:10.5px;color:var(--ink3);white-space:nowrap}
+.li .act{border:0;background:transparent;color:var(--ink3);cursor:pointer;font-size:13px;padding:3px 4px;border-radius:6px}
+.li .act:active{background:var(--sunken)}
+.li.done{opacity:.45}
+.li .tg{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:999px;background:var(--sunken);color:var(--ink3);white-space:nowrap}
+.li.ed{background:#f2f8ff;border-color:var(--cool);border-width:1.5px;flex-wrap:wrap;gap:7px}
+
+.inp{flex:1;min-width:0;font-family:var(--body);font-size:12.5px;font-weight:600;padding:8px 10px;border:1px solid var(--line2);
+  background:var(--paper);color:var(--ink);border-radius:10px}
+.inp:focus{outline:none;border-color:var(--cool)}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow button{padding:0 13px;font-family:var(--body);font-size:12.5px;font-weight:700;border:1px solid var(--line2);background:var(--paper);color:var(--cool);border-radius:10px;cursor:pointer}
+.qty{display:flex;align-items:center;gap:2px;background:var(--sunken);border-radius:9px;padding:2px;flex:none;font-family:var(--mono);font-size:12px}
+.qty button{width:26px;height:26px;border:0;background:var(--paper);border-radius:7px;cursor:pointer;font-size:15px;color:var(--ink)}
+.qty span{min-width:20px;text-align:center;font-weight:600}
+
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tgl:last-child{border-bottom:0}
+.tgl b{font-size:12.5px;font-weight:600;display:block}
+.tgl i{font-style:normal;font-size:10.5px;color:var(--ink3);display:block;margin-top:1px;line-height:1.4}
+.sw{width:40px;height:23px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:.18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.18s}
+.sw.on{background:var(--ok)}.sw.on::after{transform:translateX(17px)}
+
+.win{background:linear-gradient(168deg,#1b4f86,#0e2b4c);border-radius:16px;padding:15px 13px;text-align:center;color:#fff}
+.win .k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;opacity:.6}
+.win .n{font-family:var(--disp);font-size:31px;font-weight:700;line-height:1.62}
+.win .f{font-size:11.5px;opacity:.65}
+.win .p{font-family:var(--mono);font-size:10px;color:#ffc76b;letter-spacing:.08em;margin-top:6px}
+.win .cfm{display:flex;gap:7px;margin-top:12px}
+.win .cfm button{flex:1;border:0;font-family:var(--body);font-size:12.5px;font-weight:700;padding:10px 6px;border-radius:11px;cursor:pointer}
+.win .cfm .y{background:var(--ok);color:#fff}
+.win .cfm .n2{background:rgba(255,255,255,.14);color:#fff}
+.empty{text-align:center;color:var(--ink3);font-size:12px;padding:18px 10px;line-height:1.7}
+
+.hist .h{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.hist .h:last-child{border-bottom:0}
+.hist .h .no{font-family:var(--mono);font-size:10px;color:var(--ink3);width:17px}
+.hist .h .nm{flex:1;font-weight:600;min-width:0}
+.hist .h .nm em{font-style:normal;font-weight:400;font-size:10.5px;color:var(--ink3);display:block}
+.hist .h .tg{font-size:10px;font-weight:700;color:var(--gold);white-space:nowrap}
+.minirow{display:flex;gap:6px;margin-top:9px}
+.minirow button{flex:1;border:1px solid var(--line2);background:var(--paper);color:var(--ink2);font-family:var(--body);font-size:11.5px;font-weight:600;padding:9px 4px;border-radius:11px;cursor:pointer}
+.minirow button.danger{color:var(--bad)}
+
+.go{width:100%;border:0;background:var(--cool);color:#fff;font-family:var(--disp);font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;border-radius:15px;padding:16px;font-size:16.5px;
+  box-shadow:0 6px 16px rgba(29,127,216,.3)}
+.go:active{background:var(--cool2)}
+.go:disabled{background:var(--line2);color:var(--ink3);box-shadow:none}
+
+/* ══ A ══ */
+.dock{flex:none;background:var(--paper);border-top:1px solid var(--line);padding:10px 12px 12px;box-shadow:0 -6px 18px rgba(16,36,63,.07);z-index:6}
+.quick{display:flex;gap:6px;margin-bottom:9px}
+.quick button{flex:1;background:var(--sunken);border:0;border-radius:11px;padding:8px 2px;font-family:var(--body);font-size:10px;font-weight:600;color:var(--ink2);
+  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative}
+.quick button .ic{font-size:16px;color:var(--cool)}
+.sheet{position:absolute;inset:0;z-index:20;display:none}
+.sheet.open{display:block}
+.sheet .bg{position:absolute;inset:0;background:rgba(9,24,42,.45)}
+.sheet .pane{position:absolute;left:0;right:0;bottom:0;max-height:86%;background:var(--paper);border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:up .26s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet .grip{width:38px;height:4px;border-radius:99px;background:var(--line2);margin:9px auto 4px;flex:none}
+.sheet .shd{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;border-bottom:1px solid var(--line);flex:none}
+.sheet .shd b{font-family:var(--disp);font-size:15px;font-weight:700}
+.sheet .shd button{border:0;background:var(--sunken);width:28px;height:28px;border-radius:50%;cursor:pointer;color:var(--ink2);font-size:15px}
+.sheet .sbody{padding:12px 14px 18px;overflow:auto}
+
+/* ══ B ══ */
+.tabbar{flex:none;display:flex;background:var(--paper);border-top:1px solid var(--line);padding:5px 3px 8px}
+.tabbar button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:var(--body);font-size:9.5px;font-weight:600;color:var(--ink3);padding:6px 1px;cursor:pointer;border-radius:10px;position:relative}
+.tabbar button .ic{font-size:18px}
+.tabbar button.on{color:var(--cool)}
+.tabbar .badge{position:absolute;top:2px;right:calc(50% - 18px);background:var(--hot);color:#fff;font-family:var(--mono);font-size:8.5px;
+  min-width:14px;height:14px;border-radius:99px;display:grid;place-items:center;padding:0 3px}
+
+/* ══ C ══ */
+.steps{flex:none;display:flex;align-items:center;gap:5px;padding:10px 13px;background:var(--paper);border-bottom:1px solid var(--line)}
+.steps .s{display:flex;align-items:center;gap:5px}
+.steps .dot{width:21px;height:21px;border-radius:50%;background:var(--sunken);color:var(--ink3);font-family:var(--mono);font-size:10px;display:grid;place-items:center;flex:none;font-weight:600}
+.steps .s.on .dot{background:var(--cool);color:#fff}
+.steps .s.done .dot{background:var(--ok);color:#fff}
+.steps .s span{font-size:10px;font-weight:600;color:var(--ink3)}
+.steps .s.on span{color:var(--ink)}
+.steps .bar{flex:1;height:2px;background:var(--sunken);border-radius:9px}
+.steps .bar.done{background:var(--ok)}
+.foot{flex:none;padding:10px 12px 12px;background:var(--paper);border-top:1px solid var(--line);display:flex;gap:8px}
+.foot .back{border:1px solid var(--line2);background:transparent;color:var(--ink2);font-family:var(--body);font-weight:600;font-size:14px;padding:0 17px;border-radius:14px;cursor:pointer}
+.big{font-family:var(--disp);font-size:18px;font-weight:700;line-height:1.5}
+.sub{font-size:12px;color:var(--ink2);line-height:1.6;margin:3px 0 11px}
+
+.cmp{max-width:1240px;margin:28px auto 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:auto}
+.cmp table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.cmp th,.cmp td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp th{background:var(--paper2);font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+.cmp td:first-child{font-weight:700;width:132px}
+.cmp tr:last-child td{border-bottom:0}
+.cmp .rec{color:var(--ok);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>เมนูสตาฟบนมือถือ — 3 ทางเลือก (ฟังก์ชันครบชุด)</h1>
+  <p>ทั้งสามแบบมีฟังก์ชันเท่ากันหมดกับตัวเต็ม — สร้าง/สลับห้อง แก้ไขรายชื่อและชื่อเล่น เพิ่มคนนอกระบบ เพิ่ม/แก้/ลบรางวัล เลือกรางวัลที่กำลังสุ่ม ปิดโหมดรางวัล เลือกธีมจอใหญ่และรูปแบบอนิเมชัน ยืนยันผู้ชนะ ย้อนกลับ ล้างห้อง และออกใบเซ็นรับรางวัล · ต่างกันแค่วิธีจัดเมนู กดเล่นได้จริงทุกปุ่ม</p>
+</div>
+
+<div class="row">
+  <div class="col">
+    <h2>แผงลากขึ้น <em>A</em></h2>
+    <div class="lede">หน้าหลักมีแค่สถานะกับปุ่มสุ่มยักษ์ ฟังก์ชันอื่นซ่อนในแผงที่ลากขึ้นมา 5 แผง — หน้างานกดปุ่มเดียวจบ ไม่ต้องเลื่อนหา</div>
+    <div class="ph"><div class="scr" id="A"></div></div>
+  </div>
+  <div class="col">
+    <h2>แท็บล่าง <em>B</em></h2>
+    <div class="lede">5 แท็บแบบแอปทั่วไป สุ่ม / รายชื่อ / รางวัล / ประวัติ / ตั้งค่า แต่ละแท็บพอดีหน้าจอ คุ้นมือที่สุด สอนสตาฟใหม่ง่าย</div>
+    <div class="ph"><div class="scr" id="B"></div></div>
+  </div>
+  <div class="col">
+    <h2>ทีละขั้น <em>C</em></h2>
+    <div class="lede">พาไล่ ห้องและรายชื่อ → รางวัลและจำนวน → ตรวจแล้วสุ่ม ปุ่มใหญ่ทีละปุ่ม กดผิดยาก มีปุ่มเฟืองสำหรับตั้งค่าการแสดงผลกับประวัติ</div>
+    <div class="ph"><div class="scr" id="C"></div></div>
+  </div>
+</div>
+
+<div class="cmp">
+  <table>
+    <tr><th></th><th>A · แผงลากขึ้น</th><th>B · แท็บล่าง</th><th>C · ทีละขั้น</th></tr>
+    <tr><td>เหมาะกับ</td><td>สตาฟประจำ ตั้งค่าครั้งเดียวแล้วรัวสุ่มยาว</td><td>ทีมหลายคนสลับกันใช้ ต้องหาเมนูเจอเร็ว</td><td>ไกด์หรือสตาฟใหม่ ใช้ปีละไม่กี่ครั้ง</td></tr>
+    <tr><td>แตะกว่าจะสุ่ม</td><td class="rec">1 ครั้ง</td><td>1 ครั้ง (ถ้าอยู่แท็บสุ่ม)</td><td>3–4 ครั้งรอบแรก จากนั้น 1</td></tr>
+    <tr><td>หาเมนูตั้งค่า</td><td>ต้องรู้ว่ามีแผงลากขึ้น</td><td class="rec">เห็นทุกแท็บตลอดเวลา</td><td>อยู่หลังปุ่มเฟือง</td></tr>
+    <tr><td>ข้อดี</td><td>หน้าหลักโล่ง ปุ่มสุ่มใหญ่สุด ไม่มีทางกดผิด</td><td>เดาได้ว่าอะไรอยู่ตรงไหน แต่ละแท็บสั้น</td><td>บอกลำดับชัด ลดโอกาสลืมตั้งค่าก่อนสุ่มจริง</td></tr>
+    <tr><td>ข้อเสีย</td><td>ตั้งค่าซ่อนอยู่ ต้องสอนครั้งแรก</td><td>แถบล่างกินที่ตลอด สลับแท็บบ่อยตอนตั้งค่า</td><td>ช้ากว่าถ้าต้องสุ่มรัวหลายรอบ</td></tr>
+    <tr><td>ข้อเสนอ</td><td class="rec">แนะนำ — เร็วที่สุดหน้างานจริง</td><td>ปลอดภัยถ้าทีมมีหลายคน</td><td>ดีถ้าเปิดให้ไกด์นอกทีมใช้ด้วย</td></tr>
+  </table>
+</div>
+
+<script>
+/* ═══════════ ข้อมูล ═══════════ */
+const GUESTS=[
+ {n:'สมชาย ใจดี',k:'ชาย',g:'m',bus:1,ci:1},{n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',bus:1,ci:1},
+ {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',bus:1,ci:1},{n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',bus:1,ci:1},
+ {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',bus:1,ci:0},{n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',bus:1,ci:1},
+ {n:'วีระ ชัยมงคล',k:'โจ',g:'m',bus:1,ci:1},{n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',bus:1,ci:1},
+ {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',bus:1,ci:1},{n:'จันทิมา บุญมา',k:'จัน',g:'f',bus:1,ci:0},
+ {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',bus:1,ci:1},{n:'สุภาวดี พรหมมา',k:'แนน',g:'f',bus:1,ci:1},
+ {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',bus:2,ci:1},{n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',bus:2,ci:1},
+ {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',bus:2,ci:1},{n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',bus:2,ci:1},
+ {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',bus:2,ci:1},{n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',bus:2,ci:0},
+ {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',bus:2,ci:1},{n:'อารียา สมบูรณ์',k:'อาร์',g:'f',bus:2,ci:1},
+ {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',bus:2,ci:1},{n:'สุนิสา แก้วใส',k:'นิด',g:'f',bus:2,ci:1}];
+const THEMES=[['led','ป้ายไฟ LED','#2be8c8'],['board','ป้ายพลิก','#ff6b35'],['emerald','มรกต-ทอง','#d4af37'],
+ ['sky','ฟ้าใส','#1d7fd8'],['grid','กระดาษกราฟ','#d6402c'],['candy','ลูกกวาด','#e0417a']];
+const ANIMS=[['slot','สล็อต'],['wheel','วงล้อ'],['elim','คัดออก']];
+const FILTERS=[['checkin','เช็คอินแล้ว'],['bus1','รถคัน 1'],['bus2','รถคัน 2'],['female','ผู้หญิง']];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=i=>document.getElementById(i);
+const CHECK='<svg class="ic" style="font-size:12px" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>';
+const I={bolt:'M13 2 4 14h6l-1 8 9-12h-6l1-8Z',gift:'M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6',
+ people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9',
+ clock:'M12 8v5l3 2M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5',
+ gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4Z',
+ door:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9'};
+const svg=(d,sz)=>`<svg class="ic"${sz?` style="font-size:${sz}"`:''} viewBox="0 0 24 24"><path d="${d}"/></svg>`;
+
+let pzSeq=0,roomSeq=0;
+const mkPz=()=>[{id:'p'+(++pzSeq),n:'รางวัลที่ 3 · กระเป๋าเดินทาง',q:3,left:3},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 2 · หูฟังไร้สาย',q:2,left:2},
+  {id:'p'+(++pzSeq),n:'รางวัลที่ 1 · ทีวี 43 นิ้ว',q:1,left:1}];
+const mkRoom=(name,f)=>({id:'r'+(++roomSeq),name,
+  filters:Object.assign({checkin:true,bus1:false,bus2:false,female:false},f||{}),
+  off:new Set(),extra:[],nick:{},prizes:mkPz(),pzId:null,usePz:true,
+  results:[],pending:null,last:null});
+const mkState=()=>({rooms:[mkRoom('รถคัน 1',{bus1:true}),mkRoom('รถคัน 2',{bus2:true})],rid:null,
+  mode:'one',count:3,anim:'slot',theme:'led',rules:{nodup:true,confirm:true,fx:true},
+  editPz:null,editP:null,sheet:null,tab:'draw',step:1});
+
+const R=s=>s.rooms.find(r=>r.id===s.rid);
+const NK=(r,p)=>r.nick[p.n]||p.k||p.n;
+const members=r=>[...GUESTS,...r.extra];
+function inFilter(p,f){if(p.custom)return true;
+  if(f.checkin&&!p.ci)return false;if(f.bus1&&p.bus!==1)return false;
+  if(f.bus2&&p.bus!==2)return false;if(f.female&&p.g!=='f')return false;return true}
+function pool(s){const r=R(s);
+  return members(r).filter(p=>inFilter(p,r.filters)&&!r.off.has(p.n)
+    &&!(s.rules.nodup&&r.results.some(x=>x.n===p.n)))}
+function curPz(s){const r=R(s);if(!r.usePz)return null;
+  return r.prizes.find(p=>p.id===r.pzId&&p.left>0)||r.prizes.find(p=>p.left>0)||null}
+const needCnt=s=>s.mode==='many'?s.count:1;
+
+/* ═══════════ แผงย่อย (ใช้ร่วมกันทั้งสามแบบ) ═══════════ */
+function pRooms(s,at){const r=R(s);
+  return `<div class="lbl">ห้องสุ่ม</div>
+    ${s.rooms.map(x=>`<div class="li ${x.id===s.rid?'on':''}" ${at}="room:${x.id}">
+      <span class="rd"></span><span class="nm">${esc(x.name)}<em>สุ่มแล้ว ${x.results.length} คน</em></span>
+      ${s.rooms.length>1?`<button class="act" ${at}="room-del:${x.id}">✕</button>`:''}</div>`).join('')}
+    <div class="addrow"><input class="inp" id="${at.slice(5)}NewRoom" placeholder="ชื่อห้องใหม่ เช่น รถคัน 3">
+      <button ${at}="room-new">สร้าง</button></div>
+    <div class="hint">แต่ละห้องมีรายชื่อ รางวัล และประวัติของตัวเอง เล่นพร้อมกันคนละคันได้โดยไม่ชนกัน</div>`}
+
+function pList(s,at){const r=R(s),all=members(r),shown=all.filter(p=>inFilter(p,r.filters));
+  return `<div class="lbl"><span>ตัวกรอง</span></div>
+    <div class="chips">${FILTERS.map(([k,t])=>`<span class="chip ${r.filters[k]?'on':''}" ${at}="f:${k}">${t}</span>`).join('')}</div>
+    <div class="lbl" style="margin-top:14px"><span>อยู่ในกลุ่ม ${pool(s).length} / ${shown.length} คน</span>
+      <span><a ${at}="all:1">เลือกทั้งหมด</a> · <a ${at}="all:0">ล้าง</a></span></div>
+    ${all.map(p=>{
+      if(s.editP===p.n)return `<div class="li ed">
+        <input class="inp" id="${at.slice(5)}Nick" value="${esc(NK(r,p))}" placeholder="ชื่อเล่นที่จะประกาศ">
+        ${p.custom?`<input class="inp" id="${at.slice(5)}Full" value="${esc(p.n)}" placeholder="ชื่อจริง" style="flex-basis:100%">`:''}
+        <button class="act" ${at}="p-save:${esc(p.n)}" style="color:var(--cool);font-size:15px">✓</button>
+        <button class="act" ${at}="p-cancel">✕</button></div>`;
+      const on=!r.off.has(p.n),pass=inFilter(p,r.filters);
+      if(!pass)return '';
+      return `<div class="li ${on?'on':'off'}" ${at}="off:${esc(p.n)}">
+        <span class="cb">${CHECK}</span>
+        <span class="nm"><b>${esc(NK(r,p))}</b><em>${esc(p.n)}</em></span>
+        ${p.custom?'<span class="tg">เพิ่มเอง</span>':(!p.ci?'<span class="tg">ยังไม่เช็คอิน</span>':'')}
+        <button class="act" ${at}="p-edit:${esc(p.n)}">✎</button>
+        ${p.custom?`<button class="act" ${at}="p-del:${esc(p.n)}">✕</button>`:''}</div>`}).join('')}
+    <div class="addrow"><input class="inp" id="${at.slice(5)}NewP" placeholder="เพิ่มคนนอกระบบ เช่น พี่คนขับ">
+      <button ${at}="p-new">เพิ่ม</button></div>
+    <div class="hint">แตะแถวเพื่อเอาออก/ใส่กลับ · ✎ แก้ชื่อเล่นที่จะประกาศบนจอ</div>`}
+
+function pPrizes(s,at){const r=R(s),cp=curPz(s);
+  return `<div class="lbl"><span>รางวัล</span><a ${at}="pz-toggle">${r.usePz?'ปิดโหมดรางวัล':'เปิดโหมดรางวัล'}</a></div>
+    <div style="${r.usePz?'':'opacity:.4;pointer-events:none'}">
+      ${r.prizes.map(p=>{
+        if(s.editPz===p.id)return `<div class="li ed">
+          <input class="inp" id="${at.slice(5)}PzN" value="${esc(p.n)}" placeholder="ชื่อรางวัล">
+          <div class="qty"><button ${at}="pz-q:${p.id}:-1">−</button><span id="${at.slice(5)}PzQ">${p.q}</span><button ${at}="pz-q:${p.id}:1">+</button></div>
+          <button class="act" ${at}="pz-save:${p.id}" style="color:var(--cool);font-size:15px">✓</button>
+          <button class="act" ${at}="pz-cancel">✕</button></div>`;
+        return `<div class="li ${cp===p?'on':''} ${p.left===0?'done':''}" ${at}="pz:${p.id}">
+          <span class="rd"></span><span class="nm">${esc(p.n)}</span>
+          <span class="q">${p.left===0?'หมด':p.left+'/'+p.q}</span>
+          <button class="act" ${at}="pz-edit:${p.id}">✎</button>
+          <button class="act" ${at}="pz-del:${p.id}">✕</button></div>`}).join('')
+        ||'<div class="empty">ยังไม่มีรางวัล</div>'}
+      <div class="addrow"><input class="inp" id="${at.slice(5)}NewPz" placeholder="ชื่อรางวัลใหม่">
+        <button ${at}="pz-new">เพิ่ม</button></div>
+    </div>
+    <div class="hint">${r.usePz?'แตะเพื่อเลือกชิ้นที่กำลังสุ่ม · ✎ แก้ชื่อและจำนวน'
+      :'ปิดอยู่ — สุ่มได้ตามปกติแต่ไม่ผูกรางวัล เหมาะกับสุ่มคนออกมาเล่นกิจกรรม'}</div>`}
+
+function pMode(s,at){const many=s.mode==='many';
+  return `<div class="lbl">จะสุ่มกี่คน</div>
+    <div class="seg"><button class="${!many?'on':''}" ${at}="mode:one">สุ่มทีละคน</button>
+      <button class="${many?'on':''}" ${at}="mode:many">สุ่มหลายคน</button></div>
+    ${many?`<div class="step"><span>จำนวนที่สุ่ม</span><div class="g">
+      <button ${at}="cnt:-1">−</button><span class="v">${s.count}</span><button ${at}="cnt:1">+</button></div></div>`:''}
+    <div class="lbl" style="margin-top:15px">รูปแบบการเฉลย</div>
+    <div class="seg">${ANIMS.map(([k,t])=>`<button class="${s.anim===k?'on':''}" ${many&&k!=='elim'?'disabled':''} ${at}="anim:${k}">${t}</button>`).join('')}</div>
+    ${many?'<div class="hint">สุ่มหลายคนใช้ได้เฉพาะแบบคัดออก เพราะสล็อตกับวงล้อเฉลยได้ทีละชื่อ</div>':''}`}
+
+function pDisplay(s,at){
+  return `<div class="lbl">ธีมจอใหญ่</div>
+    <div class="chips">${THEMES.map(([k,t,c])=>`<span class="chip ${s.theme===k?'on':''}" ${at}="theme:${k}">
+      <i class="sw2" style="background:${c}"></i>${t}</span>`).join('')}</div>
+    <div class="minirow"><button ${at}="stage">${svg(I.door,'14px')} เปิดจอใหญ่เต็มจอ</button></div>
+    <div class="lbl" style="margin-top:15px">กติกา</div>
+    ${[['nodup','ไม่สุ่มซ้ำคนเดิม','ตัดคนที่เคยถูกสุ่มในห้องนี้'],
+       ['confirm','ต้องยืนยันผู้ชนะ','ถ้าคนไม่อยู่ กดสุ่มใหม่ได้ทันที'],
+       ['fx','เสียงและคอนเฟตตี้','รัวกลอง เสียงชนะ สั่นมือถือ']]
+      .map(([k,t,d])=>`<div class="tgl"><div><b>${t}</b><i>${d}</i></div>
+        <div class="sw ${s.rules[k]?'on':''}" ${at}="rule:${k}"></div></div>`).join('')}`}
+
+function pHistory(s,at){const r=R(s);
+  return `<div class="lbl"><span>ผู้โชคดีใน${esc(r.name)}</span><span>${r.results.length} คน</span></div>
+    ${r.results.length?`<div class="hist">${[...r.results].reverse().map((x,i)=>`<div class="h">
+      <span class="no">${String(r.results.length-i).padStart(2,'0')}</span>
+      <span class="nm">${esc(x.k)}<em>${esc(x.n)}</em></span>
+      ${x.pz?`<span class="tg">${esc(x.pz.split('·')[0].trim())}</span>`:''}</div>`).join('')}</div>`
+      :'<div class="empty">ยังไม่มีการสุ่มในห้องนี้</div>'}
+    <div class="minirow">
+      <button ${at}="undo">ย้อนกลับ</button>
+      <button ${at}="export">ใบเซ็นรับ</button>
+      <button class="danger" ${at}="reset">ล้างห้อง</button></div>`}
+
+function pStatus(s){const r=R(s),p=pool(s),cp=curPz(s);
+  return `<div class="card"><div class="lbl">พร้อมสุ่ม</div>
+    <div class="stat"><b>${p.length}</b><span>คนใน${esc(r.name)}<br>
+      <span style="color:var(--ink3)">${s.mode==='many'?'สุ่มครั้งละ '+s.count+' คน':'สุ่มทีละคน'} · ${ANIMS.find(a=>a[0]===s.anim)[1]}</span></span></div>
+    <div style="margin-top:11px">${cp
+      ?`<span class="pill">${svg(I.gift,'14px')}${esc(cp.n)} · เหลือ ${cp.left}</span>`
+      :'<span class="pill off">ไม่ผูกรางวัล</span>'}</div></div>`}
+
+function pResult(s){const r=R(s);
+  if(r.pending){const w=r.pending.ws[0];
+    return `<div class="win"><div class="k">รอยืนยัน</div>
+      <div class="n">${esc(w.k)}</div><div class="f">${esc(w.n)}</div>
+      ${r.pending.pz?`<div class="p">${esc(r.pending.pz.n)}</div>`:''}
+      <div class="cfm"><button class="y" data-act="cf-yes">ยืนยัน รับแล้ว</button>
+        <button class="n2" data-act="cf-no">ไม่อยู่ สุ่มใหม่</button></div></div>`}
+  if(!r.last)return '<div class="card"><div class="empty">ยังไม่มีการสุ่มในห้องนี้<br>กดปุ่มสุ่มเพื่อเริ่ม</div></div>';
+  const ws=r.last,pz=r.results[r.results.length-1]?.pz;
+  return `<div class="win"><div class="k">${ws.length>1?'ผู้โชคดี '+ws.length+' คน':'ผู้โชคดี'}</div>
+    <div class="n">${esc(ws[0].k)}</div><div class="f">${esc(ws[0].n)}</div>
+    ${ws.length>1?`<div class="f" style="margin-top:6px">+ ${ws.slice(1).map(w=>esc(w.k)).join(' · ')}</div>`:''}
+    ${pz?`<div class="p">${esc(pz)}</div>`:''}</div>`}
+
+/* ═══════════ การกระทำ (ใช้ร่วมกัน) ═══════════ */
+function val(id){const el=$(id);return el?el.value.trim():''}
+function act(s,v,pfx){
+  const r=R(s);
+  const [k,a,b]=v.split(':');
+  switch(k){
+    case 'room':s.rid=a;s.editPz=s.editP=null;break;
+    case 'room-del':if(s.rooms.length>1){s.rooms=s.rooms.filter(x=>x.id!==a);if(s.rid===a)s.rid=s.rooms[0].id}break;
+    case 'room-new':{const n=val(pfx+'NewRoom');if(!n)return;const nr=mkRoom(n);s.rooms.push(nr);s.rid=nr.id;break}
+    case 'f':if(a==='bus1'&&!r.filters.bus1)r.filters.bus2=false;
+             if(a==='bus2'&&!r.filters.bus2)r.filters.bus1=false;
+             r.filters[a]=!r.filters[a];break;
+    case 'off':r.off.has(a)?r.off.delete(a):r.off.add(a);break;
+    case 'all':members(r).forEach(p=>{if(!inFilter(p,r.filters))return;a==='1'?r.off.delete(p.n):r.off.add(p.n)});break;
+    case 'p-new':{const n=val(pfx+'NewP');if(!n)return;
+      if(members(r).some(p=>p.n===n)){r.off.delete(n)}else r.extra.push({n,k:n,custom:true});
+      $(pfx+'NewP').value='';break}
+    case 'p-edit':s.editP=a;break;
+    case 'p-cancel':s.editP=null;break;
+    case 'p-save':{const nick=val(pfx+'Nick'),full=val(pfx+'Full');
+      if(nick)r.nick[a]=nick;
+      if(full&&full!==a){const p=r.extra.find(x=>x.n===a);
+        if(p){r.nick[full]=r.nick[a]||nick;delete r.nick[a];p.n=full;p.k=nick||full}}
+      s.editP=null;break}
+    case 'p-del':r.extra=r.extra.filter(x=>x.n!==a);r.off.delete(a);delete r.nick[a];s.editP=null;break;
+    case 'pz':r.pzId=a;break;
+    case 'pz-toggle':r.usePz=!r.usePz;break;
+    case 'pz-new':{const n=val(pfx+'NewPz');if(!n)return;
+      r.prizes.unshift({id:'p'+(++pzSeq),n,q:1,left:1});$(pfx+'NewPz').value='';break}
+    case 'pz-edit':s.editPz=a;break;
+    case 'pz-cancel':s.editPz=null;break;
+    case 'pz-del':r.prizes=r.prizes.filter(x=>x.id!==a);if(r.pzId===a)r.pzId=null;s.editPz=null;break;
+    case 'pz-q':{const el=$(pfx+'PzQ');if(el)el.textContent=Math.max(1,Math.min(99,+el.textContent+ +b));return 'noRender'}
+    case 'pz-save':{const p=r.prizes.find(x=>x.id===a),n=val(pfx+'PzN'),q=+($(pfx+'PzQ')?.textContent||p.q);
+      const used=p.q-p.left;if(n)p.n=n;p.q=q;p.left=Math.max(0,q-used);s.editPz=null;break}
+    case 'mode':s.mode=a;if(a==='many')s.anim='elim';break;
+    case 'cnt':s.count=Math.max(2,Math.min(8,s.count+ +a));break;
+    case 'anim':if(s.mode==='many'&&a!=='elim')return;s.anim=a;break;
+    case 'theme':s.theme=a;break;
+    case 'rule':s.rules[a]=!s.rules[a];break;
+    case 'draw':draw(s);break;
+    case 'cf-yes':commit(s);break;
+    case 'cf-no':r.pending=null;draw(s);break;
+    case 'undo':{if(!r.results.length)break;const x=r.results.pop();
+      const p=r.prizes.find(y=>y.n===x.pz);if(p&&p.left<p.q)p.left++;
+      if(r.last&&r.last.length===1&&r.last[0].n===x.n)r.last=null;break}
+    case 'reset':r.results=[];r.last=null;r.pending=null;r.prizes.forEach(p=>p.left=p.q);break;
+    case 'export':exportSheet(r);break;
+    case 'stage':alert('เปิดจอใหญ่บนอุปกรณ์ที่ต่อโปรเจกเตอร์ — ในของจริงจะเป็นหน้า /staff/lucky-draw/stage');break;
+  }
+}
+function draw(s){const r=R(s),p=pool(s),n=Math.min(needCnt(s),p.length);
+  if(!n)return;
+  const l=[...p],ws=[];while(ws.length<n)ws.push(...l.splice(Math.floor(Math.random()*l.length),1));
+  const out=ws.map(w=>({n:w.n,k:NK(r,w)}));
+  r.pending={ws:out,pz:curPz(s)};
+  if(s.rules.confirm&&s.mode==='one')return;
+  commit(s);
+}
+function commit(s){const r=R(s),{ws,pz}=r.pending||{};if(!ws)return;
+  ws.forEach(w=>{const got=pz&&pz.left>0?pz:null;
+    r.results.push({n:w.n,k:w.k,pz:got?got.n:null});if(got)got.left--});
+  r.last=ws;r.pending=null;
+}
+function exportSheet(r){
+  if(!r.results.length){alert('ยังไม่มีผู้ได้รางวัลในห้องนี้');return}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ใบเซ็นรับรางวัล</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>body{font-family:'Noto Sans Thai',sans-serif;padding:32px;color:#10243f}
+  h1{font-size:19px}p{font-size:13px;color:#4a627f;margin:4px 0 16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid #cfdcea;padding:8px 10px;text-align:left}th{background:#f1f6fb}
+  td.s{height:40px;width:180px}</style></head><body>
+  <h1>ใบเซ็นรับรางวัล — ${esc(r.name)}</h1><p>พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} · ${r.results.length} คน</p>
+  <table><tr><th>#</th><th>ชื่อเล่น</th><th>ชื่อ-นามสกุล</th><th>รางวัล</th><th>ลายเซ็น</th></tr>
+  ${r.results.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.k)}</td><td>${esc(x.n)}</td><td>${esc(x.pz||'')}</td><td class="s"></td></tr>`).join('')}
+  </table></body></html>`);
+  w.document.close();
+}
+
+/* ═══════════ A · แผงลากขึ้น ═══════════ */
+const SA=mkState();SA.rid=SA.rooms[0].id;
+const SHEETS={room:['ห้องสุ่ม',pRooms],list:['รายชื่อในกลุ่ม',pList],pz:['รางวัล',pPrizes],
+  set:['ตั้งค่าการสุ่ม',(s,at)=>pMode(s,at)+'<div style="height:6px"></div>'+pDisplay(s,at)],
+  hist:['ประวัติ',pHistory]};
+function renderA(){
+  const s=SA,r=R(s),p=pool(s);
+  $('A').innerHTML=`
+    <div class="nav">
+      <div class="t"><b>สุ่มรายชื่อ</b><span>ทริปเชียงใหม่ 3 วัน 2 คืน</span></div>
+      <button class="gear" data-act="sheet:set">${svg(I.gear,'15px')}</button>
+    </div>
+    <div class="body">
+      ${pStatus(s)}
+      ${pResult(s)}
+      ${r.results.length?`<div class="card">${pHistory(s,'data-act')}</div>`:''}
+    </div>
+    <div class="dock">
+      <div class="quick">
+        <button data-act="sheet:room">${svg(I.door)}ห้อง</button>
+        <button data-act="sheet:list">${svg(I.people)}รายชื่อ</button>
+        <button data-act="sheet:pz">${svg(I.gift)}รางวัล</button>
+        <button data-act="sheet:hist">${svg(I.clock)}ประวัติ</button>
+      </div>
+      <button class="go" data-act="draw" ${p.length<needCnt(s)||r.pending?'disabled':''}>
+        ${svg(I.bolt,'18px')}${r.pending?'รอยืนยันผู้ชนะ':(s.mode==='many'?'สุ่ม '+s.count+' คน':'สุ่มเลย')}</button>
+    </div>
+    ${s.sheet?`<div class="sheet open"><div class="bg" data-act="sheet:"></div>
+      <div class="pane"><div class="grip"></div>
+        <div class="shd"><b>${SHEETS[s.sheet][0]}</b><button data-act="sheet:">✕</button></div>
+        <div class="sbody">${SHEETS[s.sheet][1](s,'data-act')}</div></div></div>`:''}`;
+}
+$('A').addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const v=t.dataset.act;
+  if(v.startsWith('sheet:')){SA.sheet=v.slice(6)||null;SA.editPz=SA.editP=null;renderA();return}
+  if(act(SA,v,'act')==='noRender')return;
+  renderA();
+});
+
+/* ═══════════ B · แท็บล่าง ═══════════ */
+const SB=mkState();SB.rid=SB.rooms[0].id;
+const TABS=[['draw','สุ่ม',I.bolt],['list','รายชื่อ',I.people],['pz','รางวัล',I.gift],
+  ['hist','ประวัติ',I.clock],['set','ตั้งค่า',I.gear]];
+function renderB(){
+  const s=SB,r=R(s),p=pool(s);
+  let inner='';
+  if(s.tab==='draw')inner=`${pStatus(s)}${pResult(s)}
+    <button class="go" data-b="draw" style="margin-top:auto" ${p.length<needCnt(s)||r.pending?'disabled':''}>
+      ${svg(I.bolt,'18px')}${r.pending?'รอยืนยันผู้ชนะ':(s.mode==='many'?'สุ่ม '+s.count+' คน':'สุ่มเลย')}</button>`;
+  else if(s.tab==='list')inner=`<div class="card">${pRooms(s,'data-b')}</div><div class="card">${pList(s,'data-b')}</div>`;
+  else if(s.tab==='pz')inner=`<div class="card">${pPrizes(s,'data-b')}</div>`;
+  else if(s.tab==='hist')inner=`<div class="card">${pHistory(s,'data-b')}</div>`;
+  else inner=`<div class="card">${pMode(s,'data-b')}</div><div class="card">${pDisplay(s,'data-b')}</div>`;
+  $('B').innerHTML=`
+    <div class="nav">
+      <div class="t"><b>${TABS.find(t=>t[0]===s.tab)[1]}</b><span>${esc(r.name)} · ${p.length} คนในกลุ่ม</span></div>
+    </div>
+    <div class="body">${inner}</div>
+    <div class="tabbar">${TABS.map(([k,t,d])=>`<button class="${s.tab===k?'on':''}" data-tab="${k}">
+      ${svg(d)}${t}${k==='hist'&&r.results.length?`<span class="badge">${r.results.length}</span>`:''}</button>`).join('')}</div>`;
+}
+$('B').addEventListener('click',e=>{
+  const tab=e.target.closest('[data-tab]');
+  if(tab){SB.tab=tab.dataset.tab;SB.editPz=SB.editP=null;renderB();return}
+  const t=e.target.closest('[data-b],[data-act]');if(!t)return;
+  if(act(SB,t.dataset.b||t.dataset.act,'b')==='noRender')return;
+  renderB();
+});
+
+/* ═══════════ C · ทีละขั้น ═══════════ */
+const SC=mkState();SC.rid=SC.rooms[0].id;
+function renderC(){
+  const s=SC,r=R(s),p=pool(s),cp=curPz(s);
+  let body='',foot='';
+  if(s.step===0){                                     // หน้าเฟือง
+    body=`<div class="card">${pMode(s,'data-c')}</div>
+          <div class="card">${pDisplay(s,'data-c')}</div>
+          <div class="card">${pHistory(s,'data-c')}</div>`;
+    foot=`<button class="go" data-c="step:3">เสร็จแล้ว กลับไปสุ่ม</button>`;
+  }else if(s.step===1){
+    body=`<div class="big">สุ่มในห้องไหน</div>
+      <div class="sub">แต่ละห้องมีรายชื่อ รางวัล และประวัติแยกกัน</div>
+      <div class="card">${pRooms(s,'data-c')}</div>
+      <div class="card">${pList(s,'data-c')}</div>`;
+    foot=`<button class="go" data-c="step:2">ถัดไป · รางวัล</button>`;
+  }else if(s.step===2){
+    body=`<div class="big">สุ่มชิงรางวัลอะไร</div>
+      <div class="sub">เลือกชิ้นที่กำลังจะจับ หรือปิดโหมดรางวัลถ้าสุ่มคนออกมาเล่นกิจกรรม</div>
+      <div class="card">${pPrizes(s,'data-c')}</div>
+      <div class="card">${pMode(s,'data-c')}</div>`;
+    foot=`<button class="back" data-c="step:1">ย้อน</button><button class="go" data-c="step:3">ถัดไป · สุ่ม</button>`;
+  }else{
+    body=`<div class="big">พร้อมสุ่มแล้ว</div>
+      <div class="sub">ตรวจอีกครั้งก่อนกด แล้วหันจอใหญ่ให้ลูกทัวร์ดู</div>
+      <div class="card"><div class="lbl">สรุป</div>
+        ${[['ห้อง',esc(r.name)],['รายชื่อ',p.length+' คน'],
+           ['รางวัล',cp?esc(cp.n.split('·')[0].trim())+' · เหลือ '+cp.left:'ไม่ผูกรางวัล'],
+           ['จำนวนที่สุ่ม',s.mode==='many'?s.count+' คน':'1 คน'],
+           ['การเฉลย',ANIMS.find(a=>a[0]===s.anim)[1]],
+           ['ธีมจอใหญ่',THEMES.find(t=>t[0]===s.theme)[1]]]
+          .map(([a,b])=>`<div class="tgl"><div><b>${a}</b></div><span style="font-weight:600;font-size:12.5px">${b}</span></div>`).join('')}
+      </div>
+      ${pResult(s)}
+      ${r.results.length?`<div class="card">${pHistory(s,'data-c')}</div>`:''}`;
+    foot=`<button class="back" data-c="step:2">ย้อน</button>
+      <button class="go" data-c="draw" ${p.length<needCnt(s)||r.pending?'disabled':''}>
+        ${svg(I.bolt,'18px')}${r.pending?'รอยืนยัน':(r.last?'สุ่มอีกครั้ง':(s.mode==='many'?'สุ่ม '+s.count+' คน':'สุ่มเลย'))}</button>`;
+  }
+  $('C').innerHTML=`
+    <div class="nav">
+      <div class="t"><b>สุ่มรายชื่อ</b><span>ทริปเชียงใหม่ 3 วัน 2 คืน</span></div>
+      <button class="gear" data-c="step:${s.step===0?3:0}">${svg(I.gear,'15px')}</button>
+    </div>
+    ${s.step>0?`<div class="steps">
+      ${[['1','ห้อง'],['2','รางวัล'],['3','สุ่ม']].map(([n,t],i)=>
+        `<div class="s ${s.step===i+1?'on':''} ${s.step>i+1?'done':''}"><span class="dot">${n}</span><span>${t}</span></div>`
+        +(i<2?`<div class="bar ${s.step>i+1?'done':''}"></div>`:'')).join('')}
+      </div>`:''}
+    <div class="body">${body}</div>
+    <div class="foot">${foot}</div>`;
+}
+$('C').addEventListener('click',e=>{
+  const t=e.target.closest('[data-c],[data-act]');if(!t)return;
+  const v=t.dataset.c||t.dataset.act;
+  if(v.startsWith('step:')){SC.step=+v.slice(5);SC.editPz=SC.editP=null;renderC();return}
+  if(act(SC,v,'c')==='noRender')return;
+  renderC();
+});
+
+renderA();renderB();renderC();
+</script>
+</body>
+</html>

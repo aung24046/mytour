@@ -425,11 +425,17 @@ export default function GuestHome({ guest, isNew = false }) {
         </button>
       </div>
 
-      {/* เมนูลัด (QR ย้ายไปปุ่มกลางแถบล่างแล้ว) */}
-      <div className="mt-4 grid grid-cols-4 gap-2">
+      {/* เมนูลัด (QR ย้ายไปปุ่มกลางแถบล่างแล้ว)
+          ⚠️ เดิมเป็น grid 4 ช่อง โดยช่องที่สามคือ "แชร์ตำแหน่ง"
+          ถอดออกเมื่อ 19 ส.ค. 2026 — ฟีเจอร์นั้นทำงานได้เฉพาะตอนเปิดแอปค้างและเปิดจอไว้
+          ซึ่งไม่ใช่พฤติกรรมจริงของคนที่เดินเที่ยว โค้ดกับ route ยังอยู่ครบ (ดู App.jsx)
+          รอตัดสินใจว่าจะรื้อหรือทำต่อตอนมีแอปเนทีฟ
+          หน้าที่ "บอกว่าต้องกลับมาที่ไหน กี่โมง" ย้ายไปอยู่กับหมุดจุดนัดพบในประกาศแทน */}
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <NavTile icon="seat" label={t('guest.nav.mySeat')} onClick={() => navigate(tp('my-seat'))} />
-        <NavTile icon="target" label={t('guest.nav.bingo')} onClick={() => navigate(tp('bingo'))} />
-        <NavTile icon="location" label={t('guest.nav.shareLocation')} onClick={() => navigate(tp('share-location'))} />
+        {/* เดิมยิงตรงเข้าบิงโก — เปลี่ยนเป็นหน้ารวมเกม เพราะมีเกมมากกว่าหนึ่งแล้ว
+            และคู่กับเมนู "เกม" ฝั่งทีมงาน */}
+        <NavTile icon="game" label={t('guest.games.title')} onClick={() => navigate(tp('games'))} />
         <NavTile icon="alert" label={t('guest.nav.sos')} onClick={() => navigate(tp('sos'))} danger />
       </div>
 

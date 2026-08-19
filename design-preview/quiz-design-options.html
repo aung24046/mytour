@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ควิซ — 2 สกินจอเวที × 7 สถานะเกม</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ══ ฟอนต์ของแบบ C — ใช้ไฟล์ที่ self-host อยู่แล้วในโปรเจกต์ ไม่โหลดจาก CDN ══
+   เส้นทางอ้างอิงจาก design-preview/ ไปยัง public/fonts/ (เปิดไฟล์ตรงๆ ก็เห็น)
+   unicode-range เหมือน src/index.css เป๊ะ: Looped รับเฉพาะช่วงไทย
+   ส่วนอักษรละติน/ตัวเลขตกไปที่ Plus Jakarta Sans เหมือนที่แอปจริงทำ
+   font-display: swap (ไม่ใช่ block แบบหน้าเอกสาร) — ควิซคือหน้าจอสด
+   ยอมให้เห็นฟอนต์สำรองแวบหนึ่ง ดีกว่าจอว่างตอนนับถอยหลัง */
+@font-face{font-family:'Noto Sans Thai Looped';src:url('../public/fonts/NotoSansThaiLooped-Regular.woff2') format('woff2');
+  font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0E00-0E7F,U+25CC}
+@font-face{font-family:'Noto Sans Thai Looped';src:url('../public/fonts/NotoSansThaiLooped-Medium.woff2') format('woff2');
+  font-weight:500;font-style:normal;font-display:swap;unicode-range:U+0E00-0E7F,U+25CC}
+@font-face{font-family:'Noto Sans Thai Looped';src:url('../public/fonts/NotoSansThaiLooped-SemiBold.woff2') format('woff2');
+  font-weight:600;font-style:normal;font-display:swap;unicode-range:U+0E00-0E7F,U+25CC}
+@font-face{font-family:'Noto Sans Thai Looped';src:url('../public/fonts/NotoSansThaiLooped-Bold.woff2') format('woff2');
+  font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0E00-0E7F,U+25CC}
+</style>
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   ควิซ — สามทิศทางดีไซน์ที่ต่างกันที่ "วัสดุ" ไม่ใช่แค่สี
+     A · เวทีไนต์   (neon)  โลกของงานเลี้ยงกลางคืน จอโปรเจกเตอร์ ไฟวิ่ง
+     (เคยมีแบบที่สาม "ตั๋วกระดาษ" พื้นกระดาษอุ่น — ตัดทิ้งแล้ว เพราะจอเวทีพื้นสว่าง
+      ในห้องที่ปิดไฟจะแยงตาคนแถวหน้า ส่วนเคสจอกลางแดดใช้ screen_mode=bus_tv อยู่แล้ว)
+     C · การ์ดกลางวัน (day) โลกของแอปมือถือ นุ่ม กลม เป็นมิตร ปุ่มใหญ่ (Noto Sans Thai Looped)
+   ทั้งสองใช้ markup ชุดเดียวกันทุกบรรทัด — ต่างกันเฉพาะ CSS token
+   ค่าจริงของ token อยู่ที่ src/lib/quizStyle.js → STAGE_SKINS
+   ══════════════════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* ── A · เวทีไนต์ ─────────────────────────────────────────────────────── */
+body[data-skin="neon"]{
+  --page:#05070d; --card:#0e1420; --card2:#131b2a; --sunk:#080d16;
+  --ink:#e9f2f7; --ink2:#93a6b6; --ink3:#5d6f80;
+  --line:#1d2836; --line2:#2c3b4e;
+  --hot:#ff3b6b; --cool:#25e0c0; --gold:#ffc233;
+  --stage:#04060b; --stage-ink:#eafcff;
+  --o1:#ff3b5c; --o2:#3d8bff; --o3:#ffc233; --o4:#22d67e;
+  --disp:'Chakra Petch',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:10px; --rp:26px;
+  --glow:0 0 28px rgba(37,224,192,.22);
+}
+/* ── C · การ์ดกลางวัน ─────────────────────────────────────────────────── */
+body[data-skin="day"]{
+  --page:#eaeff5; --card:#ffffff; --card2:#f5f8fc; --sunk:#eef3f9;
+  --ink:#152230; --ink2:#5f7183; --ink3:#93a3b3;
+  --line:#e2e9f1; --line2:#cdd8e4;
+  --hot:#f0475e; --cool:#0ea5a5; --gold:#e0a010;
+  --stage:#101c2b; --stage-ink:#f4f9ff;
+  --o1:#dc2626; --o2:#2563eb; --o3:#ca8a04; --o4:#16a34a;
+  --disp:'Noto Sans Thai Looped','Plus Jakarta Sans',sans-serif; --body:'Noto Sans Thai Looped','Plus Jakarta Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:16px; --rp:30px;
+  --glow:0 10px 26px rgba(21,34,48,.10);
+}
+
+body{font-family:var(--body);background:var(--page);color:var(--ink);padding-bottom:70px;transition:background .25s,color .25s}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── แถบควบคุม (chrome กลาง ไม่ขึ้นกับสกิน) ───────────────────────────── */
+.bar{position:sticky;top:0;z-index:60;background:#0f1620;color:#e6eef5;padding:10px 18px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #232f3d}
+.bar .grp{display:flex;align-items:center;gap:8px}
+.bar .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#7c8fa0}
+.bar button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:12.5px;font-weight:600;background:transparent;border:1px solid #2e3d4d;color:#a6b8c6;padding:6px 12px;border-radius:8px;cursor:pointer;transition:.15s}
+.bar button.on{background:#25e0c0;border-color:#25e0c0;color:#04211c;font-weight:700}
+.bar .note{margin-left:auto;font-size:11.5px;color:#6b7d8c;max-width:36ch;line-height:1.45}
+
+/* ── หัวเรื่องทิศทาง ──────────────────────────────────────────────────── */
+.skinhd{max-width:1560px;margin:0 auto;padding:22px 20px 4px}
+.skinhd h1{font-family:var(--disp);font-size:26px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:baseline;gap:12px}
+.skinhd h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.skinhd p{margin-top:7px;font-size:13.5px;color:var(--ink2);line-height:1.65;max-width:96ch}
+.skinhd .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.skinhd .tags span{font-size:11.5px;font-weight:600;padding:4px 10px;border:1px solid var(--line2);border-radius:99px;color:var(--ink2)}
+
+/* ── กริดสามพาเนล ─────────────────────────────────────────────────────── */
+.wrap{max-width:1560px;margin:0 auto;padding:18px 20px 0;display:grid;grid-template-columns:300px 320px minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:1240px){.wrap{grid-template-columns:300px 320px}}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}}
+.col > h2{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:9px;display:flex;justify-content:space-between;align-items:center}
+.col > h2 b{font-family:var(--body);font-size:11px;letter-spacing:0;text-transform:none;color:var(--ink3);font-weight:500}
+
+/* ══ โครงมือถือ ══ */
+.phone{background:var(--card);border:1px solid var(--line);border-radius:var(--rp);overflow:hidden;position:relative;box-shadow:var(--glow)}
+body[data-skin="day"] .phone{border-color:transparent}
+.phone .top{padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);background:var(--card2)}
+.phone .top .rm{font-family:var(--disp);font-size:13.5px;font-weight:700;line-height:1.25}
+.phone .top .sub{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.08em}
+.chip{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:600;padding:4px 9px;border-radius:var(--r);background:var(--sunk);color:var(--cool);border:1px solid var(--line2)}
+.body{padding:14px;min-height:452px;display:flex;flex-direction:column}
+
+/* แถบเวลา */
+.tbar{height:7px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-bottom:12px;border:1px solid var(--line)}
+.tbar i{display:block;height:100%;width:62%;background:var(--cool);border-radius:99px}
+body[data-skin="neon"] .tbar i{box-shadow:0 0 12px var(--cool)}
+.tnum{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.tnum b{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1;color:var(--cool)}
+.tnum span{font-size:11.5px;color:var(--ink3)}
+
+/* ปุ่มตัวเลือก 4 สี — หัวใจของเกม */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1}
+.opt{border:0;border-radius:var(--r);cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 8px;font-family:var(--body);min-height:104px;position:relative;transition:.15s;overflow:hidden}
+/* ── รูปทรงตัวเลือก: บังคับให้ "พื้นที่หมึก" เท่ากันทุกรูป ────────────────
+   ปัญหาของกลิฟข้อความ ▲◆●■ คือแต่ละตัวถูกวาดมาคนละสัดส่วนในฟอนต์
+   ● กับ ■ จะดูเล็กกว่า ▲ ราว 40% ทั้งที่ font-size เท่ากัน
+   จึงวาดเองด้วย clip-path แล้วไล่ขนาดกล่องให้ทุกรูปมีพื้นที่เท่ากัน:
+     สามเหลี่ยม/ข้าวหลามตัด = ครึ่งหนึ่งของกล่อง → กล่องใหญ่สุด (1.000)
+     วงกลม  = π/4 ของกล่อง                      → 0.798
+     สี่เหลี่ยม = เต็มกล่อง                        → 0.707            */
+.sym{width:var(--symbox);height:var(--symbox);display:grid;place-items:center;flex:none}
+.sym::before{content:'';display:block;background:currentColor;
+  width:calc(var(--symbox) * var(--s));height:calc(var(--symbox) * var(--s));clip-path:var(--cp)}
+.sym[data-shape="tri"]{--s:1;--cp:polygon(50% 2%,100% 98%,0 98%)}
+.sym[data-shape="dia"]{--s:1;--cp:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.sym[data-shape="cir"]{--s:.798;--cp:circle(50%)}
+.sym[data-shape="sq"] {--s:.707;--cp:inset(0)}
+.opt .sym{--symbox:34px}
+.opt .lb{font-size:12.5px;font-weight:600;text-align:center;line-height:1.3;opacity:.96}
+.opt:nth-child(1){background:var(--o1)} .opt:nth-child(2){background:var(--o2)}
+.opt:nth-child(3){background:var(--o3)} .opt:nth-child(4){background:var(--o4)}
+body[data-skin="neon"] .opt{background:transparent;border:2px solid;box-shadow:inset 0 0 40px -20px currentColor}
+body[data-skin="neon"] .opt:nth-child(1){border-color:var(--o1);color:var(--o1)}
+body[data-skin="neon"] .opt:nth-child(2){border-color:var(--o2);color:var(--o2)}
+body[data-skin="neon"] .opt:nth-child(3){border-color:var(--o3);color:var(--o3)}
+body[data-skin="neon"] .opt:nth-child(4){border-color:var(--o4);color:var(--o4)}
+body[data-skin="day"] .opt{box-shadow:0 4px 0 rgba(0,0,0,.14)}
+.opt.picked{outline:3px solid var(--ink);outline-offset:2px}
+.opt.dim{opacity:.28;filter:grayscale(.5)}
+
+/* กล่องกลางจอ (lobby / locked / reveal ฯลฯ) */
+.mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:11px;padding:8px 4px}
+.mid .big{font-family:var(--disp);font-size:23px;font-weight:800;line-height:1.3}
+.mid .sm{font-size:13px;color:var(--ink2);line-height:1.6;max-width:26ch}
+.mid .huge{font-family:var(--disp);font-size:96px;font-weight:800;line-height:.9;color:var(--cool)}
+body[data-skin="neon"] .mid .huge{text-shadow:0 0 40px var(--cool)}
+.mid .score{font-family:var(--mono);font-size:44px;font-weight:600;color:var(--gold);line-height:1}
+.pill{font-size:12px;font-weight:600;padding:6px 13px;border-radius:99px;border:1px solid var(--line2);color:var(--ink2)}
+.pill.good{background:var(--o4);border-color:var(--o4);color:#fff}
+.pill.bad{background:var(--o1);border-color:var(--o1);color:#fff}
+.avs{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:230px}
+.avs i{width:26px;height:26px;border-radius:var(--r);background:var(--sunk);border:1px solid var(--line2);display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:10px;color:var(--ink3)}
+.myrow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--r);background:var(--sunk);border:1px solid var(--line2)}
+.myrow .rk{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--gold)}
+.myrow .nm{font-family:var(--disp);font-size:15px;font-weight:700}
+.myrow .dl{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--cool)}
+.stat{display:flex;gap:8px;width:100%}
+.stat div{flex:1;background:var(--sunk);border:1px solid var(--line);border-radius:var(--r);padding:10px 8px;text-align:center}
+.stat b{display:block;font-family:var(--mono);font-size:21px;font-weight:600;color:var(--ink)}
+.stat span{font-size:10.5px;color:var(--ink3)}
+
+/* ══ มือถือทีมงาน ══ */
+.hbig{background:var(--sunk);border:1px solid var(--line);border-radius:var(--r);padding:13px;text-align:center;margin-bottom:10px}
+.hbig .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.hbig .v{font-family:var(--mono);font-size:38px;font-weight:600;line-height:1.05;margin-top:3px}
+.hbig .v em{font-style:normal;font-size:20px;color:var(--ink3)}
+.hbig.full .v{color:var(--o4)}
+.hbig .ok{font-size:11.5px;font-weight:700;color:var(--o4);margin-top:2px}
+.dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:9px}
+.dots i{width:8px;height:8px;border-radius:2px;background:var(--o4)}
+.dots i.off{background:var(--line2)}
+.go{width:100%;border:0;padding:16px;font-family:var(--disp);font-size:16px;font-weight:800;cursor:pointer;border-radius:var(--r);background:var(--cool);color:#04211c;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+body[data-skin="neon"] .go{box-shadow:0 0 26px rgba(37,224,192,.35)}
+.go.urge{background:var(--gold);color:#231800;animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{0%,88%,100%{transform:none}92%{transform:translateY(-2px)}96%{transform:translateY(1px)}}
+.mini{display:flex;gap:7px;margin-bottom:8px}
+.mini button{flex:1;font-family:var(--body);font-size:12px;font-weight:600;padding:10px 4px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;border-radius:var(--r)}
+.mini button.danger{color:var(--hot);border-color:var(--hot)}
+.wait{background:var(--card2);border:1px dashed var(--line2);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--ink2);line-height:1.6}
+.wait b{font-family:var(--disp);font-weight:700;color:var(--ink);display:block;font-size:12.5px;margin-bottom:3px}
+.dist{margin-top:10px}
+.dist .row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.dist .sw{width:20px;height:20px;border-radius:3px;flex:none;display:grid;place-items:center;color:#fff}
+.dist .sw .sym{--symbox:12px}
+.dist .tr{flex:1;height:9px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.dist .tr i{display:block;height:100%;border-radius:99px}
+.dist .n{font-family:var(--mono);font-size:11px;color:var(--ink2);width:36px;text-align:right;white-space:nowrap}
+.hnote{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:.06em;margin-top:11px;line-height:1.6}
+
+/* ══ จอเวที ══ */
+.stagebox{background:var(--stage);color:var(--stage-ink);border-radius:var(--rp);border:1px solid var(--line);aspect-ratio:16/9;min-height:430px;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:26px 30px}
+body[data-skin="neon"] .stagebox::before{content:'';position:absolute;inset:0;background:radial-gradient(120% 80% at 50% -10%,rgba(37,224,192,.16),transparent 60%);pointer-events:none}
+body[data-skin="day"] .stagebox{background:linear-gradient(150deg,#14243a,#0d1a2b 55%,#122b34)}
+/* ── น้ำหนักของแบบ C: ใช้ได้ถึง 700 เท่านั้น ─────────────────────────────
+   ไฟล์ Looped ที่ self-host มี 400/500/600/700 — ห้ามสั่ง 800/900 เด็ดขาด
+   เพราะเบราว์เซอร์จะ "ทำหนาปลอม" ด้วยการถ่างเส้น ซึ่งกับตัวไทยมีหัว
+   หัวกลมจะตันและสระบน-ล่างจะเบียดกันจนอ่านยากบนจอเวที
+   ลำดับความสำคัญจึงมาจาก "ขนาด + สี" เป็นหลัก ใช้น้ำหนักช่วยแค่สองระดับ */
+body[data-skin="day"]{font-weight:400}
+body[data-skin="day"] :is(.skinhd h1,.cmp h3,.cmp th,.phone .top .rm,.go,.mid .big,.mid .huge,
+  .mid .score,.myrow .nm,.stat b,.opt .lb,.st-q,.st-huge,.st-center .h,.podium b,
+  .lb .r .nm,.wait b,.hbig .ok){font-weight:700;letter-spacing:0}
+body[data-skin="day"] :is(.skinhd .tags span,.mini button,.pill,.chip,.col > h2,
+  .cmp td:first-child,.lb .r .up,.stat span,.hbig .k,.dist .n,.joins span){font-weight:500}
+/* ตัวมีหัวกินพื้นที่แนวตั้งมากกว่า สระบน-ล่างจึงชนกันง่าย ต้องเผื่อระยะบรรทัด */
+body[data-skin="day"] .st-q{line-height:1.42}
+body[data-skin="day"] .mid .big{line-height:1.45}
+/* Looped เป็นฟอนต์ static (ไม่ใช่ variable) — โหลดกี่น้ำหนักคือกี่ไฟล์
+   จึงโหลดแค่ 400/600/700/900 แล้วปัดน้ำหนักที่เหลือมาใช้ตัวที่ใกล้ที่สุด
+   สำคัญกับควิซบนรถที่เน็ตช้า: ทุก 100 KB คือคนเข้าห้องช้าลง */
+
+.st-top{position:relative;z-index:3;display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.62;margin-bottom:16px}
+.st-top .clock{margin-left:auto;font-family:var(--disp);font-size:34px;font-weight:800;letter-spacing:0;opacity:1;color:var(--cool)}
+.st-mid{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;justify-content:center}
+.st-q{font-family:var(--disp);font-size:clamp(24px,3.1vw,46px);font-weight:800;line-height:1.28;letter-spacing:-.01em;margin-bottom:22px;max-width:22ch}
+.st-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.st-opt{border-radius:var(--r);padding:16px 18px;display:flex;align-items:center;gap:14px;color:#fff;font-size:clamp(14px,1.35vw,21px);font-weight:600;position:relative}
+.st-opt .sym{--symbox:1.5em}
+.st-opt:nth-child(1){background:var(--o1)} .st-opt:nth-child(2){background:var(--o2)}
+.st-opt:nth-child(3){background:var(--o3)} .st-opt:nth-child(4){background:var(--o4)}
+body[data-skin="neon"] .st-opt{background:transparent;border:2px solid;box-shadow:inset 0 0 60px -30px currentColor}
+body[data-skin="neon"] .st-opt:nth-child(1){border-color:var(--o1);color:var(--o1)}
+body[data-skin="neon"] .st-opt:nth-child(2){border-color:var(--o2);color:var(--o2)}
+body[data-skin="neon"] .st-opt:nth-child(3){border-color:var(--o3);color:var(--o3)}
+body[data-skin="neon"] .st-opt:nth-child(4){border-color:var(--o4);color:var(--o4)}
+.st-opt.dim{opacity:.2}
+.st-opt.win{outline:4px solid var(--gold);outline-offset:3px}
+.st-opt .cnt{margin-left:auto;font-family:var(--mono);font-size:.85em;opacity:.8}
+.st-huge{font-family:var(--disp);font-size:clamp(80px,13vw,190px);font-weight:800;line-height:.9;text-align:center;color:var(--cool)}
+body[data-skin="neon"] .st-huge{text-shadow:0 0 70px var(--cool)}
+.st-center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.st-center .h{font-family:var(--disp);font-size:clamp(26px,3.4vw,50px);font-weight:800;line-height:1.2}
+.st-center .s{font-size:clamp(13px,1.2vw,17px);opacity:.62}
+.joins{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:80%}
+.joins span{font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.2);opacity:.85}
+.lb{display:flex;flex-direction:column;gap:7px}
+.lb .r{display:flex;align-items:center;gap:14px;padding:9px 16px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+.lb .r.top{background:var(--gold);color:#241a00;border-color:var(--gold)}
+.lb .r .no{font-family:var(--mono);font-size:clamp(13px,1.2vw,18px);width:2.2em;opacity:.7}
+.lb .r .nm{font-family:var(--disp);font-size:clamp(15px,1.5vw,24px);font-weight:700}
+.lb .r .up{font-family:var(--mono);font-size:12px;opacity:.7}
+.lb .r .pt{margin-left:auto;font-family:var(--mono);font-size:clamp(14px,1.4vw,22px);font-weight:600}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;height:100%;max-height:340px;padding-top:10px}
+.podium div{flex:1;max-width:190px;border-radius:var(--r) var(--r) 0 0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-bottom:0;padding:14px 10px;text-align:center;display:flex;flex-direction:column;justify-content:flex-end;gap:6px}
+.podium .p1{height:78%;background:var(--gold);color:#241a00;border-color:var(--gold)}
+.podium .p2{height:60%} .podium .p3{height:46%}
+.podium b{font-family:var(--disp);font-size:clamp(14px,1.5vw,22px);font-weight:800;display:block;line-height:1.2}
+.podium em{font-style:normal;font-family:var(--mono);font-size:12px;opacity:.7}
+.st-foot{position:relative;z-index:3;margin-top:14px;display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;opacity:.45}
+.stamp{position:absolute;top:18px;right:22px;z-index:4;font-family:var(--disp);font-weight:800;font-size:13px;color:var(--gold);border:2.5px solid var(--gold);padding:5px 12px;transform:rotate(8deg);opacity:.9;letter-spacing:.04em;display:none}
+
+/* ── สลับสถานะ ─────────────────────────────────────────────────────────── */
+[data-when]{display:none}
+body[data-state="lobby"]      [data-when~="lobby"],
+body[data-state="countdown"]  [data-when~="countdown"],
+body[data-state="answering"]  [data-when~="answering"],
+body[data-state="locked"]     [data-when~="locked"],
+body[data-state="reveal"]     [data-when~="reveal"],
+body[data-state="scoreboard"] [data-when~="scoreboard"],
+body[data-state="finished"]   [data-when~="finished"]{display:var(--d,block)}
+.opts[data-when],.st-opts[data-when]{--d:grid}
+.mid[data-when],.st-center[data-when],.stat[data-when],.mini[data-when],.dots[data-when],.podium[data-when],.lb[data-when]{--d:flex}
+.st-mid > div[data-when]:not(.st-center):not(.podium):not(.lb){--d:block}
+.flexcol{--d:flex;flex:1;flex-direction:column}
+.st-top .clock{--d:block}
+
+/* ── ตารางสรุปท้ายหน้า ────────────────────────────────────────────────── */
+.cmp{max-width:1560px;margin:36px auto 0;padding:0 20px}
+.cmp h3{font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:12px}
+.cmp table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;font-size:13px}
+.cmp th,.cmp td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6}
+.cmp th{background:var(--card2);font-family:var(--disp);font-weight:700;font-size:12.5px}
+.cmp td:first-child{color:var(--ink2);width:170px;font-weight:600}
+.cmp tr:last-child td{border-bottom:0}
+</style>
+</head>
+<body data-skin="day" data-state="answering">
+
+<div class="bar">
+  <div class="grp"><span class="k">ทิศทาง</span>
+    <button data-skin-btn="day" class="on">การ์ดกลางวัน · ค่าเริ่มต้น</button>
+    <button data-skin-btn="neon">เวทีไนต์ · ตัวเลือก</button>
+  </div>
+  <div class="grp"><span class="k">สถานะเกม</span>
+    <button data-st-btn="lobby">lobby</button>
+    <button data-st-btn="countdown">countdown</button>
+    <button data-st-btn="answering" class="on">answering</button>
+    <button data-st-btn="locked">locked</button>
+    <button data-st-btn="reveal">reveal</button>
+    <button data-st-btn="scoreboard">scoreboard</button>
+    <button data-st-btn="finished">finished</button>
+  </div>
+  <div class="note">ลงมือทำแล้ว — เก็บใน quiz_sessions.stage_theme ค่าเริ่มต้น day</div>
+</div>
+
+<div class="skinhd">
+  <h1 id="hd-name">A · เวทีไนต์<em id="hd-code">NEON STAGE</em></h1>
+  <p id="hd-desc"></p>
+  <div class="tags" id="hd-tags"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════════ มือถือแขก ═══════════ -->
+  <div class="col">
+    <h2>มือถือแขก<b>/t/:code/quiz</b></h2>
+    <div class="phone">
+      <div class="top">
+        <div><div class="rm">ควิซคืนวันที่สอง</div><div class="sub">ทีมกุ้งเผา · พี่หนึ่ง</div></div>
+        <div class="chip">4,120</div>
+      </div>
+      <div class="body">
+
+        <div class="mid" data-when="lobby">
+          <div class="avs"><i>ก</i><i>ข</i><i>ค</i><i>ง</i><i>จ</i><i>ฉ</i><i>ช</i><i>ซ</i><i>ฌ</i><i>ญ</i><i>ฎ</i><i>ฏ</i><i>+29</i></div>
+          <div class="big">รอทีมงานเริ่มเกม</div>
+          <div class="sm">เข้ามาแล้ว 41 คน · เงยหน้าดูจอใหญ่ได้เลย</div>
+          <div class="pill">ทีมกุ้งเผา · 6 คน</div>
+        </div>
+
+        <div class="mid" data-when="countdown">
+          <div class="sm">เตรียมตัว</div>
+          <div class="huge">3</div>
+          <div class="sm">10 ข้อ · ตอบเร็วได้คะแนนมากกว่า</div>
+        </div>
+
+        <div class="flexcol" data-when="answering">
+          <div class="tnum"><b>12</b><span>ข้อ 7/10</span></div>
+          <div class="tbar"><i></i></div>
+          <div class="opts">
+            <button class="opt"><span class="sym" data-shape="tri"></span><span class="lb">นครราชสีมา</span></button>
+            <button class="opt"><span class="sym" data-shape="dia"></span><span class="lb">เชียงใหม่</span></button>
+            <button class="opt"><span class="sym" data-shape="cir"></span><span class="lb">กาญจนบุรี</span></button>
+            <button class="opt"><span class="sym" data-shape="sq"></span><span class="lb">อุบลราชธานี</span></button>
+          </div>
+        </div>
+
+        <div class="flexcol" data-when="locked">
+          <div class="tnum"><b>ส่งแล้ว</b><span>ข้อ 7/10</span></div>
+          <div class="opts" style="flex:none">
+            <button class="opt picked"><span class="sym" data-shape="tri"></span><span class="lb">นครราชสีมา</span></button>
+            <button class="opt dim"><span class="sym" data-shape="dia"></span><span class="lb">เชียงใหม่</span></button>
+            <button class="opt dim"><span class="sym" data-shape="cir"></span><span class="lb">กาญจนบุรี</span></button>
+            <button class="opt dim"><span class="sym" data-shape="sq"></span><span class="lb">อุบลราชธานี</span></button>
+          </div>
+          <div class="mid" style="display:flex;flex:1"><div class="big">รอเฉลย…</div><div class="sm">ส่งเป็นคนที่ 11 จาก 41</div></div>
+        </div>
+
+        <div class="mid" data-when="reveal">
+          <div class="pill good">ถูกต้อง</div>
+          <div class="big">นครราชสีมา</div>
+          <div class="score">+932</div>
+          <div class="sm">ตอบใน 4.1 วิ · ถูกติดกัน 3 ข้อ +200</div>
+          <div class="myrow"><span class="rk">#4</span><span class="nm">พี่หนึ่ง</span><span class="dl">▲ 2 อันดับ</span></div>
+        </div>
+
+        <div class="mid" data-when="scoreboard">
+          <div class="sm">อันดับของคุณตอนนี้</div>
+          <div class="huge" style="font-size:74px">#4</div>
+          <div class="pill">4,120 คะแนน · ห่างที่ 3 อยู่ 180</div>
+          <div class="sm">ทีมกุ้งเผา รวมกันอยู่ที่ 2</div>
+        </div>
+
+        <div class="mid" data-when="finished">
+          <div class="pill">จบเกมแล้ว</div>
+          <div class="big">อันดับ 4 จาก 41 คน</div>
+          <div class="stat">
+            <div><b>7/10</b><span>ตอบถูก</span></div>
+            <div><b>4,120</b><span>คะแนน</span></div>
+            <div><b>3.9s</b><span>เร็วเฉลี่ย</span></div>
+          </div>
+          <div class="sm">ทีมกุ้งเผาได้ที่ 2 · ขอบคุณที่ร่วมสนุก</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ มือถือทีมงาน ═══════════ -->
+  <div class="col">
+    <h2>มือถือทีมงาน<b>/staff/quiz/host/:id</b></h2>
+    <div class="phone">
+      <div class="top">
+        <div><div class="rm" id="h-title">ข้อ 7/10 · numeric</div><div class="sub" id="h-sub">ควิซคืนวันที่สอง · 41 คน</div></div>
+        <div class="chip" id="h-state">ANSWERING</div>
+      </div>
+      <div class="body">
+
+        <div data-when="lobby countdown">
+          <div class="hbig"><div class="k">เข้าห้องแล้ว</div><div class="v">41<em> คน</em></div><div class="dots" id="d1"></div></div>
+          <button class="go">เริ่มเกม</button>
+          <div class="mini"><button>แก้ชุดคำถาม</button><button class="danger">ปิดห้อง</button></div>
+          <div class="wait"><b>ก่อนกดเริ่ม</b>เปิดจอเวทีที่แท็บแยกแล้วหรือยัง — แขกจะไม่เห็นคำถามบนมือถือถ้ามีจอใหญ่</div>
+        </div>
+
+        <div data-when="answering">
+          <div class="hbig full"><div class="k">ส่งคำตอบแล้ว</div><div class="v">41<em> / 41</em></div><div class="ok">✓ ครบทุกคนที่ออนไลน์</div><div class="dots" id="d2"></div></div>
+          <button class="go urge">ปิดรับ + เฉลยเลย</button>
+          <div class="mini"><button>รอต่อ (เหลือ 12 วิ)</button><button>ข้ามข้อนี้</button></div>
+          <div class="mini"><button>หยุดพัก</button><button class="danger">จบเกม</button></div>
+          <div class="wait"><b>ยังไม่ส่ง — 0 คน</b>ครบแล้ว กดปิดได้เลย ไม่ต้องรอหมดเวลา</div>
+          <div class="hnote">นับเฉพาะคนที่ last_seen_at ภายใน 60 วิ<br>คนแบตหมดไม่ทำให้ค้างที่ 40/41</div>
+        </div>
+
+        <div data-when="locked">
+          <div class="hbig"><div class="k">ปิดรับแล้ว</div><div class="v">41<em> / 41</em></div><div class="ok">รอกดเฉลย</div></div>
+          <button class="go">เฉลย</button>
+          <div class="mini"><button>ดูสรุปคำตอบก่อน</button><button>ข้ามข้อนี้</button></div>
+          <div class="wait"><b>ผ่อนผัน +200ms</b>คนที่กดพอดีตอนคุณกดปิด ยังนับให้</div>
+        </div>
+
+        <div data-when="reveal">
+          <div class="hbig"><div class="k">ตอบถูก</div><div class="v">28<em> / 41</em></div><div class="ok">68%</div></div>
+          <div class="dist">
+            <div class="row"><span class="sw" style="background:var(--o1)"><i class="sym" data-shape="tri"></i></span><span class="tr"><i style="width:68%;background:var(--o1)"></i></span><span class="n">28 ✓</span></div>
+            <div class="row"><span class="sw" style="background:var(--o2)"><i class="sym" data-shape="dia"></i></span><span class="tr"><i style="width:17%;background:var(--o2)"></i></span><span class="n">7</span></div>
+            <div class="row"><span class="sw" style="background:var(--o3)"><i class="sym" data-shape="cir"></i></span><span class="tr"><i style="width:10%;background:var(--o3)"></i></span><span class="n">4</span></div>
+            <div class="row"><span class="sw" style="background:var(--o4)"><i class="sym" data-shape="sq"></i></span><span class="tr"><i style="width:5%;background:var(--o4)"></i></span><span class="n">2</span></div>
+          </div>
+          <button class="go" style="margin-top:12px">ดูกระดานอันดับ</button>
+          <div class="mini"><button>ข้อถัดไปเลย</button><button class="danger">จบเกม</button></div>
+        </div>
+
+        <div data-when="scoreboard">
+          <div class="hbig"><div class="k">ผ่านไปแล้ว</div><div class="v">7<em> / 10 ข้อ</em></div></div>
+          <button class="go">ข้อถัดไป (8/10)</button>
+          <div class="mini"><button>หยุดพัก 5 นาที</button><button>ข้ามไปจบเลย</button></div>
+          <div class="wait"><b>จังหวะพูดไมค์</b>กระดานอันดับค้างจนกว่าจะกด — ใช้เวลานี้เรียกชื่อคนขึ้นอันดับได้</div>
+        </div>
+
+        <div data-when="finished">
+          <div class="hbig"><div class="k">จบเกมแล้ว</div><div class="v">41<em> คน</em></div><div class="ok">บันทึกผลเรียบร้อย</div></div>
+          <button class="go">เปิดรายงานสรุป</button>
+          <div class="mini"><button>ส่งผลเข้าไลน์กรุ๊ป</button><button>เล่นอีกรอบ</button></div>
+          <div class="wait"><b>รายงานเข้าด้วย PIN</b>ไม่ใช่ host_token — เปิดจากเครื่องไหนก็ได้ทีหลัง</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ จอเวที ═══════════ -->
+  <div class="col">
+    <h2>จอเวที (projector 16:9)<b>/staff/quiz/stage/:id · ไม่มีปุ่มสั่งงาน</b></h2>
+    <div class="stagebox">
+      <div class="stamp" id="stg-stamp">LIVE</div>
+      <div class="st-top">
+        <span id="stg-tag">คำถามข้อ 7 / 10</span><span>ควิซคืนวันที่สอง</span>
+        <span class="clock" data-when="answering">12</span>
+      </div>
+
+      <div class="st-mid">
+        <div class="st-center" data-when="lobby">
+          <div class="h">เปิดแอป → เมนูเกม → ควิซ</div>
+          <div class="s">เข้ามาแล้ว 41 คน · รอทีมงานเริ่ม</div>
+          <div class="joins"><span>พี่หนึ่ง</span><span>น้องมิ้น</span><span>เฮียตี๋</span><span>คุณป้าแดง</span><span>พี่บอย</span><span>น้องเบล</span><span>อาจารย์วิทย์</span><span>+34</span></div>
+        </div>
+
+        <div class="st-center" data-when="countdown">
+          <div class="s">เตรียมตัว</div>
+          <div class="st-huge">3</div>
+        </div>
+
+        <div data-when="answering locked reveal">
+          <div class="st-q">จังหวัดใดมีพื้นที่ใหญ่ที่สุดในประเทศไทย?</div>
+          <div class="st-opts" data-when="answering">
+            <div class="st-opt"><span class="sym" data-shape="tri"></span>นครราชสีมา</div>
+            <div class="st-opt"><span class="sym" data-shape="dia"></span>เชียงใหม่</div>
+            <div class="st-opt"><span class="sym" data-shape="cir"></span>กาญจนบุรี</div>
+            <div class="st-opt"><span class="sym" data-shape="sq"></span>อุบลราชธานี</div>
+          </div>
+          <div class="st-opts" data-when="locked">
+            <div class="st-opt"><span class="sym" data-shape="tri"></span>นครราชสีมา<span class="cnt">?</span></div>
+            <div class="st-opt"><span class="sym" data-shape="dia"></span>เชียงใหม่<span class="cnt">?</span></div>
+            <div class="st-opt"><span class="sym" data-shape="cir"></span>กาญจนบุรี<span class="cnt">?</span></div>
+            <div class="st-opt"><span class="sym" data-shape="sq"></span>อุบลราชธานี<span class="cnt">?</span></div>
+          </div>
+          <div class="st-opts" data-when="reveal">
+            <div class="st-opt win"><span class="sym" data-shape="tri"></span>นครราชสีมา<span class="cnt">28 คน ✓</span></div>
+            <div class="st-opt dim"><span class="sym" data-shape="dia"></span>เชียงใหม่<span class="cnt">7</span></div>
+            <div class="st-opt dim"><span class="sym" data-shape="cir"></span>กาญจนบุรี<span class="cnt">4</span></div>
+            <div class="st-opt dim"><span class="sym" data-shape="sq"></span>อุบลราชธานี<span class="cnt">2</span></div>
+          </div>
+        </div>
+
+        <div class="lb" data-when="scoreboard">
+          <div class="r top"><span class="no">1</span><span class="nm">น้องมิ้น</span><span class="up">— คงที่</span><span class="pt">6,240</span></div>
+          <div class="r"><span class="no">2</span><span class="nm">เฮียตี๋</span><span class="up">▲ 1</span><span class="pt">5,880</span></div>
+          <div class="r"><span class="no">3</span><span class="nm">คุณป้าแดง</span><span class="up">▼ 1</span><span class="pt">4,300</span></div>
+          <div class="r"><span class="no">4</span><span class="nm">พี่หนึ่ง</span><span class="up">▲ 2</span><span class="pt">4,120</span></div>
+          <div class="r"><span class="no">5</span><span class="nm">น้องเบล</span><span class="up">▼ 1</span><span class="pt">3,905</span></div>
+        </div>
+
+        <div class="podium" data-when="finished">
+          <div class="p2"><b>เฮียตี๋</b><em>6,980</em><em>ที่ 2</em></div>
+          <div class="p1"><b>น้องมิ้น</b><em>8,410</em><em>ที่ 1</em></div>
+          <div class="p3"><b>คุณป้าแดง</b><em>6,110</em><em>ที่ 3</em></div>
+        </div>
+      </div>
+
+      <div class="st-foot"><span id="stg-foot">ตอบแล้ว 41 / 41</span><span>เงยหน้าดูจอ · มือถือมีแค่ปุ่มสี</span></div>
+    </div>
+
+    <div class="cmp" style="padding:0;margin-top:18px">
+      <h3>สิ่งที่ทิศทางนี้ทำต่างจากคนอื่น</h3>
+      <table><tbody id="hd-table"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="cmp">
+  <h3>เทียบสามทิศทาง</h3>
+  <table>
+    <thead><tr><th>ประเด็น</th><th>การ์ดกลางวัน (ค่าเริ่มต้น)</th><th>เวทีไนต์ (ตัวเลือก)</th></tr></thead>
+    <tbody>
+      <tr><td>บรรยากาศที่เหมาะ</td><td>ทุกสถานการณ์ ปลอดภัยสุด ใกล้แอปเดิม</td><td>งานเลี้ยงกลางคืน ห้องมืด โปรเจกเตอร์</td></tr>
+      <tr><td>ตัวเลือก 4 สี</td><td>พื้นทึบ มุมมน เงานุ่ม ปุ่มสูง 104px+</td><td>เส้นขอบเรืองแสง พื้นโปร่ง — คอนทราสต์สูงบนจอมืด</td></tr>
+      <tr><td>ฟอนต์</td><td>Noto Sans Thai Looped <b>มีหัว</b> ตามแบบเรียนไทย — self-host ในโปรเจกต์อยู่แล้ว ไม่โหลด CDN ใช้ 400/500/700 (ห้ามสั่ง 800/900 เพราะไม่มีไฟล์ = หนาปลอม)</td><td>Chakra Petch (หัวข้อ) — คมแบบป้ายไฟ</td></tr>
+      <tr><td>อนิเมชัน</td><td>ปานกลาง fade/slide</td><td>เต็มที่ (glow, ไต่อันดับ) — CPU โปรเจกเตอร์ไหว</td></tr>
+      <tr><td>ธีมบริษัท</td><td>รับ brand/accent token เดิมได้ทันที</td><td>ชนกับ brand token ง่ายสุด (พื้นดำตายตัว)</td></tr>
+      <tr><td>คนตาบอดสี</td><td colspan="3">ทั้งสามใช้ ▲ ◆ ● ■ กำกับสีเสมอ ตาม <code>quizStyle.js</code> — สีไม่ใช่ข้อมูลเดียว</td></tr>
+      <tr><td>งานที่ต้องทำจริง</td><td>ปรับ spacing/radius/ขนาดปุ่มในไฟล์เดิม งานน้อยสุด</td><td>เพิ่ม skin ใหม่ทั้งชุด + ทับ token ในหน้าควิซ</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+const META = {
+  neon: {
+    name:'เวทีไนต์ — ตัวเลือก', code:'NEON STAGE',
+    desc:'ออกแบบจากห้องจัดเลี้ยงที่ปิดไฟแล้ว จอโปรเจกเตอร์เป็นแหล่งแสงเดียวในห้อง — ตัวเลือกจึงเป็นกรอบเรืองแสงบนพื้นดำสนิทแทนบล็อกสีทึบ (บล็อกสีเต็มจอบนโปรเจกเตอร์ในห้องมืดจะแยงตาและทำให้ข้อความในบล็อกอ่านยาก) ตัวเลขเวลาและคะแนนใช้ฟอนต์โมโนคมๆ ให้อ่านออกจากท้ายห้อง 10 เมตร',
+    tags:['ห้องมืด / โปรเจกเตอร์','คอนทราสต์สูงสุด','อนิเมชันเต็มที่','ชนธีมบริษัทง่าย'],
+    table:[['จุดเด่น','พลังงานงานเลี้ยงกลางคืน — ปุ่มเรืองแสง ตัวเลขนับถอยหลังเรืองแสง คนในห้องรู้สึกว่ากำลังแข่งกันจริง'],
+           ['จุดต้องระวัง','พื้นดำตายตัวไม่ยอมรับสีบริษัท ถ้าลูกค้าเป็นแบรนด์สีอ่อนจะดูไม่เข้ากัน — และบนทีวีรถกลางวันจะสะท้อนแสงจนอ่านไม่ออก'],
+           ['เหมาะกับ','ควิซช่วงงานเลี้ยงเย็น (use case หลักตามเอกสาร ข้อ 6.4 projector)']]
+  },
+  day: {
+    name:'การ์ดกลางวัน — ค่าเริ่มต้น', code:'DAYLIGHT CARD',
+    desc:'ต่อยอดจากหน้าตาแอปเดิมโดยตรง — ใช้ token brand/accent/surface ที่มีอยู่ ไม่ต้องสร้างระบบสีใหม่ ฟอนต์ใช้ Noto Sans Thai Looped ตัวเดียวทั้งหน้าตั้งแต่หัวข้อยันคำบรรยาย — เป็นแบบ "มีหัว" ตามที่คนไทยหัดอ่านมาตั้งแต่แบบเรียน กลุ่มทัวร์ที่มีผู้สูงอายุจะอ่านได้เร็วกว่าฟอนต์ไม่มีหัวโดยเฉพาะตอนรถสั่น และใช้ไฟล์ที่ self-host อยู่แล้วใน public/fonts (400/500/600/700 ครบแล้ว) จึงไม่พึ่ง CDN และทำงานตอนออฟไลน์ได้เหมือนหน้าเอกสาร เน้นไปที่สิ่งที่แก้ปัญหาหน้างานจริงแทน: ปุ่มสูงขึ้น มุมมนขึ้น ระยะห่างมากขึ้น เพราะโจทย์คือ "กดตอนรถโยก" (เอกสารข้อ 6.5 กำหนดขั้นต่ำ 25% ของความสูงจอต่อปุ่ม) จอเวทีเป็นพื้นเข้มไล่เฉดนุ่ม ไม่ดำสนิท ให้กล้องถ่ายรูปงานออกมาสวย',
+    tags:['Looped · self-host ไม่พึ่ง CDN','ใช้ token เดิม','งานพัฒนาน้อยสุด','ปุ่มใหญ่ กดตอนรถโยก','ปลอดภัยกับทุกธีมบริษัท'],
+    table:[['จุดเด่น','ลงมือได้เร็วที่สุดและกลืนกับหน้าอื่นในแอปทันที ลูกค้าที่เปลี่ยนสีแบรนด์เองก็ได้ควิซที่สีตรงกันฟรี'],
+           ['จุดต้องระวัง','ปลอดภัยแปลว่าจำง่ายน้อยกว่า — ควิซจะดูเหมือน "อีกหน้าหนึ่งของแอป" ไม่ใช่ช่วงเวลาพิเศษของงาน'],
+           ['เหมาะกับ','ถ้าอยากปล่อยของก่อนแล้วค่อยเพิ่ม skin A/B เป็น screen_mode ทีหลัง']]
+  }
+};
+const HOSTMETA = {
+  lobby:['ห้องรอ · lobby','เปิดห้องมา 3 นาที','LOBBY','รอเริ่ม · 41 คนพร้อม'],
+  countdown:['กำลังเริ่ม · countdown','เตรียมข้อ 1/10','START','3.. 2.. 1..'],
+  answering:['ข้อ 7/10 · mcq','ควิซคืนวันที่สอง · 41 คน','ANSWERING','ตอบแล้ว 41 / 41'],
+  locked:['ข้อ 7/10 · ปิดรับแล้ว','รอกดเฉลย','LOCKED','ปิดรับคำตอบแล้ว'],
+  reveal:['ข้อ 7/10 · เฉลย','ถูก 28 คน จาก 41','REVEAL','เฉลย: นครราชสีมา'],
+  scoreboard:['กระดานอันดับ','หลังข้อ 7/10','BOARD','อันดับหลังข้อ 7'],
+  finished:['จบเกม','สรุปผล 10 ข้อ','DONE','จบเกม · 41 คน'],
+};
+const STAGETAG = {
+  lobby:'ห้องรอ · เข้าร่วมได้',countdown:'กำลังจะเริ่ม',answering:'คำถามข้อ 7 / 10',
+  locked:'ปิดรับคำตอบแล้ว',reveal:'เฉลยข้อ 7 / 10',scoreboard:'กระดานอันดับ · หลังข้อ 7',finished:'ผลรวมทั้งเกม'
+};
+const STAMP = {lobby:'เปิดรับ',countdown:'เริ่ม!',answering:'LIVE',locked:'ปิดรับ',reveal:'เฉลย',scoreboard:'อันดับ',finished:'จบเกม'};
+
+function setSkin(s){
+  document.body.dataset.skin = s;
+  document.querySelectorAll('[data-skin-btn]').forEach(b=>b.classList.toggle('on',b.dataset.skinBtn===s));
+  const m = META[s];
+  document.getElementById('hd-name').firstChild.textContent = m.name;
+  document.getElementById('hd-code').textContent = m.code;
+  document.getElementById('hd-desc').textContent = m.desc;
+  document.getElementById('hd-tags').innerHTML = m.tags.map(t=>`<span>${t}</span>`).join('');
+  document.getElementById('hd-table').innerHTML = m.table.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+function setState(st){
+  document.body.dataset.state = st;
+  document.querySelectorAll('[data-st-btn]').forEach(b=>b.classList.toggle('on',b.dataset.stBtn===st));
+  const h = HOSTMETA[st];
+  document.getElementById('h-title').textContent = h[0];
+  document.getElementById('h-sub').textContent = h[1];
+  document.getElementById('h-state').textContent = h[2];
+  document.getElementById('stg-foot').textContent = h[3];
+  document.getElementById('stg-tag').textContent = STAGETAG[st];
+  document.getElementById('stg-stamp').textContent = STAMP[st];
+}
+document.querySelectorAll('[data-skin-btn]').forEach(b=>b.onclick=()=>setSkin(b.dataset.skinBtn));
+document.querySelectorAll('[data-st-btn]').forEach(b=>b.onclick=()=>setState(b.dataset.stBtn));
+['d1','d2'].forEach(id=>{
+  const el=document.getElementById(id); if(!el) return;
+  el.innerHTML = Array.from({length:41},()=>'<i></i>').join('');
+});
+setSkin('day'); setState('answering');
+</script>
+</body>
+</html>

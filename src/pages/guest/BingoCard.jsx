@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { useTourId } from '../../lib/TourContext'
+import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { playWinAlert, primeWinAlert } from '../../lib/winAlert'
 import { useNumberReveal } from '../../lib/useNumberReveal'
@@ -10,6 +10,7 @@ import NumberReveal from '../../components/common/NumberReveal'
 import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 import Card from '../../components/common/Card'
 import GuestNav from '../../components/common/GuestNav'
+import BackButton from '../../components/common/BackButton'
 
 const GRID_SIZE = 5
 const FREE_INDEX = 12 // center cell (row 2, col 2) — ช่องฟรี ตามกติกาบิงโกทั่วไป
@@ -56,6 +57,7 @@ function checkBingo(numbers, markedSet) {
 
 export default function BingoCard() {
   const tourId = useTourId()
+  const tp = useTourPath()
   const { t } = useTranslation()
   const guestId = getGuestId(tourId)
 
@@ -365,9 +367,12 @@ export default function BingoCard() {
       <AnnouncementBanner />
       <div className="p-4 pb-28">
         <div className="mx-auto max-w-md">
-          <h1 className="mb-4 flex items-center gap-2 text-2xl font-extrabold text-ink">
-            <span aria-hidden="true">🎯</span>{t('guest.bingo.title')}
-          </h1>
+          <div className="mb-4 flex items-center gap-2">
+            <BackButton to={tp('games')} />
+            <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+              <span aria-hidden="true">🎯</span>{t('guest.bingo.title')}
+            </h1>
+          </div>
 
           <GuestNav active="bingo" />
 

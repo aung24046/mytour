@@ -1,15 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+/* ══ ฟอนต์ทั้งหมด self-host ไม่มีตัวไหนมาจาก CDN ══════════════════════════
+   เดิมบรรทัดนี้เป็น @import จาก fonts.googleapis.com ซึ่งมีปัญหาสามข้อ:
+     1. แอปเป็น PWA แต่ workbox precache ได้เฉพาะไฟล์ใน public/ — ฟอนต์จาก CDN
+        จึงไม่ถูก cache หัวหน้าทัวร์ที่เปิดแอปตอนไม่มีเน็ตจะได้ฟอนต์ระบบแทน
+     2. @import ใน CSS เป็น render-blocking ต่อกันสองชั้น (โหลด css → โหลดฟอนต์)
+     3. ธีมจอสุ่มรางวัลใน lib/drawStage.js เรียก Kanit / Chakra Petch / Anuphan
+        ซึ่งไม่เคยถูกโหลดที่ไหนเลย ทั้ง 5 ธีมจึงเรนเดอร์ด้วยฟอนต์เดียวกันหมด
 
-/* ── ฟอนต์เอกสาร export — self-host เพื่อให้พิมพ์ได้ตอนออฟไลน์ ────────────
-   ไฟล์ woff2 ต้องวางเองใน public/fonts/ (ดู public/fonts/README.md)
-   ถ้ายังไม่มีไฟล์ จะตกไปใช้ Noto Sans Thai จาก CDN ข้างบนแทน เอกสารยังพิมพ์ได้
-   font-display: block — ยอมรอฟอนต์ ดีกว่าพิมพ์ออกมาด้วยฟอนต์ผิดแล้วคอลัมน์เพี้ยน */
+   ทำไม Bold ประกาศเป็นช่วง 700-900:
+     ไฟล์ที่ self-host มีถึงน้ำหนัก 700 แต่โค้ดใช้ font-black (900) กับ
+     font-extrabold (800) อยู่ 118 จุด ถ้าประกาศแค่ 700 เบราว์เซอร์จะ
+     "ทำหนาปลอม" ด้วยการถ่างเส้น ซึ่งกับตัวไทยจะทำให้หัวตันและสระเบียดกัน
+     การประกาศเป็นช่วงคือบอกเบราว์เซอร์ว่า "ขอ 900 ก็ใช้ไฟล์นี้แหละ อย่าปลอม"
+
+   unicode-range: ตระกูลที่มีเฉพาะไทยถูกจำกัดช่วงไว้ เพื่อให้ละตินกับตัวเลข
+   ตกไปที่ Plus Jakarta Sans / Google Sans ตามลำดับใน font-family เสมอ
+   ────────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/PlusJakartaSans-Regular.woff2') format('woff2');
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/PlusJakartaSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/PlusJakartaSans-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/PlusJakartaSans-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans Thai';
+  src: url('/fonts/NotoSansThai-Regular.woff2') format('woff2');
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Thai';
+  src: url('/fonts/NotoSansThai-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Thai';
+  src: url('/fonts/NotoSansThai-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Thai';
+  src: url('/fonts/NotoSansThai-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+
 @font-face {
   font-family: 'Noto Sans Thai Looped';
   src: url('/fonts/NotoSansThaiLooped-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-weight: 100 400;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
   unicode-range: U+0E00-0E7F, U+25CC;
 }
 @font-face {
@@ -17,22 +90,135 @@
   src: url('/fonts/NotoSansThaiLooped-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
-  font-display: block;
+  font-display: swap;
   unicode-range: U+0E00-0E7F, U+25CC;
 }
 @font-face {
+  font-family: 'Noto Sans Thai Looped';
+  src: url('/fonts/NotoSansThaiLooped-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Thai Looped';
+  src: url('/fonts/NotoSansThaiLooped-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0E00-0E7F, U+25CC;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Regular.woff2') format('woff2');
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/ChakraPetch-Regular.woff2') format('woff2');
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/ChakraPetch-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/ChakraPetch-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('/fonts/ChakraPetch-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Anuphan';
+  src: url('/fonts/Anuphan-Regular.woff2') format('woff2');
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Anuphan';
+  src: url('/fonts/Anuphan-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Anuphan';
+  src: url('/fonts/Anuphan-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Anuphan';
+  src: url('/fonts/Anuphan-Bold.woff2') format('woff2');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Google Sans — ใช้เฉพาะเอกสาร export ────────────────────────────────
+   font-display: block (ไม่ใช่ swap) — ยอมรอฟอนต์ ดีกว่าพิมพ์ออกมาด้วยฟอนต์ผิด
+   แล้วความกว้างคอลัมน์ที่คำนวณไว้ใน lib/printProfiles.js เพี้ยน
+   จำกัด unicode-range ไว้ที่ละติน เพราะไฟล์นี้มีกลิฟไทยติดมาด้วย (แบบไม่มีหัว)
+   ซึ่งต้องไม่ถูกใช้ — ไทยเป็นหน้าที่ของ Noto Sans Thai Looped
+   ⚠ สองไฟล์นี้ยังไม่ได้ subset (474 KB + 533 KB) คิดเป็น ~78% ของฟอนต์ทั้งหมด
+     ที่ service worker ต้อง precache — ดูวิธี subset ใน public/fonts/README.md */
+@font-face {
   font-family: 'Google Sans';
   src: url('/fonts/GoogleSans-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-weight: 100 400;
   font-style: normal;
   font-display: block;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2070-209F, U+20A0-20BF;
 }
 @font-face {
   font-family: 'Google Sans';
   src: url('/fonts/GoogleSans-Medium.woff2') format('woff2');
-  font-weight: 500;
+  font-weight: 500 900;
   font-style: normal;
   font-display: block;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2070-209F, U+20A0-20BF;
 }
 
 @tailwind base;
@@ -298,6 +484,23 @@ body {
 @keyframes fade-up {
   from { transform: translateY(10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* เกมสุ่มรายชื่อ — ใช้ทั้งจอโปรเจกเตอร์และมือถือลูกทัวร์
+   อยู่ที่นี่แทนที่จะเป็น style ในคอมโพเนนต์ เพราะ keyframes ประกาศ inline ไม่ได้ */
+@keyframes mt-pop {
+  from { transform: scale(0.82); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes mt-flap {
+  from { transform: rotateX(-92deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ไฟวิ่งขอบจอของธีมป้ายไฟ LED */
+@keyframes mt-march {
+  to { background-position: 34px 0, -34px 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,65 @@
+# กัน Supabase หยุดโปรเจกต์เพราะไม่มีการใช้งาน
+#
+# ปัญหา: Supabase Free plan หยุดโปรเจกต์ที่ไม่มีการใช้งานติดกัน 7 วัน
+#        บริษัททัวร์ไม่ได้ออกทริปทุกสัปดาห์ ถ้าเว้นไป 10 วันแล้ววันออกทริปเปิดแอปมา
+#        จะเจอแอปตายทั้งระบบ ต้องเข้า Dashboard กด restore ก่อน
+#        ซึ่งไม่ใช่สิ่งที่อยากทำตอนยืนอยู่หน้ารถบัสกับลูกทัวร์ 40 คน
+#
+# วิธี: ยิง query จริงเข้า REST API สัปดาห์ละ 3 ครั้ง
+#       เอกสาร Supabase บอกว่า "a few user requests to the database each day"
+#       พอกันโดนหยุด — เราเผื่อไว้เป็นทุก 2-3 วัน ไม่ใช่ 6 วันครึ่ง
+#       เพราะถ้าวันนั้น GitHub ล่มพอดี จะได้ไม่ขาดช่วงจนโดนหยุด
+#
+# ⚠️ ข้อจำกัดที่ต้องรู้:
+#   1. GitHub ปิด scheduled workflow อัตโนมัติ ถ้า repo ไม่มี commit เลย 60 วัน
+#      → ตราบใดที่ยังพัฒนาอยู่ก็ไม่มีปัญหา แต่ถ้าโปรเจกต์นิ่งยาว ต้องมาเปิดเอง
+#   2. นี่คือการเลี่ยงเงื่อนไข ไม่ใช่การแก้ที่ต้นเหตุ — Supabase เปลี่ยนกติกาเมื่อไหร่ก็ได้
+#      ถ้าทริปสำคัญจริงๆ การขึ้น Pro คือทางที่ไม่ต้องลุ้น
+#   3. ถ้า workflow นี้พังเงียบๆ จะไปรู้ตัวเอาวันออกทริป
+#      → ตั้ง fail ให้ชัด GitHub จะส่งอีเมลแจ้งเจ้าของ repo เมื่อ workflow ล้มเหลว
+#
+# ตั้งค่าก่อนใช้: Settings → Secrets and variables → Actions → New repository secret
+#   SUPABASE_URL       = https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY  = anon key (ตัวเดียวกับที่อยู่ในแอปหน้าบ้านอยู่แล้ว ไม่ใช่ service_role)
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # ทุกวันจันทร์ พุธ ศุกร์ เวลา 03:00 UTC (10:00 น. ไทย)
+    - cron: '0 3 * * 1,3,5'
+  workflow_dispatch:        # กดรันเองได้จากหน้า Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ยิง query เข้า Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::ยังไม่ได้ตั้ง secret SUPABASE_URL / SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          # ต้องเป็น query เข้าตารางจริง ไม่ใช่แค่เรียก /health
+          # เพราะสิ่งที่ Supabase นับคือ "user requests to the database"
+          # เลือก tours เพราะเป็นตารางที่มีแถวแน่ๆ และอ่านได้ด้วย anon key
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/tours?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          echo "HTTP $code"
+          cat /tmp/out.json
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase ตอบ HTTP $code — โปรเจกต์อาจถูกหยุดไปแล้ว หรือ key ผิด"
+            exit 1
+          fi
+
+          echo "✅ โปรเจกต์ยังทำงานปกติ"

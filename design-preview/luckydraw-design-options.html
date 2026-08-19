@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สุ่มรายชื่อ — 2 ดีไซน์ × 3 อนิเมชัน</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800&family=Chakra+Petch:wght@400;600;700&family=Mitr:wght@400;500;600;700&family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   สองดีไซน์ที่เสนอ — ต่างกันที่ "วัสดุ" ไม่ใช่แค่สี
+   A · ตั๋วรางวัล — โลกของตั๋วรถทัวร์ สลาก ตราปั๊มหมึก
+   B · ป้ายไฟ LED — โลกของป้ายไฟหน้ารถทัวร์ ไฟวิ่งงานเลี้ยง
+   ══════════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{ --r:14px }
+
+/* ── A: ตั๋วรางวัล ─────────────────────────────────────────────── */
+body[data-skin="ticket"]{
+  --page:#e6ded0; --paper:#fbf6ec; --paper2:#f3ebdc;
+  --ink:#12303f; --ink2:#5c6b73; --ink3:#8a949a;
+  --line:#dccfba; --line2:#c4b49a;
+  --hot:#d8442f;            /* แดงตราปั๊ม */
+  --cool:#0e8c87;           /* เขียวมิ้นท์ตั๋ว */
+  --gold:#b8860f;
+  --stage-bg:#12303f; --stage-ink:#fbf6ec;
+  --disp:'Kanit',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:14px;
+}
+/* ── B: ป้ายไฟ LED ─────────────────────────────────────────────── */
+body[data-skin="led"]{
+  --page:#070a10; --paper:#111823; --paper2:#0c121b;
+  --ink:#e8f3f5; --ink2:#8fa3ad; --ink3:#5d6f7a;
+  --line:#1e2a38; --line2:#2b3b4c;
+  --hot:#ff4d8d; --cool:#2be8c8; --gold:#ffb020;
+  --stage-bg:#05080d; --stage-ink:#eafcf8;
+  --disp:'Chakra Petch',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:6px;
+}
+
+body{font-family:var(--body);background:var(--page);color:var(--ink);padding:0 0 60px;transition:background .3s}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── แถบสลับ (chrome กลาง ไม่ขึ้นกับสกิน) ───────────────────────── */
+.bar{position:sticky;top:0;z-index:40;background:#111823;color:#e8f3f5;padding:11px 20px;display:flex;gap:26px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #26313f}
+.bar .grp{display:flex;align-items:center;gap:9px}
+.bar .k{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7e919c;font-family:'IBM Plex Mono',monospace}
+.bar button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;font-weight:600;background:transparent;border:1px solid #2f3c4b;color:#a9bcc6;padding:7px 14px;border-radius:8px;cursor:pointer;transition:.15s}
+.bar button.on{background:#2be8c8;border-color:#2be8c8;color:#05202a;font-weight:700}
+.bar .note{margin-left:auto;font-size:12px;color:#6d7f8a;max-width:42ch;line-height:1.45}
+
+.wrap{max-width:1500px;margin:0 auto;padding:22px 20px 0;display:grid;grid-template-columns:340px minmax(0,1fr) 268px;gap:20px;align-items:start}
+@media(max-width:1300px){.wrap{grid-template-columns:330px minmax(0,1fr)}}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+
+/* ══ HOST PANEL ══ */
+.host{position:sticky;top:66px;max-height:calc(100vh - 86px);overflow:auto;padding-right:2px}
+.host::-webkit-scrollbar{width:5px}.host::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:11px;position:relative}
+body[data-skin="ticket"] .card{box-shadow:2px 3px 0 rgba(18,48,63,.09)}
+body[data-skin="led"] .card{box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+
+.eyebrow{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.eyebrow a{cursor:pointer;color:var(--cool);letter-spacing:.04em;font-weight:600}
+
+.brandhd{display:flex;align-items:center;gap:11px;padding:4px 2px 14px}
+.brandhd .mk{width:38px;height:38px;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:17px;flex:none}
+body[data-skin="ticket"] .brandhd .mk{background:var(--hot);color:var(--paper);border-radius:3px;transform:rotate(-3deg)}
+body[data-skin="led"] .brandhd .mk{background:transparent;border:1.5px solid var(--cool);color:var(--cool);border-radius:4px;box-shadow:0 0 12px rgba(43,232,200,.35)}
+.brandhd b{font-family:var(--disp);font-size:19px;font-weight:800;letter-spacing:-.01em;display:block;line-height:1.2}
+.brandhd span{font-size:11.5px;color:var(--ink2)}
+
+.count{display:flex;align-items:baseline;gap:10px}
+.count b{font-family:var(--mono);font-size:40px;font-weight:600;line-height:1;color:var(--cool);letter-spacing:-.02em}
+.count span{font-size:12.5px;color:var(--ink2);line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
+.chip{font-size:12.5px;font-weight:600;padding:6px 11px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;user-select:none;border-radius:var(--r)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+body[data-skin="led"] .chip.on{background:var(--cool);border-color:var(--cool);color:#05202a}
+
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font-family:var(--body);font-size:13px;font-weight:600;padding:9px 4px;cursor:pointer;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:var(--r)}
+.seg button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+body[data-skin="led"] .seg button.on{background:var(--cool);border-color:var(--cool);color:#05202a}
+
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:13px;font-weight:600}
+.stepper .g{display:flex;align-items:center;gap:4px}
+.stepper button{width:30px;height:30px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:16px;cursor:pointer;border-radius:var(--r)}
+.stepper .v{min-width:34px;text-align:center;font-family:var(--mono);font-size:16px;font-weight:600}
+
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0;padding-bottom:1px}.row:first-child{padding-top:1px}
+.row b{font-size:13px;font-weight:600;display:block}
+.row i{font-style:normal;font-size:11.5px;color:var(--ink3);display:block;margin-top:2px;line-height:1.4}
+.sw{width:40px;height:23px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;margin-top:2px;transition:.18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:var(--paper);transition:.18s}
+.sw.on{background:var(--cool)}.sw.on::after{transform:translateX(17px)}
+
+.pz{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);margin-bottom:6px;border-radius:var(--r);font-size:13px}
+.pz.cur{border-color:var(--gold);border-style:solid}
+body[data-skin="ticket"] .pz.cur{background:#fdf6e3}
+body[data-skin="led"] .pz.cur{background:rgba(255,176,32,.09);box-shadow:0 0 14px rgba(255,176,32,.18)}
+.pz .ix{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.pz .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pz .q{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.pz.cur .q{color:var(--gold);font-weight:600}
+
+.go{width:100%;border:0;padding:16px;font-family:var(--disp);font-size:17px;font-weight:800;cursor:pointer;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:var(--r);transition:.15s}
+body[data-skin="ticket"] .go{background:var(--hot);color:var(--paper);box-shadow:3px 3px 0 var(--ink)}
+body[data-skin="ticket"] .go:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+body[data-skin="led"] .go{background:var(--cool);color:#04181f;box-shadow:0 0 22px rgba(43,232,200,.35)}
+.go:disabled{background:var(--line2);color:var(--ink3);box-shadow:none;cursor:not-allowed}
+.mini{display:flex;gap:6px;margin-top:8px}
+.mini button{flex:1;font-family:var(--body);font-size:12px;font-weight:600;padding:9px 4px;border:1px solid var(--line2);background:transparent;color:var(--ink2);cursor:pointer;border-radius:var(--r)}
+
+.hist{max-height:190px;overflow:auto}
+.hrow{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.hrow:last-child{border-bottom:0}
+.hrow .no{font-family:var(--mono);font-size:11px;color:var(--ink3);width:20px}
+.hrow .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .tag{font-size:10.5px;font-weight:600;color:var(--gold);white-space:nowrap}
+.none{font-size:12.5px;color:var(--ink3);text-align:center;padding:15px 0;line-height:1.6}
+
+/* ══ STAGE ══ */
+.stagebox{border-radius:var(--r);overflow:hidden;position:relative}
+body[data-skin="ticket"] .stagebox{box-shadow:6px 8px 0 rgba(18,48,63,.13)}
+body[data-skin="led"] .stagebox{border:1px solid #1c2836}
+.stage{position:relative;background:var(--stage-bg);color:var(--stage-ink);min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:46px 30px 62px;overflow:hidden;text-align:center}
+.stage:fullscreen{min-height:100vh}
+
+/* signature A: กระดาษตั๋ว — เส้นปรุรอบเวที + ลายเส้นบางแนวนอน */
+body[data-skin="ticket"] .stage{
+  background-image:repeating-linear-gradient(0deg,rgba(251,246,236,.045) 0 1px,transparent 1px 5px);
+}
+body[data-skin="ticket"] .stage::before{content:"";position:absolute;inset:13px;border:1.5px dashed rgba(251,246,236,.22);pointer-events:none;z-index:1}
+/* signature B: ตาราง LED dot + ไฟวิ่งรอบขอบ */
+body[data-skin="led"] .stage{
+  background-image:radial-gradient(rgba(120,160,180,.13) 1.1px,transparent 1.2px);
+  background-size:11px 11px;
+}
+body[data-skin="led"] .stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 34px) top/100% 3px no-repeat,
+    repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 34px) bottom/100% 3px no-repeat;
+  opacity:.55;animation:march 1.1s linear infinite}
+@keyframes march{to{background-position:34px 0,-34px 100%}}
+
+#cfti{position:absolute;inset:0;pointer-events:none;z-index:6}
+.st-top{position:relative;z-index:3;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;opacity:.55;margin-bottom:16px}
+.st-pz{position:relative;z-index:3;display:none;align-items:center;gap:9px;font-family:var(--disp);font-size:15px;font-weight:700;margin-bottom:26px;padding:8px 18px}
+.st-pz.show{display:inline-flex}
+body[data-skin="ticket"] .st-pz{background:var(--gold);color:#1a1200;transform:rotate(-1deg)}
+body[data-skin="led"] .st-pz{border:1px solid var(--gold);color:var(--gold);border-radius:4px;box-shadow:0 0 16px rgba(255,176,32,.25)}
+.st-pz em{font-style:normal;font-family:var(--mono);font-size:12px;opacity:.72}
+
+#anim{position:relative;z-index:3;width:100%;max-width:900px;min-height:210px;display:flex;align-items:center;justify-content:center}
+
+/* — สล็อต — */
+.slot{height:140px;overflow:hidden;width:100%;
+  -webkit-mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent)}
+.slot .r div{height:140px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:60px;font-weight:800;white-space:nowrap;letter-spacing:-.02em}
+.slot .r div.dim{opacity:.3}
+body[data-skin="led"] .slot .r div:last-child{text-shadow:0 0 26px var(--cool)}
+
+/* — วงล้อ — */
+.wheelbox{position:relative;width:340px;height:340px}
+.wheelbox svg{width:100%;height:100%;display:block}
+.wheelbox .spin{transform-origin:50% 50%}
+.wheelbox .pin{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:2;
+  width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--gold);filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.wheelbox .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;
+  background:var(--stage-bg);border:2px solid var(--gold);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:13px;color:var(--gold)}
+@media(max-width:640px){.wheelbox{width:260px;height:260px}}
+
+/* — คัดออก — */
+.elim{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-height:270px;overflow:hidden;padding:2px}
+.ec{font-family:var(--body);font-size:15px;font-weight:600;padding:7px 13px;border:1px solid rgba(255,255,255,.16);border-radius:var(--r);transition:opacity .35s,transform .35s,filter .35s;white-space:nowrap}
+.ec.hot{background:var(--cool);color:#04181f;border-color:var(--cool)}
+.ec.out{opacity:.12;transform:scale(.9);filter:blur(.6px)}
+.ec.win{background:var(--gold);color:#1a1200;border-color:var(--gold);font-family:var(--disp);font-weight:800;font-size:22px;padding:11px 22px}
+
+/* — ผลลัพธ์ — */
+#out{position:relative;z-index:3;width:100%;max-width:960px;display:none}
+#out.show{display:block}
+.pop{animation:pop .5s cubic-bezier(.2,1.35,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.pop{animation:none}}
+
+/* ตั๋วผู้ชนะ (สกิน A) */
+.stub{display:inline-block;background:var(--paper);color:var(--ink);padding:26px 40px 22px;position:relative;text-align:center;transform:rotate(-1.1deg);
+  box-shadow:0 14px 0 rgba(0,0,0,.16)}
+.stub::before,.stub::after{content:"";position:absolute;top:50%;width:26px;height:26px;border-radius:50%;background:var(--stage-bg);transform:translateY(-50%)}
+.stub::before{left:-13px}.stub::after{right:-13px}
+.stub .no{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--ink3);text-transform:uppercase}
+.stub .nm{font-family:var(--disp);font-size:60px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 2px}
+.stub .nk{font-family:var(--disp);font-size:20px;font-weight:600;color:var(--hot)}
+.stub .mt{margin-top:16px;padding-top:13px;border-top:1.5px dashed var(--line2);display:flex;gap:16px;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.stub .stamp{position:absolute;top:-16px;right:-22px;font-family:var(--disp);font-weight:800;font-size:14px;color:var(--hot);border:2.5px solid var(--hot);padding:5px 12px;transform:rotate(9deg);opacity:.88;letter-spacing:.04em}
+
+/* ป้ายไฟผู้ชนะ (สกิน B) */
+.led-name{font-family:var(--disp);font-size:70px;font-weight:700;letter-spacing:.01em;line-height:1.08;color:var(--stage-ink);text-shadow:0 0 34px rgba(43,232,200,.55)}
+.led-nick{font-family:var(--mono);font-size:19px;color:var(--cool);letter-spacing:.22em;text-transform:uppercase;margin-top:9px}
+.led-meta{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.led-meta span{font-family:var(--mono);font-size:12px;padding:6px 13px;border:1px solid rgba(43,232,200,.35);color:var(--cool);border-radius:4px}
+@media(max-width:700px){.stub .nm,.led-name{font-size:36px}}
+
+.gridw{display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:10px}
+.gwin{padding:13px 15px;display:flex;align-items:center;gap:11px;text-align:left;opacity:0;transform:translateY(12px);border-radius:var(--r)}
+.gwin.in{animation:gin .4s cubic-bezier(.2,1.3,.5,1) forwards}
+@keyframes gin{to{opacity:1;transform:none}}
+body[data-skin="ticket"] .gwin{background:var(--paper);color:var(--ink)}
+body[data-skin="led"] .gwin{border:1px solid rgba(43,232,200,.3);background:rgba(43,232,200,.06)}
+.gwin i{font-family:var(--mono);font-style:normal;font-size:12px;font-weight:600;opacity:.55;flex:none}
+.gwin b{font-family:var(--disp);font-size:18px;font-weight:700;display:block;line-height:1.25}
+.gwin span{font-size:11.5px;opacity:.6;display:block}
+
+.cfm{position:relative;z-index:7;display:none;gap:10px;margin-top:28px;justify-content:center;flex-wrap:wrap}
+.cfm.show{display:flex}
+.cfm button{font-family:var(--disp);font-size:15px;font-weight:700;padding:12px 24px;border:0;cursor:pointer;border-radius:var(--r)}
+.cfm .y{background:var(--cool);color:#04181f}
+.cfm .n{background:transparent;border:1px solid rgba(255,255,255,.32)!important;color:var(--stage-ink)}
+
+.st-foot{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:14px 24px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:.06em;opacity:.5}
+
+/* ══ GUEST ══ */
+.guest{position:sticky;top:66px}
+.gsh{background:var(--ink);border-radius:26px;padding:8px}
+body[data-skin="led"] .gsh{background:#1b2532;border:1px solid #2b3b4c}
+.gscr{background:var(--paper2);border-radius:20px;overflow:hidden;min-height:590px;display:flex;flex-direction:column;position:relative}
+.gtop{background:var(--cool);color:#04181f;padding:11px 14px;font-family:var(--disp);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+body[data-skin="ticket"] .gtop{background:var(--hot);color:var(--paper)}
+.gtabs{display:flex;background:var(--paper);border-bottom:1px solid var(--line)}
+.gtabs button{flex:1;border:0;background:transparent;font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--ink3);padding:10px 4px;cursor:pointer;border-bottom:2px solid transparent;position:relative}
+.gtabs button.on{color:var(--ink);border-bottom-color:var(--cool)}
+.gtabs .dot{position:absolute;top:7px;right:16px;width:6px;height:6px;border-radius:50%;background:var(--hot);display:none}
+.gtabs button.alert .dot{display:block}
+.gbody{flex:1;padding:11px;overflow:auto;max-height:540px;display:flex;flex-direction:column;gap:10px}
+.gsel{width:100%;font-family:var(--body);font-size:12.5px;padding:8px 10px;border:1px solid var(--line2);background:var(--paper);color:var(--ink);border-radius:var(--r)}
+.gpane{display:none;flex-direction:column;gap:10px}.gpane.on{display:flex}
+.glive{background:var(--stage-bg);color:var(--stage-ink);border-radius:var(--r);padding:13px 12px;text-align:center;overflow:hidden}
+body[data-skin="led"] .glive{background-image:radial-gradient(rgba(120,160,180,.14) 1px,transparent 1.1px);background-size:9px 9px}
+.glive .s{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.55}
+.glive .s i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--hot);margin-right:5px;animation:blink 1.1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.gname{font-family:var(--disp);font-size:23px;font-weight:800;margin-top:8px;line-height:1.25;min-height:30px}
+.gsub{font-family:var(--mono);font-size:11px;opacity:.6;margin-top:3px}
+.grow{display:flex;align-items:center;gap:7px;padding:6px 9px;margin-top:5px;font-size:12.5px;font-weight:600;text-align:left;border:1px solid rgba(255,255,255,.13);border-radius:var(--r)}
+.grow.me{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+.grow i{font-family:var(--mono);font-style:normal;font-size:10px;opacity:.6}
+.mcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:13px}
+.mwho{display:flex;align-items:center;gap:10px}
+.mwho .av{width:38px;height:38px;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:14px;flex:none;background:var(--cool);color:#04181f;border-radius:var(--r)}
+.mwho b{font-size:14px;font-weight:700;display:block;line-height:1.25}
+.mwho span{font-size:11px;color:var(--ink3)}
+.mstat{margin-top:11px;padding:10px 12px;font-size:12.5px;font-weight:600;display:flex;gap:8px;align-items:center;line-height:1.4;border-radius:var(--r)}
+.mstat.win{background:rgba(14,140,135,.14);color:var(--cool)}
+.mstat.pend{background:rgba(255,176,32,.16);color:var(--gold)}
+.mstat.idle{background:var(--paper2);color:var(--ink3)}
+body[data-skin="led"] .mstat.win{background:rgba(43,232,200,.12)}
+.mpz{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:6px;font-size:12px;font-weight:600;border:1px solid var(--gold);color:var(--gold);border-radius:var(--r)}
+.mpz em{font-style:normal;margin-left:auto;font-family:var(--mono);font-size:10px;opacity:.7}
+
+/* ══ อธิบายดีไซน์ ══ */
+.explain{max-width:1500px;margin:20px auto 0;padding:0 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.explain{grid-template-columns:1fr}}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.ex h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.ex p{font-size:12.5px;color:var(--ink2);line-height:1.75}
+.ex .sw2{display:flex;gap:5px;margin-top:11px}
+.ex .sw2 i{width:22px;height:22px;border-radius:4px;display:block}
+
+/* ══════════════════════════════════════════════════════════════════
+   C · โปสเตอร์งานเลี้ยง — พื้นน้ำเงินกรม รัศมีดาวกระจาย สีจัดจ้าน
+   D · ป้ายพลิกสนามบิน — เทาถ่าน ระเบียบจัด ตัวอักษรพลิกทีละตัว
+   ══════════════════════════════════════════════════════════════════ */
+body[data-skin="fest"]{
+  --page:#101b33; --paper:#1a2748; --paper2:#16213c;
+  --ink:#fff6e5; --ink2:#a9b6d4; --ink3:#7385a8;
+  --line:#2a3a63; --line2:#3a4e80;
+  --hot:#e8175d; --cool:#06d6a0; --gold:#ffc93c;
+  --stage-bg:#14213d; --stage-ink:#fff6e5;
+  --disp:'Mitr',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:18px;
+}
+body[data-skin="board"]{
+  --page:#15181d; --paper:#1c2026; --paper2:#181b21;
+  --ink:#edeff2; --ink2:#9aa3ae; --ink3:#6b7480;
+  --line:#282d35; --line2:#39404a;
+  --hot:#ff6b35; --cool:#e8b44a; --gold:#e8b44a;
+  --stage-bg:#101317; --stage-ink:#f2f4f7;
+  --disp:'Anuphan',sans-serif; --body:'IBM Plex Sans Thai',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --r:3px;
+}
+
+/* — โครงร่วม — */
+body[data-skin="fest"] .card{box-shadow:0 3px 0 rgba(0,0,0,.22)}
+body[data-skin="board"] .card{box-shadow:none}
+body[data-skin="fest"] .brandhd .mk{background:var(--hot);color:#fff;border-radius:12px;transform:rotate(-4deg)}
+body[data-skin="board"] .brandhd .mk{background:transparent;border:1px solid var(--hot);color:var(--hot);border-radius:2px;font-family:var(--mono);font-size:13px}
+body[data-skin="fest"] .chip.on,body[data-skin="fest"] .seg button.on{background:var(--hot);border-color:var(--hot);color:#fff}
+body[data-skin="board"] .chip.on,body[data-skin="board"] .seg button.on{background:var(--ink);border-color:var(--ink);color:var(--page)}
+body[data-skin="fest"] .go{background:var(--gold);color:#3b2600;border-radius:16px;box-shadow:0 5px 0 #c99a10}
+body[data-skin="fest"] .go:active{transform:translateY(3px);box-shadow:0 2px 0 #c99a10}
+body[data-skin="board"] .go{background:var(--hot);color:#160a04;letter-spacing:.06em}
+body[data-skin="board"] .eyebrow,body[data-skin="board"] .hrow .no{letter-spacing:.2em}
+body[data-skin="fest"] .gsh{background:#0a1224}
+body[data-skin="board"] .gsh{background:#0c0e12;border:1px solid #282d35}
+body[data-skin="fest"] .gtop{background:var(--hot);color:#fff}
+body[data-skin="board"] .gtop{background:var(--paper);color:var(--ink);border-bottom:1px solid var(--line);font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;font-size:11.5px}
+body[data-skin="fest"] .mwho .av{background:var(--gold);color:#3b2600}
+body[data-skin="board"] .mwho .av{background:transparent;border:1px solid var(--line2);color:var(--ink2)}
+
+/* — เวที C: รัศมีดาวกระจายหมุนช้าๆ หลังชื่อ — */
+body[data-skin="fest"] .stage{background-image:none}
+body[data-skin="fest"] .stage::before{content:"";position:absolute;top:50%;left:50%;width:150%;padding-top:150%;
+  transform:translate(-50%,-50%);z-index:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(255,201,60,.13) 0 5deg,transparent 5deg 11deg);
+  animation:rot 40s linear infinite}
+@keyframes rot{to{transform:translate(-50%,-50%) rotate(360deg)}}
+body[data-skin="fest"] .st-pz{background:var(--hot);color:#fff;border-radius:999px;transform:none}
+/* — เวที D: เส้นกริดบางแนวนอน เงียบ เป็นระเบียบ — */
+body[data-skin="board"] .stage{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 46px)}
+body[data-skin="board"] .stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  border-top:2px solid var(--hot)}
+body[data-skin="board"] .st-pz{border:1px solid var(--line2);color:var(--gold);font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;border-radius:2px}
+body[data-skin="board"] .st-top{letter-spacing:.28em}
+
+/* — ผู้ชนะ C: ป้ายสติกเกอร์เอียง เงาแข็ง — */
+.poster{display:inline-block;position:relative;padding:8px}
+.poster .band{background:var(--gold);color:#3b2600;font-family:var(--disp);font-weight:700;font-size:13px;
+  padding:6px 20px;border-radius:999px;display:inline-block;letter-spacing:.06em;transform:rotate(-2deg)}
+.poster .nm{font-family:var(--disp);font-size:62px;font-weight:700;line-height:1.14;margin:16px 0 0;
+  color:#fff;text-shadow:4px 4px 0 var(--hot)}
+.poster .nk{font-family:var(--disp);font-size:24px;font-weight:500;color:var(--cool);margin-top:6px}
+.poster .mt{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.poster .mt span{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.24);
+  padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:600}
+
+/* — ผู้ชนะ D: ป้ายพลิกสนามบิน ตัวอักษรแยกช่อง — */
+.board{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;perspective:600px}
+.flap{display:inline-block;min-width:.78em;text-align:center;padding:10px 6px;background:#22272f;
+  border-radius:2px;position:relative;font-family:var(--disp);font-size:44px;font-weight:600;line-height:1.1;
+  color:var(--stage-ink);animation:flapin .34s cubic-bezier(.3,1.15,.5,1) both;transform-origin:50% 0}
+.flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.55)}
+.flap.sp{background:transparent;min-width:.4em}
+@keyframes flapin{from{transform:rotateX(-92deg);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.flap{animation:none}}
+.board-meta{display:flex;gap:0;justify-content:center;margin-top:22px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase}
+.board-meta span{padding:7px 18px;border-left:1px solid var(--line2);color:var(--ink2)}
+.board-meta span:first-child{border-left:0}
+.board-meta span b{color:var(--gold);font-weight:600}
+@media(max-width:700px){.poster .nm{font-size:34px}.flap{font-size:26px;padding:7px 4px}}
+</style>
+</head>
+<body data-skin="ticket">
+
+<div class="bar">
+  <div class="grp"><span class="k">ดีไซน์</span>
+    <button class="on" data-skin="ticket">A · ตั๋วรางวัล</button>
+    <button data-skin="led">B · ป้ายไฟ LED</button>
+    <button data-skin="fest">C · โปสเตอร์งานเลี้ยง</button>
+    <button data-skin="board">D · ป้ายพลิกสนามบิน</button>
+  </div>
+  <div class="grp"><span class="k">อนิเมชัน</span>
+    <button class="on" data-anim="slot">สล็อต</button>
+    <button data-anim="wheel">วงล้อ</button>
+    <button data-anim="elim">คัดออก</button>
+  </div>
+  <div class="note">สลับได้ทุกเมื่อ — ตัวเลือกอนิเมชันตั้งใจให้เก็บไว้ในของจริงด้วย สลับต่อรอบได้ คนดูจะได้ไม่เบื่อ</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══ HOST ══ -->
+  <div class="host">
+    <div class="brandhd">
+      <div class="mk">สุ่ม</div>
+      <div><b>สุ่มรายชื่อ</b><span>ทริปเชียงใหม่ 3 วัน 2 คืน</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">รายชื่อที่จะสุ่ม</div>
+      <div class="count"><b id="poolN">0</b><span>คนในกลุ่มสุ่ม<br><span id="poolNote" style="color:var(--ink3)"></span></span></div>
+      <div class="chips">
+        <div class="chip on" data-f="checkin">เช็คอินแล้ว</div>
+        <div class="chip" data-f="bus1">รถคัน 1</div>
+        <div class="chip" data-f="bus2">รถคัน 2</div>
+        <div class="chip" data-f="female">ผู้หญิง</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">โหมด</div>
+      <div class="seg" id="modeSeg">
+        <button class="on" data-m="one">สุ่มทีละคน</button>
+        <button data-m="many">สุ่มหลายคน</button>
+      </div>
+      <div class="stepper" id="cntRow" style="display:none">
+        <span>จำนวนที่สุ่ม</span>
+        <div class="g"><button id="dec">−</button><div class="v" id="cntV">3</div><button id="inc">+</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">รางวัล</div>
+      <div id="pzList"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">กติกา</div>
+      <div class="row"><div><b>ไม่สุ่มซ้ำคนเดิม</b><i>ตัดคนที่เคยถูกสุ่มออก</i></div><div class="sw on" data-r="nodup"></div></div>
+      <div class="row"><div><b>ต้องยืนยันผู้ชนะ</b><i>ถ้าคนไม่อยู่ กดสุ่มใหม่ได้</i></div><div class="sw on" data-r="confirm"></div></div>
+      <div class="row"><div><b>เสียงและคอนเฟตตี้</b><i>รัวกลอง เสียงชนะ สั่นมือถือ</i></div><div class="sw on" data-r="fx"></div></div>
+    </div>
+
+    <button class="go" id="go"><span id="goTxt">สุ่มเลย</span></button>
+    <div class="mini">
+      <button id="undo">ย้อนกลับ</button>
+      <button id="fs">เต็มจอ</button>
+      <button id="reset">ล้างประวัติ</button>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="eyebrow"><span>ผู้โชคดี</span><span id="histN">0</span></div>
+      <div class="hist" id="hist"><div class="none">ยังไม่มีการสุ่ม</div></div>
+    </div>
+  </div>
+
+  <!-- ══ STAGE ══ -->
+  <div>
+    <div class="stagebox">
+      <div class="stage" id="stage">
+        <canvas id="cfti"></canvas>
+        <div class="st-top" id="stTop">พร้อมสุ่ม</div>
+        <div class="st-pz" id="stPz"></div>
+        <div id="anim"></div>
+        <div id="out"></div>
+        <div class="cfm" id="cfm">
+          <button class="y" id="cfY">ยืนยัน รับรางวัลแล้ว</button>
+          <button class="n" id="cfN">ไม่อยู่ — สุ่มใหม่</button>
+        </div>
+        <div class="st-foot">
+          <span>สุ่มจาก <b id="footPool">0</b> รายชื่อ</span>
+          <span id="footSeed">seed —</span>
+          <span>รอบที่ <b id="footRound">0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="ex" id="exSkin"></div>
+      <div class="ex">
+        <h4>อนิเมชัน 3 แบบ</h4>
+        <p><b>สล็อต</b> — ชื่อวิ่งแนวตั้ง เร็ว อ่านง่าย เหมาะกับจับรัวๆ หลายรอบติด<br>
+        <b>วงล้อ</b> — เห็นทุกชื่อพร้อมกัน ลุ้นตอนเข็มชะลอ เหมาะกับรางวัลใหญ่<br>
+        <b>คัดออก</b> — ขึ้นชื่อทุกคนแล้วหรี่ทีละคนจนเหลือหนึ่ง ลุ้นนานที่สุด เหมาะกับรางวัลที่ 1</p>
+      </div>
+      <div class="ex">
+        <h4>เลือกยังไงดี</h4>
+        <p>ลองสลับดีไซน์ระหว่างที่สุ่มค้างอยู่ได้เลย ผลลัพธ์บนเวทีจะเปลี่ยนหน้าตาทันทีโดยไม่หาย<br><br>
+        ตัดสินใจแล้วบอกได้ ผมจะเขียน design doc + migration แล้วลงโค้ดจริงตามแบบที่เลือก</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GUEST ══ -->
+  <div class="guest">
+    <div class="gsh"><div class="gscr">
+      <div class="gtop">สุ่มรางวัล</div>
+      <div class="gtabs">
+        <button class="on" data-t="live">ถ่ายทอดสด</button>
+        <button data-t="mine">ของฉัน<span class="dot"></span></button>
+      </div>
+      <div class="gbody">
+        <select class="gsel" id="gWho"></select>
+        <div class="gpane on" id="paneLive">
+          <div class="glive">
+            <div class="s" id="gSt">รอผลการสุ่ม</div>
+            <div class="gname" id="gName">—</div>
+            <div class="gsub" id="gSub"></div>
+            <div id="gRows"></div>
+          </div>
+        </div>
+        <div class="gpane" id="paneMine"></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+/* ═══ ข้อมูลจำลอง ═══ */
+const GUESTS=[
+ {n:'สมชาย ใจดี',k:'ชาย',g:'m',seat:'A1',bus:1,ci:1},{n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',seat:'A2',bus:1,ci:1},
+ {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',seat:'A3',bus:1,ci:1},{n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',seat:'A4',bus:1,ci:1},
+ {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',seat:'B1',bus:1,ci:0},{n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',seat:'B2',bus:1,ci:1},
+ {n:'วีระ ชัยมงคล',k:'โจ',g:'m',seat:'B3',bus:1,ci:1},{n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',seat:'B4',bus:1,ci:1},
+ {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',seat:'C1',bus:1,ci:1},{n:'จันทิมา บุญมา',k:'จัน',g:'f',seat:'C2',bus:1,ci:0},
+ {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',seat:'C3',bus:1,ci:1},{n:'สุภาวดี พรหมมา',k:'แนน',g:'f',seat:'C4',bus:1,ci:1},
+ {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',seat:'D1',bus:2,ci:1},{n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',seat:'D2',bus:2,ci:1},
+ {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',seat:'D3',bus:2,ci:1},{n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',seat:'D4',bus:2,ci:1},
+ {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',seat:'E1',bus:2,ci:1},{n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',seat:'E2',bus:2,ci:0},
+ {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',seat:'E3',bus:2,ci:1},{n:'อารียา สมบูรณ์',k:'อาร์',g:'f',seat:'E4',bus:2,ci:1},
+ {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',seat:'F1',bus:2,ci:1},{n:'สุนิสา แก้วใส',k:'นิด',g:'f',seat:'F2',bus:2,ci:1},
+];
+const S={skin:'ticket',anim:'slot',mode:'one',count:3,
+  filters:{checkin:true,bus1:false,bus2:false,female:false},
+  prizes:[{n:'รางวัลที่ 3 · กระเป๋าเดินทาง',q:3,left:3},{n:'รางวัลที่ 2 · หูฟังไร้สาย',q:2,left:2},{n:'รางวัลที่ 1 · ทีวี 43 นิ้ว',q:1,left:1}],
+  rules:{nodup:true,confirm:true,fx:true},
+  results:[],round:0,busy:false,pending:null,last:null};
+const $=i=>document.getElementById(i);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const SKIN_TXT={
+ ticket:{h:'A · ตั๋วรางวัล',p:'หยิบวัสดุจากโลกของทัวร์จริง — ตั๋วรถ สลาก ตราปั๊มหมึก พื้นกระดาษครีม หมึกน้ำเงินเข้ม แดงชาดใช้เฉพาะตราปั๊มกับปุ่มสุ่ม ชื่อผู้ชนะขึ้นบน<b>ตั๋วที่ฉีกออกมา</b> มีรูเจาะสองข้างและตราปั๊ม "ผู้โชคดี" เอียงมุม อ่านง่ายในห้องสว่าง เหมาะกับงานเลี้ยงกลางวันและพิมพ์ลงเอกสารได้เนียน',c:['#fbf6ec','#12303f','#d8442f','#0e8c87','#b8860f']},
+ led:{h:'B · ป้ายไฟ LED',p:'อ้างอิงป้ายไฟหน้ารถทัวร์และไฟวิ่งงานเลี้ยง — พื้นดำสนิทเป็น<b>ตาราง LED จริง</b> มีไฟวิ่งขอบบน-ล่าง ตัวอักษรเรืองแสงเขียวมิ้นท์ ฟอนต์ Chakra Petch ทรงเหลี่ยม อ่านชัดจากท้ายห้องมืด เหมาะกับงานกลางคืน ปาร์ตี้ และการฉายบนโปรเจกเตอร์',c:['#05080d','#2be8c8','#ffb020','#ff4d8d','#111823']},
+ fest:{h:'C · โปสเตอร์งานเลี้ยง',p:'เสียงดังที่สุดในสี่แบบ — พื้นน้ำเงินกรมท่า สีชมพูบานเย็นกับเหลืองทองแบบโปสเตอร์งานวัด ฟอนต์ Mitr ทรงกลมเป็นมิตร มุมโค้งใหญ่ ปุ่มมีเงาแข็งกดแล้วยุบ signature คือ<b>รัศมีดาวกระจายหมุนช้าๆ อยู่หลังชื่อ</b> และชื่อผู้ชนะมีเงาชมพูเหลื่อม เหมาะกับทัวร์ครอบครัว ผู้สูงอายุ งานเลี้ยงที่อยากให้ครึกครื้น',c:['#14213d','#e8175d','#ffc93c','#06d6a0','#fff6e5']},
+ board:{h:'D · ป้ายพลิกสนามบิน',p:'เงียบและเป็นระเบียบที่สุด — เทาถ่าน เส้นบาง มุมคม ตัวพิมพ์เล็กใช้ mono ตัวใหญ่ใช้ Anuphan ส้มอิฐใช้จุดเดียวคือปุ่มสุ่มกับเส้นบนเวที signature คือ<b>ชื่อผู้ชนะพลิกทีละตัวอักษรแบบป้ายเที่ยวบิน</b> เหมาะกับทัวร์ต่างประเทศ ลูกค้าองค์กร งานที่ต้องดูน่าเชื่อถือมากกว่าสนุก',c:['#101317','#ff6b35','#e8b44a','#1c2026','#edeff2']}};
+/* จานสีต่อสกิน — ใช้กับวงล้อและคอนเฟตตี้ */
+const PAL={
+ ticket:{seg:['#fbf6ec','#e8dcc6'],win:'#fdf0d8',stroke:'#c4b49a',txt:'#12303f',cf:['#d8442f','#0e8c87','#b8860f','#fbf6ec']},
+ led:{seg:['#0e2029','#132b36'],win:'#0d2f33',stroke:'#223947',txt:'#eafcf8',cf:['#2be8c8','#ffb020','#ff4d8d','#ffffff']},
+ fest:{seg:['#1c2c52','#233666'],win:'#3a1f42',stroke:'#3a4e80',txt:'#fff6e5',cf:['#e8175d','#ffc93c','#06d6a0','#ffffff']},
+ board:{seg:['#1a1e24','#20252c'],win:'#2a2119',stroke:'#39404a',txt:'#edeff2',cf:['#ff6b35','#e8b44a','#edeff2','#9aa3ae']}};
+
+/* ═══ pool ═══ */
+function pool(){const f=S.filters;
+  return GUESTS.filter(p=>{
+    if(f.checkin&&!p.ci)return false;
+    if(f.bus1&&p.bus!==1)return false;
+    if(f.bus2&&p.bus!==2)return false;
+    if(f.female&&p.g!=='f')return false;
+    if(S.rules.nodup&&S.results.some(r=>r.n===p.n))return false;
+    return true})}
+const curPz=()=>S.prizes.find(p=>p.left>0)||null;
+function refresh(){
+  const p=pool();
+  $('poolN').textContent=p.length;$('footPool').textContent=p.length;
+  $('poolNote').textContent=S.results.length?`ตัดผู้ที่ถูกสุ่มแล้ว ${S.results.length} คน`:`จากทั้งหมด ${GUESTS.length} คน`;
+  $('go').disabled=S.busy||p.length<(S.mode==='many'?S.count:1);
+  $('goTxt').textContent=S.mode==='many'?`สุ่ม ${S.count} คน`:'สุ่มเลย';
+  $('histN').textContent=S.results.length+' คน';
+  const cp=curPz();
+  $('stPz').className='st-pz'+(cp?' show':'');
+  if(cp)$('stPz').innerHTML=`${esc(cp.n)} <em>เหลือ ${cp.left}</em>`;
+  $('pzList').innerHTML=S.prizes.map((p,i)=>`<div class="pz ${cp===p?'cur':''}">
+    <span class="ix">${i+1}</span><span class="nm">${esc(p.n)}</span>
+    <span class="q">${p.left===0?'หมด':p.left+'/'+p.q}</span></div>`).join('');
+}
+
+/* ═══ เสียง ═══ */
+let ctx=null;
+function ac(){if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)()}catch{return null}}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return ctx}
+function beep(a,f,at,d,t='triangle',v=.25){const o=a.createOscillator(),g=a.createGain();o.type=t;o.frequency.value=f;
+ g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(v,at+.02);g.gain.exponentialRampToValueAtTime(.0001,at+d);
+ o.connect(g).connect(a.destination);o.start(at);o.stop(at+d+.02)}
+function roll(sec){const a=ac();if(!a||!S.rules.fx)return;
+ const n=a.sampleRate*sec,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);
+ for(let i=0;i<n;i++){const e=(Math.sin(i/a.sampleRate*2*Math.PI*17)+1)/2;d[i]=(Math.random()*2-1)*e*.55}
+ const s=a.createBufferSource();s.buffer=b;const g=a.createGain(),lp=a.createBiquadFilter();
+ lp.type='lowpass';lp.frequency.value=1400;g.gain.setValueAtTime(.03,a.currentTime);
+ g.gain.exponentialRampToValueAtTime(.28,a.currentTime+sec*.85);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
+ s.connect(lp).connect(g).connect(a.destination);s.start()}
+function fanfare(){const a=ac();if(!a||!S.rules.fx)return;const t=a.currentTime;
+ beep(a,660,t,.14);beep(a,880,t+.16,.14);beep(a,1175,t+.32,.3);beep(a,1568,t+.34,.34,'sine',.16);
+ try{navigator.vibrate?.([120,60,120,60,240])}catch{}}
+function tick(f=1800,v=.07){const a=ac();if(!a||!S.rules.fx)return;beep(a,f,a.currentTime,.03,'square',v)}
+
+/* ═══ คอนเฟตตี้ ═══ */
+const cv=$('cfti'),cx=cv.getContext('2d');let ps=[],raf=null;
+function sizeCv(){const r=cv.getBoundingClientRect();cv.width=r.width;cv.height=r.height}
+addEventListener('resize',sizeCv);setTimeout(sizeCv,80);
+function boom(){if(!S.rules.fx)return;sizeCv();
+ const c=PAL[S.skin].cf;
+ for(let i=0;i<130;i++)ps.push({x:cv.width/2+(Math.random()-.5)*180,y:cv.height*.5,vx:(Math.random()-.5)*15,
+  vy:-Math.random()*16-5,s:5+Math.random()*7,c:c[i%c.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,l:1});
+ if(!raf)raf=requestAnimationFrame(lp2)}
+function lp2(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.l>0);
+ ps.forEach(p=>{p.vy+=.42;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.vx*=.99;if(p.y>cv.height+30)p.l=0;
+  cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore()});
+ raf=ps.length?requestAnimationFrame(lp2):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ═══════════ อนิเมชัน 3 แบบ ═══════════ */
+const A=$('anim');
+const short=w=>w.k||w.n;
+
+/* 1 · สล็อต — ชื่อวิ่งแนวตั้ง */
+function animSlot(win,ms){return new Promise(res=>{
+  const p=pool(),st=[];
+  for(let i=0;i<26;i++)st.push(p[Math.floor(Math.random()*p.length)]?.n||'—');
+  st.push(win.n);
+  A.innerHTML=`<div class="slot"><div class="r">${st.map((n,i)=>`<div class="${i===st.length-1?'':'dim'}">${esc(n)}</div>`).join('')}</div></div>`;
+  const r=A.querySelector('.r');r.offsetHeight;
+  const tk=setInterval(()=>tick(1800),70);
+  r.style.transition=`transform ${ms}ms cubic-bezier(.12,.62,.16,1)`;
+  r.style.transform=`translateY(-${(st.length-1)*140}px)`;
+  setTimeout(()=>{clearInterval(tk);res()},ms+40)})}
+
+/* 2 · วงล้อ — เห็นทุกชื่อพร้อมกัน เข็มชี้ด้านบน */
+function animWheel(win,ms){return new Promise(res=>{
+  const p=pool().filter(x=>x!==win);
+  const seg=[win,...p.sort(()=>Math.random()-.5).slice(0,11)];   // ผู้ชนะอยู่ช่อง 0 เสมอ
+  const n=seg.length,a=360/n,R=150,cxy=170;
+  const P=PAL[S.skin],cols=P.seg,txt=P.txt;
+  const paths=seg.map((w,i)=>{
+    const s=(i*a-90)*Math.PI/180,e=((i+1)*a-90)*Math.PI/180;
+    const x1=cxy+R*Math.cos(s),y1=cxy+R*Math.sin(s),x2=cxy+R*Math.cos(e),y2=cxy+R*Math.sin(e);
+    const mid=(i*a+a/2-90);
+    const nm=short(w).length>9?short(w).slice(0,8)+'…':short(w);
+    return `<path d="M${cxy},${cxy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="${i===0?P.win:cols[i%2]}" stroke="${P.stroke}" stroke-width="1"/>
+      <text x="${cxy+R*.62*Math.cos(mid*Math.PI/180)}" y="${cxy+R*.62*Math.sin(mid*Math.PI/180)}"
+        fill="${txt}" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle"
+        font-family="IBM Plex Sans Thai,sans-serif" transform="rotate(${mid+90} ${cxy+R*.62*Math.cos(mid*Math.PI/180)} ${cxy+R*.62*Math.sin(mid*Math.PI/180)})">${esc(nm)}</text>`}).join('');
+  A.innerHTML=`<div class="wheelbox"><div class="pin"></div>
+    <svg viewBox="0 0 340 340"><g class="spin">${paths}
+      <circle cx="170" cy="170" r="150" fill="none" stroke="var(--gold)" stroke-width="3"/></g></svg>
+    <div class="hub">สุ่ม</div></div>`;
+  const g=A.querySelector('.spin');g.getBoundingClientRect();
+  const jitter=(Math.random()-.5)*a*.5;
+  const deg=360*6-a/2+jitter;
+  const tk=setInterval(()=>tick(1500,.05),90);
+  g.style.transition=`transform ${ms}ms cubic-bezier(.14,.68,.12,1)`;
+  g.style.transform=`rotate(${deg}deg)`;
+  setTimeout(()=>{clearInterval(tk);res()},ms+40)})}
+
+/* 3 · คัดออก — ขึ้นชื่อทุกคน แล้วหรี่ทีละคนจนเหลือหนึ่ง */
+function animElim(win,ms){return new Promise(res=>{
+  const p=pool();
+  A.innerHTML=`<div class="elim">${p.map(w=>`<div class="ec" data-n="${esc(w.n)}">${esc(short(w))}</div>`).join('')}</div>`;
+  const cells=[...A.querySelectorAll('.ec')];
+  const others=cells.filter(c=>c.dataset.n!==win.n).sort(()=>Math.random()-.5);
+  const winCell=cells.find(c=>c.dataset.n===win.n);
+  let scan=setInterval(()=>{                       // ไฟวิ่งสุ่มระหว่างคัด
+    cells.forEach(c=>c.classList.remove('hot'));
+    const alive=cells.filter(c=>!c.classList.contains('out'));
+    alive[Math.floor(Math.random()*alive.length)]?.classList.add('hot');
+  },110);
+  others.forEach((c,i)=>{                          // เร็วตอนต้น ช้าตอนท้าย = ลุ้น
+    const t=ms*Math.pow((i+1)/others.length,1.7);
+    setTimeout(()=>{c.classList.remove('hot');c.classList.add('out');tick(900+i*40,.05)},t);
+  });
+  setTimeout(()=>{clearInterval(scan);cells.forEach(c=>c.classList.remove('hot'));
+    winCell?.classList.add('win');res()},ms+120);
+})}
+const ANIM={slot:animSlot,wheel:animWheel,elim:animElim};
+const MS={slot:3400,wheel:4200,elim:4000};
+
+/* ═══ ผลลัพธ์บนเวที ═══ */
+/* ป้ายพลิก — ตัดคำแบบ grapheme ไม่งั้นสระ/วรรณยุกต์ไทยจะหลุดออกจากพยัญชนะ */
+function flaps(text){
+  let seg;
+  try{seg=[...new Intl.Segmenter('th',{granularity:'grapheme'}).segment(text)].map(s=>s.segment)}
+  catch{seg=Array.from(text)}
+  return seg.map((ch,i)=>ch.trim()===''
+    ?'<span class="flap sp"></span>'
+    :`<span class="flap" style="animation-delay:${i*52}ms">${esc(ch)}</span>`).join('');
+}
+function renderWinner(w){
+  const pz=curPz();
+  if(S.skin==='ticket'){
+    $('out').innerHTML=`<div class="pop"><div class="stub">
+      <div class="stamp">ผู้โชคดี</div>
+      <div class="no">รอบที่ ${S.round} · ${S.seed||''}</div>
+      <div class="nm">${esc(w.n)}</div><div class="nk">"${esc(w.k)}"</div>
+      <div class="mt"><span>ที่นั่ง ${w.seat}</span><span>รถคัน ${w.bus}</span>${pz?`<span>${esc(pz.n.split('·')[0].trim())}</span>`:''}</div>
+    </div></div>`;
+  }else if(S.skin==='led'){
+    $('out').innerHTML=`<div class="pop"><div class="led-name">${esc(w.n)}</div>
+      <div class="led-nick">${esc(w.k)}</div>
+      <div class="led-meta"><span>SEAT ${w.seat}</span><span>BUS ${w.bus}</span>${pz?`<span>${esc(pz.n.split('·')[0].trim())}</span>`:''}</div></div>`;
+  }else if(S.skin==='fest'){
+    $('out').innerHTML=`<div class="pop"><div class="poster">
+      <div class="band">ผู้โชคดีรอบที่ ${S.round}</div>
+      <div class="nm">${esc(w.n)}</div><div class="nk">"${esc(w.k)}"</div>
+      <div class="mt"><span>ที่นั่ง ${w.seat}</span><span>รถคัน ${w.bus}</span>${pz?`<span>${esc(pz.n.split('·')[0].trim())}</span>`:''}</div>
+    </div></div>`;
+  }else{
+    $('out').innerHTML=`<div><div class="board">${flaps(w.n)}</div>
+      <div class="board-meta"><span>seat <b>${w.seat}</b></span><span>bus <b>${w.bus}</b></span>
+      <span>${esc(w.k)}</span>${pz?`<span><b>${esc(pz.n.split('·')[0].trim())}</b></span>`:''}</div></div>`;
+  }
+  $('out').classList.add('show');
+}
+function renderMany(ws){
+  $('out').innerHTML=`<div class="gridw">${ws.map((w,i)=>`<div class="gwin"><i>${String(i+1).padStart(2,'0')}</i>
+    <div><b>${esc(w.n)}</b><span>"${esc(w.k)}" · ที่นั่ง ${w.seat}</span></div></div>`).join('')}</div>`;
+  $('out').classList.add('show');
+  [...$('out').querySelectorAll('.gwin')].forEach((el,i)=>setTimeout(()=>{el.classList.add('in');tick()},i*220));
+}
+
+/* ═══ สุ่ม ═══ */
+function pickN(list,n){const l=[...list],o=[];while(o.length<n&&l.length)o.push(...l.splice(Math.floor(Math.random()*l.length),1));return o}
+async function draw(){
+  if(S.busy)return;const p=pool();const need=S.mode==='many'?S.count:1;if(p.length<need)return;
+  S.busy=true;refresh();$('cfm').classList.remove('show');$('out').classList.remove('show');$('out').innerHTML='';
+  S.round++;$('footRound').textContent=S.round;
+  S.seed=Math.random().toString(36).slice(2,8).toUpperCase();$('footSeed').textContent='seed '+S.seed;
+  const ws=pickN(p,need),lead=ws[0],ms=MS[S.anim];
+  $('stTop').textContent=S.mode==='many'?`กำลังสุ่ม ${need} คน`:'กำลังสุ่ม';
+  roll(ms/1000);gLive(lead,ms);
+  await ANIM[S.anim](lead,ms);
+  A.innerHTML='';
+  if(S.mode==='many'){S.last=null;renderMany(ws);$('stTop').textContent=`ผู้โชคดี ${need} คน`}
+  else{S.last=lead;renderWinner(lead);$('stTop').textContent='ผู้โชคดี'}
+  fanfare();boom();gReveal(ws);
+  S.pending={ws,pz:curPz()};
+  if(S.rules.confirm&&S.mode==='one'){$('cfm').classList.add('show');S.busy=false;refresh();renderMine()}
+  else commit();
+}
+function commit(){
+  const {ws,pz}=S.pending||{};if(!ws)return;
+  ws.forEach(w=>{S.results.push({n:w.n,k:w.k,seat:w.seat,pz:pz?pz.n:null,t:new Date()});if(pz&&pz.left>0)pz.left--});
+  $('cfm').classList.remove('show');S.pending=null;S.busy=false;
+  renderHist();gWinPop(ws,pz);renderMine();refresh();
+}
+function renderHist(){
+  $('hist').innerHTML=S.results.length?[...S.results].reverse().map((r,i)=>{
+    const no=S.results.length-i;
+    return `<div class="hrow"><span class="no">${String(no).padStart(2,'0')}</span><span class="nm">${esc(r.n)}</span>
+      ${r.pz?`<span class="tag">${esc(r.pz.split('·')[0].trim())}</span>`:''}</div>`}).join('')
+    :'<div class="none">ยังไม่มีการสุ่ม</div>';
+}
+
+/* ═══ มือถือลูกทัวร์ ═══ */
+const ME=()=>$('gWho').value;
+function gLive(lead,ms){
+  $('gSt').innerHTML='<i></i>กำลังสุ่ม';$('gRows').innerHTML='';$('gSub').textContent='';
+  const p=pool();let t=0;
+  const iv=setInterval(()=>{$('gName').textContent=p[Math.floor(Math.random()*p.length)]?.n||'—';
+    if((t+=90)>ms-120){clearInterval(iv);$('gName').textContent=lead.n}},90);
+  try{navigator.vibrate?.(30)}catch{}
+}
+function gReveal(ws){
+  const me=ME();
+  $('gSt').textContent=ws.length>1?`ผู้โชคดี ${ws.length} คน`:'ผู้โชคดี';
+  $('gName').textContent=ws[0].n;
+  $('gSub').textContent=curPz()?curPz().n:'';
+  $('gRows').innerHTML=ws.length>1?ws.map((w,i)=>`<div class="grow ${w.n===me?'me':''}">
+    <i>${String(i+1).padStart(2,'0')}</i>${esc(w.n)}</div>`).join(''):'';
+  renderMine();
+}
+function gWinPop(ws,pz){
+  if(ME()&&ws.some(w=>w.n===ME())){try{navigator.vibrate?.([200,80,200])}catch{}}
+  renderMine();
+}
+function renderMine(){
+  const me=ME(),P=$('paneMine'),tab=document.querySelector('.gtabs [data-t="mine"]');
+  if(!me){P.innerHTML='<div class="mcard"><div class="none">เลือกชื่อด้านบน<br>เพื่อดูมุมมองลูกทัวร์</div></div>';tab.classList.remove('alert');return}
+  const g=GUESTS.find(x=>x.n===me),wins=S.results.filter(r=>r.n===me);
+  const pend=!!(S.pending&&S.pending.ws.some(w=>w.n===me));
+  let cls='idle',txt='ยังไม่ถูกสุ่ม — ลุ้นรอบต่อไป';
+  if(wins.length){cls='win';txt=`คุณได้รับรางวัลแล้ว ${wins.length} ชิ้น`}
+  else if(pend){cls='pend';txt='คุณถูกสุ่มแล้ว! รอทีมงานกดยืนยัน'}
+  let h=`<div class="mcard"><div class="mwho"><div class="av">${esc((g.k||g.n).slice(0,2))}</div>
+    <div><b>${esc(g.n)}</b><span>"${esc(g.k)}" · ที่นั่ง ${g.seat} · รถคัน ${g.bus}</span></div></div>
+    <div class="mstat ${cls}">${txt}</div>`;
+  wins.forEach(w=>h+=`<div class="mpz">${esc(w.pz||'ออกมาเล่นกิจกรรม')}<em>${w.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</em></div>`);
+  if(pend&&S.pending.pz)h+=`<div class="mpz" style="opacity:.6">${esc(S.pending.pz.n)}<em>รอยืนยัน</em></div>`;
+  h+='</div>';
+  P.innerHTML=h;
+  tab.classList.toggle('alert',(!!wins.length||pend)&&!tab.classList.contains('on'));
+}
+
+/* ═══ สลับสกิน/อนิเมชัน ═══ */
+function applySkin(s){
+  S.skin=s;document.body.dataset.skin=s;
+  document.querySelectorAll('.bar [data-skin]').forEach(b=>b.classList.toggle('on',b.dataset.skin===s));
+  const t=SKIN_TXT[s];
+  $('exSkin').innerHTML=`<h4>${t.h}</h4><p>${t.p}</p><div class="sw2">${t.c.map(c=>`<i style="background:${c};border:1px solid rgba(128,128,128,.3)"></i>`).join('')}</div>`;
+  if(S.last)renderWinner(S.last);      // เปลี่ยนสกินแล้วผลบนเวทีไม่หาย
+  setTimeout(sizeCv,60);
+}
+document.querySelectorAll('.bar [data-skin]').forEach(b=>b.onclick=()=>applySkin(b.dataset.skin));
+document.querySelectorAll('.bar [data-anim]').forEach(b=>b.onclick=()=>{S.anim=b.dataset.anim;
+  document.querySelectorAll('.bar [data-anim]').forEach(x=>x.classList.toggle('on',x===b));ac()});
+
+/* ═══ bind ═══ */
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const f=c.dataset.f;
+  if(f==='bus1'&&!S.filters.bus1)S.filters.bus2=false;
+  if(f==='bus2'&&!S.filters.bus2)S.filters.bus1=false;
+  S.filters[f]=!S.filters[f];
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',S.filters[x.dataset.f]));ac();refresh()});
+document.querySelectorAll('.sw').forEach(s=>s.onclick=()=>{S.rules[s.dataset.r]=!S.rules[s.dataset.r];
+  s.classList.toggle('on',S.rules[s.dataset.r]);refresh()});
+$('modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.mode=b.dataset.m;
+  [...$('modeSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('cntRow').style.display=S.mode==='many'?'flex':'none';refresh()};
+$('inc').onclick=()=>{S.count=Math.min(8,S.count+1);$('cntV').textContent=S.count;refresh()};
+$('dec').onclick=()=>{S.count=Math.max(2,S.count-1);$('cntV').textContent=S.count;refresh()};
+$('go').onclick=()=>{ac();draw()};
+$('cfY').onclick=()=>{tick();commit()};
+$('cfN').onclick=()=>{S.pending=null;$('cfm').classList.remove('show');renderMine();draw()};
+$('undo').onclick=()=>{if(!S.results.length)return;const r=S.results.pop();
+  const p=S.prizes.find(x=>x.n===r.pz);if(p&&p.left<p.q)p.left++;renderHist();renderMine();refresh()};
+$('reset').onclick=()=>{S.results=[];S.round=0;S.pending=null;S.last=null;S.prizes.forEach(p=>p.left=p.q);
+  $('footRound').textContent=0;$('out').classList.remove('show');$('out').innerHTML='';A.innerHTML='';
+  $('cfm').classList.remove('show');$('stTop').textContent='พร้อมสุ่ม';
+  $('gSt').textContent='รอผลการสุ่ม';$('gName').textContent='—';$('gSub').textContent='';$('gRows').innerHTML='';
+  renderHist();renderMine();refresh()};
+$('fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('stage').requestFullscreen?.().then(sizeCv);
+document.querySelectorAll('.gtabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.gtabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $('paneLive').classList.toggle('on',b.dataset.t==='live');
+  $('paneMine').classList.toggle('on',b.dataset.t==='mine');
+  if(b.dataset.t==='mine')b.classList.remove('alert')});
+$('gWho').innerHTML='<option value="">— จำลองมุมมองลูกทัวร์ —</option>'+
+  GUESTS.map(p=>`<option value="${esc(p.n)}">${esc(p.n)} (${p.k})</option>`).join('');
+$('gWho').onchange=renderMine;
+
+applySkin('ticket');renderHist();renderMine();refresh();
+</script>
+</body>
+</html>

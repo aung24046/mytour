@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyTour — สุ่มรายชื่อ (Lucky Draw) prototype v2 เต็มรูปแบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#077c99; --brand-hover:#066b84; --brand-deep:#05576b;
+  --brand-light:#d4e8ed; --brand-lighter:#f2f8fa; --brand-start:#0bbfec;
+  --accent:#f97362; --accent-bg:#fff1ee; --accent-text:#c23b2c;
+  --surface:#fff; --surface-muted:#f6f9fb; --surface-sunken:#eef4f7;
+  --ink:#0f2b35; --ink-muted:#4e6670; --ink-faint:#5a6f79;
+  --line-subtle:#e8eff2; --line:#d7e3e8; --line-strong:#b9ccd4;
+  --success:#16a34a; --success-bg:#dcfce7; --success-text:#15803d;
+  --warning-bg:#fef3c7; --warning-text:#b45309;
+  --danger:#dc2626; --danger-bg:#fee2e2; --danger-text:#b91c1c;
+  --gold:#f5b83d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif;background:#e9eef1;color:var(--ink);padding:26px 20px 70px;-webkit-text-size-adjust:100%}
+.page-head{max-width:1460px;margin:0 auto 20px}
+.page-head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.page-head p{color:var(--ink-muted);font-size:14px;margin-top:6px;max-width:86ch;line-height:1.65}
+.wrap{max-width:1460px;margin:0 auto;display:grid;grid-template-columns:392px minmax(0,1fr) 288px;gap:22px;align-items:start}
+@media(max-width:1280px){.wrap{grid-template-columns:380px minmax(0,1fr)}}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+.lbl{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.lbl a{font-size:11px;color:var(--brand);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:700}
+.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ══ HOST ══ */
+.phone{background:var(--surface-muted);border-radius:26px;padding:14px 12px 20px;box-shadow:0 10px 30px rgba(15,43,53,.10);border:1px solid var(--line);max-height:calc(100vh - 46px);overflow:auto;position:sticky;top:20px}
+.phone::-webkit-scrollbar{width:6px}.phone::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}
+.hd{display:flex;align-items:center;gap:9px;padding:2px 6px 12px}
+.hd b{font-size:20px;font-weight:800}
+.hd .sub{font-size:12px;color:var(--ink-muted);margin-top:1px}
+.card{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;padding:15px;margin-bottom:11px;box-shadow:0 2px 10px rgba(15,43,53,.05)}
+
+.seg{display:flex;background:var(--surface-sunken);border-radius:13px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-muted);padding:9px 4px;border-radius:10px;cursor:pointer;transition:.15s}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(15,43,53,.10)}
+.seg.wrap5{flex-wrap:wrap}.seg.wrap5 button{flex:1 1 30%;font-size:12.5px;padding:8px 3px}
+
+.pool{display:flex;align-items:center;gap:13px}
+.pool-n{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.03em;color:var(--brand)}
+.pool-t{font-size:12.5px;color:var(--ink-muted);line-height:1.45}
+.pool-t b{color:var(--ink);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);cursor:pointer;user-select:none;transition:.15s}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.stepper .t{font-size:13px;font-weight:600}
+.stepper .g{display:flex;align-items:center;gap:2px;background:var(--surface-sunken);border-radius:11px;padding:3px}
+.stepper button{width:32px;height:32px;border:0;background:var(--surface);border-radius:9px;font-size:18px;font-weight:700;color:var(--ink);cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(15,43,53,.10)}
+.stepper .v{min-width:44px;text-align:center;font-size:16px;font-weight:800}
+
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-subtle)}
+.row:last-child{border-bottom:0;padding-bottom:2px}.row:first-child{padding-top:2px}
+.row .tx b{font-size:13px;font-weight:700;display:block}
+.row .tx span{font-size:11.5px;color:var(--ink-muted);line-height:1.4;display:block;margin-top:2px}
+.sw{width:44px;height:26px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;flex:none;transition:.18s;margin-top:2px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--success-text)}.sw.on::after{transform:translateX(18px)}
+
+textarea,input[type=text]{width:100%;font-family:inherit;font-size:13px;border:1px solid var(--line-strong);border-radius:12px;padding:10px 12px;color:var(--ink);background:var(--surface);resize:vertical}
+textarea:focus,input:focus{outline:none;border-color:var(--brand)}
+
+/* prizes */
+.pz{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line-subtle);border-radius:13px;margin-bottom:7px;background:var(--surface-muted)}
+.pz.cur{border-color:var(--gold);background:#fffaf0;box-shadow:0 0 0 3px rgba(245,184,61,.16)}
+.pz .ix{width:24px;height:24px;border-radius:7px;background:var(--surface-sunken);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--ink-muted);flex:none}
+.pz.cur .ix{background:var(--gold);color:#3d2a06}
+.pz .nm{flex:1;font-size:13px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pz .q{font-size:11.5px;font-weight:700;color:var(--ink-muted);background:var(--surface);border:1px solid var(--line);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pz .q.out{color:var(--danger-text);background:var(--danger-bg);border-color:transparent}
+.pz .x{border:0;background:transparent;color:var(--ink-faint);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px}
+.addpz{display:flex;gap:7px;margin-top:9px}
+.addpz input{flex:1}.addpz button{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:0 14px;font-family:inherit;font-weight:700;font-size:13px;color:var(--brand);cursor:pointer}
+
+/* guest picker */
+.gl{max-height:230px;overflow:auto;border:1px solid var(--line-subtle);border-radius:13px;padding:5px;margin-top:10px;display:none}
+.gl.open{display:block}
+.gli{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;font-size:13px}
+.gli:hover{background:var(--surface-muted)}
+.gli .cb{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--line-strong);flex:none;display:grid;place-items:center;color:#fff}
+.gli.on .cb{background:var(--brand);border-color:var(--brand)}
+.gli .cb svg{opacity:0}.gli.on .cb svg{opacity:1}
+.gli .nm{flex:1}
+.gli .tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--surface-sunken);color:var(--ink-faint)}
+.gli.off .nm{opacity:.45;text-decoration:line-through}
+
+.go{width:100%;border:0;border-radius:16px;padding:17px;font-family:inherit;font-size:17px;font-weight:800;color:#fff;background:var(--brand);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 14px rgba(7,124,153,.32);transition:.15s}
+.go:hover{background:var(--brand-hover)}
+.go:disabled{background:var(--line-strong);box-shadow:none;cursor:not-allowed}
+.mini{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.mini button{flex:1 1 30%;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:10px 5px;font-family:inherit;font-size:12px;font-weight:700;color:var(--ink-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.mini button:hover{border-color:var(--line-strong);color:var(--ink)}
+
+.hist{max-height:230px;overflow:auto}
+.hi{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line-subtle);font-size:12.5px}
+.hi:last-child{border-bottom:0}
+.hi .n{width:23px;height:23px;border-radius:50%;background:var(--surface-sunken);display:grid;place-items:center;font-size:10.5px;font-weight:800;color:var(--ink-muted);flex:none}
+.hi .nm{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hi .pz2{font-size:10.5px;font-weight:700;color:var(--warning-text);background:var(--warning-bg);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.hi .rr{font-size:10.5px;font-weight:700;color:var(--accent-text);background:var(--accent-bg);padding:2px 7px;border-radius:999px}
+.hi .tm{font-size:10.5px;color:var(--ink-faint)}
+.empty{font-size:12.5px;color:var(--ink-faint);text-align:center;padding:16px 0}
+
+/* ══ STAGE ══ */
+.stage-wrap{border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(15,43,53,.20);border:1px solid rgba(0,0,0,.08)}
+.stage-bar{background:#062f3b;color:rgba(255,255,255,.62);font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stage-bar button{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.85);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.06em;padding:5px 11px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 0%,#0a6d87 0%,#05455a 48%,#032c3a 100%);min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 30px 60px;overflow:hidden;text-align:center}
+.stage:fullscreen{min-height:100vh;justify-content:center}
+.stage::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 108%,rgba(11,191,236,.30),transparent 70%);pointer-events:none}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:5}
+.st-eyebrow{position:relative;z-index:2;font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:18px}
+.prize{position:relative;z-index:2;display:none;align-items:center;gap:9px;background:rgba(245,184,61,.16);border:1px solid rgba(245,184,61,.42);color:var(--gold);font-size:15px;font-weight:800;padding:9px 19px;border-radius:999px;margin-bottom:24px}
+.prize.show{display:inline-flex}
+.prize em{font-style:normal;opacity:.7;font-weight:700;font-size:13px}
+
+.reel-mask{position:relative;z-index:2;height:132px;overflow:hidden;width:100%;max-width:820px;
+  -webkit-mask-image:linear-gradient(transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(transparent,#000 24%,#000 76%,transparent)}
+.reel div{height:132px;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:800;letter-spacing:-.03em;color:#fff;white-space:nowrap}
+.reel div.dim{color:rgba(255,255,255,.32)}
+@media(max-width:760px){.reel div{font-size:38px}.reel div,.reel-mask{height:92px}}
+
+#res{position:relative;z-index:2;width:100%;max-width:1000px;display:none}
+#res.show{display:block}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}
+.w-name{font-size:76px;font-weight:800;color:#fff;letter-spacing:-.035em;line-height:1.06;text-shadow:0 4px 30px rgba(11,191,236,.5)}
+.w-nick{font-size:27px;font-weight:700;color:var(--gold);margin-top:6px}
+.w-meta{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.w-meta span{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.17);color:rgba(255,255,255,.9);font-size:14px;font-weight:600;padding:7px 15px;border-radius:999px}
+@media(max-width:760px){.w-name{font-size:40px}.w-nick{font-size:18px}}
+
+.gridw{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px}
+.gw{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px 15px;display:flex;align-items:center;gap:12px;text-align:left;opacity:0;transform:translateY(14px) scale(.94)}
+.gw.in{animation:gin .42s cubic-bezier(.2,1.3,.5,1) forwards}
+@keyframes gin{to{opacity:1;transform:none}}
+.gw i{width:31px;height:31px;border-radius:50%;background:var(--gold);color:#3d2a06;display:grid;place-items:center;font-size:13.5px;font-weight:800;font-style:normal;flex:none}
+.gw b{color:#fff;font-size:18px;font-weight:800;display:block;line-height:1.25}
+.gw span{color:rgba(255,255,255,.6);font-size:12px;display:block;margin-top:1px}
+
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.team{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:14px;text-align:left;opacity:0;transform:translateY(14px)}
+.team.in{animation:gin .45s cubic-bezier(.2,1.3,.5,1) forwards}
+.team h4{color:var(--gold);font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-bottom:9px;display:flex;justify-content:space-between}
+.team h4 em{font-style:normal;color:rgba(255,255,255,.42);font-weight:700}
+.team li{list-style:none;color:#fff;font-size:15.5px;font-weight:600;padding:4px 0;border-top:1px solid rgba(255,255,255,.09)}
+.team li:first-of-type{border-top:0}
+
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px}
+.pair{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:15px;padding:12px 15px;display:flex;align-items:center;gap:12px;color:#fff;font-size:17px;font-weight:700;opacity:0;transform:translateY(12px)}
+.pair.in{animation:gin .4s cubic-bezier(.2,1.3,.5,1) forwards}
+.pair svg{color:var(--gold);font-size:18px}
+.pair span{flex:1;text-align:left}.pair span:last-child{text-align:right}
+
+.queue{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;max-height:420px;overflow:auto;padding-right:4px}
+.qi{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px;color:#fff;font-size:15px;font-weight:600;text-align:left;opacity:0}
+.qi.in{animation:gin .3s ease forwards}
+.qi i{width:25px;height:25px;border-radius:7px;background:rgba(245,184,61,.9);color:#3d2a06;font-style:normal;font-size:12px;font-weight:800;display:grid;place-items:center;flex:none}
+
+/* confirm bar */
+.confirm{position:relative;z-index:6;display:none;gap:10px;margin-top:26px;justify-content:center;flex-wrap:wrap}
+.confirm.show{display:flex}
+.confirm button{border:0;font-family:inherit;font-size:15px;font-weight:800;padding:13px 26px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.cf-yes{background:var(--success);color:#fff}
+.cf-no{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)!important}
+
+.st-foot{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:rgba(255,255,255,.45);font-weight:600;gap:12px;flex-wrap:wrap}
+.st-foot b{color:rgba(255,255,255,.8)}
+.st-foot .seed{font-family:ui-monospace,monospace;font-size:11px;opacity:.75}
+
+/* ══ GUEST PHONE ══ */
+.gphone{background:#0f2b35;border-radius:30px;padding:9px;box-shadow:0 12px 34px rgba(15,43,53,.28);position:sticky;top:20px}
+.gscr{background:var(--surface-muted);border-radius:23px;overflow:hidden;min-height:520px;display:flex;flex-direction:column;position:relative}
+.gtop{background:var(--brand);color:#fff;padding:12px 15px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800}
+.gbody{flex:1;padding:15px;display:flex;flex-direction:column}
+.gsel{width:100%;font-family:inherit;font-size:12.5px;padding:8px 10px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);margin-bottom:12px}
+.gidle{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--ink-muted);gap:11px;padding:20px 0}
+.gidle .ring{width:62px;height:62px;border-radius:50%;border:3px dashed var(--line-strong);display:grid;place-items:center;color:var(--brand);font-size:25px;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gidle b{font-size:14.5px;color:var(--ink);font-weight:700}
+.gidle span{font-size:12px;line-height:1.55;max-width:24ch}
+.gwin{position:absolute;inset:0;background:linear-gradient(160deg,#0a6d87,#04384a);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px;color:#fff;z-index:3}
+.gwin.show{display:flex;animation:pop .45s cubic-bezier(.2,1.4,.5,1)}
+.gwin .big{font-size:15px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--gold)}
+.gwin h2{font-size:34px;font-weight:800;margin:12px 0 4px;letter-spacing:-.03em;line-height:1.15}
+.gwin p{font-size:13.5px;color:rgba(255,255,255,.72);line-height:1.6}
+.gwin .pzt{margin-top:16px;background:rgba(245,184,61,.16);border:1px solid rgba(245,184,61,.4);color:var(--gold);font-size:13.5px;font-weight:800;padding:9px 17px;border-radius:999px}
+.gwin .cta{margin-top:22px;background:#fff;color:var(--brand-deep);font-family:inherit;font-size:14px;font-weight:800;border:0;padding:12px 24px;border-radius:13px}
+.glist{margin-top:auto}
+.glist .t{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.glist .gi{background:var(--surface);border:1px solid var(--line-subtle);border-radius:11px;padding:8px 11px;font-size:12.5px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
+.glist .gi em{font-style:normal;font-weight:600;color:var(--ink-faint);font-size:11px}
+
+/* ── guest v2: ถ่ายทอดสด + ของฉัน ─────────────────────────────── */
+.gscr{min-height:660px}
+.gbody{padding:12px;gap:11px;overflow:auto;max-height:620px}
+.gbody::-webkit-scrollbar{width:5px}.gbody::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}
+.gtabs{display:flex;background:var(--surface);border-bottom:1px solid var(--line-subtle);flex:none}
+.gtabs button{flex:1;border:0;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-muted);padding:11px 4px;cursor:pointer;border-bottom:2px solid transparent;position:relative}
+.gtabs button.on{color:var(--brand);border-bottom-color:var(--brand)}
+.gtabs button .dot{position:absolute;top:8px;right:14px;width:7px;height:7px;border-radius:50%;background:var(--accent);display:none}
+.gtabs button.alert .dot{display:block}
+.gpane{display:none;flex-direction:column;gap:11px}
+.gpane.on{display:flex}
+
+.glive{background:linear-gradient(160deg,#0a6d87,#04384a);border-radius:17px;padding:14px 12px 15px;text-align:center;color:#fff;overflow:hidden}
+.glive .st{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.glive .st i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff5a5a;margin-right:6px;vertical-align:middle;animation:blink 1.1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.gpz{display:none;margin:9px auto 0;background:rgba(245,184,61,.16);border:1px solid rgba(245,184,61,.42);color:var(--gold);font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:999px}
+.gpz.show{display:inline-block}
+.greel-mask{height:54px;overflow:hidden;margin-top:10px;
+  -webkit-mask-image:linear-gradient(transparent,#000 28%,#000 72%,transparent);mask-image:linear-gradient(transparent,#000 28%,#000 72%,transparent)}
+.greel div{height:54px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;white-space:nowrap;color:#fff}
+.greel div.dim{color:rgba(255,255,255,.3)}
+.gres{margin-top:11px;display:none;text-align:left}
+.gres.show{display:block}
+.gres .one{text-align:center}
+.gres .one b{font-size:24px;font-weight:800;display:block;line-height:1.2}
+.gres .one em{font-style:normal;font-size:12.5px;color:var(--gold);font-weight:700}
+.gr{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:7px 10px;margin-bottom:5px;font-size:13px;font-weight:700}
+.gr.me{background:rgba(245,184,61,.2);border-color:rgba(245,184,61,.55)}
+.gr i{width:21px;height:21px;border-radius:6px;background:rgba(255,255,255,.16);font-style:normal;font-size:10.5px;font-weight:800;display:grid;place-items:center;flex:none}
+.gr.me i{background:var(--gold);color:#3d2a06}
+.gr .r{margin-left:auto;font-size:10.5px;font-weight:800;color:var(--gold)}
+.gteam{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:9px 11px;margin-bottom:6px;text-align:left}
+.gteam.me{background:rgba(245,184,61,.16);border-color:rgba(245,184,61,.5)}
+.gteam h5{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);display:flex;justify-content:space-between;margin-bottom:5px}
+.gteam h5 em{font-style:normal;color:rgba(255,255,255,.4)}
+.gteam p{font-size:12.5px;color:#fff;line-height:1.65}
+
+.mine{background:var(--surface);border:1px solid var(--line-subtle);border-radius:17px;padding:14px}
+.mine .who{display:flex;align-items:center;gap:11px}
+.mine .av{width:42px;height:42px;border-radius:50%;background:var(--brand-lighter);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
+.mine .who b{font-size:15px;font-weight:800;display:block;line-height:1.25}
+.mine .who span{font-size:11.5px;color:var(--ink-muted)}
+.mstat{margin-top:12px;border-radius:13px;padding:11px 13px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:9px;line-height:1.4}
+.mstat.win{background:var(--success-bg);color:var(--success-text)}
+.mstat.pend{background:var(--warning-bg);color:var(--warning-text)}
+.mstat.info{background:var(--brand-lighter);color:var(--brand-deep)}
+.mstat.idle{background:var(--surface-sunken);color:var(--ink-muted)}
+.mpz{display:flex;align-items:center;gap:9px;padding:9px 11px;background:#fffaf0;border:1px solid rgba(245,184,61,.55);border-radius:12px;margin-top:7px;font-size:12.5px;font-weight:700}
+.mpz svg{color:var(--gold);font-size:16px}
+.mpz em{font-style:normal;margin-left:auto;font-size:10.5px;color:var(--ink-faint);font-weight:700}
+.mbig{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.mbig b{font-size:32px;font-weight:800;color:var(--brand);line-height:1;letter-spacing:-.02em}
+.mbig span{font-size:12px;color:var(--ink-muted)}
+.mlist{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.mlist span{font-size:12px;font-weight:700;background:var(--surface-sunken);color:var(--ink-muted);padding:5px 10px;border-radius:999px}
+.mlist span.me{background:var(--brand);color:#fff}
+.mnone{font-size:12.5px;color:var(--ink-faint);text-align:center;padding:14px 0;line-height:1.6}
+
+/* notes */
+.notes{max-width:1460px;margin:24px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.notes{grid-template-columns:1fr}}
+.nc{background:var(--surface);border:1px solid var(--line-subtle);border-radius:20px;padding:19px 21px}
+.nc h3{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.nc ul{margin-left:17px;color:var(--ink-muted);font-size:13px;line-height:1.85}
+.nc code{background:var(--surface-sunken);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--brand-deep)}
+.nc .ok{color:var(--success-text)}.nc .todo{color:var(--accent-text)}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>สุ่มรายชื่อ — Lucky Draw · prototype v2 (เต็มรูปแบบ)</h1>
+  <p>ครบทั้ง 5 โหมด รางวัล การยืนยันผู้ชนะ มุมมองลูกทัวร์แบบเรียลไทม์ และ export ใบเซ็นรับรางวัล — กดใช้งานได้จริงทุกปุ่ม ซ้าย = หน้าคุมของสตาฟ · กลาง = จอใหญ่ · ขวา = มือถือลูกทัวร์</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ═════ HOST ═════ -->
+  <div class="phone">
+    <div class="hd">
+      <svg class="ic" style="font-size:22px;color:var(--brand)" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4M4.9 19.1l2.9-2.9M16.2 7.8l2.9-2.9"/></svg>
+      <div><b>สุ่มรายชื่อ</b><div class="sub">ทริปเชียงใหม่ 3 วัน 2 คืน</div></div>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="card">
+      <div class="lbl">แหล่งรายชื่อ</div>
+      <div class="seg" id="srcSeg">
+        <button class="on" data-s="guests">ลูกทัวร์ในทริป</button>
+        <button data-s="custom">พิมพ์/วางเอง</button>
+      </div>
+      <div id="srcGuests">
+        <div class="chips">
+          <div class="chip on" data-f="checkin">เช็คอินแล้ว</div>
+          <div class="chip" data-f="bus1">รถคัน 1</div>
+          <div class="chip" data-f="bus2">รถคัน 2</div>
+          <div class="chip" data-f="female">ผู้หญิง</div>
+          <div class="chip" data-f="male">ผู้ชาย</div>
+        </div>
+        <div class="lbl" style="margin:14px 0 0"><span>เลือก/ตัดรายคน</span><a id="tglList">แสดงรายชื่อ</a></div>
+        <div class="gl" id="gl"></div>
+      </div>
+      <div id="srcCustom" style="display:none">
+        <textarea id="customTa" rows="6" placeholder="พิมพ์ทีละบรรทัด เช่น&#10;สมชาย ใจดี&#10;ปิยะดา ศรีสุข&#10;คุณลุงคนขับ"></textarea>
+        <div style="font-size:11.5px;color:var(--ink-faint);margin-top:7px;line-height:1.5">ใช้ตอนสุ่มคนที่ไม่ได้อยู่ในระบบ เช่น ทีมงาน คนขับรถ ไกด์ท้องถิ่น</div>
+      </div>
+      <div class="pool" style="margin-top:14px;padding-top:13px;border-top:1px solid var(--line-subtle)">
+        <div class="pool-n" id="poolN">0</div>
+        <div class="pool-t">คนอยู่ในกลุ่มสุ่ม<br><b id="poolNote">—</b></div>
+      </div>
+    </div>
+
+    <!-- MODE -->
+    <div class="card">
+      <div class="lbl">โหมดการสุ่ม</div>
+      <div class="seg wrap5" id="modeSeg">
+        <button class="on" data-m="one">ทีละคน</button>
+        <button data-m="many">หลายคน</button>
+        <button data-m="group">แบ่งกลุ่ม</button>
+        <button data-m="pair">จับคู่</button>
+        <button data-m="queue">ลำดับคิว</button>
+      </div>
+      <div id="modeHint" style="font-size:11.5px;color:var(--ink-faint);margin-top:10px;line-height:1.5"></div>
+      <div class="stepper" id="cntRow" style="display:none">
+        <div class="t" id="cntLbl">จำนวนที่สุ่ม</div>
+        <div class="g"><button id="dec">−</button><div class="v" id="cntV">3</div><button id="inc">+</button></div>
+      </div>
+      <div class="seg" id="grpSeg" style="display:none;margin-top:10px">
+        <button class="on" data-g="teams">กำหนดจำนวนทีม</button>
+        <button data-g="size">กำหนดคนต่อทีม</button>
+      </div>
+    </div>
+
+    <!-- PRIZES -->
+    <div class="card">
+      <div class="lbl"><span>รางวัล</span><a id="tglPz">ปิดใช้งาน</a></div>
+      <div id="pzBox">
+        <div id="pzList"></div>
+        <div class="addpz">
+          <input type="text" id="pzName" placeholder="ชื่อรางวัล">
+          <button id="pzAdd">เพิ่ม</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-faint);margin-top:9px;line-height:1.5">สุ่มไล่จากรางวัลล่างขึ้นบน — หมดชิ้นแล้วเลื่อนไปรางวัลถัดไปเอง</div>
+      </div>
+    </div>
+
+    <!-- RULES -->
+    <div class="card">
+      <div class="lbl">กติกา</div>
+      <div class="row"><div class="tx"><b>ไม่สุ่มซ้ำคนเดิม</b><span>ตัดคนที่เคยถูกสุ่มในทริปนี้ออก</span></div><div class="sw on" data-r="nodup"></div></div>
+      <div class="row"><div class="tx"><b>ยกเว้นทีมงาน</b><span>สตาฟ 2 คนไม่ถูกสุ่ม</span></div><div class="sw on" data-r="nostaff"></div></div>
+      <div class="row"><div class="tx"><b>ถ่วงน้ำหนัก</b><span>คนที่ยังไม่เคยได้รางวัลมีโอกาสมากกว่า 3 เท่า</span></div><div class="sw" data-r="weighted"></div></div>
+      <div class="row"><div class="tx"><b>ต้องยืนยันผู้ชนะ</b><span>ถ้าคนไม่อยู่ กดสุ่มใหม่แทนได้ทันที</span></div><div class="sw on" data-r="confirm"></div></div>
+      <div class="row"><div class="tx"><b>เสียง &amp; อนิเมชัน</b><span>รัวกลอง เสียงชนะ สั่น คอนเฟตตี้</span></div><div class="sw on" data-r="fx"></div></div>
+    </div>
+
+    <button class="go" id="go">
+      <svg class="ic" style="font-size:19px" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+      <span id="goTxt">สุ่มเลย</span>
+    </button>
+    <div class="mini">
+      <button id="reroll"><svg class="ic" style="font-size:14px" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2M18 3v5h-5M6 21v-5h5"/></svg>สุ่มแทน</button>
+      <button id="undo"><svg class="ic" style="font-size:14px" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg>ย้อนกลับ</button>
+      <button id="exp"><svg class="ic" style="font-size:14px" viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg>ใบเซ็นรับ</button>
+      <button id="reset"><svg class="ic" style="font-size:14px" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>ล้างประวัติ</button>
+    </div>
+
+    <div class="card" style="margin-top:11px">
+      <div class="lbl"><span>ประวัติผู้โชคดี</span><span id="histN" style="text-transform:none;letter-spacing:0">0 คน</span></div>
+      <div class="hist" id="hist"><div class="empty">ยังไม่มีการสุ่ม</div></div>
+    </div>
+  </div>
+
+  <!-- ═════ STAGE ═════ -->
+  <div>
+    <div class="stage-wrap">
+      <div class="stage-bar">
+        <span>จอใหญ่ · /staff/lucky-draw/stage</span>
+        <button id="fs"><svg class="ic" style="font-size:13px" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>เต็มจอ</button>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="confetti"></canvas>
+        <div class="st-eyebrow" id="eyebrow">พร้อมสุ่มแล้ว</div>
+        <div class="prize show" id="prize"></div>
+        <div class="reel-mask" id="reelMask"><div class="reel" id="reel"></div></div>
+        <div id="res"></div>
+        <div class="confirm" id="confirmBar">
+          <button class="cf-yes" id="cfYes"><svg class="ic" style="font-size:17px" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>ยืนยัน รับรางวัลแล้ว</button>
+          <button class="cf-no" id="cfNo"><svg class="ic" style="font-size:17px" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2M18 3v5h-5"/></svg>ไม่อยู่ — สุ่มใหม่</button>
+        </div>
+        <div class="st-foot">
+          <span>สุ่มจาก <b id="footPool">0</b> รายชื่อ</span>
+          <span class="seed" id="footSeed">seed —</span>
+          <span>รอบที่ <b id="footRound">0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="nc">
+        <h3><span class="ok">✓</span> มีครบแล้วในต้นแบบนี้</h3>
+        <ul>
+          <li>5 โหมด — ทีละคน / หลายคน / แบ่งกลุ่ม / จับคู่ / ลำดับคิว</li>
+          <li>แหล่งรายชื่อ 2 ทาง + กรอง 5 แบบ + ติ๊กตัดรายคน</li>
+          <li>รางวัลหลายชิ้น สุ่มไล่ลำดับ นับจำนวนคงเหลืออัตโนมัติ</li>
+          <li>ยืนยันผู้ชนะ / สุ่มแทนคนที่ไม่อยู่ / ย้อนกลับ 1 ขั้น</li>
+          <li>ถ่วงน้ำหนักคนที่ยังไม่เคยได้รางวัล</li>
+          <li>seed ต่อรอบ แสดงบนจอเพื่อความโปร่งใส</li>
+          <li>โหมดเต็มจอสำหรับโปรเจกเตอร์ · เสียง/สั่น/คอนเฟตตี้</li>
+          <li>มุมมองลูกทัวร์เรียลไทม์ + export ใบเซ็นรับรางวัล</li>
+        </ul>
+      </div>
+      <div class="nc">
+        <h3><span class="todo">◷</span> ยังขาด — ต้องทำตอนลงโค้ดจริง</h3>
+        <ul>
+          <li>ตาราง <code>draw_sessions</code> / <code>draw_prizes</code> / <code>draw_results</code> + RLS — ตอนนี้ทุกอย่างอยู่ใน memory</li>
+          <li>Supabase Realtime ให้ลูกทัวร์เห็นผลพร้อมกันจริง (ตอนนี้จำลอง)</li>
+          <li>ยิงเข้า <code>Broadcast</code> อัตโนมัติเมื่อประกาศผู้ชนะ</li>
+          <li>ต่อ export เข้า <code>DocumentHub</code> + <code>SignatureSheet</code> ของจริง (ตอนนี้เปิดหน้าพิมพ์แยก)</li>
+          <li>ออฟไลน์: สุ่มฝั่ง client แล้ว sync ผ่าน <code>offlineQueue.js</code></li>
+          <li>รูปรางวัล / รูปโปรไฟล์ผู้ชนะ (Supabase storage)</li>
+          <li>i18n — ต้นแบบนี้ฮาร์ดโค้ดภาษาไทยล้วน</li>
+          <li>สิทธิ์: ใครกดสุ่มได้บ้าง (<code>permissions.js</code>)</li>
+          <li>บันทึกกลุ่ม/คู่ที่สุ่มได้กลับเข้าทริป เช่น ตั้งเป็นทีมกิจกรรมถาวร</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════ GUEST ═════ -->
+  <div class="gphone">
+    <div class="gscr">
+      <div class="gtop">
+        <svg class="ic" style="font-size:17px" viewBox="0 0 24 24"><path d="M12 2v4M4.9 4.9l2.9 2.9M2 12h4M4.9 19.1l2.9-2.9M12 18v4M16.2 16.2l2.9 2.9M18 12h4M16.2 7.8l2.9-2.9"/></svg>
+        สุ่มรางวัล
+      </div>
+      <div class="gtabs">
+        <button class="on" data-t="live">ถ่ายทอดสด</button>
+        <button data-t="mine">ของฉัน<span class="dot"></span></button>
+      </div>
+      <div class="gbody">
+        <select class="gsel" id="gWho" style="margin:0"></select>
+
+        <!-- LIVE -->
+        <div class="gpane on" id="paneLive">
+          <div class="glive">
+            <div class="st" id="gSt">รอผลการสุ่ม</div>
+            <div class="gpz" id="gPz"></div>
+            <div class="greel-mask" id="gReelMask"><div class="greel" id="gReel"><div>พร้อมสุ่ม</div></div></div>
+            <div class="gres" id="gRes"></div>
+          </div>
+          <div class="glist" id="gList"></div>
+        </div>
+
+        <!-- MINE -->
+        <div class="gpane" id="paneMine"></div>
+      </div>
+      <div class="gwin" id="gWin">
+        <div class="big">คุณถูกสุ่ม!</div>
+        <h2 id="gwName">—</h2>
+        <p>ไปรับรางวัลที่หน้าเวทีได้เลย<br>แจ้งชื่อกับทีมงานเพื่อยืนยัน</p>
+        <div class="pzt" id="gwPrize"></div>
+        <button class="cta" id="gwOk">รับทราบ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ mock data ═══ */
+const GUESTS=[
+ {n:'สมชาย ใจดี',k:'ชาย',g:'m',seat:'A1',bus:1,ci:1},
+ {n:'ปิยะดา ศรีสุข',k:'ปิ๊ก',g:'f',seat:'A2',bus:1,ci:1},
+ {n:'ธนวัฒน์ พงษ์ไพศาล',k:'บอส',g:'m',seat:'A3',bus:1,ci:1},
+ {n:'ศิริพร วงศ์เจริญ',k:'นก',g:'f',seat:'A4',bus:1,ci:1},
+ {n:'อนุชา รัตนากร',k:'ตั้ม',g:'m',seat:'B1',bus:1,ci:0},
+ {n:'กมลชนก แสงทอง',k:'อ้อม',g:'f',seat:'B2',bus:1,ci:1},
+ {n:'วีระ ชัยมงคล',k:'โจ',g:'m',seat:'B3',bus:1,ci:1},
+ {n:'นภัสสร ทองคำ',k:'มิ้น',g:'f',seat:'B4',bus:1,ci:1},
+ {n:'ประเสริฐ สุขสวัสดิ์',k:'เสริฐ',g:'m',seat:'C1',bus:1,ci:1},
+ {n:'จันทิมา บุญมา',k:'จัน',g:'f',seat:'C2',bus:1,ci:0},
+ {n:'ณัฐพงศ์ เกียรติศักดิ์',k:'ณัฐ',g:'m',seat:'C3',bus:1,ci:1},
+ {n:'สุภาวดี พรหมมา',k:'แนน',g:'f',seat:'C4',bus:1,ci:1},
+ {n:'ชัยวัฒน์ อินทรีย์',k:'วัฒน์',g:'m',seat:'D1',bus:2,ci:1},
+ {n:'พรทิพย์ มณีรัตน์',k:'ทิพย์',g:'f',seat:'D2',bus:2,ci:1},
+ {n:'เอกชัย ธีระวุฒิ',k:'เอก',g:'m',seat:'D3',bus:2,ci:1},
+ {n:'รัตนา จิตต์งาม',k:'ตุ๊ก',g:'f',seat:'D4',bus:2,ci:1},
+ {n:'กิตติพงษ์ ศรีนวล',k:'กิต',g:'m',seat:'E1',bus:2,ci:1},
+ {n:'วราภรณ์ เพชรดี',k:'ปุ๊ย',g:'f',seat:'E2',bus:2,ci:0},
+ {n:'ธีรศักดิ์ คงทน',k:'ตี๋',g:'m',seat:'E3',bus:2,ci:1},
+ {n:'อารียา สมบูรณ์',k:'อาร์',g:'f',seat:'E4',bus:2,ci:1},
+ {n:'มานพ ไพรวัลย์',k:'นพ',g:'m',seat:'F1',bus:2,ci:1},
+ {n:'สุนิสา แก้วใส',k:'นิด',g:'f',seat:'F2',bus:2,ci:1},
+ {n:'ภาณุพงศ์ ยอดเยี่ยม',k:'ภาณุ',g:'m',seat:'F3',bus:2,ci:1,staff:1},
+ {n:'ดวงใจ รุ่งเรือง',k:'ดาว',g:'f',seat:'F4',bus:2,ci:1,staff:1},
+];
+
+const S={
+  src:'guests', custom:'',
+  filters:{checkin:true,bus1:false,bus2:false,female:false,male:false},
+  off:new Set(),                       // ตัดรายคน
+  mode:'one', count:3, grp:'teams', grpN:4,
+  usePrize:true,
+  prizes:[{n:'รางวัลที่ 3 · กระเป๋าเดินทาง',q:3,left:3},
+          {n:'รางวัลที่ 2 · หูฟังไร้สาย',q:2,left:2},
+          {n:'รางวัลที่ 1 · ทีวี 43 นิ้ว',q:1,left:1}],
+  rules:{nodup:true,nostaff:true,weighted:false,confirm:true,fx:true},
+  results:[], round:0, busy:false, pending:null, seed:'—'
+};
+const MODE_HINT={
+  one:'จับทีละคน เหมาะกับแจกรางวัลไล่ลำดับ',
+  many:'ออกผลรวดเดียวหลายคน เหมาะกับรางวัลปลอบใจ',
+  group:'แบ่งลูกทัวร์เป็นทีมสำหรับเล่นกิจกรรม',
+  pair:'จับคู่แบบสุ่ม เหมาะกับเกมจับคู่ / แลกของขวัญ',
+  queue:'เรียงลำดับทุกคนในกลุ่ม เช่น คิวร้องเพลง'
+};
+const $=id=>document.getElementById(id);
+
+/* ═══ pool ═══ */
+function basePool(){
+  if(S.src==='custom'){
+    return S.custom.split('\n').map(s=>s.trim()).filter(Boolean)
+      .map((n,i)=>({n,k:'',seat:'',bus:'',ci:1,custom:1,id:'c'+i}));
+  }
+  return GUESTS.map(p=>({...p,id:p.n}));
+}
+function pool(){
+  const f=S.filters;
+  return basePool().filter(p=>{
+    if(S.off.has(p.id)) return false;
+    if(!p.custom){
+      if(f.checkin&&!p.ci) return false;
+      if(f.bus1&&p.bus!==1) return false;
+      if(f.bus2&&p.bus!==2) return false;
+      if(f.female&&p.g!=='f') return false;
+      if(f.male&&p.g!=='m') return false;
+      if(S.rules.nostaff&&p.staff) return false;
+    }
+    if(S.rules.nodup&&S.results.some(r=>r.id===p.id)) return false;
+    return true;
+  });
+}
+function needed(){
+  if(S.mode==='many') return S.count;
+  if(S.mode==='group') return S.grp==='teams'?S.grpN:S.grpN;
+  if(S.mode==='pair') return 2;
+  if(S.mode==='queue') return 2;
+  return 1;
+}
+function curPrize(){
+  if(!S.usePrize) return null;
+  return S.prizes.find(p=>p.left>0)||null;
+}
+function refresh(){
+  const p=pool();
+  $('poolN').textContent=p.length; $('footPool').textContent=p.length;
+  const bits=[];
+  if(S.rules.nodup&&S.results.length) bits.push('ตัดผู้ที่ถูกสุ่มแล้ว '+S.results.length);
+  if(S.off.size) bits.push('ตัดเอง '+S.off.size);
+  if(S.rules.nostaff&&S.src==='guests') bits.push('ตัดทีมงาน');
+  if(S.rules.weighted) bits.push('ถ่วงน้ำหนัก');
+  $('poolNote').textContent=bits.length?bits.join(' · '):'จากทั้งหมด '+basePool().length+' คน';
+  $('go').disabled=S.busy||p.length<needed();
+  $('goTxt').textContent={one:'สุ่มเลย',many:`สุ่ม ${S.count} คน`,group:'แบ่งกลุ่ม',pair:'จับคู่',queue:'สุ่มลำดับ'}[S.mode];
+  $('reroll').style.opacity=S.results.length?1:.4;
+  $('undo').style.opacity=S.results.length?1:.4;
+  $('exp').style.opacity=S.results.length?1:.4;
+  $('modeHint').textContent=MODE_HINT[S.mode];
+  const cp=curPrize();
+  if(cp&&(S.mode==='one'||S.mode==='many')){
+    $('prize').className='prize show';
+    $('prize').innerHTML=`<svg class="ic" style="font-size:16px" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6"/></svg>${cp.n} <em>เหลือ ${cp.left}</em>`;
+  }else $('prize').className='prize';
+  renderPz(); $('histN').textContent=S.results.length+' คน';
+}
+
+/* ═══ audio ═══ */
+let ctx=null;
+function ac(){if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)()}catch{return null}}if(ctx.state==='suspended')ctx.resume().catch(()=>{});return ctx}
+function beep(a,f,at,d,t='triangle',v=.25){const o=a.createOscillator(),g=a.createGain();o.type=t;o.frequency.value=f;
+ g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(v,at+.02);g.gain.exponentialRampToValueAtTime(.0001,at+d);
+ o.connect(g).connect(a.destination);o.start(at);o.stop(at+d+.02)}
+function drumroll(sec){const a=ac();if(!a||!S.rules.fx)return;
+ const n=a.sampleRate*sec,buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+ for(let i=0;i<n;i++){const e=(Math.sin(i/a.sampleRate*2*Math.PI*17)+1)/2;d[i]=(Math.random()*2-1)*e*.55}
+ const s=a.createBufferSource();s.buffer=buf;const g=a.createGain(),lp=a.createBiquadFilter();
+ lp.type='lowpass';lp.frequency.value=1400;
+ g.gain.setValueAtTime(.03,a.currentTime);g.gain.exponentialRampToValueAtTime(.30,a.currentTime+sec*.85);
+ g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
+ s.connect(lp).connect(g).connect(a.destination);s.start()}
+function fanfare(){const a=ac();if(!a||!S.rules.fx)return;const t=a.currentTime;
+ beep(a,660,t,.14);beep(a,880,t+.16,.14);beep(a,1175,t+.32,.30);beep(a,1568,t+.34,.34,'sine',.16);
+ try{navigator.vibrate?.([120,60,120,60,240])}catch{}}
+function tick(){const a=ac();if(!a||!S.rules.fx)return;beep(a,1800,a.currentTime,.03,'square',.07)}
+
+/* ═══ confetti ═══ */
+const cv=$('confetti'),cx=cv.getContext('2d');let parts=[],raf=null;
+function sizeCv(){const r=cv.getBoundingClientRect();cv.width=r.width;cv.height=r.height}
+addEventListener('resize',sizeCv);setTimeout(sizeCv,60);
+function boom(){if(!S.rules.fx)return;sizeCv();
+ const c=['#f5b83d','#0bbfec','#f97362','#fff','#7ee787'];
+ for(let i=0;i<140;i++)parts.push({x:cv.width/2+(Math.random()-.5)*180,y:cv.height*.5,
+  vx:(Math.random()-.5)*15,vy:-Math.random()*16-5,s:5+Math.random()*7,c:c[i%c.length],
+  r:Math.random()*6,vr:(Math.random()-.5)*.4,life:1});
+ if(!raf)raf=requestAnimationFrame(loop)}
+function loop(){cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.life>0);
+ parts.forEach(p=>{p.vy+=.42;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.vx*=.99;if(p.y>cv.height+30)p.life=0;
+  cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore()});
+ raf=parts.length?requestAnimationFrame(loop):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ═══ reel ═══ */
+const RH=()=>innerWidth<=760?92:132;
+function spin(name,ms){return new Promise(res=>{
+ const p=pool(),strip=[];
+ for(let i=0;i<26;i++)strip.push(p[Math.floor(Math.random()*p.length)]?.n||'—');
+ strip.push(name);
+ const reel=$('reel');
+ reel.innerHTML=strip.map((n,i)=>`<div class="${i===strip.length-1?'':'dim'}">${esc(n)}</div>`).join('');
+ reel.style.transition='none';reel.style.transform='translateY(0)';reel.offsetHeight;
+ const tk=setInterval(tick,70);
+ reel.style.transition=`transform ${ms}ms cubic-bezier(.12,.62,.16,1)`;
+ reel.style.transform=`translateY(-${(strip.length-1)*RH()}px)`;
+ setTimeout(()=>{clearInterval(tk);res()},ms+40)})}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+/* ═══ picking ═══ */
+function weightOf(p){ return S.rules.weighted ? (S.results.some(r=>r.id===p.id)?1:3) : 1; }
+function pickOne(list){
+  const tot=list.reduce((s,p)=>s+weightOf(p),0);
+  let r=Math.random()*tot;
+  for(const p of list){ r-=weightOf(p); if(r<=0) return p; }
+  return list[list.length-1];
+}
+function pickN(list,n){
+  const l=[...list],out=[];
+  while(out.length<n&&l.length){const p=pickOne(l);out.push(p);l.splice(l.indexOf(p),1)}
+  return out;
+}
+function newSeed(){S.seed=Math.random().toString(36).slice(2,10).toUpperCase();$('footSeed').textContent='seed '+S.seed}
+
+/* ═══ draw ═══ */
+async function draw(replace=false){
+  if(S.busy)return; const p=pool(); if(p.length<needed())return;
+  S.busy=true;$('go').disabled=true;$('confirmBar').classList.remove('show');
+  $('res').classList.remove('show');$('res').innerHTML='';
+  $('reelMask').style.display='block';
+  S.round++;$('footRound').textContent=S.round;newSeed();
+  const R=$('res');
+
+  if(S.mode==='one'){
+    const w=pickOne(p);
+    $('eyebrow').textContent=replace?'สุ่มใหม่แทนคนเดิม…':'กำลังสุ่ม…';
+    drumroll(3.4);gSpin(w.n,3400);await spin(w.n,3400);
+    $('reelMask').style.display='none';gReveal('one',w);
+    R.innerHTML=`<div class="pop"><div class="w-name">${esc(w.n)}</div>
+      ${w.k?`<div class="w-nick">"${esc(w.k)}"</div>`:''}
+      <div class="w-meta">${w.seat?`<span>ที่นั่ง ${w.seat}</span>`:''}${w.bus?`<span>รถคัน ${w.bus}</span>`:''}
+      ${curPrize()?`<span>${esc(curPrize().n)}</span>`:''}</div></div>`;
+    R.classList.add('show');$('eyebrow').textContent='ผู้โชคดี';fanfare();boom();
+    finish([w],replace);
+  }
+  else if(S.mode==='many'){
+    const ws=pickN(p,S.count);
+    $('eyebrow').textContent=`กำลังสุ่ม ${S.count} คน…`;
+    drumroll(2.6);gSpin(ws[0].n,2600);await spin(ws[0].n,2600);
+    $('reelMask').style.display='none';gReveal('many',ws);
+    R.innerHTML=`<div class="gridw">${ws.map((w,i)=>`<div class="gw"><i>${i+1}</i><div><b>${esc(w.n)}</b>
+      <span>${[w.k&&'"'+w.k+'"',w.seat&&'ที่นั่ง '+w.seat,w.bus&&'รถ '+w.bus].filter(Boolean).join(' · ')||'รายชื่อเพิ่มเอง'}</span></div></div>`).join('')}</div>`;
+    R.classList.add('show');
+    [...R.querySelectorAll('.gw')].forEach((el,i)=>setTimeout(()=>{el.classList.add('in');tick()},i*230));
+    setTimeout(()=>{$('eyebrow').textContent=`ผู้โชคดี ${S.count} คน`;fanfare();boom()},ws.length*230+150);
+    finish(ws,false);
+  }
+  else if(S.mode==='group'){
+    const sh=pickN(p,p.length);
+    const nTeams=S.grp==='teams'?S.grpN:Math.ceil(p.length/S.grpN);
+    const teams=Array.from({length:nTeams},()=>[]);
+    sh.forEach((w,i)=>teams[i%nTeams].push(w));
+    $('eyebrow').textContent='กำลังแบ่งกลุ่ม…';
+    drumroll(2.2);gSpin(sh[0].n,2200);await spin(sh[0].n,2200);
+    $('reelMask').style.display='none';
+    S.lastTeams=teams;S.lastPairs=null;S.lastQueue=null;gReveal('group',teams);
+    R.innerHTML=`<div class="teams">${teams.map((t,i)=>`<div class="team"><h4>ทีม ${i+1}<em>${t.length} คน</em></h4>
+      ${t.map(m=>`<li>${esc(m.k||m.n)}</li>`).join('')}</div>`).join('')}</div>`;
+    R.classList.add('show');
+    [...R.querySelectorAll('.team')].forEach((el,i)=>setTimeout(()=>{el.classList.add('in');tick()},i*180));
+    setTimeout(()=>{$('eyebrow').textContent=`แบ่งได้ ${nTeams} ทีม`;fanfare();boom()},teams.length*180+150);
+    S.busy=false;refresh();return;      // แบ่งกลุ่มไม่นับเป็นผู้ได้รางวัล
+  }
+  else if(S.mode==='pair'){
+    const sh=pickN(p,p.length),prs=[];
+    for(let i=0;i<sh.length-1;i+=2)prs.push([sh[i],sh[i+1]]);
+    const odd=sh.length%2?sh[sh.length-1]:null;
+    $('eyebrow').textContent='กำลังจับคู่…';
+    drumroll(2.2);gSpin(sh[0].n,2200);await spin(sh[0].n,2200);
+    $('reelMask').style.display='none';
+    S.lastPairs=odd?[...prs,[odd,null]]:prs;S.lastTeams=null;S.lastQueue=null;gReveal('pair',S.lastPairs);
+    R.innerHTML=`<div class="pairs">${prs.map(([a,b])=>`<div class="pair"><span>${esc(a.k||a.n)}</span>
+      <svg class="ic" viewBox="0 0 24 24"><path d="M7 8 3 12l4 4M17 8l4 4-4 4M3 12h18"/></svg>
+      <span>${esc(b.k||b.n)}</span></div>`).join('')}
+      ${odd?`<div class="pair" style="justify-content:center"><span style="text-align:center;opacity:.75">${esc(odd.k||odd.n)} — ไม่มีคู่ (ไปแทรกคู่ไหนก็ได้)</span></div>`:''}</div>`;
+    R.classList.add('show');
+    [...R.querySelectorAll('.pair')].forEach((el,i)=>setTimeout(()=>{el.classList.add('in');tick()},i*140));
+    setTimeout(()=>{$('eyebrow').textContent=`จับได้ ${prs.length} คู่`;fanfare();boom()},prs.length*140+150);
+    S.busy=false;refresh();return;
+  }
+  else{ // queue
+    const sh=pickN(p,p.length);
+    $('eyebrow').textContent='กำลังสุ่มลำดับ…';
+    drumroll(2.2);gSpin(sh[0].n,2200);await spin(sh[0].n,2200);
+    $('reelMask').style.display='none';
+    S.lastQueue=sh;S.lastTeams=null;S.lastPairs=null;gReveal('queue',sh);
+    R.innerHTML=`<div class="queue">${sh.map((w,i)=>`<div class="qi"><i>${i+1}</i>${esc(w.k||w.n)}</div>`).join('')}</div>`;
+    R.classList.add('show');
+    [...R.querySelectorAll('.qi')].forEach((el,i)=>setTimeout(()=>el.classList.add('in'),i*55));
+    setTimeout(()=>{$('eyebrow').textContent=`ลำดับคิว ${sh.length} คน`;fanfare();boom()},sh.length*55+150);
+    S.busy=false;refresh();return;
+  }
+}
+
+function finish(ws,replace){
+  const pz=curPrize();
+  S.pending={ws,replace,pz};
+  if(S.rules.confirm&&S.mode==='one'){ $('confirmBar').classList.add('show'); S.busy=false; refresh(); renderMine(); }
+  else commit();
+}
+function commit(){
+  const {ws,replace,pz}=S.pending||{}; if(!ws)return;
+  if(replace) S.results.pop();
+  ws.forEach(w=>{
+    S.results.push({id:w.id,n:w.n,k:w.k,seat:w.seat,pz:pz?pz.n:null,t:new Date(),rr:replace,seed:S.seed});
+    if(pz&&pz.left>0)pz.left--;
+  });
+  $('confirmBar').classList.remove('show');
+  S.pending=null;S.busy=false;renderHist();notifyGuest(ws,pz);refresh();
+}
+
+/* ═══ history / prizes / list ═══ */
+function renderHist(){
+  const h=$('hist');
+  if(!S.results.length){h.innerHTML='<div class="empty">ยังไม่มีการสุ่ม</div>';return}
+  h.innerHTML=[...S.results].reverse().map((d,i)=>{
+    const no=S.results.length-i;
+    const tm=d.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="hi"><div class="n">${no}</div><div class="nm">${esc(d.n)}</div>
+      ${d.pz?`<div class="pz2">${esc(d.pz.split('·')[0].trim())}</div>`:''}
+      ${d.rr?'<div class="rr">สุ่มแทน</div>':''}<div class="tm">${tm}</div></div>`}).join('');
+}
+function renderPz(){
+  const box=$('pzList'),cp=curPrize();
+  $('pzBox').style.opacity=S.usePrize?1:.42;
+  $('pzBox').style.pointerEvents=S.usePrize?'auto':'none';
+  $('tglPz').textContent=S.usePrize?'ปิดใช้งาน':'เปิดใช้งาน';
+  box.innerHTML=S.prizes.map((p,i)=>`<div class="pz ${cp===p?'cur':''}">
+    <div class="ix">${i+1}</div><div class="nm">${esc(p.n)}</div>
+    <div class="q ${p.left===0?'out':''}">${p.left===0?'หมด':p.left+'/'+p.q}</div>
+    <button class="x" data-pz="${i}">✕</button></div>`).join('')
+    ||'<div class="empty">ยังไม่มีรางวัล</div>';
+  box.querySelectorAll('.x').forEach(b=>b.onclick=()=>{S.prizes.splice(+b.dataset.pz,1);refresh()});
+}
+function renderList(){
+  $('gl').innerHTML=GUESTS.map(p=>{
+    const on=!S.off.has(p.n);
+    const tags=[p.ci?'':'ยังไม่เช็คอิน',p.staff?'ทีมงาน':''].filter(Boolean);
+    return `<div class="gli ${on?'on':'off'}" data-id="${esc(p.n)}">
+      <div class="cb"><svg class="ic" style="font-size:12px" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></div>
+      <div class="nm">${esc(p.n)}</div>${tags.map(t=>`<div class="tag">${t}</div>`).join('')}</div>`}).join('');
+  $('gl').querySelectorAll('.gli').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.id; S.off.has(id)?S.off.delete(id):S.off.add(id); renderList(); refresh()});
+}
+
+/* ═══ guest view ═══ */
+const ME=()=>$('gWho').value;
+
+function fillWho(){
+  $('gWho').innerHTML='<option value="">— จำลองมุมมองลูกทัวร์ —</option>'+
+    GUESTS.map(p=>`<option value="${esc(p.n)}">${esc(p.n)} (${p.k})</option>`).join('');
+}
+
+/* มินิรีลบนมือถือ — หมุนพร้อมจอใหญ่ ให้คนที่ก้มดูมือถือลุ้นไปด้วยกัน */
+function gSpin(name,ms){
+  const p=pool(),strip=[];
+  for(let i=0;i<20;i++)strip.push(p[Math.floor(Math.random()*p.length)]?.n||'—');
+  strip.push(name);
+  const r=$('gReel');
+  $('gReelMask').style.display='block'; $('gRes').classList.remove('show');
+  r.innerHTML=strip.map((n,i)=>`<div class="${i===strip.length-1?'':'dim'}">${esc(n)}</div>`).join('');
+  r.style.transition='none';r.style.transform='translateY(0)';r.offsetHeight;
+  r.style.transition=`transform ${ms}ms cubic-bezier(.12,.62,.16,1)`;
+  r.style.transform=`translateY(-${(strip.length-1)*54}px)`;
+  $('gSt').innerHTML='<i></i>กำลังสุ่ม…';
+  const cp=curPrize();
+  $('gPz').className='gpz'+((cp&&(S.mode==='one'||S.mode==='many'))?' show':'');
+  if(cp)$('gPz').textContent=cp.n;
+  try{navigator.vibrate?.(30)}catch{}
+}
+
+/* เฉลยบนมือถือ — เลย์เอาต์ต่างกันตามโหมด และไฮไลต์บรรทัดที่เป็นตัวเอง */
+function gReveal(kind,data){
+  const me=ME(),R=$('gRes');
+  $('gReelMask').style.display='none';
+  const isMe=n=>me&&n===me;
+  if(kind==='one'){
+    const w=data;
+    R.innerHTML=`<div class="one"><b>${esc(w.n)}</b>${w.k?`<em>"${esc(w.k)}"</em>`:''}</div>`;
+    $('gSt').textContent='ผู้โชคดี';
+  }else if(kind==='many'){
+    R.innerHTML=data.map((w,i)=>`<div class="gr ${isMe(w.n)?'me':''}"><i>${i+1}</i>${esc(w.k||w.n)}${isMe(w.n)?'<span class="r">คุณ</span>':''}</div>`).join('');
+    $('gSt').textContent=`ผู้โชคดี ${data.length} คน`;
+  }else if(kind==='group'){
+    R.innerHTML=data.map((t,i)=>{
+      const mine=t.some(m=>isMe(m.n));
+      return `<div class="gteam ${mine?'me':''}"><h5>ทีม ${i+1}<em>${t.length} คน${mine?' · ทีมคุณ':''}</em></h5>
+        <p>${t.map(m=>esc(m.k||m.n)).join(' · ')}</p></div>`}).join('');
+    $('gSt').textContent=`แบ่งได้ ${data.length} ทีม`;
+  }else if(kind==='pair'){
+    R.innerHTML=data.map(([a,b],i)=>{
+      const mine=isMe(a.n)||isMe(b?.n);
+      return `<div class="gr ${mine?'me':''}"><i>${i+1}</i>${esc(a.k||a.n)} ↔ ${b?esc(b.k||b.n):'—'}${mine?'<span class="r">คู่คุณ</span>':''}</div>`}).join('');
+    $('gSt').textContent=`จับได้ ${data.length} คู่`;
+  }else{
+    R.innerHTML=data.map((w,i)=>`<div class="gr ${isMe(w.n)?'me':''}"><i>${i+1}</i>${esc(w.k||w.n)}${isMe(w.n)?'<span class="r">คิวคุณ</span>':''}</div>`).join('');
+    $('gSt').textContent=`ลำดับคิว ${data.length} คน`;
+  }
+  R.classList.add('show');
+  renderMine();
+  if(me&&R.querySelector('.me')) try{navigator.vibrate?.([120,50,120])}catch{}
+}
+
+function notifyGuest(ws,pz){
+  const me=ME(); renderGList(); renderMine();
+  if(me&&ws.some(w=>w.n===me)){
+    $('gwName').textContent=me;
+    $('gwPrize').textContent=pz?pz.n:'ออกมาเล่นกิจกรรมหน้าเวที';
+    $('gWin').classList.add('show');
+    try{navigator.vibrate?.([200,80,200])}catch{}
+  }
+}
+function renderGList(){
+  const L=$('gList');
+  if(!S.results.length){L.innerHTML='';return}
+  L.innerHTML='<div class="t">ผู้โชคดีล่าสุด</div>'+[...S.results].reverse().slice(0,4)
+    .map(r=>`<div class="gi"><span>${esc(r.n)}</span><em>${r.pz?esc(r.pz.split('·')[0].trim()):'—'}</em></div>`).join('');
+}
+
+/* ═══ "ของฉัน" — สรุปเฉพาะของลูกทัวร์คนนั้น ═══ */
+function renderMine(){
+  const me=ME(),P=$('paneMine'),tab=document.querySelector('.gtabs button[data-t="mine"]');
+  if(!me){
+    P.innerHTML=`<div class="mine"><div class="mnone">เลือกชื่อด้านบนเพื่อดูมุมมองของลูกทัวร์<br>ว่าเห็นอะไรบนมือถือตัวเองบ้าง</div></div>`;
+    tab.classList.remove('alert');return;
+  }
+  const g=GUESTS.find(x=>x.n===me)||{n:me,k:''};
+  const wins=S.results.filter(r=>r.n===me);
+  const myTeam=(S.lastTeams||[]).findIndex(t=>t.some(m=>m.n===me));
+  const myPair=(S.lastPairs||[]).find(([a,b])=>a.n===me||b?.n===me);
+  const myQ=(S.lastQueue||[]).findIndex(w=>w.n===me);
+
+  // ถูกสุ่มแล้วแต่ทีมงานยังไม่กดยืนยัน — ต้องบอกลูกทัวร์ ไม่งั้นดูเหมือนระบบพัง
+  const pendMe=!!(S.pending&&S.pending.ws.some(w=>w.n===me));
+  const P_ICON='<path d="M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6"/>';
+  const C_ICON='<path d="M12 8v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>';
+  let cls='idle',icon=C_ICON,txt='ยังไม่ถูกสุ่ม — ลุ้นรอบต่อไป';
+  if(wins.length){cls='win';icon=P_ICON;txt=`คุณได้รับรางวัลแล้ว ${wins.length} ชิ้น`}
+  else if(pendMe){cls='pend';icon=P_ICON;txt='คุณถูกสุ่มแล้ว! รอทีมงานกดยืนยันหน้าเวที'}
+  else if(myTeam>=0){cls='info';txt=`คุณอยู่ทีม ${myTeam+1}`}
+  else if(myPair){cls='info';txt='คุณได้คู่แล้ว — ดูด้านล่าง'}
+  else if(myQ>=0){cls='info';txt=`คุณอยู่คิวที่ ${myQ+1}`}
+
+  let html=`<div class="mine">
+    <div class="who"><div class="av">${esc((g.k||g.n).slice(0,2))}</div>
+      <div><b>${esc(g.n)}</b><span>${[g.k&&'"'+g.k+'"',g.seat&&'ที่นั่ง '+g.seat,g.bus&&'รถคัน '+g.bus].filter(Boolean).join(' · ')}</span></div></div>
+    <div class="mstat ${cls}">
+      <svg class="ic" style="font-size:17px" viewBox="0 0 24 24">${icon}</svg>${txt}
+    </div>`;
+  if(pendMe&&S.pending.pz) html+=`<div class="mpz" style="opacity:.65">
+    <svg class="ic" viewBox="0 0 24 24">${P_ICON}</svg>${esc(S.pending.pz.n)}<em>รอยืนยัน</em></div>`;
+  wins.forEach(w=>{html+=`<div class="mpz">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 0 12 0M6 9V4h12v5M9 21h6M12 15v6"/></svg>
+    ${esc(w.pz||'ออกมาเล่นกิจกรรม')}<em>${w.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</em></div>`});
+  html+='</div>';
+
+  if(myTeam>=0){
+    const t=S.lastTeams[myTeam];
+    html+=`<div class="mine"><div class="lbl" style="margin-bottom:6px">ทีมของฉัน</div>
+      <div class="mbig"><b>ทีม ${myTeam+1}</b><span>${t.length} คน</span></div>
+      <div class="mlist">${t.map(m=>`<span class="${m.n===me?'me':''}">${esc(m.k||m.n)}</span>`).join('')}</div></div>`;
+  }
+  if(myPair){
+    const other=myPair[0].n===me?myPair[1]:myPair[0];
+    html+=`<div class="mine"><div class="lbl" style="margin-bottom:6px">คู่ของฉัน</div>
+      <div class="mbig"><b style="font-size:22px">${other?esc(other.n):'ไม่มีคู่'}</b></div>
+      ${other?`<div class="mlist"><span>${esc(other.k||'')}</span>${other.seat?`<span>ที่นั่ง ${other.seat}</span>`:''}</div>`:''}</div>`;
+  }
+  if(myQ>=0){
+    html+=`<div class="mine"><div class="lbl" style="margin-bottom:6px">คิวของฉัน</div>
+      <div class="mbig"><b>#${myQ+1}</b><span>จากทั้งหมด ${S.lastQueue.length} คน</span></div>
+      <div class="mlist">${myQ>0?`<span>ก่อนหน้า: ${esc(S.lastQueue[myQ-1].k||S.lastQueue[myQ-1].n)}</span>`:'<span class="me">คุณเป็นคนแรก</span>'}
+        ${myQ<S.lastQueue.length-1?`<span>ถัดไป: ${esc(S.lastQueue[myQ+1].k||S.lastQueue[myQ+1].n)}</span>`:''}</div></div>`;
+  }
+  if(!wins.length&&!pendMe&&myTeam<0&&!myPair&&myQ<0)
+    html+=`<div class="mine"><div class="mnone">ยังไม่มีผลการสุ่มที่เกี่ยวกับคุณ<br>ผลจะขึ้นที่นี่ทันทีที่ทีมงานสุ่ม</div></div>`;
+
+  P.innerHTML=html;
+  const has=wins.length||pendMe||myTeam>=0||myPair||myQ>=0;
+  tab.classList.toggle('alert',!!has&&!document.querySelector('.gtabs button[data-t="mine"]').classList.contains('on'));
+}
+
+/* ═══ export ═══ */
+function exportSheet(){
+  if(!S.results.length)return;
+  const rows=S.results.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.n)}</td><td>${esc(r.seat||'')}</td>
+    <td>${esc(r.pz||'')}</td><td>${r.t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</td>
+    <td class="sig"></td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ใบเซ็นรับรางวัล</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>body{font-family:'Noto Sans Thai',sans-serif;padding:34px;color:#0f2b35}
+  h1{font-size:20px;margin-bottom:3px}p.sub{font-size:13px;color:#4e6670;margin-bottom:18px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border:1px solid #b9ccd4;padding:8px 10px;text-align:left}
+  th{background:#eef4f7;font-weight:700}td.sig{height:42px;width:180px}
+  .ft{margin-top:26px;font-size:12px;color:#5a6f79;display:flex;justify-content:space-between}
+  @media print{body{padding:14px}}</style></head><body>
+  <h1>ใบเซ็นรับรางวัล — ทริปเชียงใหม่ 3 วัน 2 คืน</h1>
+  <p class="sub">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} · ผู้ได้รางวัลทั้งหมด ${S.results.length} คน</p>
+  <table><thead><tr><th style="width:38px">#</th><th>ชื่อ-นามสกุล</th><th style="width:70px">ที่นั่ง</th>
+  <th>รางวัล</th><th style="width:64px">เวลา</th><th>ลายเซ็นผู้รับ</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="ft"><span>ผู้จ่ายรางวัล ..............................................</span>
+  <span>หัวหน้าทัวร์ ..............................................</span></div>
+  <script>onload=()=>setTimeout(print,400)<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ═══ bind ═══ */
+$('srcSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  S.src=b.dataset.s;[...$('srcSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('srcGuests').style.display=S.src==='guests'?'block':'none';
+  $('srcCustom').style.display=S.src==='custom'?'block':'none';refresh()};
+$('customTa').oninput=e=>{S.custom=e.target.value;refresh()};
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  const f=c.dataset.f;
+  if(f==='bus1'&&!S.filters.bus1)S.filters.bus2=false;
+  if(f==='bus2'&&!S.filters.bus2)S.filters.bus1=false;
+  if(f==='female'&&!S.filters.female)S.filters.male=false;
+  if(f==='male'&&!S.filters.male)S.filters.female=false;
+  S.filters[f]=!S.filters[f];
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',S.filters[x.dataset.f]));
+  ac();refresh()});
+$('tglList').onclick=()=>{const o=$('gl').classList.toggle('open');$('tglList').textContent=o?'ซ่อนรายชื่อ':'แสดงรายชื่อ'};
+document.querySelectorAll('.sw').forEach(s=>s.onclick=()=>{
+  const r=s.dataset.r;S.rules[r]=!S.rules[r];s.classList.toggle('on',S.rules[r]);refresh()});
+$('modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  S.mode=b.dataset.m;[...$('modeSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  const showCnt=S.mode==='many'||S.mode==='group';
+  $('cntRow').style.display=showCnt?'flex':'none';
+  $('grpSeg').style.display=S.mode==='group'?'flex':'none';
+  $('cntLbl').textContent=S.mode==='group'?(S.grp==='teams'?'จำนวนทีม':'คนต่อทีม'):'จำนวนที่สุ่ม';
+  $('cntV').textContent=S.mode==='group'?S.grpN:S.count;refresh()};
+$('grpSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  S.grp=b.dataset.g;[...$('grpSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('cntLbl').textContent=S.grp==='teams'?'จำนวนทีม':'คนต่อทีม';refresh()};
+const bump=d=>{ if(S.mode==='group'){S.grpN=Math.min(12,Math.max(2,S.grpN+d));$('cntV').textContent=S.grpN}
+  else{S.count=Math.min(12,Math.max(2,S.count+d));$('cntV').textContent=S.count} refresh()};
+$('inc').onclick=()=>bump(1);$('dec').onclick=()=>bump(-1);
+$('pzAdd').onclick=()=>{const v=$('pzName').value.trim();if(!v)return;
+  S.prizes.unshift({n:v,q:1,left:1});$('pzName').value='';refresh()};
+$('pzName').onkeydown=e=>{if(e.key==='Enter')$('pzAdd').click()};
+$('tglPz').onclick=()=>{S.usePrize=!S.usePrize;refresh()};
+$('go').onclick=()=>{ac();draw(false)};
+$('cfYes').onclick=()=>{tick();commit()};
+$('cfNo').onclick=()=>{S.pending=null;$('confirmBar').classList.remove('show');renderMine();draw(false)};
+$('reroll').onclick=()=>{if(!S.results.length||S.busy)return;ac();
+  S.mode='one';[...$('modeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.m==='one'));
+  $('cntRow').style.display='none';$('grpSeg').style.display='none';draw(true)};
+$('undo').onclick=()=>{if(!S.results.length)return;const r=S.results.pop();
+  if(r.pz){const p=S.prizes.find(x=>x.n===r.pz);if(p&&p.left<p.q)p.left++}
+  renderHist();renderGList();renderMine();refresh()};
+$('exp').onclick=exportSheet;
+$('reset').onclick=()=>{S.results=[];S.round=0;S.pending=null;S.prizes.forEach(p=>p.left=p.q);
+  S.lastTeams=null;S.lastPairs=null;S.lastQueue=null;
+  $('gRes').classList.remove('show');$('gReelMask').style.display='block';$('gSt').textContent='รอผลการสุ่ม';
+  $('gPz').className='gpz';$('gReel').innerHTML='<div>พร้อมสุ่ม</div>';
+  $('gReel').style.transition='none';$('gReel').style.transform='translateY(0)';renderMine();
+  $('footRound').textContent=0;$('confirmBar').classList.remove('show');
+  $('res').classList.remove('show');$('res').innerHTML='';$('reelMask').style.display='block';
+  $('reel').innerHTML='<div>พร้อมสุ่ม</div>';$('reel').style.transition='none';$('reel').style.transform='translateY(0)';
+  $('eyebrow').textContent='พร้อมสุ่มแล้ว';$('gWin').classList.remove('show');
+  renderHist();renderGList();refresh()};
+$('fs').onclick=()=>{const s=$('stage');document.fullscreenElement?document.exitFullscreen():s.requestFullscreen?.().then(sizeCv)};
+$('gwOk').onclick=()=>{$('gWin').classList.remove('show');gTab('mine')};
+$('gWho').onchange=()=>{$('gWin').classList.remove('show');renderMine();
+  const R=$('gRes'); if(R.classList.contains('show')){ // รีเฟรชไฮไลต์ "คุณ" เมื่อสลับคน
+    const k=S.lastTeams?'group':S.lastPairs?'pair':S.lastQueue?'queue':null;
+    if(k==='group')gReveal('group',S.lastTeams);
+    else if(k==='pair')gReveal('pair',S.lastPairs);
+    else if(k==='queue')gReveal('queue',S.lastQueue);
+  }};
+function gTab(t){
+  document.querySelectorAll('.gtabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $('paneLive').classList.toggle('on',t==='live');
+  $('paneMine').classList.toggle('on',t==='mine');
+  if(t==='mine')document.querySelector('.gtabs button[data-t="mine"]').classList.remove('alert');
+}
+document.querySelectorAll('.gtabs button').forEach(b=>b.onclick=()=>gTab(b.dataset.t));
+
+$('reel').innerHTML='<div>พร้อมสุ่ม</div>';
+renderList();fillWho();renderHist();renderMine();refresh();
+</script>
+</body>
+</html>
