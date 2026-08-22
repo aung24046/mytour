@@ -246,6 +246,26 @@ export async function deleteTeam(sessionId, teamId) {
 // ไม่ใช้ host_token เพราะ token อยู่แค่ในแท็บที่เปิดห้อง — พอจะมาดูรายงานทีหลัง
 // (คนละวัน คนละเครื่อง) token หายไปแล้ว แต่ PIN ยังอยู่กับตัวคน
 
+/**
+ * แก้ข้อมูลชุดคำถาม (ชื่อ / คำอธิบาย / ปลายทาง / เก็บเข้ากรุ)
+ *
+ * quiz_sets ยังเปิด UPDATE ให้ anon อยู่ (ดูเหตุผลใน 20260819_game_hardening.sql)
+ * จึงเขียนตรงได้ไม่ต้องใช้ PIN — แต่ต้อง throw เมื่อพลาด ไม่ใช่เงียบ
+ * ของเดิมเขียนแบบไม่ดู error เลย พิมพ์ชื่อใหม่แล้วไม่รู้ว่าบันทึกได้ไหม
+ */
+export async function updateSetMeta(setId, patch) {
+  const { data, error } = await supabase
+    .from('quiz_sets')
+    .update(patch)
+    .eq('id', setId)
+    .select('id')
+
+  if (error) throw error
+  // RLS ปฏิเสธจะไม่เป็น error แต่คืน 0 แถว — ต้องจับเคสนี้เองไม่งั้นดูเหมือนบันทึกผ่าน
+  if (!data || data.length === 0) throw new Error('SET_UPDATE_BLOCKED')
+  return data[0]
+}
+
 export async function cloneSet({ staffId, pin, setId, title }) {
   const { data, error } = await supabase.rpc('quiz_clone_set', {
     p_staff_id: staffId,

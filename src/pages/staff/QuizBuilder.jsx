@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveOrgId } from '../../lib/staffSession'
 import { can } from '../../lib/permissions'
-import { deleteSet } from '../../lib/quizHost'
+import { deleteSet, updateSetMeta } from '../../lib/quizHost'
 import { getQuizPin, saveQuizPin } from '../../lib/quizPin'
 import OptionShape from '../../components/quiz/OptionShape'
 import { optionStyles } from '../../lib/quizStyle'
@@ -98,6 +98,7 @@ export default function QuizBuilder() {
   const [uploading, setUploading] = useState(false)
   const [destinations, setDestinations] = useState([])
   const [deleting, setDeleting] = useState(false)
+  const [savedAt, setSavedAt] = useState(0)
 
   const loadSet = useCallback(async () => {
     const { data } = await supabase
@@ -320,9 +321,25 @@ export default function QuizBuilder() {
     }
   }
 
+  // เดิมยิง UPDATE แล้วไม่ดูผลเลย — ถ้าเขียนไม่ผ่านผู้ใช้จะเห็นชื่อใหม่บนจอ
+  // (เพราะ setSet ไปแล้ว) แต่พอ refresh กลับเป็นชื่อเดิม = "แก้ชื่อไม่ได้"
+  // ตอนนี้บันทึกจริงก่อน ค่อยอัปเดตจอ และขึ้น error ให้เห็นเมื่อพลาด
   async function saveSetMeta(patch) {
+    const before = set
     setSet((s) => ({ ...s, ...patch }))
-    await supabase.from('quiz_sets').update(patch).eq('id', setId)
+    setError('')
+    try {
+      await updateSetMeta(setId, patch)
+      setSavedAt(Date.now())
+      setTimeout(() => setSavedAt(0), 2000)
+    } catch (err) {
+      setSet(before)
+      setError(
+        err.message === 'SET_UPDATE_BLOCKED'
+          ? t('staff.quiz.setSaveBlocked')
+          : err.message ?? String(err)
+      )
+    }
   }
 
   if (!unlocked) {
@@ -354,18 +371,44 @@ export default function QuizBuilder() {
 
         {/* ── ชื่อชุด ─────────────────────────────────────────── */}
         <div className="rounded-2xl border border-line bg-surface p-3.5 shadow-card">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="quiz-set-title"
+              className="text-xs font-extrabold uppercase tracking-wide text-ink-muted"
+            >
+              {t('staff.quiz.setNameLabel')}
+            </label>
+            {savedAt > 0 && (
+              <span className="flex items-center gap-1 text-xs font-bold text-success-text">
+                <Icon name="check" size={13} />
+                {t('common.saved')}
+              </span>
+            )}
+          </div>
+
+          {/* เดิมเป็นช่องไร้กรอบที่ดูเหมือนหัวข้อ ไม่มีใครรู้ว่าพิมพ์ทับได้
+              และบันทึกตอน blur อย่างเดียว — บนมือถือกดปุ่ม back ก่อน blur = ชื่อหาย
+              จึงเพิ่ม Enter เพื่อบันทึกทันที และทำให้หน้าตาเป็น "ช่องกรอก" จริงๆ */}
           <input
+            id="quiz-set-title"
             value={set?.title ?? ''}
+            placeholder={t('staff.quiz.setNamePlaceholder')}
             onChange={(e) => setSet((s) => ({ ...s, title: e.target.value }))}
-            onBlur={(e) => saveSetMeta({ title: e.target.value })}
-            className="w-full bg-transparent text-lg font-extrabold text-ink outline-none"
+            onBlur={(e) => saveSetMeta({ title: e.target.value.trim() || t('staff.quiz.newSetName') })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+            }}
+            className="mt-1 w-full rounded-control border border-line bg-surface px-3 py-2 text-lg font-extrabold text-ink outline-none focus:border-brand"
           />
           <input
             value={set?.description ?? ''}
             placeholder={t('staff.quiz.setDescPlaceholder')}
             onChange={(e) => setSet((s) => ({ ...s, description: e.target.value }))}
             onBlur={(e) => saveSetMeta({ description: e.target.value })}
-            className="mt-1 w-full bg-transparent text-sm text-ink-muted outline-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+            }}
+            className="mt-2 w-full rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand"
           />
 
           {/* ผูกกับปลายทาง — ชุด "รู้จักญี่ปุ่นแค่ไหน" ควรโผล่เฉพาะตอนทำทริปญี่ปุ่น

@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { can } from '../../lib/permissions'
-import { startSession, setSessionState, getHostToken, cloneSet, replaySession } from '../../lib/quizHost'
+import {
+  startSession, setSessionState, getHostToken, cloneSet, replaySession, updateSetMeta,
+} from '../../lib/quizHost'
 import { STAGE_SKIN_LIST } from '../../lib/quizStyle'
 import { getQuizPin, saveQuizPin } from '../../lib/quizPin'
 import Icon from '../../components/common/Icon'
@@ -40,6 +42,9 @@ export default function QuizManager() {
   const [destinations, setDestinations] = useState([])
   const [destFilter, setDestFilter] = useState('')
   const [history, setHistory] = useState([])
+  const [renamingId, setRenamingId] = useState(null)
+  const [renameText, setRenameText] = useState('')
+  const [newSetName, setNewSetName] = useState(null) // null = ยังไม่ได้กดสร้าง
 
   // ชุดที่ไม่ผูกปลายทาง (destination_id = null) ต้องเห็นเสมอ
   // เพราะเป็นชุดกลางแบบ "ความรู้ทั่วไป" ที่ใช้ได้ทุกทริป
@@ -183,17 +188,44 @@ export default function QuizManager() {
     }
   }
 
+  // เดิมสร้างชุดใหม่แล้วตั้งชื่อ "ชุดคำถามใหม่" ให้เลย ทำให้ทั้งคลังชื่อซ้ำกันหมด
+  // ตอนนี้ถามชื่อก่อนสร้าง — ยังเว้นว่างได้ ระบบจะใส่ชื่อเริ่มต้นให้เหมือนเดิม
   async function handleNewSet() {
+    const title = (newSetName ?? '').trim() || t('staff.quiz.newSetName')
+    setError('')
     const { data, error: err } = await supabase
       .from('quiz_sets')
-      .insert({ org_id: orgId, title: t('staff.quiz.newSetName'), created_by: session?.staff?.id ?? null })
+      .insert({ org_id: orgId, title, created_by: session?.staff?.id ?? null })
       .select('id')
       .single()
     if (err) {
       setError(err.message)
       return
     }
+    setNewSetName(null)
     navigate(`/staff/quiz/builder/${data.id}`)
+  }
+
+  // เปลี่ยนชื่อชุดจากหน้ารวมได้เลย ไม่ต้องเข้าหน้าสร้างชุด (ซึ่งต้องใส่ PIN ก่อน)
+  // เพราะ "ตั้งชื่อ" ไม่ได้แตะเฉลย จึงไม่ต้องใช้ค่าผ่านทางเดียวกับการแก้คำถาม
+  async function handleRename(setId) {
+    const title = renameText.trim()
+    if (!title) {
+      setRenamingId(null)
+      return
+    }
+    setError('')
+    try {
+      await updateSetMeta(setId, { title })
+      setSets((list) => list.map((s) => (s.id === setId ? { ...s, title } : s)))
+      setRenamingId(null)
+    } catch (err) {
+      setError(
+        err.message === 'SET_UPDATE_BLOCKED'
+          ? t('staff.quiz.setSaveBlocked')
+          : err.message ?? String(err)
+      )
+    }
   }
 
   return (
@@ -280,7 +312,7 @@ export default function QuizManager() {
             {can(session, 'quiz.edit') && (
               <button
                 type="button"
-                onClick={handleNewSet}
+                onClick={() => setNewSetName((v) => (v === null ? '' : null))}
                 className="flex items-center gap-1 text-sm font-bold text-brand"
               >
                 <Icon name="plus" size={16} />
@@ -288,6 +320,31 @@ export default function QuizManager() {
               </button>
             )}
           </div>
+
+          {/* ตั้งชื่อตั้งแต่ตอนสร้าง — กันคลังเต็มไปด้วย "ชุดคำถามใหม่" */}
+          {newSetName !== null && (
+            <div className="mt-2 space-y-2 rounded-2xl border border-line bg-surface p-3.5 shadow-card">
+              <input
+                autoFocus
+                value={newSetName}
+                placeholder={t('staff.quiz.setNamePlaceholder')}
+                onChange={(e) => setNewSetName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNewSet()
+                  if (e.key === 'Escape') setNewSetName(null)
+                }}
+                className="w-full rounded-control border border-line bg-surface px-3 py-2 text-base font-bold text-ink outline-none focus:border-brand"
+              />
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={handleNewSet}>
+                  {t('staff.quiz.createSet')}
+                </Button>
+                <Button variant="ghost" fullWidth={false} onClick={() => setNewSetName(null)}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {destinations.length > 0 && (
             <select
@@ -315,36 +372,81 @@ export default function QuizManager() {
                   key={set.id}
                   className="rounded-2xl border border-line bg-surface p-3.5 shadow-card"
                 >
-                  <div className="flex items-start gap-2">
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-base font-extrabold text-ink">{set.title}</span>
-                      {set.description && (
-                        <span className="mt-0.5 block text-xs text-ink-muted">
-                          {set.description}
-                        </span>
+                  {renamingId === set.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        value={renameText}
+                        onChange={(e) => setRenameText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRename(set.id)
+                          if (e.key === 'Escape') setRenamingId(null)
+                        }}
+                        className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 text-base font-bold text-ink outline-none focus:border-brand"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRename(set.id)}
+                        className="flex-none rounded-full bg-brand p-2 text-white"
+                        aria-label={t('common.save')}
+                      >
+                        <Icon name="check" size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRenamingId(null)}
+                        className="flex-none rounded-full p-2 text-ink-muted hover:bg-surface-sunken"
+                        aria-label={t('common.cancel')}
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-extrabold text-ink">{set.title}</span>
+                        {set.description && (
+                          <span className="mt-0.5 block text-xs text-ink-muted">
+                            {set.description}
+                          </span>
+                        )}
+                      </span>
+                      {can(session, 'quiz.edit') && (
+                        <>
+                          {/* เปลี่ยนชื่อ — แยกจากปุ่มดินสอที่พาไปแก้ "คำถาม" (ต้องใส่ PIN) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRenameText(set.title ?? '')
+                              setRenamingId(set.id)
+                            }}
+                            className="flex-none rounded-full p-1.5 text-ink-muted hover:bg-surface-sunken"
+                            aria-label={t('staff.quiz.renameSet')}
+                            title={t('staff.quiz.renameSet')}
+                          >
+                            <Icon name="notes" size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleClone(set)}
+                            className="flex-none rounded-full p-1.5 text-ink-muted hover:bg-surface-sunken"
+                            aria-label={t('staff.quiz.cloneSet')}
+                            title={t('staff.quiz.cloneSet')}
+                          >
+                            <Icon name="copy" size={18} />
+                          </button>
+                          <Link
+                            to={`/staff/quiz/builder/${set.id}`}
+                            className="flex-none rounded-full p-1.5 text-ink-muted hover:bg-surface-sunken"
+                            aria-label={t('staff.quiz.editQuestions')}
+                            title={t('staff.quiz.editQuestions')}
+                          >
+                            <Icon name="edit" size={18} />
+                          </Link>
+                        </>
                       )}
-                    </span>
-                    {can(session, 'quiz.edit') && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleClone(set)}
-                          className="flex-none rounded-full p-1.5 text-ink-muted hover:bg-surface-sunken"
-                          aria-label={t('staff.quiz.cloneSet')}
-                          title={t('staff.quiz.cloneSet')}
-                        >
-                          <Icon name="copy" size={18} />
-                        </button>
-                        <Link
-                          to={`/staff/quiz/builder/${set.id}`}
-                          className="flex-none rounded-full p-1.5 text-ink-muted hover:bg-surface-sunken"
-                          aria-label={t('common.edit')}
-                        >
-                          <Icon name="edit" size={18} />
-                        </Link>
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {creatingFor === set.id ? (
                     <div className="mt-3 space-y-2 rounded-xl bg-surface-sunken p-3">
