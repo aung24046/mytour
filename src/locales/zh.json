@@ -627,13 +627,14 @@
         "hint": "客人点开后手机会自己算出步行时间。这一栏无法关闭，随时可以回来查看。",
         "pinHere": "标记我现在的位置",
         "pinning": "正在定位…",
-        "pastePlaceholder": "或粘贴 Google Maps 链接／坐标",
+        "pastePlaceholder": "或粘贴 Google Maps 链接（短链接也可以）",
         "labelPlaceholder": "如何称呼这个地点，例如：G 层 3 号门咖啡店旁",
         "timeLabel": "集合",
         "attached": "已附加集合点",
         "noGeo": "此设备不支持定位 — 请改为粘贴 Google Maps 链接",
         "geoFailed": "定位失败，请重试，或改为粘贴 Google Maps 链接",
-        "parseFailed": "无法从此链接读取坐标（goo.gl 短链接请先打开再复制完整链接）"
+        "parseFailed": "这不是链接或坐标 — 请粘贴 Google Maps 分享按钮的链接，或使用上方的标记位置按钮",
+        "urlOnlyNote": "此链接可以正常使用。若希望客人一点开就看到步行时间，请到集合点用「标记位置」按钮。"
       }
     },
     "seatMap": {
@@ -1365,6 +1366,10 @@
       "archiveSet": "归档此题组（不在列表显示）",
       "cloneSet": "复制此题组",
       "history": "已结束的房间",
+      "replay": "再玩一次此题组",
+      "replayShort": "再玩一次",
+      "replayHint": "本局已结束——再玩一次会用相同题组与设置开一个新房间，本房间保留供查看总结。",
+      "viewReport": "查看赛后总结",
       "reportTitle": "赛后总结",
       "reportPinHint": "答题统计已加锁，需先验证身份才能查看",
       "avgCorrect": "全场平均正确率",

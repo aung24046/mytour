@@ -113,6 +113,31 @@ export async function startSession({
   return row
 }
 
+/**
+ * เล่นชุดคำถามเดิมใหม่อีกครั้ง — เปิด "ห้องใหม่" จาก set เดิม
+ *
+ * ไม่ย้อน state ของห้องเดิมกลับไป lobby เพราะห้องหนึ่ง = การเล่นหนึ่งรอบ
+ * คำตอบ/คะแนน/รายงานหลังเกมผูกกับ session_id นั้น ถ้ารีเซ็ตกลับไปเล่นซ้ำ
+ * รายงานรอบก่อนจะพังทันที และ token เดิมก็ยังอยู่ในมือคนเดิมด้วย
+ *
+ * ห้องใหม่ยกค่าตั้งเดิมมาให้ครบ (รถ / จอ / สกิน / โหมดทีม) ทีมงานจะได้กดรอบเดียวจบ
+ */
+export async function replaySession({ session, staffId, name }) {
+  if (!session?.set_id || !session?.tour_id) throw new Error('missing session data')
+
+  return startSession({
+    tourId: session.tour_id,
+    setId: session.set_id,
+    name: name ?? session.name ?? null,
+    busId: session.bus_id ?? null,
+    screenMode: session.screen_mode ?? 'projector',
+    stageTheme: session.stage_theme ?? 'day',
+    staffId: staffId ?? null,
+    teamMode: Boolean(session.team_mode),
+    teamSizeLimit: session.team_size_limit ?? 0,
+  })
+}
+
 export async function nextQuestion(sessionId, expectedIndex) {
   const { data, error } = await supabase.rpc('quiz_next', {
     p_session_id: sessionId,

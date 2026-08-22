@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { meetPointDirectionsUrl, minutesUntilMeet, meetUrgency } from '../../lib/meetPoint'
+import { meetPointOpenUrl, minutesUntilMeet, meetUrgency } from '../../lib/meetPoint'
 import Icon from './Icon'
 
 // จุดนัดพบที่แนบมากับประกาศ
@@ -60,7 +60,9 @@ export default function MeetPointCard({ announcement, compact = false }) {
   const { t } = useTranslation()
   const minutesLeft = useCountdown(announcement?.meet_time)
 
-  const url = meetPointDirectionsUrl(announcement?.meet_lat, announcement?.meet_lng)
+  // มีพิกัด → ปุ่มพาไปนำทางโหมดเดินเลย / มีแต่ลิงก์ (เช่นลิงก์ย่อจากปุ่มแชร์ของ
+  // Google Maps ซึ่งแกะพิกัดไม่ได้) → เปิดลิงก์นั้นตรงๆ แล้วกด "เส้นทาง" ต่อในแอป Maps
+  const url = meetPointOpenUrl(announcement)
   if (!url) return null
 
   const label = announcement.meet_label?.trim() || t('guest.meetPoint.defaultLabel')

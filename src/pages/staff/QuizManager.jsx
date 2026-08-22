@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { can } from '../../lib/permissions'
-import { startSession, setSessionState, getHostToken, cloneSet } from '../../lib/quizHost'
+import { startSession, setSessionState, getHostToken, cloneSet, replaySession } from '../../lib/quizHost'
 import { STAGE_SKIN_LIST } from '../../lib/quizStyle'
 import { getQuizPin, saveQuizPin } from '../../lib/quizPin'
 import Icon from '../../components/common/Icon'
@@ -69,7 +69,10 @@ export default function QuizManager() {
     // ห้องที่จบแล้ว — เก็บไว้ดูรายงานย้อนหลัง ไม่ปนกับห้องที่กำลังเล่น
     supabase
       .from('quiz_sessions')
-      .select('id, name, ended_at, set_id, team_mode')
+      .select(
+        'id, name, ended_at, tour_id, set_id, bus_id, screen_mode, stage_theme,' +
+        ' team_mode, team_size_limit'
+      )
       .eq('tour_id', tourId)
       .eq('state', 'finished')
       .order('ended_at', { ascending: false })
@@ -122,6 +125,20 @@ export default function QuizManager() {
         staffId: session?.staff?.id ?? null,
         teamMode: form.teamMode,
         teamSizeLimit: Number(form.teamSizeLimit) || 0,
+      })
+      navigate(`/staff/quiz/host/${row.session_id}`)
+    } catch (err) {
+      setError(err.message ?? String(err))
+    }
+  }
+
+  // เล่นชุดเดิมซ้ำจากห้องที่จบไปแล้ว — เปิดห้องใหม่ ยกค่าตั้งเดิมมาทั้งชุด
+  async function handleReplay(room) {
+    setError('')
+    try {
+      const row = await replaySession({
+        session: { ...room, tour_id: room.tour_id ?? tourId },
+        staffId: session?.staff?.id ?? null,
       })
       navigate(`/staff/quiz/host/${row.session_id}`)
     } catch (err) {
@@ -475,20 +492,33 @@ export default function QuizManager() {
             </h2>
             <div className="mt-2 space-y-1.5">
               {history.map((room) => (
-                <Link
+                <div
                   key={room.id}
-                  to={`/staff/quiz/report/${room.id}`}
                   className="flex items-center gap-2 rounded-2xl border border-line bg-surface p-3 shadow-card"
                 >
-                  <Icon name="fileText" size={18} className="flex-none text-ink-muted" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-ink">{room.name}</span>
-                    <span className="text-xs text-ink-faint">
-                      {room.ended_at ? new Date(room.ended_at).toLocaleString() : ''}
+                  <Link
+                    to={`/staff/quiz/report/${room.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-2"
+                  >
+                    <Icon name="fileText" size={18} className="flex-none text-ink-muted" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-ink">{room.name}</span>
+                      <span className="text-xs text-ink-faint">
+                        {room.ended_at ? new Date(room.ended_at).toLocaleString() : ''}
+                      </span>
                     </span>
-                  </span>
-                  <Icon name="chevronRight" size={16} className="flex-none text-ink-faint" />
-                </Link>
+                  </Link>
+                  {/* เล่นชุดเดิมซ้ำ — ไม่ต้องไปหาชุดในคลังใหม่ */}
+                  <button
+                    type="button"
+                    onClick={() => handleReplay(room)}
+                    className="flex flex-none items-center gap-1 rounded-full bg-surface-sunken px-3 py-1.5 text-xs font-bold text-ink"
+                    title={t('staff.quiz.replay')}
+                  >
+                    <Icon name="rotate" size={14} />
+                    {t('staff.quiz.replayShort')}
+                  </button>
+                </div>
               ))}
             </div>
           </section>

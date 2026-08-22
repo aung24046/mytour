@@ -661,13 +661,14 @@
         "hint": "Guests tap it and their own phone tells them the walk time. This part can't be dismissed.",
         "pinHere": "Pin where I am standing",
         "pinning": "Getting location...",
-        "pastePlaceholder": "Or paste a Google Maps link / coordinates",
+        "pastePlaceholder": "Or paste a Google Maps link (short links work too)",
         "labelPlaceholder": "What to call it, e.g. Gate 3, G floor, by the cafe",
         "timeLabel": "Meet at",
         "attached": "Meeting point attached",
         "noGeo": "This device has no location support — paste a Google Maps link instead",
         "geoFailed": "Could not get location. Try again, or paste a Google Maps link",
-        "parseFailed": "Could not read coordinates from this link (open short goo.gl links first, then copy the full one)"
+        "parseFailed": "Not a link or coordinates — paste a link from the Google Maps share button, or use the pin button above",
+        "urlOnlyNote": "This link works fine. To show guests the walking time right away, stand at the spot and use the pin button instead."
       }
     },
     "seatMap": {
@@ -1502,6 +1503,10 @@
       "archiveSet": "Archive this set (hide from the list)",
       "cloneSet": "Duplicate this set",
       "history": "Finished rooms",
+      "replay": "Play this set again",
+      "replayShort": "Play again",
+      "replayHint": "The game is over. Playing again opens a fresh room with the same questions and settings — this room stays for the report.",
+      "viewReport": "View post-game report",
       "reportTitle": "Post-game report",
       "reportPinHint": "Answer stats are locked — confirm who you are to view them",
       "avgCorrect": "average correct",

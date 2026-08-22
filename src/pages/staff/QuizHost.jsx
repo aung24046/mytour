@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
+import { getStaffSession } from '../../lib/staffSession'
 import { useQuizSession, useQuizAnswerCount } from '../../lib/useQuizSession'
 import {
   resolveHostToken, nextQuestion, lockAnswers, revealAnswer, lockAndReveal,
   setSessionState, removePlayer, fetchPendingPlayers, fetchLeaderboard, stageUrl,
-  fetchTeamLeaderboard, renameTeam, deleteTeam,
+  fetchTeamLeaderboard, renameTeam, deleteTeam, replaySession,
 } from '../../lib/quizHost'
 import { optionStyles, optionLabels, teamStyle } from '../../lib/quizStyle'
 import OptionShape from '../../components/quiz/OptionShape'
@@ -27,6 +28,8 @@ import StaffHeader from '../../components/common/StaffHeader'
 export default function QuizHost() {
   const { sessionId } = useParams()
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const staffSession = getStaffSession()
 
   const [token, setToken] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -112,6 +115,18 @@ export default function QuizHost() {
       setBusy(false)
     }
   }, [])
+
+  // เล่นชุดเดิมซ้ำ = เปิดห้องใหม่จาก set เดิม แล้วเด้งไปคุมห้องใหม่ทันที
+  // (ห้องเก่ายังอยู่ครบสำหรับดูรายงานย้อนหลัง)
+  const handleReplay = useCallback(() => {
+    run(async () => {
+      const row = await replaySession({
+        session,
+        staffId: staffSession?.staff?.id ?? null,
+      })
+      if (row?.session_id) navigate(`/staff/quiz/host/${row.session_id}`)
+    })
+  }, [run, session, staffSession, navigate])
 
   const noTeamCount = useMemo(
     () => (session?.team_mode ? players.filter((p) => !p.team_id).length : 0),
@@ -345,6 +360,22 @@ export default function QuizHost() {
               onClick={() => run(() => setSessionState(sessionId, 'finished'))}
             >
               {t('staff.quiz.finish')}
+            </Button>
+          </div>
+        )}
+
+        {/* ── จบเกมแล้ว — เล่นชุดเดิมซ้ำ / ดูสรุป ───────── */}
+        {session.state === 'finished' && (
+          <div className="space-y-2 rounded-2xl border border-line bg-surface p-4 shadow-card">
+            <p className="text-sm text-ink-muted">{t('staff.quiz.replayHint')}</p>
+            <Button disabled={busy} onClick={handleReplay}>
+              {t('staff.quiz.replay')}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate(`/staff/quiz/report/${sessionId}`)}
+            >
+              {t('staff.quiz.viewReport')}
             </Button>
           </div>
         )}

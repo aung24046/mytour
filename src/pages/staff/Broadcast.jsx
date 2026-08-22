@@ -45,6 +45,9 @@ export default function Broadcast() {
   // จุดนัดพบที่จะแนบไปกับประกาศ — ว่างไว้ก็ได้ ประกาศทั่วไปไม่ต้องมีหมุด
   const [meetLat, setMeetLat] = useState(null)
   const [meetLng, setMeetLng] = useState(null)
+  // ลิงก์ที่แกะพิกัดไม่ได้ (ลิงก์ย่อ maps.app.goo.gl จากปุ่มแชร์ของ Google Maps
+  // ซึ่งเป็นค่าเริ่มต้นที่ทุกคนได้มา) — เก็บทั้งลิงก์ไว้ใช้แทนพิกัด
+  const [meetUrl, setMeetUrl] = useState(null)
   const [meetLabel, setMeetLabel] = useState('')
   const [meetTime, setMeetTime] = useState('')
   const [meetInput, setMeetInput] = useState('')
@@ -173,7 +176,8 @@ export default function Broadcast() {
   const liveReadCount = live ? (readCountByAnnouncement[live.id] ?? 0) : 0
   const readPercent = guests.length > 0 ? Math.round((liveReadCount / guests.length) * 100) : 0
 
-  const hasPin = meetLat != null && meetLng != null
+  const hasCoords = meetLat != null && meetLng != null
+  const hasPin = hasCoords || meetUrl != null
 
   /** ปักตรงที่ทีมงานยืนอยู่ — วิธีที่แม่นและเร็วที่สุด เพราะคนกดยืนอยู่จุดนัดพบจริงตอนนั้น */
   function pinHere() {
@@ -187,6 +191,7 @@ export default function Broadcast() {
       (pos) => {
         setMeetLat(pos.coords.latitude)
         setMeetLng(pos.coords.longitude)
+        setMeetUrl(null)
         setMeetInput('')
         setPinning(false)
       },
@@ -207,18 +212,28 @@ export default function Broadcast() {
       return
     }
     const point = parseMeetPointInput(raw)
-    if (point) {
+    if (!point) {
+      setMeetError(t('staff.broadcast.meet.parseFailed'))
+      return
+    }
+    if (point.url) {
+      // ลิงก์ย่อ — ใช้ได้ แค่ไม่ได้พิกัดมาด้วย ลูกทัวร์จะกดเปิด Google Maps
+      // แล้วกด "เส้นทาง" เองอีกทีแทนที่จะได้เวลาเดินทันที
+      setMeetUrl(point.url)
+      setMeetLat(null)
+      setMeetLng(null)
+    } else {
       setMeetLat(point.lat)
       setMeetLng(point.lng)
-      setMeetError(null)
-    } else {
-      setMeetError(t('staff.broadcast.meet.parseFailed'))
+      setMeetUrl(null)
     }
+    setMeetError(null)
   }
 
   function clearMeet() {
     setMeetLat(null)
     setMeetLng(null)
+    setMeetUrl(null)
     setMeetLabel('')
     setMeetTime('')
     setMeetInput('')
@@ -249,8 +264,9 @@ export default function Broadcast() {
       message: text,
       is_active: true,
       staff_id: me?.id ?? null,
-      meet_lat: hasPin ? meetLat : null,
-      meet_lng: hasPin ? meetLng : null,
+      meet_lat: hasCoords ? meetLat : null,
+      meet_lng: hasCoords ? meetLng : null,
+      meet_url: hasPin ? meetUrl : null,
       meet_label: hasPin ? meetLabel.trim() || null : null,
       meet_time: hasPin && meetTime ? meetTime : null,
     })
@@ -530,12 +546,12 @@ export default function Broadcast() {
                     <div className="mt-2 flex items-center gap-2 rounded-control bg-success-bg px-3 py-2">
                       <Icon name="location" size={15} className="shrink-0 text-success-text" />
                       <a
-                        href={meetPointMapsUrl(meetLat, meetLng)}
+                        href={hasCoords ? meetPointMapsUrl(meetLat, meetLng) : meetUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="min-w-0 flex-1 truncate text-xs font-semibold text-success-text underline"
                       >
-                        {meetLat.toFixed(5)}, {meetLng.toFixed(5)}
+                        {hasCoords ? `${meetLat.toFixed(5)}, ${meetLng.toFixed(5)}` : meetUrl}
                       </a>
                       <button
                         type="button"
@@ -545,6 +561,14 @@ export default function Broadcast() {
                         {t('common.delete')}
                       </button>
                     </div>
+
+                    {/* ลิงก์ย่อใช้ได้ แต่บอกให้รู้ว่าต่างจากการปักพิกัดยังไง
+                        จะได้เลือกได้ว่าจะเดินไปปักเองเพื่อให้ลูกทัวร์ได้เวลาเดินทันที */}
+                    {!hasCoords && (
+                      <p className="mt-1.5 text-[11px] leading-snug text-ink-faint">
+                        {t('staff.broadcast.meet.urlOnlyNote')}
+                      </p>
+                    )}
 
                     <input
                       value={meetLabel}

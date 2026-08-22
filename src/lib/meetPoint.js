@@ -14,17 +14,41 @@
 // (node ESM ไม่เติมนามสกุลให้เหมือน Vite) — ดู src/lib/__tests__/meet-point.test.mjs
 import { parseLatLngFromMapsUrl } from './geo.js'
 
-/** true ถ้าประกาศแถวนี้มีหมุดที่ใช้งานได้จริง */
+/** true ถ้าประกาศแถวนี้มีจุดนัดพบที่กดเปิดได้ — พิกัดก็ได้ ลิงก์ก็ได้ */
 export function hasMeetPoint(row) {
+  return hasMeetCoords(row) || Boolean(row?.meet_url)
+}
+
+/** มีพิกัดจริง (ไม่ใช่แค่ลิงก์) — ใช้ตอนที่ต้องคำนวณอะไรกับตำแหน่ง */
+export function hasMeetCoords(row) {
   return Number.isFinite(row?.meet_lat) && Number.isFinite(row?.meet_lng)
 }
 
+// รูปแบบลิงก์เพิ่มเติมที่ parseLatLngFromMapsUrl() ใน geo.js ยังไม่ครอบคลุม
+//   query=      — รูปแบบ api=1 ซึ่งเป็นลิงก์ที่ "แอปเราเองสร้างขึ้น" (meetPointMapsUrl)
+//                 ถ้าไม่รับ ทีมงานก็อปลิงก์ที่ระบบเราเพิ่งสร้างมาวางกลับ จะแกะไม่ออก
+//   destination= — ลิงก์นำทาง ซึ่งเป็นอีกปุ่มหนึ่งที่แอปเราสร้าง
+const EXTRA_LATLNG_PATTERNS = [
+  /[?&]query=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+  /[?&]destination=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+]
+
+/** ข้อความนี้หน้าตาเป็นลิงก์ http(s) ไหม */
+export function isLikelyUrl(raw) {
+  return /^https?:\/\/\S+$/i.test(String(raw ?? '').trim())
+}
+
 /**
- * แกะพิกัดจากสิ่งที่ทีมงานวางลงช่อง — รับได้ทั้งลิงก์ Google Maps และพิกัดดิบ
- * คืน { lat, lng } หรือ null
+ * แกะสิ่งที่ทีมงานวางลงช่อง คืนได้ 3 แบบ:
+ *   { lat, lng }  — แกะพิกัดออกมาได้ (ดีที่สุด เอาไปทำปุ่มนำทางโหมดเดินได้เลย)
+ *   { url }       — แกะพิกัดไม่ได้ แต่เป็นลิงก์ที่กดเปิดได้ → เก็บลิงก์ไว้ใช้ตรงๆ
+ *   null          — ไม่ใช่ทั้งสองอย่าง
  *
- * รับพิกัดดิบด้วยเพราะบางทีทีมงานก็อปมาจากที่อื่น (แชท/โน้ต) ไม่ได้มาเป็นลิงก์เสมอ
- * ลิงก์ย่อ (maps.app.goo.gl) แกะไม่ได้ — ตัวมันไม่มีพิกัดอยู่ข้างใน ต้องกดเปิดก่อน
+ * ⚠️ กรณี { url } มีไว้เพื่อ "ลิงก์ย่อ" (maps.app.goo.gl) เป็นหลัก
+ *    ซึ่งเป็นสิ่งที่ปุ่มแชร์ในแอป Google Maps สร้างให้เป็นค่าเริ่มต้น = เป็นเคสปกติ
+ *    ไม่ใช่เคสหายาก ตัวลิงก์ย่อไม่มีพิกัดอยู่ข้างใน และเบราว์เซอร์ตามลิงก์ไปดูเองไม่ได้
+ *    (ติด CORS) จึงเก็บลิงก์ไว้ทั้งอันแล้วให้ลูกทัวร์กดเปิด Google Maps เอง
+ *    เสียแค่ต้องกด "เส้นทาง" เพิ่มอีกทีในแอป Maps ซึ่งดีกว่าไม่มีปุ่มให้กดเลย
  */
 export function parseMeetPointInput(raw) {
   const text = String(raw ?? '').trim()
@@ -33,12 +57,24 @@ export function parseMeetPointInput(raw) {
   const fromUrl = parseLatLngFromMapsUrl(text)
   if (fromUrl) return fromUrl
 
-  const m = text.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/)
-  if (m) {
-    const lat = Number(m[1])
-    const lng = Number(m[2])
+  for (const re of EXTRA_LATLNG_PATTERNS) {
+    const m = text.match(re)
+    if (m) {
+      const lat = Number(m[1])
+      const lng = Number(m[2])
+      if (isValidLatLng(lat, lng)) return { lat, lng }
+    }
+  }
+
+  const rawPair = text.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/)
+  if (rawPair) {
+    const lat = Number(rawPair[1])
+    const lng = Number(rawPair[2])
     if (isValidLatLng(lat, lng)) return { lat, lng }
   }
+
+  if (isLikelyUrl(text)) return { url: text }
+
   return null
 }
 
@@ -92,5 +128,15 @@ export function meetUrgency(minutesLeft) {
   return 'ok'
 }
 
+/**
+ * ลิงก์ที่ปุ่มของลูกทัวร์จะเปิด
+ * มีพิกัด → นำทางโหมดเดินเลย (Google Maps บอก "เดินกี่นาที" ให้ทันที)
+ * มีแต่ลิงก์ (เช่นลิงก์ย่อ) → เปิดลิงก์นั้นตรงๆ แล้วให้เขากด "เส้นทาง" เองในแอป Maps
+ */
+export function meetPointOpenUrl(row) {
+  if (hasMeetCoords(row)) return meetPointDirectionsUrl(row.meet_lat, row.meet_lng)
+  return row?.meet_url || null
+}
+
 /** คอลัมน์ที่ต้อง select มาด้วยทุกครั้งที่ดึงประกาศ ไม่งั้นหมุดจะหายเงียบ */
-export const MEET_COLUMNS = 'meet_lat, meet_lng, meet_label, meet_time'
+export const MEET_COLUMNS = 'meet_lat, meet_lng, meet_url, meet_label, meet_time'
