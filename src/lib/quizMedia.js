@@ -20,6 +20,19 @@ export const IMAGE_QUALITY = 0.82
 export const MAX_VIDEO_BYTES = 10 * 1024 * 1024
 export const MAX_VIDEO_SECONDS = 15
 
+// ── เพดานของเกมปริศนาใบ้คำ ────────────────────────────────────────────
+// ควิซมีรูปข้อละ 1 รูป และตั้งใจไม่ส่งให้มือถือเมื่อมีจอใหญ่
+// เกมปริศนากลับกันทั้งสองข้อ — ได้ถึง 6 รูปต่อข้อ และมือถือทุกเครื่องต้องเห็น
+// เลขจึงคูณกันได้ถึง 120 เท่า ถ้าใช้เพดานเดียวกับควิซจะหมดโควตา egress ในเกมเดียว
+//
+// รูปใบ้เป็นรูปของ "ของหนึ่งชิ้น" (อีกา กะละมัง แพะ) ไม่ใช่ภาพวิว
+// 900px คุณภาพ 0.8 ≈ 80 KB จึงไม่เสียอะไรเลย
+export const CLUE_IMAGE_WIDTH = 900
+export const CLUE_IMAGE_QUALITY = 0.8
+// ยกเว้นภาพเฉลย — ขึ้นเต็มจอโปรเจกเตอร์เป็นจังหวะพีคของข้อ และโหลดแค่ตอนเฉลย
+export const ANSWER_IMAGE_WIDTH = 1600
+export const ANSWER_IMAGE_QUALITY = 0.82
+
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const VIDEO_TYPES = ['video/mp4', 'video/webm']
 
@@ -43,7 +56,7 @@ export function mediaKindOf(file) {
 //        (นาฬิกาเดินตั้งแต่ question_started_at ไม่ได้รอไฟล์)
 //
 // GIF ไม่ย่อ เพราะ canvas จะเหลือแค่เฟรมแรก ภาพเคลื่อนไหวหายหมด
-async function resizeImage(file) {
+async function resizeImage(file, maxWidth = MAX_IMAGE_WIDTH, quality = IMAGE_QUALITY) {
   if (file.type === 'image/gif') return file
 
   const bitmap = await createImageBitmap(file).catch(() => null)
@@ -52,12 +65,12 @@ async function resizeImage(file) {
   // เดิมข้ามการย่อทันทีถ้ากว้างไม่เกินเพดาน ซึ่งพลาดเคสรูปกว้าง 1600px แต่หนัก 6 MB
   // (ภาพสแกน / ภาพถ่ายคุณภาพสูง) — ไฟล์แบบนั้นจะไปตกด่านตรวจขนาดข้างล่าง
   // ทั้งที่บีบคุณภาพให้ผ่านได้ ขัดกับเจตนาที่เขียนไว้ตรงจุดเรียก resizeImage()
-  if (bitmap.width <= MAX_IMAGE_WIDTH && file.size <= MAX_IMAGE_BYTES) {
+  if (bitmap.width <= maxWidth && file.size <= MAX_IMAGE_BYTES) {
     bitmap.close?.()
     return file
   }
 
-  const targetWidth = Math.min(bitmap.width, MAX_IMAGE_WIDTH)
+  const targetWidth = Math.min(bitmap.width, maxWidth)
   const scale = targetWidth / bitmap.width
   const canvas = document.createElement('canvas')
   canvas.width = targetWidth
@@ -65,9 +78,7 @@ async function resizeImage(file) {
   canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close?.()
 
-  const blob = await new Promise((resolve) =>
-    canvas.toBlob(resolve, 'image/jpeg', IMAGE_QUALITY)
-  )
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
   if (!blob || blob.size >= file.size) return file   // ย่อแล้วไม่เล็กลง ใช้ของเดิม
 
   return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', {
@@ -98,7 +109,7 @@ function videoDuration(file) {
  * คืน { kind, url } หรือโยน Error ที่มี .code ให้หน้าจอไปแปลเป็นข้อความเอง
  * code: 'type' | 'imageTooBig' | 'videoTooBig' | 'videoTooLong' | 'upload'
  */
-export async function uploadQuizMedia(setId, inputFile) {
+export async function uploadQuizMedia(setId, inputFile, opts = {}) {
   const kind = mediaKindOf(inputFile)
   if (!kind) {
     const e = new Error('unsupported type')
@@ -108,7 +119,14 @@ export async function uploadQuizMedia(setId, inputFile) {
 
   // ย่อก่อนแล้วค่อยตรวจขนาด — รูปจากมือถือส่วนใหญ่เกิน 5 MB ตั้งแต่ยังไม่ย่อ
   // ถ้าตรวจก่อนย่อ สตาฟจะโดนปฏิเสธทั้งที่ระบบย่อให้ผ่านได้อยู่แล้ว
-  const file = kind === 'image' ? await resizeImage(inputFile) : inputFile
+  const file =
+    kind === 'image'
+      ? await resizeImage(
+          inputFile,
+          opts.maxWidth ?? MAX_IMAGE_WIDTH,
+          opts.quality ?? IMAGE_QUALITY
+        )
+      : inputFile
 
   if (kind === 'image' && file.size > MAX_IMAGE_BYTES) {
     const e = new Error('image too big')

@@ -79,6 +79,7 @@ export default function Games() {
   const [bingo, setBingo] = useState({ open: 0, myCard: false })
   const [draw, setDraw] = useState({ open: 0 })
   const [quiz, setQuiz] = useState({ open: 0 })
+  const [puzzle, setPuzzle] = useState({ open: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -92,9 +93,11 @@ export default function Games() {
           .eq('tour_id', tourId)
           .in('status', ['waiting', 'playing']),
         supabase.from('draw_rooms').select('id').eq('tour_id', tourId).eq('status', 'open'),
+        // ควิซกับปริศนาใบ้คำใช้ตารางเดียวกัน — ดึงทีเดียวแล้วแยกด้วย game_kind
+        // ถ้าไม่แยก การ์ดควิซจะขึ้นว่ามีห้องเปิดทั้งที่เป็นห้องปริศนา
         supabase
           .from('quiz_sessions')
-          .select('id, bus_id')
+          .select('id, bus_id, game_kind')
           .eq('tour_id', tourId)
           .neq('state', 'finished'),
       ])
@@ -114,7 +117,9 @@ export default function Games() {
         myBusId = g?.bus_id ?? null
       }
       if (cancelled) return
-      setQuiz({ open: (quizRooms ?? []).filter((r) => !r.bus_id || r.bus_id === myBusId).length })
+      const mine = (quizRooms ?? []).filter((r) => !r.bus_id || r.bus_id === myBusId)
+      setQuiz({ open: mine.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').length })
+      setPuzzle({ open: mine.filter((r) => r.game_kind === 'puzzle').length })
       const ids = (games ?? []).map((g) => g.id)
       if (ids.length === 0 || !guestId) {
         setBingo({ open: ids.length, myCard: false })
@@ -181,6 +186,16 @@ export default function Games() {
           status={quiz.open ? t('guest.games.quizOpen') : t('guest.games.quizClosed')}
           live={quiz.open > 0}
           onClick={() => navigate(tp('quiz'))}
+        />
+
+        <GameCard
+          icon="eye"
+          tint="#0f8a4a"
+          title={t('puzzle.title')}
+          desc={t('guest.games.puzzleDesc')}
+          status={puzzle.open ? t('guest.games.puzzleOpen') : t('guest.games.puzzleClosed')}
+          live={puzzle.open > 0}
+          onClick={() => navigate(tp('puzzle'))}
         />
       </div>
 

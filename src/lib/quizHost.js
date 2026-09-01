@@ -303,9 +303,13 @@ export async function fetchReport({ sessionId, staffId, pin }) {
   return data ?? []
 }
 
-/** ลิงก์จอใหญ่ พร้อม token ใน hash */
-export function stageUrl(sessionId) {
+/**
+ * ลิงก์จอใหญ่ พร้อม token ใน hash
+ * kind = 'quiz' | 'puzzle' — สองเกมใช้เครื่องยนต์เดียวกันแต่คนละหน้าจอเวที
+ */
+export function stageUrl(sessionId, kind = 'quiz') {
   const token = getHostToken(sessionId)
-  const base = `${window.location.origin}/staff/quiz/stage/${sessionId}`
+  const path = kind === 'puzzle' ? 'puzzle' : 'quiz'
+  const base = `${window.location.origin}/staff/${path}/stage/${sessionId}`
   return token ? `${base}#t=${token}` : base
 }

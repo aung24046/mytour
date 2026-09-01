@@ -114,7 +114,10 @@
       "soonTag": "Soon",
       "quizDesc": "Answer fast, score more",
       "quizOpen": "Room open",
-      "quizClosed": "No room open"
+      "quizClosed": "No room open",
+      "puzzleDesc": "Guess the word from picture clues — unlimited attempts",
+      "puzzleOpen": "A room is open",
+      "puzzleClosed": "No open room yet"
     },
     "nav": {
       "home": "Home",
@@ -914,7 +917,10 @@
       "soonTag": "Soon",
       "quizDesc": "Live quiz on the big screen, scored by speed",
       "quizLive": "{{rooms}} room(s) · {{players}} players",
-      "quizIdle": "No room open"
+      "quizIdle": "No room open",
+      "puzzleDesc": "Picture word puzzle on the big screen, 1 point per answer",
+      "puzzleLive": "{{rooms}} rooms · {{players}} players",
+      "puzzleIdle": "No open room"
     },
     "luckyDraw": {
       "errNoTable": "The tables for this game are not installed yet — run migration 20260818_lucky_draw.sql first",
@@ -1592,6 +1598,111 @@
       "members": "{{n}} members",
       "full": "Full",
       "mustPick": "Pick a team before the game starts, or your points count for nobody"
+    }
+  },
+  "puzzle": {
+    "title": "Picture Word Puzzle",
+    "syllables": "{{n}} syllables",
+    "noRoom": "No open room yet",
+    "placeholder": "Type your answer...",
+    "correct": "Correct! +1 point",
+    "waitReveal": "Waiting for the reveal...",
+    "youGotIt": "You got it",
+    "youMissed": "You missed this one",
+    "solvedCount": "{{n}} correct",
+    "state": {
+      "lobby": "Waiting",
+      "countdown": "Starting",
+      "answering": "In play",
+      "locked": "Closed",
+      "reveal": "Reveal",
+      "scoreboard": "Scoreboard",
+      "finished": "Finished"
+    },
+    "rules": {
+      "guess": "• Guess the word from the picture clues",
+      "point": "• 1 point per correct answer",
+      "unlimited": "• Unlimited attempts",
+      "winner": "• Highest score wins"
+    },
+    "feedback": {
+      "wrong": "Not it — try again",
+      "duplicate": "Same as your last guess",
+      "too_fast": "A bit too fast, hold on",
+      "closed": "Answers are closed",
+      "not_started": "Not started yet",
+      "no_attempts": "No attempts left",
+      "too_long": "Answer is too long"
+    },
+    "manager": {
+      "subtitle": "Guess the word from picture clues, on the big screen",
+      "openRooms": "Open rooms",
+      "noRooms": "No room yet — pick a set below and open one",
+      "roomMeta": "{{players}} players · item {{index}}",
+      "enterRoom": "Host",
+      "closeRoom": "Close",
+      "library": "Puzzle sets",
+      "openRoomFrom": "Open a room",
+      "createRoom": "Create room",
+      "edit": "Edit",
+      "newSet": "New set",
+      "newSetName": "New puzzle set",
+      "allBuses": "Whole trip (all buses)",
+      "screen": {
+        "projector": "Projector",
+        "bus_tv": "Bus TV",
+        "none": "No big screen"
+      }
+    },
+    "builder": {
+      "title": "Puzzle set",
+      "pinWhy": "Enter the staff PIN — this page reads answers, which guests cannot access.",
+      "editItem": "Edit item",
+      "addItem": "Add item",
+      "empty": "No items yet",
+      "itemMeta": "{{clues}} clues · {{syllables}} syllables · {{hints}} hints",
+      "clues": "Clues ({{n}}/{{max}})",
+      "cluesHint": "1-6 clues. The layout is chosen for you — no need to pick one.",
+      "clueLabel": "Caption (shown at reveal)",
+      "pickImage": "Choose image",
+      "wordClue": "Short word",
+      "addImage": "Image",
+      "addEmoji": "Emoji",
+      "addWord": "Word",
+      "answer": "Answer",
+      "needAnswer": "An answer is required",
+      "splitHint": "Split syllables with hyphens — {{n}} syllables. Used on screen and in the reveal.",
+      "splitMismatch": "Split count differs from the set count — the split wins.",
+      "aliases": "Also accept",
+      "aliasesHint": "Comma separated — spellings people actually use.",
+      "test": "Test",
+      "testPlaceholder": "Type what a guest might answer",
+      "testPass": "Accepted",
+      "testFail": "Rejected — add it to \"Also accept\" if it should count",
+      "hints": "Hints (up to 3)",
+      "hintsHint": "The host opens them one at a time. Players cannot request them.",
+      "hintPlaceholder": "Hint {{n}}",
+      "answerImage": "Reveal image (optional)",
+      "timeLimit": "Time per item (seconds)",
+      "preview": "Preview"
+    },
+    "host": {
+      "openStage": "Open big screen",
+      "progress": "Item {{index}} · {{state}}",
+      "sec": "s",
+      "stats": "{{solved}}/{{online}} solved · {{guesses}} guesses",
+      "hintTitle": "Hint {{level}}/{{total}}",
+      "openHint": "Open hint {{n}}/{{total}} for everyone",
+      "nearTitle": "Near misses",
+      "nearHint": "Accepting awards those players retroactively and the set remembers it.",
+      "nearPeople": "{{n}} people",
+      "accept": "Accept",
+      "start": "Start",
+      "next": "Next",
+      "lockReveal": "Close + reveal",
+      "scoreboard": "Scoreboard",
+      "finish": "End game",
+      "shoutReminder": "Remind everyone not to shout the answer — type it instead."
     }
   }
 }

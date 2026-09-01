@@ -60,12 +60,16 @@ export default function QuizManager() {
         .from('quiz_sessions')
         .select('id, name, set_id, bus_id, state, current_index, screen_mode, created_at')
         .eq('tour_id', tourId)
+        // ห้องของเกมปริศนาใบ้คำใช้ตารางเดียวกัน แต่มีหน้าคุมของมันเอง (/staff/puzzle)
+        // ถ้าไม่กรอง ห้องปริศนาจะโผล่ในหน้าควิซแล้วกดเข้าไปเจอจอที่ใช้ไม่ได้
+        .eq('game_kind', 'quiz')
         .neq('state', 'finished')
         .order('created_at', { ascending: false }),
       supabase
         .from('quiz_sets')
         .select('id, title, description, lang, default_time_limit, destination_id')
         .eq('org_id', orgId)
+        .eq('game_kind', 'quiz')
         .eq('is_archived', false)
         .order('created_at', { ascending: false }),
       supabase.from('buses').select('id, name').eq('tour_id', tourId).order('name'),
@@ -79,6 +83,7 @@ export default function QuizManager() {
         ' team_mode, team_size_limit'
       )
       .eq('tour_id', tourId)
+      .eq('game_kind', 'quiz')
       .eq('state', 'finished')
       .order('ended_at', { ascending: false })
       .limit(10)
@@ -195,7 +200,7 @@ export default function QuizManager() {
     setError('')
     const { data, error: err } = await supabase
       .from('quiz_sets')
-      .insert({ org_id: orgId, title, created_by: session?.staff?.id ?? null })
+      .insert({ org_id: orgId, title, game_kind: 'quiz', created_by: session?.staff?.id ?? null })
       .select('id')
       .single()
     if (err) {

@@ -11,6 +11,7 @@ import BingoCard from './pages/guest/BingoCard.jsx'
 import GuestGames from './pages/guest/Games.jsx'
 import GuestLuckyDraw from './pages/guest/LuckyDraw.jsx'
 import GuestQuiz from './pages/guest/Quiz.jsx'
+import GuestPuzzle from './pages/guest/Puzzle.jsx'
 import ShareLocation from './pages/guest/ShareLocation.jsx'
 import BagLookup from './pages/guest/BagLookup.jsx'
 import SOS from './pages/guest/SOS.jsx'
@@ -36,6 +37,10 @@ import QuizBuilder from './pages/staff/QuizBuilder.jsx'
 import QuizHost from './pages/staff/QuizHost.jsx'
 import QuizStage from './pages/staff/QuizStage.jsx'
 import QuizReport from './pages/staff/QuizReport.jsx'
+import PuzzleManager from './pages/staff/PuzzleManager.jsx'
+import PuzzleBuilder from './pages/staff/PuzzleBuilder.jsx'
+import PuzzleHost from './pages/staff/PuzzleHost.jsx'
+import PuzzleStage from './pages/staff/PuzzleStage.jsx'
 import FormBuilder from './pages/staff/FormBuilder.jsx'
 import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
@@ -182,6 +187,7 @@ function App() {
           <Route path="games" element={<GuestGames />} />
           <Route path="lucky-draw" element={<GuestLuckyDraw />} />
           <Route path="quiz" element={<GuestQuiz />} />
+          <Route path="puzzle" element={<GuestPuzzle />} />
           <Route path="bingo" element={<BingoCard />} />
           <Route path="share-location" element={<ShareLocation />} />
           <Route path="sos" element={<SOS />} />
@@ -254,6 +260,29 @@ function App() {
           }
         />
         <Route path="/staff/quiz/report/:sessionId" element={staffRoute('quiz.host', <QuizReport />)} />
+
+        {/* ── ปริศนาใบ้คำ ─────────────────────────────────────
+            เกมคนละใบกับควิซในสายตาผู้ใช้ แต่ใช้ตาราง/RPC ชุดเดียวกัน
+            แยกกันด้วย quiz_sets.game_kind = 'puzzle' (ดู MyTour_WordPuzzle_Design_v1.md) */}
+        <Route path="/staff/puzzle" element={staffRoute('puzzle.host', <PuzzleManager />)} />
+        <Route
+          path="/staff/puzzle/builder/:setId"
+          element={staffRoute('puzzle.edit', <PuzzleBuilder />)}
+        />
+        <Route
+          path="/staff/puzzle/host/:sessionId"
+          element={staffRoute('puzzle.host', <PuzzleHost />)}
+        />
+        {/* จอใหญ่ — เปิดแท็บแยกบนโน้ตบุ๊กโรงแรม/จอในรถที่ไม่มีใครล็อกอิน
+            เหตุผลเดียวกับ QuizStage: ถ้า guard ไว้จะโดน redirect แล้ว hash ที่พา token มาหายไปด้วย */}
+        <Route
+          path="/staff/puzzle/stage/:sessionId"
+          element={
+            <StaffTourLayout>
+              <PuzzleStage />
+            </StaffTourLayout>
+          }
+        />
         <Route path="/staff/form-builder" element={staffRoute('form.assign', <FormBuilder />)} />
         <Route
           path="/staff/itinerary-builder"

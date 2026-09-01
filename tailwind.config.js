@@ -146,9 +146,17 @@ export default {
           '0%, 100%': { backgroundColor: 'rgb(255 251 235)' },
           '50%': { backgroundColor: 'rgb(253 230 138)' },
         },
+        // เดาผิดในเกมปริศนาใบ้คำ — สั่นครั้งเดียวสั้นๆ แล้วจบ
+        // ไม่ใช้สีแดงเป็นสัญญาณหลัก เพราะบนรถที่แดดส่องจอ สีอ่านยากกว่าการเคลื่อนไหว
+        'shake-once': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-6px)' },
+          '40%, 80%': { transform: 'translateX(6px)' },
+        },
       },
       animation: {
         'flash-once': 'flash-once 0.9s ease-in-out 3',
+        'shake-once': 'shake-once 0.3s ease-in-out 1',
       },
     },
   },

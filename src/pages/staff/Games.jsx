@@ -78,6 +78,7 @@ export default function Games() {
   const [bingo, setBingo] = useState({ rooms: 0, cards: 0 })
   const [draw, setDraw] = useState({ rooms: 0, drawn: 0 })
   const [quiz, setQuiz] = useState({ rooms: 0, players: 0 })
+  const [puzzle, setPuzzle] = useState({ rooms: 0, players: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -92,9 +93,10 @@ export default function Games() {
           .eq('tour_id', tourId)
           .in('status', ['waiting', 'playing']),
         supabase.from('draw_rooms').select('id').eq('tour_id', tourId).eq('status', 'open'),
+        // ควิซกับปริศนาใบ้คำใช้ตารางเดียวกัน — แยกด้วย game_kind
         supabase
           .from('quiz_sessions')
-          .select('id')
+          .select('id, game_kind')
           .eq('tour_id', tourId)
           .neq('state', 'finished'),
       ])
@@ -102,15 +104,26 @@ export default function Games() {
 
       setTour(tourRes.data ?? null)
 
-      const quizIds = (quizRes.data ?? []).map((r) => r.id)
-      if (quizIds.length === 0) {
-        setQuiz({ rooms: 0, players: 0 })
-      } else {
+      const countPlayers = async (ids) => {
+        if (ids.length === 0) return 0
         const { count } = await supabase
           .from('quiz_players')
           .select('id', { count: 'exact', head: true })
-          .in('session_id', quizIds)
-        if (!cancelled) setQuiz({ rooms: quizIds.length, players: count ?? 0 })
+          .in('session_id', ids)
+        return count ?? 0
+      }
+
+      const rows = quizRes.data ?? []
+      const quizIds = rows.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').map((r) => r.id)
+      const puzzleIds = rows.filter((r) => r.game_kind === 'puzzle').map((r) => r.id)
+
+      const [quizPlayers, puzzlePlayers] = await Promise.all([
+        countPlayers(quizIds),
+        countPlayers(puzzleIds),
+      ])
+      if (!cancelled) {
+        setQuiz({ rooms: quizIds.length, players: quizPlayers })
+        setPuzzle({ rooms: puzzleIds.length, players: puzzlePlayers })
       }
 
       const drawIds = (drawRes.data ?? []).map((r) => r.id)
@@ -199,6 +212,20 @@ export default function Games() {
           }
           statusLive={quiz.rooms > 0}
           to={can(session, 'quiz.host') ? '/staff/quiz' : null}
+        />
+
+        <GameCard
+          icon="eye"
+          tint="#0f8a4a"
+          title={t('puzzle.title')}
+          desc={t('staff.games.puzzleDesc')}
+          status={
+            puzzle.rooms > 0
+              ? t('staff.games.puzzleLive', { rooms: puzzle.rooms, players: puzzle.players })
+              : t('staff.games.puzzleIdle')
+          }
+          statusLive={puzzle.rooms > 0}
+          to={can(session, 'puzzle.host') ? '/staff/puzzle' : null}
         />
 
         <div className="flex items-center gap-3.5 rounded-2xl border border-dashed border-line-strong p-4">

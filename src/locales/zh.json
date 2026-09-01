@@ -381,7 +381,10 @@
     "games": {
       "quizDesc": "答得越快分数越高",
       "quizOpen": "房间开放中",
-      "quizClosed": "暂无开放房间"
+      "quizClosed": "暂无开放房间",
+      "puzzleDesc": "看图猜词，可无限次作答",
+      "puzzleOpen": "有房间开放中",
+      "puzzleClosed": "暂无开放的房间"
     },
     "meetPoint": {
       "title": "集合点",
@@ -1271,7 +1274,10 @@
     "games": {
       "quizDesc": "大屏幕实时竞答，按速度计分",
       "quizLive": "{{rooms}} 个房间 · {{players}} 人",
-      "quizIdle": "暂无开放房间"
+      "quizIdle": "暂无开放房间",
+      "puzzleDesc": "大屏看图猜词，答对得 1 分",
+      "puzzleLive": "{{rooms}} 个房间 · {{players}} 人",
+      "puzzleIdle": "暂无房间"
     },
     "quiz": {
       "title": "知识竞答",
@@ -1455,6 +1461,111 @@
       "members": "{{n}} 人",
       "full": "已满",
       "mustPick": "请在开始前选择队伍，否则你的分数不计入任何队伍"
+    }
+  },
+  "puzzle": {
+    "title": "看图猜词",
+    "syllables": "{{n}} 个音节",
+    "noRoom": "暂无开放的房间",
+    "placeholder": "输入答案...",
+    "correct": "答对了！+1 分",
+    "waitReveal": "等待公布答案...",
+    "youGotIt": "你答对了",
+    "youMissed": "这题没答对",
+    "solvedCount": "答对 {{n}} 题",
+    "state": {
+      "lobby": "等待开始",
+      "countdown": "即将开始",
+      "answering": "进行中",
+      "locked": "已截止",
+      "reveal": "公布答案",
+      "scoreboard": "排行榜",
+      "finished": "已结束"
+    },
+    "rules": {
+      "guess": "• 看图猜出词语",
+      "point": "• 答对得 1 分",
+      "unlimited": "• 可无限次作答",
+      "winner": "• 得分最高者获胜"
+    },
+    "feedback": {
+      "wrong": "还不对，再试试",
+      "duplicate": "和刚才的答案一样",
+      "too_fast": "有点快，稍等一下",
+      "closed": "已停止收答案",
+      "not_started": "还没开始",
+      "no_attempts": "次数已用完",
+      "too_long": "答案太长了"
+    },
+    "manager": {
+      "subtitle": "看图猜词，投到大屏幕",
+      "openRooms": "开放中的房间",
+      "noRooms": "还没有房间 — 从下面选一套题开房",
+      "roomMeta": "{{players}} 人 · 第 {{index}} 题",
+      "enterRoom": "进入主持",
+      "closeRoom": "关闭",
+      "library": "题库",
+      "openRoomFrom": "用这套开房",
+      "createRoom": "创建房间",
+      "edit": "编辑",
+      "newSet": "新建题库",
+      "newSetName": "新的猜词题库",
+      "allBuses": "全团（所有车）",
+      "screen": {
+        "projector": "投影仪",
+        "bus_tv": "车上电视",
+        "none": "没有大屏"
+      }
+    },
+    "builder": {
+      "title": "猜词题库",
+      "pinWhy": "请先输入工作人员 PIN — 此页会读取答案，游客无法访问。",
+      "editItem": "编辑题目",
+      "addItem": "新增题目",
+      "empty": "这套还没有题目",
+      "itemMeta": "{{clues}} 张提示图 · {{syllables}} 音节 · {{hints}} 条提示",
+      "clues": "提示图（{{n}}/{{max}}）",
+      "cluesHint": "1-6 张，版面由系统自动排好，不用自己选。",
+      "clueLabel": "图注（公布答案时显示）",
+      "pickImage": "选择图片",
+      "wordClue": "短词",
+      "addImage": "图片",
+      "addEmoji": "表情",
+      "addWord": "文字",
+      "answer": "答案",
+      "needAnswer": "必须填写答案",
+      "splitHint": "用连字符分音节 — 共 {{n}} 个音节，用于大屏和公布动画。",
+      "splitMismatch": "分出的音节数与设定不一致 — 以分出的为准。",
+      "aliases": "也接受的写法",
+      "aliasesHint": "用逗号分隔 — 大家实际会写的写法。",
+      "test": "试测",
+      "testPlaceholder": "输入游客可能写的答案",
+      "testPass": "通过 — 会判为正确",
+      "testFail": "不通过 — 想算对请加入「也接受的写法」",
+      "hints": "提示（最多 3 条）",
+      "hintsHint": "由主持人逐条开启，玩家不能自己要。",
+      "hintPlaceholder": "第 {{n}} 条提示",
+      "answerImage": "答案配图（可选）",
+      "timeLimit": "每题时间（秒）",
+      "preview": "预览"
+    },
+    "host": {
+      "openStage": "打开大屏",
+      "progress": "第 {{index}} 题 · {{state}}",
+      "sec": "秒",
+      "stats": "答对 {{solved}}/{{online}} · 共猜 {{guesses}} 次",
+      "hintTitle": "提示 {{level}}/{{total}}",
+      "openHint": "向全场开启第 {{n}}/{{total}} 条提示",
+      "nearTitle": "接近的答案",
+      "nearHint": "点「接受」后这些人会补分，本题库也会记住这个写法。",
+      "nearPeople": "{{n}} 人",
+      "accept": "接受",
+      "start": "开始",
+      "next": "下一题",
+      "lockReveal": "截止并公布",
+      "scoreboard": "排行榜",
+      "finish": "结束游戏",
+      "shoutReminder": "开始前提醒大家别喊出答案 — 想到了就打字。"
     }
   }
 }

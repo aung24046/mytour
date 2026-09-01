@@ -18,10 +18,14 @@ import { supabase } from './supabase'
 
 const POLL_INTERVAL_MS = 4000
 
+// ⚠️ เป็นรายชื่อคอลัมน์แบบระบุเอง ไม่ใช่ select('*') — คอลัมน์ใหม่ต้องมาเติมที่นี่
+// ไม่งั้น realtime (payload.new มาครบทุกคอลัมน์) กับ polling (มาเฉพาะที่ระบุ)
+// จะให้ค่าไม่ตรงกัน แล้วจะเห็นเป็น "คำใบ้ขึ้นแป๊บนึงแล้วหายไป" ทุก 4 วินาที
 export const SESSION_COLS =
   'id, tour_id, set_id, name, bus_id, state, current_index, current_question_id,' +
   ' question_started_at, question_ends_at, locked_at, reveal_payload, join_open,' +
-  ' late_join, stage_theme, screen_mode, team_mode, team_size_limit, created_at, ended_at'
+  ' late_join, stage_theme, screen_mode, team_mode, team_size_limit, created_at, ended_at,' +
+  ' game_kind, hint_level, hint_payload'
 
 // ---------------------------------------------------------------------
 // นาฬิกา server
@@ -204,8 +208,28 @@ export function useQuizSession(sessionId) {
       .select('id, set_id, sort_order, kind, text, media_url, media_kind, options, numeric_unit, time_limit_sec')
       .eq('id', qid)
       .maybeSingle()
-      .then(({ data }) => {
-        if (mountedRef.current) setQuestion(data ?? null)
+      .then(async ({ data }) => {
+        if (!mountedRef.current) return
+        // ข้อของเกมปริศนามีเนื้อเพิ่มอีกสองตาราง — ดึงต่อให้เลยเพื่อให้ทุกจอ
+        // (เวที / ทีมงาน / ลูกทัวร์) ได้ก้อนเดียวกันจาก hook เดียวกัน
+        if (data?.kind === 'puzzle') {
+          const [{ data: meta }, { data: clues }] = await Promise.all([
+            supabase
+              .from('quiz_puzzle')
+              .select('syllable_count, hint_count')
+              .eq('question_id', qid)
+              .maybeSingle(),
+            supabase
+              .from('quiz_puzzle_clues')
+              .select('id, sort_order, clue_kind, body')
+              .eq('question_id', qid)
+              .order('sort_order'),
+          ])
+          if (!mountedRef.current) return
+          setQuestion({ ...data, puzzle: meta ?? null, clues: clues ?? [] })
+          return
+        }
+        setQuestion(data ?? null)
       })
   }, [session?.current_question_id])
 

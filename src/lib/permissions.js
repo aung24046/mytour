@@ -51,6 +51,7 @@ export const CAPABILITIES = {
   'broadcast.send': 'staff',
   'bingo.host': 'staff',
   'quiz.host': 'staff', // คุมห้องควิซหน้างาน — ระดับเดียวกับบิงโก
+  'puzzle.host': 'staff', // คุมห้องปริศนาใบ้คำ — เกมคนละใบแต่เครื่องยนต์เดียวกับควิซ
   'guest.view': 'staff',
   'dashboard.view': 'guide',
   'guide.read': 'guide',
@@ -62,6 +63,7 @@ export const CAPABILITIES = {
   'guest.delete': 'lead',
   'form.assign': 'lead', // เปิด/ปิด/เรียงคำถามในทริปนี้
   'quiz.edit': 'lead', // สร้าง/แก้ชุดคำถามควิซ
+  'puzzle.edit': 'lead', // สร้าง/แก้ชุดปริศนาใบ้คำ
   'itinerary.edit': 'lead',
   'seat.layout': 'lead',
   'room.layout': 'lead',
@@ -82,6 +84,7 @@ export const CAPABILITIES = {
   'library.fork': 'lead', // แยกสำเนาเฉพาะทริปนี้ — ไม่กระทบคนอื่น จึงให้ lead ได้
   'form.define': 'admin', // สร้าง/แก้ตัวคำถามในคลัง
   'quiz.define': 'admin', // แก้ชุดคำถามในคลังกลาง (กระทบทุกทริปที่หยิบไปใช้)
+  'puzzle.define': 'admin', // แก้ชุดปริศนาในคลังกลาง
   'destination.manage': 'admin',
   'supplier.manage': 'admin',
   'person.create': 'admin', // สร้างคนใหม่เข้าคลังทีมงาน
