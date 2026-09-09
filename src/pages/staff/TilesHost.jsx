@@ -42,7 +42,9 @@ export default function TilesHost() {
   const { t } = useTranslation()
 
   const [ready, setReady] = useState(false)
-  const [stats, setStats] = useState({ solved: 0, guesses: 0, online: 0, total: 0, still_in: 0 })
+  const [stats, setStats] = useState({
+    solved: 0, guesses: 0, online: 0, total: 0, still_in: 0, winner_name: null,
+  })
   const [feed, setFeed] = useState([])
   const [sortBy, setSortBy] = useState('time')   // time | closeness
   const [imageUrl, setImageUrl] = useState(null)
@@ -205,6 +207,20 @@ export default function TilesHost() {
           <p className="mt-1 text-sm text-ink-muted">
             {t('tiles.host.openedOf', { opened, total })}
           </p>
+
+          {/* ★ ข้อจะล็อกทันทีที่มีคนตอบถูก แต่ชื่อผู้ชนะเดิมโผล่ตอนกด "เฉลย" เท่านั้น
+              ระหว่างนั้นคนคุมเกมเห็นแต่ "ยังตอบได้ 0 คน" ซึ่งอ่านแล้วเหมือนไม่มีใครตอบได้ */}
+          {stats.winner_name ? (
+            <p className="mt-2 rounded-xl bg-success-bg px-3 py-2 text-sm font-bold text-success-text">
+              {t(stats.winner_team ? 'tiles.host.solvedByTeam' : 'tiles.host.solvedBy', {
+                name: stats.winner_name,
+                team: stats.winner_team,
+                sec: stats.winner_seconds ?? 0,
+              })}
+            </p>
+          ) : live ? (
+            <p className="mt-2 text-sm text-ink-faint">{t('tiles.host.noOneYet')}</p>
+          ) : null}
           {/* ★ "ยังตอบได้กี่คน" คือตัวเลขที่บอกว่าควรเปิดต่อหรือเฉลยเลย
               เหลือ 3 จาก 40 = การเปิดแผ่นต่อไปไม่มีความหมายแล้ว */}
           <p className="mt-0.5 text-sm text-ink-muted">

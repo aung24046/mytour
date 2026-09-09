@@ -20,6 +20,10 @@ import TileBoard from '../../components/tiles/TileBoard'
 const CHECKER =
   'repeating-conic-gradient(#0f8a4a 0% 25%, #ffffff 0% 50%) 50% / 120px 120px'
 
+// โปสเตอร์หน้ารอ — ใช้ cover_url ของชุดถ้าตั้งไว้ ไม่งั้นใช้ของแถมมากับแอป
+// จะได้เปลี่ยนภาพต่อชุดได้โดยไม่ต้องแก้โค้ด (เกมทายภาพวิวกับทายว่าใครควรมีหน้ารอคนละแบบ)
+const DEFAULT_LOBBY_ART = '/games/who-is-who.jpg'
+
 function Pill({ children, className = '' }) {
   return (
     <span
@@ -33,9 +37,10 @@ function Pill({ children, className = '' }) {
 export default function TilesStage() {
   const { sessionId } = useParams()
   const { session, question, phase } = useQuizSession(sessionId)
-  const [stats, setStats] = useState({ solved: 0, online: 0, still_in: 0 })
+  const [stats, setStats] = useState({ solved: 0, online: 0, still_in: 0, winner_name: null })
   const [imageUrl, setImageUrl] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
+  const [setCover, setSetCover] = useState(null)
   const preloadRef = useRef(new Set())
 
   useEffect(() => {
@@ -99,8 +104,10 @@ export default function TilesStage() {
     return () => { alive = false }
   }, [sessionId, session?.set_id, session?.current_index])
 
+  // ★ poll ต่อระหว่าง reveal ด้วย — stats เป็นทางเดียวที่จอรู้ "ทีม" ของผู้ชนะ
+  //   (reveal_payload มีแค่ชื่อ) และรู้ทันทีที่มีคนตอบถูกโดยไม่ต้องรอคนคุมเกมกดเฉลย
   useEffect(() => {
-    if (!questionId || phase === 'reveal' || phase === 'lobby') return undefined
+    if (!questionId || phase === 'lobby') return undefined
     let alive = true
     const tick = async () => {
       try {
@@ -115,12 +122,22 @@ export default function TilesStage() {
     return () => { alive = false; clearInterval(timer) }
   }, [sessionId, questionId, phase])
 
+  // ภาพหน้ารอของชุดนี้ (ถ้าตั้งไว้)
+  useEffect(() => {
+    if (!session?.set_id) return
+    supabase.from('quiz_sets').select('cover_url').eq('id', session.set_id).maybeSingle()
+      .then(({ data }) => setSetCover(data?.cover_url ?? null))
+  }, [session?.set_id])
+
+  // เล่นเป็นทีมก็ให้กระดานเป็นของทีม ไม่ใช่รายคน
+  // คะแนนทีมเป็น "ค่าเฉลี่ยต่อคน" (ดู quiz_team_leaderboard) ทีมใหญ่จึงไม่ได้เปรียบ
   useEffect(() => {
     if (phase !== 'scoreboard' && phase !== 'finished') return
-    supabase
-      .rpc('quiz_leaderboard', { p_session_id: sessionId, p_limit: busTv ? 3 : 10 })
-      .then(({ data }) => setLeaderboard(data ?? []))
-  }, [phase, sessionId, busTv, session?.current_index])
+    const rpc = session?.team_mode
+      ? supabase.rpc('quiz_team_leaderboard', { p_session_id: sessionId })
+      : supabase.rpc('quiz_leaderboard', { p_session_id: sessionId, p_limit: busTv ? 3 : 10 })
+    rpc.then(({ data }) => setLeaderboard((data ?? []).slice(0, busTv ? 3 : 10)))
+  }, [phase, sessionId, busTv, session?.team_mode, session?.current_index])
 
   const heading = useMemo(() => {
     if (revealing) return reveal.answer ?? ''
@@ -129,6 +146,15 @@ export default function TilesStage() {
   }, [revealing, reveal.answer, question?.text, session?.name])
 
   const showBoard = questionId && phase !== 'scoreboard' && phase !== 'finished'
+
+  // ★ มีคนตอบถูกแล้วหรือยัง — ข้อจะล็อกทันทีที่มีคนตอบถูก แต่ชื่อผู้ชนะเดิม
+  //   โผล่ตอนกด "เฉลย" เท่านั้น ระหว่างนั้นจอเลยขึ้น "ยังตอบได้ 0 คน"
+  //   ซึ่งอ่านแล้วเหมือนไม่มีใครตอบได้ ทั้งที่เพิ่งมีคนตอบถูกไปเมื่อกี้
+  const winner = stats.winner_name
+    ? { name: stats.winner_name, team: stats.winner_team, sec: stats.winner_seconds }
+    : (revealing && reveal.fastest
+        ? { name: reveal.fastest.name, team: null, sec: reveal.fastest.seconds }
+        : null)
 
   return (
     <div
@@ -146,7 +172,9 @@ export default function TilesStage() {
             {!revealing && (
               <div className="mb-4 flex items-center justify-between text-2xl font-black text-black sm:text-3xl">
                 <span>เปิดแล้ว {opened}/{total}</span>
-                <span>ยังตอบได้ {stats.still_in} คน</span>
+                {winner
+                  ? <span className="text-[#0f8a4a]">🎉 {winner.name} ตอบถูกแล้ว</span>
+                  : <span>ยังไม่มีใครตอบถูก</span>}
               </div>
             )}
 
@@ -164,17 +192,18 @@ export default function TilesStage() {
             </div>
 
             {/* ผู้ชนะ — จังหวะพีคของข้อ ตัวใหญ่กว่าทุกอย่างบนจอ */}
-            {revealing && reveal.fastest && (
+            {revealing && winner && (
               <div className="mt-6 text-center">
                 <p className="text-4xl font-black text-black sm:text-6xl">
-                  🎉 {reveal.fastest.name}
+                  🎉 {winner.name}
+                  {winner.team ? <span className="text-black/60"> · ทีม {winner.team}</span> : null}
                 </p>
                 {reveal.explain && (
                   <p className="mt-2 text-2xl font-bold text-black/70 sm:text-3xl">{reveal.explain}</p>
                 )}
               </div>
             )}
-            {revealing && !reveal.fastest && (
+            {revealing && !winner && (
               <p className="mt-6 text-center text-3xl font-black text-black/60 sm:text-5xl">
                 ไม่มีใครตอบถูก
               </p>
@@ -191,18 +220,29 @@ export default function TilesStage() {
               >
                 <span className="text-3xl font-black text-black sm:text-5xl">{i + 1}</span>
                 <span className="min-w-0 flex-1 truncate text-3xl font-black text-black sm:text-5xl">
-                  {row.display_name}
+                  {/* กระดานทีมคืนคอลัมน์ name ส่วนกระดานรายคนคืน display_name */}
+                  {row.display_name ?? row.name}
+                  {row.member_count ? (
+                    <span className="text-black/50"> ({row.member_count})</span>
+                  ) : null}
                 </span>
-                <span className="text-3xl font-black text-black sm:text-5xl">{row.score}</span>
+                <span className="text-3xl font-black text-black sm:text-5xl">
+                  {row.score ?? row.avg_score}
+                </span>
               </li>
             ))}
           </ol>
         )}
 
         {phase === 'lobby' && (
-          <p className="mt-10 text-center text-3xl font-black text-black/60 sm:text-5xl">
-            รอเริ่มเกม
-          </p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-6">
+            <img
+              src={setCover || DEFAULT_LOBBY_ART}
+              alt=""
+              className="w-full max-w-[1100px] rounded-2xl border-[4px] border-black object-contain shadow-[8px_8px_0_0_rgba(0,0,0,0.9)]"
+            />
+            <p className="text-3xl font-black text-black/60 sm:text-5xl">รอเริ่มเกม</p>
+          </div>
         )}
       </div>
     </div>

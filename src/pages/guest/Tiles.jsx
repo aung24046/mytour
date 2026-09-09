@@ -8,7 +8,10 @@ import { getStaffSession } from '../../lib/staffSession'
 import { SESSION_COLS, useQuizSession, useQuizHeartbeat, syncServerClock } from '../../lib/useQuizSession'
 import { submitTileGuess, fetchMyTileState, fetchCurrentTileImage } from '../../lib/tileHost'
 import { openCount, tileCount } from '../../lib/tileGrid'
+import { useQuizTeams } from '../../lib/useQuizTeams'
+import { teamStyle } from '../../lib/quizStyle'
 import TileBoard from '../../components/tiles/TileBoard'
+import TeamPicker from '../../components/quiz/TeamPicker'
 import Button from '../../components/common/Button'
 import GuestNav from '../../components/common/GuestNav'
 import BackButton from '../../components/common/BackButton'
@@ -27,6 +30,9 @@ import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 // ★ หน้าจอตอนหมดโควตาต้องไม่ใช่ช่องพิมพ์สีเทาพร้อมข้อความว่าคุณหมดสิทธิ์
 //   โควตาจำกัดทำให้สภาพนี้เป็นเรื่องปกติของทุกข้อ ไม่ใช่เคสขอบ —
 //   เขายังดูเกมอยู่ แค่ตอบไม่ได้ กระดานจึงต้องยังเปิดต่อให้เห็น
+
+// โปสเตอร์หน้ารอ — ใช้ cover_url ของชุดถ้าตั้งไว้ ไม่งั้นใช้ของแถมมากับแอป
+const DEFAULT_LOBBY_ART = '/games/who-is-who.jpg'
 
 const VISITOR_KEY = 'mytour.quiz.visitor'
 
@@ -80,6 +86,16 @@ export default function Tiles() {
   const answerMode = setMeta?.answer_mode ?? 'type'
   const exhausted = left !== null && left <= 0
 
+  // ทีม — ตรรกะเดียวกับควิซ ใช้ hook ตัวเดียวกัน
+  const { teams, myTeam, teamBusy, createTeam, joinTeam } = useQuizTeams({
+    sessionId: activeId,
+    teamMode: session?.team_mode,
+    sessionState: session?.state,
+    player,
+    setPlayer,
+    onError: setError,
+  })
+
   const loadRooms = useCallback(async () => {
     if (!tourId) return
     let myBusId = null
@@ -115,7 +131,7 @@ export default function Tiles() {
     if (!setId) return
     supabase
       .from('quiz_sets')
-      .select('answer_mode, attempt_limit')
+      .select('answer_mode, attempt_limit, cover_url')
       .eq('id', setId)
       .maybeSingle()
       .then(({ data }) => setSetMeta(data ?? null))
@@ -278,12 +294,59 @@ export default function Tiles() {
     )
   }
 
+  // ── หน้ารอก่อนเริ่มเกม ───────────────────────────────────────────
+  // กระดานเปล่าๆ ที่ยังไม่มีข้อไม่ได้บอกอะไรใคร เอาโปสเตอร์กับการเลือกทีมมาแทน
+  if (phase === 'lobby') {
+    return (
+      <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col gap-4 px-4 pb-6 pt-4">
+        <h1 className="text-lg font-extrabold text-ink">{session?.name}</h1>
+
+        <img
+          src={setMeta?.cover_url || DEFAULT_LOBBY_ART}
+          alt=""
+          className="w-full rounded-2xl object-contain shadow-card"
+        />
+
+        {session?.team_mode ? (
+          <TeamPicker
+            teams={teams}
+            myTeamId={player?.team_id ?? null}
+            sizeLimit={session.team_size_limit ?? 0}
+            onCreate={createTeam}
+            onJoin={joinTeam}
+            busy={teamBusy}
+            t={t}
+          />
+        ) : null}
+
+        <p className="text-center text-sm text-ink-faint">
+          {session?.team_mode && !myTeam
+            ? t('tiles.guest.joinTeamFirst')
+            : t('tiles.lobbyWait')}
+        </p>
+
+        {error && <p className="text-center text-sm text-danger-text">{error}</p>}
+        <GuestNav active="games" />
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col px-4 pb-4 pt-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-extrabold text-ink">{session?.name}</h1>
         <span className="text-sm font-bold text-ink-muted">{opened}/{total}</span>
       </div>
+
+      {/* ป้ายทีมของตัวเอง — ระหว่างเล่นต้องเห็นว่าตัวเองอยู่ทีมไหน ไม่งั้นลืม */}
+      {myTeam && (
+        <p
+          className="mt-1 self-start rounded-full px-2.5 py-0.5 text-xs font-bold text-white"
+          style={{ background: teamStyle(myTeam.color_index).color }}
+        >
+          {teamStyle(myTeam.color_index).badge} {t('tiles.guest.myTeam')}: {myTeam.name}
+        </p>
+      )}
 
       {question?.text && (
         <p className="mt-2 text-center text-base font-bold text-ink">{question.text}</p>

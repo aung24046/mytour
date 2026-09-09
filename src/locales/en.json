@@ -1745,7 +1745,11 @@
         "bus_tv": "Bus TV",
         "none": "No big screen"
       },
-      "leakWarning": "No big screen means the picture must be sent to every phone — determined players can see it before any tile opens"
+      "leakWarning": "No big screen means the picture must be sent to every phone — determined players can see it before any tile opens",
+      "teamMode": "Let guests play in teams",
+      "teamSize": "Members per team",
+      "teamSizeFree": "Unlimited",
+      "teamHint": "Guests form teams themselves in the lobby · team score is the average per person, so a big team gains nothing"
     },
     "builder": {
       "subtitle": "{{count}} questions",
@@ -1816,7 +1820,11 @@
       "next": "Next",
       "lockReveal": "Close and reveal",
       "scoreboard": "Leaderboard",
-      "finish": "Finish"
+      "finish": "Finish",
+      "solvedBy": "🎉 {{name}} got it ({{sec}}s)",
+      "solvedByTeam": "🎉 {{name}} of {{team}} got it ({{sec}}s)",
+      "noOneYet": "No one has it yet",
+      "teamMode": "Team mode"
     },
     "guest": {
       "placeholder": "Type your answer...",
@@ -1838,7 +1846,14 @@
         "no_attempts": "Out of tries",
         "empty": "Nothing typed",
         "too_long": "Answer too long"
-      }
+      },
+      "myTeam": "Your team",
+      "joinTeamFirst": "Pick a team before the game starts",
+      "winnerTeam": "{{name}} of {{team}} got it first"
+    },
+    "lobbyWait": "Waiting for the host to start",
+    "stage": {
+      "teamBoard": "Team scores"
     }
   }
 }

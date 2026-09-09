@@ -12,7 +12,9 @@ import {
   syncServerClock,
 } from '../../lib/useQuizSession'
 import { optionStyles, optionLabels, teamStyle } from '../../lib/quizStyle'
+import { useQuizTeams } from '../../lib/useQuizTeams'
 import OptionShape from '../../components/quiz/OptionShape'
+import TeamPicker from '../../components/quiz/TeamPicker'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import GuestNav from '../../components/common/GuestNav'
@@ -72,84 +74,6 @@ function RoomPicker({ rooms, onPick, joining, t }) {
           <Icon name="chevronRight" size={18} className="flex-none text-ink-faint" />
         </button>
       ))}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------
-// ห้องรอแบบทีม — ลูกทัวร์ตั้งทีมกันเอง
-// ---------------------------------------------------------------------
-// ตั้งใจให้ "ใครกดเข้าทีมไหนก็ได้" ไม่มีเชิญ ไม่มีรหัส เพราะคนที่จะจับกลุ่มกัน
-// เขานั่งข้างกันอยู่แล้ว คุยกันด้วยปากเร็วกว่าระบบเชิญใดๆ
-//
-// ผลที่ตามมาคือทีมจะขนาดไม่เท่ากันแน่นอน — คะแนนทีมจึงคิดเป็น "เฉลี่ยต่อคน"
-// ไม่ใช่ผลรวม (ดู quiz_team_leaderboard) ไม่งั้นทีมใหญ่ชนะตั้งแต่ยังไม่เริ่มเล่น
-function TeamPicker({ teams, myTeamId, sizeLimit, onCreate, onJoin, busy, t }) {
-  const [name, setName] = useState('')
-  const [creating, setCreating] = useState(false)
-
-  return (
-    <div className="space-y-3">
-      <p className="text-sm font-bold text-ink">{t('quiz.team.pick')}</p>
-
-      <div className="space-y-2">
-        {teams.map((team) => {
-          const st = teamStyle(team.color_index)
-          const mine = team.id === myTeamId
-          const full = sizeLimit > 0 && team.member_count >= sizeLimit && !mine
-          return (
-            <button
-              key={team.id}
-              type="button"
-              disabled={busy || full}
-              onClick={() => onJoin(team.id)}
-              className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3 text-left transition active:scale-[0.99] disabled:opacity-40 ${
-                mine ? 'border-transparent' : 'border-line bg-surface'
-              }`}
-              style={mine ? { background: st.color, color: 'white' } : undefined}
-            >
-              <span className="text-xl leading-none">{st.badge}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-base font-extrabold">{team.name}</span>
-                <span className={`text-xs ${mine ? 'opacity-80' : 'text-ink-muted'}`}>
-                  {t('quiz.team.members', { n: team.member_count })}
-                  {full ? ` · ${t('quiz.team.full')}` : ''}
-                </span>
-              </span>
-              {mine && <Icon name="check" size={20} />}
-            </button>
-          )
-        })}
-      </div>
-
-      {creating ? (
-        <div className="flex gap-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={20}
-            autoFocus
-            placeholder={t('quiz.team.namePlaceholder')}
-            className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-brand"
-          />
-          <Button
-            fullWidth={false}
-            disabled={!name.trim() || busy}
-            onClick={() => {
-              onCreate(name.trim())
-              setName('')
-              setCreating(false)
-            }}
-          >
-            {t('quiz.team.create')}
-          </Button>
-        </div>
-      ) : (
-        <Button variant="secondary" onClick={() => setCreating(true)}>
-          <Icon name="plus" size={18} />
-          {t('quiz.team.newTeam')}
-        </Button>
-      )}
     </div>
   )
 }
@@ -255,8 +179,6 @@ export default function Quiz() {
 
   const [chosen, setChosen] = useState(null)
   const [myRank, setMyRank] = useState(null)
-  const [teams, setTeams] = useState([])
-  const [teamBusy, setTeamBusy] = useState(false)
   const answeredForRef = useRef(null)
 
   const { session, question, phase, msLeft, msToStart, loading } = useQuizSession(activeId)
@@ -380,91 +302,15 @@ export default function Quiz() {
   }, [phase, player?.id, session?.current_index])
 
   // ── ทีม ──────────────────────────────────────────────────────────
-  // realtime ของ quiz_teams ทำให้ทุกคนเห็นทีมใหม่โผล่ทันทีที่มีคนสร้าง
-  // ถ้าไม่มี จะมีคนตั้งทีมชื่อซ้ำกันเพราะไม่เห็นของคนอื่น แล้วเจอ error งงๆ
-  const loadTeams = useCallback(async () => {
-    if (!activeId || !session?.team_mode) return
-    const { data } = await supabase.rpc('quiz_team_leaderboard', { p_session_id: activeId })
-    setTeams(data ?? [])
-  }, [activeId, session?.team_mode])
-
-  useEffect(() => {
-    if (!session?.team_mode || !activeId) return undefined
-    loadTeams()
-
-    const ch = supabase
-      .channel(`quiz-teams-${activeId}-${Math.random().toString(36).slice(2, 7)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'quiz_teams', filter: `session_id=eq.${activeId}` },
-        () => loadTeams()
-      )
-      .subscribe()
-
-    // จำนวนสมาชิกไม่ได้มาทาง realtime (quiz_players ไม่ได้ publish โดยตั้งใจ)
-    // จึงต้อง poll เบาๆ ระหว่างอยู่ในห้องรอเท่านั้น
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible' && session?.state === 'lobby') loadTeams()
-    }, 5000)
-
-    return () => {
-      supabase.removeChannel(ch)
-      clearInterval(timer)
-    }
-  }, [activeId, session?.team_mode, session?.state, loadTeams])
-
-  const createTeam = useCallback(
-    async (name) => {
-      if (!player?.id) return
-      setTeamBusy(true)
-      setError('')
-      const { error: err } = await supabase.rpc('quiz_create_team', {
-        p_session_id: activeId,
-        p_player_id: player.id,
-        p_name: name,
-      })
-      setTeamBusy(false)
-      if (err) {
-        setError(err.message)
-        return
-      }
-      // อ่านแถวตัวเองใหม่ ไม่เดาค่า team_id เอง — ฝั่ง DB เป็นคนตัดสินว่าเข้าทีมไหน
-      const { data: me } = await supabase
-        .from('quiz_players')
-        .select('*')
-        .eq('id', player.id)
-        .maybeSingle()
-      if (me) setPlayer(me)
-      loadTeams()
-    },
-    [activeId, player?.id, loadTeams]
-  )
-
-  const joinTeam = useCallback(
-    async (teamId) => {
-      if (!player?.id) return
-      setTeamBusy(true)
-      setError('')
-      const { data, error: err } = await supabase.rpc('quiz_join_team', {
-        p_session_id: activeId,
-        p_player_id: player.id,
-        p_team_id: teamId,
-      })
-      setTeamBusy(false)
-      if (err) setError(err.message)
-      else {
-        setPlayer(Array.isArray(data) ? data[0] : data)
-        loadTeams()
-      }
-    },
-    [activeId, player?.id, loadTeams]
-  )
-
-  // team_id ของ player อาจเก่า (ตั้ง 'pending' ไว้ตอนสร้างทีม) — เชื่อ teams เป็นหลัก
-  const myTeam = useMemo(() => {
-    if (!player?.id) return null
-    return teams.find((tm) => tm.id === player.team_id) ?? null
-  }, [teams, player?.team_id, player?.id])
+  // ตรรกะทั้งก้อนอยู่ใน useQuizTeams ใช้ร่วมกับเกมเปิดแผ่นป้าย
+  const { teams, myTeam, teamBusy, createTeam, joinTeam } = useQuizTeams({
+    sessionId: activeId,
+    teamMode: session?.team_mode,
+    sessionState: session?.state,
+    player,
+    setPlayer,
+    onError: setError,
+  })
 
   const submit = useCallback(
     async (choiceIndex, numberValue) => {

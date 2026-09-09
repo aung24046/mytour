@@ -29,7 +29,9 @@ export default function TilesManager() {
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [creatingFor, setCreatingFor] = useState(null)
-  const [form, setForm] = useState({ name: '', busId: '', screenMode: 'projector' })
+  const [form, setForm] = useState({
+    name: '', busId: '', screenMode: 'projector', teamMode: false, teamSizeLimit: 0,
+  })
   const [newSetName, setNewSetName] = useState(null)
   const [error, setError] = useState('')
 
@@ -90,6 +92,8 @@ export default function TilesManager() {
         busId: form.busId || null,
         screenMode: form.screenMode,
         staffId: staffSession?.staff?.id ?? null,
+        teamMode: form.teamMode,
+        teamSizeLimit: form.teamSizeLimit,
       })
       navigate(`/staff/tiles/host/${row.session_id}`)
     } catch (err) {
@@ -231,6 +235,37 @@ export default function TilesManager() {
                       ))}
                     </select>
 
+                    {/* เล่นเป็นทีม — ลูกทัวร์ตั้งทีมกันเองในห้องรอ
+                        คะแนนทีมคิดเป็นค่าเฉลี่ยต่อคน (quiz_team_leaderboard)
+                        ทีมใหญ่จึงไม่ได้เปรียบ ไม่ต้องบังคับให้ทีมเท่ากัน */}
+                    <label className="flex items-center gap-2 rounded-xl bg-neutral-bg px-3 py-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.teamMode}
+                        onChange={(e) => setForm({ ...form, teamMode: e.target.checked })}
+                        className="h-4 w-4"
+                      />
+                      <span className="font-semibold text-ink">{t('tiles.manager.teamMode')}</span>
+                    </label>
+
+                    {form.teamMode && (
+                      <>
+                        <select
+                          value={form.teamSizeLimit}
+                          onChange={(e) => setForm({ ...form, teamSizeLimit: Number(e.target.value) })}
+                          className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                        >
+                          <option value={0}>{t('tiles.manager.teamSizeFree')}</option>
+                          {[2, 3, 4, 5, 6, 8].map((n) => (
+                            <option key={n} value={n}>
+                              {t('tiles.manager.teamSize')} {n}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-ink-faint">{t('tiles.manager.teamHint')}</p>
+                      </>
+                    )}
+
                     {/* ★ ไม่มีจอใหญ่ = ต้องส่งภาพให้มือถือทุกเครื่อง ไม่งั้นเล่นไม่ได้เลย
                         ซึ่งแปลว่าคนที่ตั้งใจแคะจะเห็นภาพเต็มได้
                         บอกให้รู้ตัว ดีกว่าปิดฟีเจอร์เงียบๆ หรือปล่อยรั่วเงียบๆ */}
@@ -254,7 +289,10 @@ export default function TilesManager() {
                     <Button
                       fullWidth={false} className="px-3 py-2 text-sm"
                       onClick={() => {
-                        setForm({ name: '', busId: '', screenMode: 'projector' })
+                        setForm({
+                          name: '', busId: '', screenMode: 'projector',
+                          teamMode: false, teamSizeLimit: 0,
+                        })
                         setCreatingFor(set.id)
                       }}
                     >
