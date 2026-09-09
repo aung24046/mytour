@@ -80,6 +80,7 @@ export default function Games() {
   const [draw, setDraw] = useState({ open: 0 })
   const [quiz, setQuiz] = useState({ open: 0 })
   const [puzzle, setPuzzle] = useState({ open: 0 })
+  const [tiles, setTiles] = useState({ open: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -120,6 +121,7 @@ export default function Games() {
       const mine = (quizRooms ?? []).filter((r) => !r.bus_id || r.bus_id === myBusId)
       setQuiz({ open: mine.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').length })
       setPuzzle({ open: mine.filter((r) => r.game_kind === 'puzzle').length })
+      setTiles({ open: mine.filter((r) => r.game_kind === 'tiles').length })
       const ids = (games ?? []).map((g) => g.id)
       if (ids.length === 0 || !guestId) {
         setBingo({ open: ids.length, myCard: false })
@@ -196,6 +198,16 @@ export default function Games() {
           status={puzzle.open ? t('guest.games.puzzleOpen') : t('guest.games.puzzleClosed')}
           live={puzzle.open > 0}
           onClick={() => navigate(tp('puzzle'))}
+        />
+
+        <GameCard
+          icon="expand"
+          tint="#b45309"
+          title={t('tiles.title')}
+          desc={t('guest.games.tilesDesc')}
+          status={tiles.open ? t('guest.games.tilesOpen') : t('guest.games.tilesClosed')}
+          live={tiles.open > 0}
+          onClick={() => navigate(tp('tiles'))}
         />
       </div>
 

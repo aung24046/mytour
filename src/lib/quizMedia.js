@@ -33,6 +33,19 @@ export const CLUE_IMAGE_QUALITY = 0.8
 export const ANSWER_IMAGE_WIDTH = 1600
 export const ANSWER_IMAGE_QUALITY = 0.82
 
+// ── เพดานของเกมเปิดแผ่นป้าย ───────────────────────────────────────────
+// ใหญ่กว่าภาพเฉลยของปริศนาใบ้คำเพราะมีสองเหตุผลซ้อนกัน:
+//   1. ภาพขึ้นเต็มจอโปรเจกเตอร์ตลอดทั้งข้อ ไม่ใช่แวบเดียวตอนเฉลย
+//   2. กรอบครอปเก็บเป็นตัวเลขไม่ทำลายต้นฉบับ — ถ้าคนสร้างข้อครอปเหลือครึ่งเดียว
+//      ความละเอียดที่เห็นจริงก็เหลือครึ่ง เผื่อไว้ตั้งแต่ต้นถูกกว่าให้เขาอัปใหม่
+// ต้นทุนไม่บาน เพราะภาพเต็มเดินทางไปแค่จอเวทีเครื่องเดียว ไม่ใช่ 40 เครื่อง
+// (ดูข้อ 5 ของ MyTour_TileReveal_Design_v1.md)
+export const TILE_IMAGE_WIDTH = 2000
+export const TILE_IMAGE_QUALITY = 0.85
+// ภาพตอนปิดเป็นโลโก้/ลาย ไม่ใช่ภาพที่ต้องดูรายละเอียด
+export const COVER_IMAGE_WIDTH = 1200
+export const COVER_IMAGE_QUALITY = 0.8
+
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const VIDEO_TYPES = ['video/mp4', 'video/webm']
 

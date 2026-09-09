@@ -384,7 +384,10 @@
       "quizClosed": "暂无开放房间",
       "puzzleDesc": "看图猜词，可无限次作答",
       "puzzleOpen": "有房间开放中",
-      "puzzleClosed": "暂无开放的房间"
+      "puzzleClosed": "暂无开放的房间",
+      "tilesDesc": "随着方块翻开猜出整张图",
+      "tilesOpen": "有房间开放中",
+      "tilesClosed": "目前没有开放的房间"
     },
     "meetPoint": {
       "title": "集合点",
@@ -1277,7 +1280,10 @@
       "quizIdle": "暂无开放房间",
       "puzzleDesc": "大屏看图猜词，答对得 1 分",
       "puzzleLive": "{{rooms}} 个房间 · {{players}} 人",
-      "puzzleIdle": "暂无房间"
+      "puzzleIdle": "暂无房间",
+      "tilesDesc": "把图片切成方块，逐块翻开",
+      "tilesLive": "{{rooms}} 个房间进行中 · {{players}} 人",
+      "tilesIdle": "目前没有房间"
     },
     "quiz": {
       "title": "知识竞答",
@@ -1566,6 +1572,136 @@
       "scoreboard": "排行榜",
       "finish": "结束游戏",
       "shoutReminder": "开始前提醒大家别喊出答案 — 想到了就打字。"
+    }
+  },
+  "tiles": {
+    "title": "翻牌看图",
+    "noRoom": "目前没有开放的房间",
+    "state": {
+      "lobby": "等待开始",
+      "countdown": "即将开始",
+      "answering": "进行中",
+      "locked": "已停止作答",
+      "reveal": "公布答案",
+      "scoreboard": "排行榜",
+      "finished": "已结束"
+    },
+    "manager": {
+      "subtitle": "把图片切成方块，逐块翻开",
+      "openRooms": "开放中的房间",
+      "noRooms": "还没有房间 — 请从下方选一套图",
+      "roomMeta": "{{players}} 人 · 第 {{index}} 题",
+      "enterRoom": "进入主持",
+      "closeRoom": "关闭房间",
+      "library": "图库",
+      "modeType": "打字作答 · {{limit}}",
+      "modeNone": "只看图，不用作答",
+      "unlimited": "次数不限",
+      "openRoomFrom": "用这套开房间",
+      "createRoom": "建立房间",
+      "edit": "编辑",
+      "newSet": "新增一套",
+      "newSetName": "新图组",
+      "allBuses": "全团（所有车）",
+      "screen": {
+        "projector": "投影幕",
+        "bus_tv": "车上电视",
+        "none": "没有大屏幕"
+      },
+      "leakWarning": "没有大屏幕就必须把图片传到每支手机，有心人可以在翻牌前就看到整张图"
+    },
+    "builder": {
+      "subtitle": "共 {{count}} 题",
+      "setSettings": "整套设定",
+      "answerMode": "作答方式",
+      "modeType": "在手机上打字",
+      "modeNone": "不用作答 — 只翻图给大家看",
+      "attemptLimit": "每题可作答次数",
+      "unlimited": "不限",
+      "nTries": "{{n}} 次",
+      "attemptHint": "每题重新计算 · 与上一次相同的答案不扣次数",
+      "itemMeta": "网格 {{grid}} · 另接受 {{aliases}} 种写法",
+      "addQuestion": "新增题目",
+      "image": "图片",
+      "pickImage": "上传图片",
+      "changeImage": "更换图片",
+      "recrop": "重新裁切",
+      "cropTitle": "裁切图片",
+      "grid": "切成几块",
+      "openStep": "每次翻几块",
+      "nTiles": "{{n}} 块",
+      "preview": {
+        "closed": "盖住时",
+        "open": "全部翻开"
+      },
+      "shapeWarn": {
+        "wide": "方块会变得很扁 — 请减少行数或把图裁高一点",
+        "tall": "方块会变得很窄 — 请减少列数或把图裁宽一点"
+      },
+      "cover": "盖板图案",
+      "coverHint": "可不填 — 不填就用主题色方块",
+      "pickCover": "上传盖板图",
+      "changeCover": "更换盖板图",
+      "removeCover": "移除",
+      "answerSection": "题目与答案",
+      "questionText": "屏幕上的文字（可不填）",
+      "questionPlaceholder": "例如：这是哪里？",
+      "answer": "答案",
+      "aliases": "也接受的写法",
+      "aliasesPlaceholder": "用逗号分隔",
+      "aliasesHint": "第一个答对的人就结束该题 — 知道答案但写法不同的人会输，请多填几种",
+      "testAnswer": "测试答案",
+      "testPlaceholder": "照团员可能会打的方式输入",
+      "testRun": "测试",
+      "testPass": "✓ 通过",
+      "testFail": "✕ 不通过 — 请加进「也接受的写法」",
+      "explain": "公布答案时的说明（可不填）",
+      "untestedWarn": "还没填其他写法也还没测试过 — 再按一次储存以确认",
+      "saveAnyway": "仍要储存",
+      "needImage": "请先上传图片",
+      "needAnswer": "请先填写答案"
+    },
+    "host": {
+      "openStage": "打开大屏幕",
+      "tapHint": "点一下要翻的方块，或按随机 · 变暗的图只有这台看得到",
+      "openRandom": "随机翻开",
+      "undo": "撤销刚翻的",
+      "progress": "第 {{index}} 题 · {{state}}",
+      "openedOf": "已翻开 {{opened}} / {{total}} 块",
+      "stats": "还能作答 {{stillIn}} 人 · 在线 {{online}} · 已猜 {{guesses}} 次",
+      "feedTitle": "送进来的答案",
+      "sort": {
+        "time": "按时间",
+        "closeness": "按接近度"
+      },
+      "accept": "采纳",
+      "start": "开始",
+      "next": "下一题",
+      "lockReveal": "停止作答并公布",
+      "scoreboard": "排行榜",
+      "finish": "结束游戏"
+    },
+    "guest": {
+      "placeholder": "输入答案…",
+      "send": "送出",
+      "triesLeft": "还剩 {{n}} 次",
+      "outOfTries": "次数已用完 — 可以继续看到公布答案",
+      "youGotIt": "答对了！你是第一个",
+      "watchOnly": "这题用喊的，不用打字",
+      "winner": "{{name}} 最先答对",
+      "myScore": "你的分数 {{score}}",
+      "feedback": {
+        "correct": "答对了！",
+        "wrong": "还不对，再试试",
+        "already_solved": "已经有人答对了",
+        "duplicate": "和刚才送出的一样",
+        "too_fast": "送得太快了，稍等一下",
+        "closed": "已停止作答",
+        "not_started": "还没开始",
+        "no_attempts": "次数已用完",
+        "empty": "还没输入内容",
+        "too_long": "答案太长"
+      }
     }
   }
 }

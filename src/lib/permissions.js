@@ -52,6 +52,7 @@ export const CAPABILITIES = {
   'bingo.host': 'staff',
   'quiz.host': 'staff', // คุมห้องควิซหน้างาน — ระดับเดียวกับบิงโก
   'puzzle.host': 'staff', // คุมห้องปริศนาใบ้คำ — เกมคนละใบแต่เครื่องยนต์เดียวกับควิซ
+  'tiles.host': 'staff', // คุมห้องเปิดแผ่นป้าย — เครื่องยนต์เดียวกันอีกเกม
   'guest.view': 'staff',
   'dashboard.view': 'guide',
   'guide.read': 'guide',
@@ -64,6 +65,7 @@ export const CAPABILITIES = {
   'form.assign': 'lead', // เปิด/ปิด/เรียงคำถามในทริปนี้
   'quiz.edit': 'lead', // สร้าง/แก้ชุดคำถามควิซ
   'puzzle.edit': 'lead', // สร้าง/แก้ชุดปริศนาใบ้คำ
+  'tiles.edit': 'lead', // สร้าง/แก้ชุดเปิดแผ่นป้าย
   'itinerary.edit': 'lead',
   'seat.layout': 'lead',
   'room.layout': 'lead',
@@ -85,6 +87,7 @@ export const CAPABILITIES = {
   'form.define': 'admin', // สร้าง/แก้ตัวคำถามในคลัง
   'quiz.define': 'admin', // แก้ชุดคำถามในคลังกลาง (กระทบทุกทริปที่หยิบไปใช้)
   'puzzle.define': 'admin', // แก้ชุดปริศนาในคลังกลาง
+  'tiles.define': 'admin', // แก้ชุดเปิดแผ่นป้ายในคลังกลาง
   'destination.manage': 'admin',
   'supplier.manage': 'admin',
   'person.create': 'admin', // สร้างคนใหม่เข้าคลังทีมงาน

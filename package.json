@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node src/lib/__tests__/themes.test.mjs && node src/lib/__tests__/theme-apply.test.mjs && node src/lib/__tests__/contrast.test.mjs && node src/lib/__tests__/dietary.test.mjs && node src/lib/__tests__/guest-field-display.test.mjs && node src/lib/__tests__/fetch-all.test.mjs && node src/lib/__tests__/lucky-draw.test.mjs && node src/lib/__tests__/meet-point.test.mjs && node src/lib/__tests__/puzzle-layout.test.mjs"
+    "test": "node src/lib/__tests__/themes.test.mjs && node src/lib/__tests__/theme-apply.test.mjs && node src/lib/__tests__/contrast.test.mjs && node src/lib/__tests__/dietary.test.mjs && node src/lib/__tests__/guest-field-display.test.mjs && node src/lib/__tests__/fetch-all.test.mjs && node src/lib/__tests__/lucky-draw.test.mjs && node src/lib/__tests__/meet-point.test.mjs && node src/lib/__tests__/puzzle-layout.test.mjs && node src/lib/__tests__/tile-grid.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -20,7 +20,9 @@
     "i18next-browser-languagedetector": "^8.0.0",
     "qrcode.react": "^3.1.0",
     "html5-qrcode": "^2.3.8",
-    "react-markdown": "^9.0.1"
+    "react-markdown": "^9.0.1",
+    "cropperjs": "^1.6.2",
+    "react-cropper": "^2.3.3"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

@@ -79,6 +79,7 @@ export default function Games() {
   const [draw, setDraw] = useState({ rooms: 0, drawn: 0 })
   const [quiz, setQuiz] = useState({ rooms: 0, players: 0 })
   const [puzzle, setPuzzle] = useState({ rooms: 0, players: 0 })
+  const [tiles, setTiles] = useState({ rooms: 0, players: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -116,14 +117,17 @@ export default function Games() {
       const rows = quizRes.data ?? []
       const quizIds = rows.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').map((r) => r.id)
       const puzzleIds = rows.filter((r) => r.game_kind === 'puzzle').map((r) => r.id)
+      const tilesIds = rows.filter((r) => r.game_kind === 'tiles').map((r) => r.id)
 
-      const [quizPlayers, puzzlePlayers] = await Promise.all([
+      const [quizPlayers, puzzlePlayers, tilesPlayers] = await Promise.all([
         countPlayers(quizIds),
         countPlayers(puzzleIds),
+        countPlayers(tilesIds),
       ])
       if (!cancelled) {
         setQuiz({ rooms: quizIds.length, players: quizPlayers })
         setPuzzle({ rooms: puzzleIds.length, players: puzzlePlayers })
+        setTiles({ rooms: tilesIds.length, players: tilesPlayers })
       }
 
       const drawIds = (drawRes.data ?? []).map((r) => r.id)
@@ -226,6 +230,20 @@ export default function Games() {
           }
           statusLive={puzzle.rooms > 0}
           to={can(session, 'puzzle.host') ? '/staff/puzzle' : null}
+        />
+
+        <GameCard
+          icon="expand"
+          tint="#b45309"
+          title={t('tiles.title')}
+          desc={t('staff.games.tilesDesc')}
+          status={
+            tiles.rooms > 0
+              ? t('staff.games.tilesLive', { rooms: tiles.rooms, players: tiles.players })
+              : t('staff.games.tilesIdle')
+          }
+          statusLive={tiles.rooms > 0}
+          to={can(session, 'tiles.host') ? '/staff/tiles' : null}
         />
 
         <div className="flex items-center gap-3.5 rounded-2xl border border-dashed border-line-strong p-4">

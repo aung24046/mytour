@@ -12,6 +12,7 @@ import GuestGames from './pages/guest/Games.jsx'
 import GuestLuckyDraw from './pages/guest/LuckyDraw.jsx'
 import GuestQuiz from './pages/guest/Quiz.jsx'
 import GuestPuzzle from './pages/guest/Puzzle.jsx'
+import GuestTiles from './pages/guest/Tiles.jsx'
 import ShareLocation from './pages/guest/ShareLocation.jsx'
 import BagLookup from './pages/guest/BagLookup.jsx'
 import SOS from './pages/guest/SOS.jsx'
@@ -41,6 +42,10 @@ import PuzzleManager from './pages/staff/PuzzleManager.jsx'
 import PuzzleBuilder from './pages/staff/PuzzleBuilder.jsx'
 import PuzzleHost from './pages/staff/PuzzleHost.jsx'
 import PuzzleStage from './pages/staff/PuzzleStage.jsx'
+import TilesManager from './pages/staff/TilesManager.jsx'
+import TilesBuilder from './pages/staff/TilesBuilder.jsx'
+import TilesHost from './pages/staff/TilesHost.jsx'
+import TilesStage from './pages/staff/TilesStage.jsx'
 import FormBuilder from './pages/staff/FormBuilder.jsx'
 import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
@@ -188,6 +193,7 @@ function App() {
           <Route path="lucky-draw" element={<GuestLuckyDraw />} />
           <Route path="quiz" element={<GuestQuiz />} />
           <Route path="puzzle" element={<GuestPuzzle />} />
+          <Route path="tiles" element={<GuestTiles />} />
           <Route path="bingo" element={<BingoCard />} />
           <Route path="share-location" element={<ShareLocation />} />
           <Route path="sos" element={<SOS />} />
@@ -280,6 +286,28 @@ function App() {
           element={
             <StaffTourLayout>
               <PuzzleStage />
+            </StaffTourLayout>
+          }
+        />
+
+        {/* ── เปิดแผ่นป้าย ────────────────────────────────────
+            เกมที่สามบนเครื่องยนต์เดียวกัน แยกด้วย quiz_sets.game_kind = 'tiles'
+            (ดู MyTour_TileReveal_Design_v1.md) */}
+        <Route path="/staff/tiles" element={staffRoute('tiles.host', <TilesManager />)} />
+        <Route
+          path="/staff/tiles/builder/:setId"
+          element={staffRoute('tiles.edit', <TilesBuilder />)}
+        />
+        <Route
+          path="/staff/tiles/host/:sessionId"
+          element={staffRoute('tiles.host', <TilesHost />)}
+        />
+        {/* จอใหญ่ไม่ guard ด้วยเหตุผลเดียวกับอีกสองเกม: redirect จะทำให้ hash ที่พา token มาหายไป */}
+        <Route
+          path="/staff/tiles/stage/:sessionId"
+          element={
+            <StaffTourLayout>
+              <TilesStage />
             </StaffTourLayout>
           }
         />

@@ -47,6 +47,17 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // ★ กัน chunk ของ cropperjs ออกจาก precache
+        //
+        //   globPatterns ข้างล่างจับ **/*.js ทั้งหมด ซึ่งรวม chunk ที่ lazy ไว้ด้วย
+        //   แปลว่าถ้าไม่มีบรรทัดนี้ service worker จะดาวน์โหลดไลบรารีแต่งรูปให้
+        //   ลูกทัวร์ 40 คนบนรถตั้งแต่เปิดแอปครั้งแรก ทั้งที่มีแต่สตาฟใน TilesBuilder
+        //   เท่านั้นที่ได้ใช้ — และจะไม่มีอะไรฟ้อง เพราะแอปทำงานปกติทุกอย่าง
+        //   แค่ทุกคนโหลดหนักขึ้นเงียบๆ
+        //
+        //   ต้องมาคู่กับ manualChunks ข้างล่าง (ตั้งชื่อ chunk ให้จับได้)
+        //   และ React.lazy ใน TilesBuilder.jsx — ขาดอย่างใดอย่างหนึ่งก็ไม่ได้ผล
+        globIgnores: ['**/image-cropper-*.js', '**/image-cropper-*.css'],
         // App shell + static assets precached for offline load.
         // Supabase API calls are NOT cached here — CheckIn/Itinerary/MyRoom
         // already handle their own offline fallback via localStorage (offlineCache.js).
@@ -55,4 +66,16 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // แยก cropperjs ออกเป็น chunk ชื่อคงที่ เพื่อให้ globIgnores ข้างบนจับได้
+        // ชื่อต้องขึ้นต้นด้วย image-cropper- เท่านั้น ถ้าเปลี่ยนตรงนี้ต้องไปแก้ที่นั่นด้วย
+        manualChunks(id) {
+          if (id.includes('cropperjs') || id.includes('react-cropper')) return 'image-cropper'
+          return undefined
+        },
+      },
+    },
+  },
 })

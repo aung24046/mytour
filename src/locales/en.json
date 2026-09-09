@@ -117,7 +117,10 @@
       "quizClosed": "No room open",
       "puzzleDesc": "Guess the word from picture clues — unlimited attempts",
       "puzzleOpen": "A room is open",
-      "puzzleClosed": "No open room yet"
+      "puzzleClosed": "No open room yet",
+      "tilesDesc": "Guess the picture as tiles open up",
+      "tilesOpen": "A room is open",
+      "tilesClosed": "No open room yet"
     },
     "nav": {
       "home": "Home",
@@ -920,7 +923,10 @@
       "quizIdle": "No room open",
       "puzzleDesc": "Picture word puzzle on the big screen, 1 point per answer",
       "puzzleLive": "{{rooms}} rooms · {{players}} players",
-      "puzzleIdle": "No open room"
+      "puzzleIdle": "No open room",
+      "tilesDesc": "Split a picture into tiles and open them one by one",
+      "tilesLive": "{{rooms}} rooms live · {{players}} players",
+      "tilesIdle": "No room open"
     },
     "luckyDraw": {
       "errNoTable": "The tables for this game are not installed yet — run migration 20260818_lucky_draw.sql first",
@@ -1703,6 +1709,136 @@
       "scoreboard": "Scoreboard",
       "finish": "End game",
       "shoutReminder": "Remind everyone not to shout the answer — type it instead."
+    }
+  },
+  "tiles": {
+    "title": "Reveal the Picture",
+    "noRoom": "No open room yet",
+    "state": {
+      "lobby": "Waiting",
+      "countdown": "Starting",
+      "answering": "Playing",
+      "locked": "Closed",
+      "reveal": "Answer",
+      "scoreboard": "Leaderboard",
+      "finished": "Finished"
+    },
+    "manager": {
+      "subtitle": "Split a picture into tiles, open one at a time",
+      "openRooms": "Open rooms",
+      "noRooms": "No room yet — pick a set below",
+      "roomMeta": "{{players}} players · question {{index}}",
+      "enterRoom": "Host",
+      "closeRoom": "Close",
+      "library": "Picture sets",
+      "modeType": "Typed answers · {{limit}}",
+      "modeNone": "Watch only, no answering",
+      "unlimited": "unlimited tries",
+      "openRoomFrom": "Open a room",
+      "createRoom": "Create",
+      "edit": "Edit",
+      "newSet": "New set",
+      "newSetName": "New picture set",
+      "allBuses": "Whole trip (all buses)",
+      "screen": {
+        "projector": "Projector",
+        "bus_tv": "Bus TV",
+        "none": "No big screen"
+      },
+      "leakWarning": "No big screen means the picture must be sent to every phone — determined players can see it before any tile opens"
+    },
+    "builder": {
+      "subtitle": "{{count}} questions",
+      "setSettings": "Set settings",
+      "answerMode": "How players answer",
+      "modeType": "Type on their phone",
+      "modeNone": "No answering — just reveal the picture",
+      "attemptLimit": "Tries allowed (per question)",
+      "unlimited": "Unlimited",
+      "nTries": "{{n}} tries",
+      "attemptHint": "Resets each question · repeating your last answer does not use a try",
+      "itemMeta": "Grid {{grid}} · {{aliases}} accepted spellings",
+      "addQuestion": "Add question",
+      "image": "Picture",
+      "pickImage": "Attach picture",
+      "changeImage": "Change picture",
+      "recrop": "Adjust crop",
+      "cropTitle": "Crop picture",
+      "grid": "How many tiles",
+      "openStep": "Tiles per tap",
+      "nTiles": "{{n}} tiles",
+      "preview": {
+        "closed": "Closed",
+        "open": "Fully open"
+      },
+      "shapeWarn": {
+        "wide": "Tiles will be very wide — use fewer rows or crop taller",
+        "tall": "Tiles will be very narrow — use fewer columns or crop wider"
+      },
+      "cover": "Tile face",
+      "coverHint": "Optional — leave empty for plain tiles",
+      "pickCover": "Attach tile face",
+      "changeCover": "Change tile face",
+      "removeCover": "Remove",
+      "answerSection": "Question and answer",
+      "questionText": "Text on screen (optional)",
+      "questionPlaceholder": "e.g. Where is this?",
+      "answer": "Answer",
+      "aliases": "Also accept",
+      "aliasesPlaceholder": "Comma separated",
+      "aliasesHint": "The first correct answer ends the question — someone who knows it but spells it differently loses. Add plenty.",
+      "testAnswer": "Test an answer",
+      "testPlaceholder": "Type it the way a guest might",
+      "testRun": "Test",
+      "testPass": "✓ Accepted",
+      "testFail": "✕ Rejected — add it to 'also accept'",
+      "explain": "Note shown at reveal (optional)",
+      "untestedWarn": "No alternative spellings and no test run yet — tap save again to confirm",
+      "saveAnyway": "Save anyway",
+      "needImage": "Attach a picture first",
+      "needAnswer": "Enter the answer first"
+    },
+    "host": {
+      "openStage": "Open big screen",
+      "tapHint": "Tap a tile to open it, or shuffle · the dimmed picture is only on this device",
+      "openRandom": "Open at random",
+      "undo": "Undo last tile",
+      "progress": "Question {{index}} · {{state}}",
+      "openedOf": "{{opened}} of {{total}} tiles open",
+      "stats": "{{stillIn}} can still answer · {{online}} online · {{guesses}} guesses",
+      "feedTitle": "Answers coming in",
+      "sort": {
+        "time": "By time",
+        "closeness": "By closeness"
+      },
+      "accept": "Accept",
+      "start": "Start",
+      "next": "Next",
+      "lockReveal": "Close and reveal",
+      "scoreboard": "Leaderboard",
+      "finish": "Finish"
+    },
+    "guest": {
+      "placeholder": "Type your answer...",
+      "send": "Send",
+      "triesLeft": "{{n}} tries left",
+      "outOfTries": "Out of tries — keep watching until the reveal",
+      "youGotIt": "Correct! You got it first",
+      "watchOnly": "Shout it out — no typing for this one",
+      "winner": "{{name}} got it first",
+      "myScore": "Your score {{score}}",
+      "feedback": {
+        "correct": "Correct!",
+        "wrong": "Not it — try again",
+        "already_solved": "Someone already got it",
+        "duplicate": "Same as your last answer",
+        "too_fast": "A little too fast",
+        "closed": "Answers are closed",
+        "not_started": "Not started yet",
+        "no_attempts": "Out of tries",
+        "empty": "Nothing typed",
+        "too_long": "Answer too long"
+      }
     }
   }
 }
