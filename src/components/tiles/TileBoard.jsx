@@ -24,7 +24,8 @@ export default function TileBoard({
   rows = 3,
   cols = 4,
   crop = null,
-  imageUrl = null,          // ภาพจริง — ลูกทัวร์ไม่ได้รับจนกว่าจะเฉลย
+  imageUrl = null,          // ภาพจริง — อาจยังโหลดไม่เสร็จหรือยังไม่ได้รับ
+  imageAspect = null,       // กว้าง/สูง ของภาพต้นฉบับ จาก quiz_tiles.image_aspect
   coverImageUrl = null,     // ภาพตอนปิด · ไม่มี = ช่องสีตามธีม
   revealed = [],
   peek = false,             // โหมดคนคุมเกม: เห็นภาพหรี่แสงใต้แผ่นที่ยังปิด
@@ -36,11 +37,13 @@ export default function TileBoard({
   const g = clampGrid(rows, cols)
   const numbers = useMemo(() => tileNumbers(g.rows, g.cols), [g.rows, g.cols])
 
-  // สัดส่วนภาพจริง — ต้องอ่านจากไฟล์ ไม่มีเก็บใน DB
-  // ลูกทัวร์ที่ยังไม่ได้ภาพจะได้กระดานตามสัดส่วนกริด (แผ่นจัตุรัส) ซึ่งเป็นรูปทรง
-  // ที่อ่านง่ายที่สุดสำหรับกระดานที่เป็นแค่ "ตัวเลข" ไม่ใช่ "ภาพ"
-  const imgAspect = useImageAspect(imageUrl)
-  const aspect = imageUrl && imgAspect ? boardAspect(imgAspect, crop) : g.cols / g.rows
+  // ★ สัดส่วนกระดานต้อง "ไม่ขึ้นกับว่ามีตัวภาพอยู่ในมือหรือยัง"
+  //   ไม่งั้นจอที่มีภาพกับจอที่ยังไม่มีจะได้รูปทรงคนละแบบ แล้วภาพตอนปิดจะถูกยืด
+  //   (เจอตอนเล่นจริง: มือถือได้ 3x4 = 1.33 ส่วนโปรเจกเตอร์ได้ 16:9 = 1.78)
+  //   ค่าที่เก็บไว้ตอนสร้างข้อมาก่อนเสมอ · วัดจากไฟล์เป็นแผนสอง · กริดเป็นแผนสาม
+  const measured = useImageAspect(imageUrl)
+  const srcAspect = Number(imageAspect) > 0 ? Number(imageAspect) : measured
+  const aspect = srcAspect ? boardAspect(srcAspect, crop) : g.cols / g.rows
 
   const fresh = useFreshlyOpened(revealed, animate)
 

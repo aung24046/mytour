@@ -235,7 +235,10 @@ export function useQuizSession(sessionId) {
         if (data?.kind === 'tiles') {
           const { data: tiles } = await supabase
             .from('quiz_tiles')
-            .select('grid_rows, grid_cols, open_step, cover_image_url, crop_x, crop_y, crop_w, crop_h')
+            .select(
+              'grid_rows, grid_cols, open_step, cover_image_url,' +
+              ' crop_x, crop_y, crop_w, crop_h, image_aspect'
+            )
             .eq('question_id', qid)
             .maybeSingle()
           if (!mountedRef.current) return

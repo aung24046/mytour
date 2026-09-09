@@ -309,7 +309,10 @@ export async function fetchReport({ sessionId, staffId, pin }) {
  */
 export function stageUrl(sessionId, kind = 'quiz') {
   const token = getHostToken(sessionId)
-  const path = kind === 'puzzle' ? 'puzzle' : 'quiz'
+  // ⚠️ เพิ่มเกมใหม่แล้วต้องมาเติมที่นี่ด้วย ไม่งั้นปุ่ม "เปิดจอใหญ่" จะพาไปจอควิซ
+  //    ซึ่งไม่รู้จักข้อชนิดใหม่ เห็นแต่นาฬิกาเปล่าๆ — และไม่มี error อะไรฟ้องเลย
+  //    (เจอตอนเล่นจริงครั้งแรกของเกมเปิดแผ่นป้าย 10 ก.ย. 2026)
+  const path = ['quiz', 'puzzle', 'tiles'].includes(kind) ? kind : 'quiz'
   const base = `${window.location.origin}/staff/${path}/stage/${sessionId}`
   return token ? `${base}#t=${token}` : base
 }

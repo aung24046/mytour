@@ -56,6 +56,22 @@ export default function ImageCropper({
     })
   }
 
+  /**
+   * สลับอัตราส่วนกรอบ
+   *
+   * ⚠️ ต้องสั่ง setAspectRatio เองทุกครั้ง — react-cropper อ่าน prop aspectRatio
+   *    แค่ตอน mount ครั้งเดียว แล้วไม่เฝ้าดูอีกเลย (ยืนยันจากซอร์ส dist ของมัน:
+   *    ทั้งไฟล์ไม่มีคำว่า setAspectRatio) ถ้าเปลี่ยนแต่ state ปุ่มจะไฮไลต์ถูก
+   *    แต่กรอบไม่ขยับ — บั๊กที่ดูผ่านๆ เหมือนทำงานอยู่
+   *
+   *    ตั้งตรงนี้แทนที่จะทำใน useEffect โดยตั้งใจ: ถ้าใช้ effect มันจะยิงตอน mount ด้วย
+   *    แล้วไป reset กรอบที่ handleReady เพิ่งตั้งจาก initialCrop ทิ้ง
+   */
+  function pickRatio(v) {
+    setRatio(v)
+    cropperRef.current?.cropper?.setAspectRatio(v ?? NaN)
+  }
+
   function rotate(deg) {
     cropperRef.current?.cropper?.rotate(deg)
   }
@@ -143,7 +159,7 @@ export default function ImageCropper({
               <button
                 key={r.key}
                 type="button"
-                onClick={() => setRatio(r.value)}
+                onClick={() => pickRatio(r.value)}
                 className={[
                   'rounded-full px-3 py-1.5 text-sm font-semibold transition',
                   ratio === r.value ? 'bg-white text-slate-900' : 'bg-white/15 text-white',

@@ -103,10 +103,11 @@ export default function TilesBuilder() {
     if (pin) load(pin)
   }, [pin, load])
 
-  // สัดส่วนภาพจริงต้องอ่านจากไฟล์ ไม่มีเก็บใน DB — ใช้เตือนว่ากริดที่เลือกจะได้แผ่นเป็นเส้น
+  // อ่านสัดส่วนจากไฟล์จริง — ใช้สองอย่าง: เตือนรูปทรงแผ่น และเก็บลง DB ตอนบันทึก
   useEffect(() => {
     const url = draft?.tile_image_url
     if (!url) return undefined
+    if (draft?._aspect) return undefined     // วัดไปแล้ว ไม่ต้องโหลดซ้ำ
     let alive = true
     const img = new Image()
     img.onload = () => {
@@ -119,9 +120,13 @@ export default function TilesBuilder() {
   }, [draft?.tile_image_url])
 
   const imgAspectWarning = useMemo(
-    () => (draft ? tileShapeWarning(draft._aspect, draft.grid_rows, draft.grid_cols, crop) : null),
+    () =>
+      draft
+        ? tileShapeWarning(draft._aspect ?? draft.image_aspect, draft.grid_rows, draft.grid_cols, crop)
+        : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [draft?._aspect, draft?.grid_rows, draft?.grid_cols, draft?.crop_x, draft?.crop_y, draft?.crop_w, draft?.crop_h]
+    [draft?._aspect, draft?.image_aspect, draft?.grid_rows, draft?.grid_cols,
+     draft?.crop_x, draft?.crop_y, draft?.crop_w, draft?.crop_h]
   )
 
   function patch(next) {
@@ -226,6 +231,9 @@ export default function TilesBuilder() {
         sortOrder: draft.question_id
           ? items.find((i) => i.question_id === draft.question_id)?.sort_order ?? 0
           : items.length,
+        // ★ สัดส่วนภาพต้องถูกเก็บลง DB ไม่งั้นมือถือลูกทัวร์คำนวณรูปทรงกระดานไม่ได้
+        //   แล้วจะได้กระดานคนละรูปทรงกับโปรเจกเตอร์ (ดู TileBoard)
+        imageAspect: draft._aspect ?? draft.image_aspect ?? null,
       })
       setDraft(null)
       setTestedOnce(false)
@@ -328,6 +336,7 @@ export default function TilesBuilder() {
                       rows={it.grid_rows} cols={it.grid_cols}
                       crop={{ x: it.crop_x, y: it.crop_y, w: it.crop_w, h: it.crop_h }}
                       imageUrl={it.tile_image_url}
+                      imageAspect={it.image_aspect}
                       coverImageUrl={it.cover_image_url}
                       revealed={Array.from({ length: tileCount(it.grid_rows, it.grid_cols) }, (_, k) => k + 1)}
                       showNumbers={false}
@@ -438,6 +447,7 @@ export default function TilesBuilder() {
                   <TileBoard
                     rows={draft.grid_rows} cols={draft.grid_cols} crop={crop}
                     imageUrl={draft.tile_image_url}
+                    imageAspect={draft._aspect ?? draft.image_aspect}
                     coverImageUrl={draft.cover_image_url}
                     revealed={preview === 'open'
                       ? Array.from({ length: tileCount(draft.grid_rows, draft.grid_cols) }, (_, k) => k + 1)

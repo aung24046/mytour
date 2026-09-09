@@ -6,7 +6,7 @@ import { useTourId, useTourPath } from '../../lib/TourContext'
 import { getGuestId } from '../../lib/guestSession'
 import { getStaffSession } from '../../lib/staffSession'
 import { SESSION_COLS, useQuizSession, useQuizHeartbeat, syncServerClock } from '../../lib/useQuizSession'
-import { submitTileGuess, fetchMyTileState } from '../../lib/tileHost'
+import { submitTileGuess, fetchMyTileState, fetchCurrentTileImage } from '../../lib/tileHost'
 import { openCount, tileCount } from '../../lib/tileGrid'
 import TileBoard from '../../components/tiles/TileBoard'
 import Button from '../../components/common/Button'
@@ -16,10 +16,13 @@ import AnnouncementBanner from '../../components/common/AnnouncementBanner'
 
 // หน้าเล่นเกมเปิดแผ่นป้ายของลูกทัวร์
 //
-// ★ มือถือไม่ได้รับภาพจริงจนกว่าจะเฉลย — เห็นแค่ภาพตอนปิดกับหมายเลข
-//   ภาพจริงคือเฉลย ถ้าส่งมาที่นี่ก็เท่ากับแจกเฉลยให้ทุกคนที่เปิด Network tab เป็น
-//   (ต่างจากเกมปริศนาใบ้คำที่รูปใบ้เป็นของสาธารณะโดยธรรมชาติ)
-//   ตอน reveal ภาพมาพร้อม reveal_payload ซึ่งตอนนั้นข้อจบแล้ว ไม่มีอะไรให้รั่ว
+// ★ มือถือเห็นภาพใต้แผ่นที่เปิดแล้ว (เจ้าของโปรเจกต์ตัดสิน 10 ก.ย. 2026)
+//   เดิมตั้งใจไม่ส่งเลยเพราะภาพคือเฉลย แต่พอเล่นจริงลูกทัวร์เห็นแค่ตารางตัวเลขเปล่าๆ
+//   เล่นไม่รู้เรื่อง — เกมที่ไม่มีใครเห็นแย่กว่าการรั่วที่ไม่มีใครไปแคะ
+//
+//   แต่ยังไม่ได้แปลว่าแจกฟรีทุกอย่าง: ภาพมาทาง quiz_tiles_current_image ซึ่งคืนเฉพาะ
+//   "ข้อปัจจุบันที่เปิดแล้ว" ข้อเดียว ไม่ใช่ทั้งชุด คนที่เปิด devtools เห็นได้อย่างมาก
+//   คือภาพของข้อที่กำลังเล่นอยู่ตรงหน้า
 //
 // ★ หน้าจอตอนหมดโควตาต้องไม่ใช่ช่องพิมพ์สีเทาพร้อมข้อความว่าคุณหมดสิทธิ์
 //   โควตาจำกัดทำให้สภาพนี้เป็นเรื่องปกติของทุกข้อ ไม่ใช่เคสขอบ —
@@ -61,6 +64,8 @@ export default function Tiles() {
   const [error, setError] = useState('')
   const [myScore, setMyScore] = useState(null)
 
+  const [tileImage, setTileImage] = useState(null)
+
   const questionRef = useRef(null)
   const { session, question, phase } = useQuizSession(activeId)
   useQuizHeartbeat(player?.id)
@@ -70,6 +75,8 @@ export default function Tiles() {
   const opened = openCount(session?.revealed_tiles, grid.grid_rows, grid.grid_cols)
   const reveal = session?.reveal_payload ?? {}
   const revealing = phase === 'reveal' && reveal.kind === 'tiles'
+  // ภาพที่เอามาวางใต้แผ่น — ตอนเฉลย reveal_payload พามาให้อยู่แล้ว ใช้เป็นตาข่ายรองรับ
+  const boardImage = tileImage ?? (revealing ? reveal.tile_image_url ?? null : null)
   const answerMode = setMeta?.answer_mode ?? 'type'
   const exhausted = left !== null && left <= 0
 
@@ -164,6 +171,22 @@ export default function Tiles() {
       })
       .catch(() => {})
   }, [session?.current_question_id, session?.id, player?.id, setMeta?.attempt_limit])
+
+  // ดึงภาพของข้อปัจจุบัน — server คืนให้เฉพาะเมื่อเปิดข้อแล้ว จึงต้องลองใหม่
+  // เมื่อเฟสขยับ (lobby → countdown → answering) ไม่ใช่ยิงครั้งเดียวตอนเปลี่ยนข้อ
+  useEffect(() => {
+    setTileImage(null)
+  }, [session?.current_question_id])
+
+  useEffect(() => {
+    const qid = session?.current_question_id
+    if (!qid || !session?.id || tileImage || phase === 'lobby') return undefined
+    let alive = true
+    fetchCurrentTileImage(session.id)
+      .then((url) => { if (alive && url) setTileImage(url) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [session?.id, session?.current_question_id, phase, tileImage])
 
   useEffect(() => {
     if (!player?.id || !['reveal', 'scoreboard', 'finished'].includes(phase)) return
@@ -271,8 +294,8 @@ export default function Tiles() {
           rows={grid.grid_rows}
           cols={grid.grid_cols}
           crop={{ x: grid.crop_x, y: grid.crop_y, w: grid.crop_w, h: grid.crop_h }}
-          // ★ ภาพจริงมาตอน reveal เท่านั้น
-          imageUrl={revealing ? reveal.tile_image_url ?? null : null}
+          imageUrl={boardImage}
+          imageAspect={grid.image_aspect}
           coverImageUrl={grid.cover_image_url}
           revealed={session?.revealed_tiles ?? []}
           showNumbers={!revealing}

@@ -171,6 +171,7 @@ export default function TilesHost() {
               cols={grid.grid_cols}
               crop={{ x: grid.crop_x, y: grid.crop_y, w: grid.crop_w, h: grid.crop_h }}
               imageUrl={imageUrl}
+              imageAspect={grid.image_aspect}
               coverImageUrl={grid.cover_image_url}
               revealed={session?.revealed_tiles ?? []}
               peek

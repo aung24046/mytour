@@ -72,7 +72,18 @@ export default defineConfig({
         // แยก cropperjs ออกเป็น chunk ชื่อคงที่ เพื่อให้ globIgnores ข้างบนจับได้
         // ชื่อต้องขึ้นต้นด้วย image-cropper- เท่านั้น ถ้าเปลี่ยนตรงนี้ต้องไปแก้ที่นั่นด้วย
         manualChunks(id) {
-          if (id.includes('cropperjs') || id.includes('react-cropper')) return 'image-cropper'
+          // รวม "ตัวคอมโพเนนต์" เข้ามาใน chunk เดียวกับไลบรารีด้วย
+          // ไม่งั้น rollup ตั้งชื่อ chunk ของคอมโพเนนต์ว่า ImageCropper-*.js (ตัว I ใหญ่)
+          // ซึ่ง globIgnores ที่เขียนว่า image-cropper-* จับไม่ได้ เพราะ glob แยกตัวพิมพ์ใหญ่เล็ก
+          // ผลคือมี chunk หลุดเข้า precache ทั้งที่ดูเผินๆ เหมือนกันไว้แล้ว (ยืนยันด้วยการ build จริง)
+          // ก้อนเดียว = ยามด่านเดียว = ไม่มีช่องให้พลาด
+          if (
+            id.includes('cropperjs') ||
+            id.includes('react-cropper') ||
+            id.includes('ImageCropper')
+          ) {
+            return 'image-cropper'
+          }
           return undefined
         },
       },

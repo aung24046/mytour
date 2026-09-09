@@ -82,6 +82,25 @@ export async function fetchTileImage(sessionId, questionId) {
   return data ?? null
 }
 
+/**
+ * ภาพของ "ข้อปัจจุบัน" สำหรับมือถือลูกทัวร์ — ไม่ต้องมี token
+ *
+ * ต่างจาก fetchTileImage ตรงที่ตัวนี้ใครก็เรียกได้ แต่ฝั่ง server จำกัดไว้สามชั้น:
+ * คืนเฉพาะข้อปัจจุบันของห้องนั้น · ต้องเปิดข้อแล้ว · ห้องที่จบแล้วไม่คืน
+ * จึงรั่วได้อย่างมากคือภาพของข้อที่กำลังเล่นอยู่ ซึ่งเป็นสิ่งที่ตั้งใจให้เห็นอยู่แล้ว
+ *
+ * ★ ห้ามเปลี่ยนไปอ่าน tile_image_url จากตาราง quiz_tiles ตรงๆ เพื่อความสะดวก
+ *   นั่นแปลว่าลูกทัวร์ SELECT ทีเดียวได้ภาพทุกข้อในชุด = ได้เฉลยทั้งเกม
+ */
+export async function fetchCurrentTileImage(sessionId) {
+  if (!sessionId) return null
+  const { data, error } = await supabase.rpc('quiz_tiles_current_image', {
+    p_session_id: sessionId,
+  })
+  if (error) throw error
+  return data ?? null
+}
+
 export async function fetchTileStats(sessionId, questionId) {
   const { data, error } = await supabase.rpc('quiz_tiles_stats', {
     p_session_id: sessionId,
@@ -144,7 +163,7 @@ export async function fetchTilesSet({ setId, staffId, pin }) {
 export async function saveTilesQuestion({
   staffId, pin, setId, questionId, text, timeLimitSec,
   gridRows, gridCols, openStep, coverImageUrl, crop, imageUrl,
-  answer, aliases, explain, sortOrder,
+  answer, aliases, explain, sortOrder, imageAspect,
 }) {
   const { data, error } = await supabase.rpc('quiz_tiles_upsert', {
     p_staff_id: staffId,
@@ -166,6 +185,7 @@ export async function saveTilesQuestion({
     p_aliases: aliases ?? [],
     p_explain: explain ?? '',
     p_sort_order: sortOrder ?? 0,
+    p_image_aspect: imageAspect ?? null,
   })
   if (error) throw error
   return data
