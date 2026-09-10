@@ -19,6 +19,8 @@ const HIDE_GUEST_PAGES = [
   'games',
   'lucky-draw',
   'quiz',
+  'puzzle',
+  'tiles',
   'share-location',
   'trip-guide',
   'feedback',

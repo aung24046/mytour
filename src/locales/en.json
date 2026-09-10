@@ -1629,7 +1629,9 @@
       "guess": "• Guess the word from the picture clues",
       "point": "• 1 point per correct answer",
       "unlimited": "• Unlimited attempts",
-      "winner": "• Highest score wins"
+      "winner": "• Highest score wins",
+      "teamPoint": "• The team that answers correctly gets 1 point",
+      "teamWinner": "• Highest team total wins"
     },
     "feedback": {
       "wrong": "Not it — try again",
@@ -1658,13 +1660,27 @@
         "projector": "Projector",
         "bus_tv": "Bus TV",
         "none": "No big screen"
-      }
+      },
+      "teamMode": "Let guests play in teams",
+      "teamSize": "Members per team",
+      "teamSizeFree": "No team size limit",
+      "teamHint": "Guests form teams themselves in the lobby · team score is the members’ total",
+      "solveLimit": "Correct answers before reveal (this room)",
+      "solveLimitHint": "For teams keep it at 1 — the first team to answer scores and the answer is revealed",
+      "solveLimitN": "First {{n}}, then reveal",
+      "solveLimitOff": "Unlimited — host reveals manually",
+      "teamBadge": "Teams"
     },
     "builder": {
       "title": "Puzzle set",
       "pinWhy": "Enter the staff PIN — this page reads answers, which guests cannot access.",
       "editItem": "Edit item",
       "addItem": "Add item",
+      "setSettings": "Settings for this set",
+      "solveLimit": "How many may answer correctly before the reveal",
+      "solveLimitHint": "Once that many are in, the answer shows at once — the host does not have to press anything.",
+      "solveLimitN": "First {{n}}, then reveal",
+      "solveLimitOff": "No limit — the host reveals",
       "empty": "No items yet",
       "itemMeta": "{{clues}} clues · {{syllables}} syllables · {{hints}} hints",
       "clues": "Clues ({{n}}/{{max}})",
@@ -1708,8 +1724,21 @@
       "lockReveal": "Close + reveal",
       "scoreboard": "Scoreboard",
       "finish": "End game",
-      "shoutReminder": "Remind everyone not to shout the answer — type it instead."
-    }
+      "shoutReminder": "Remind everyone not to shout the answer — type it instead.",
+      "teams": "Teams",
+      "teamRow": "{{n}} members · {{score}} pts",
+      "noTeamWarn": "{{n}} players have not picked a team",
+      "noTeams": "No teams yet",
+      "solvedBy": "🎉 {{name}} got it ({{sec}}s)",
+      "solvedByTeam": "🎉 {{name}} of {{team}} got it ({{sec}}s)",
+      "roomSolveLimit": "This room: reveal after {{n}} correct",
+      "roomSolveLimitOff": "This room: unlimited — reveal manually"
+    },
+    "myTeam": "Your team",
+    "joinTeamFirst": "Pick a team before the game starts",
+    "winner": "🎉 {{name}} got it first",
+    "winnerTeam": "🎉 {{team}} scores ({{name}})",
+    "teamScore": "Team score {{score}}"
   },
   "tiles": {
     "title": "Reveal the Picture",
@@ -1749,7 +1778,7 @@
       "teamMode": "Let guests play in teams",
       "teamSize": "Members per team",
       "teamSizeFree": "Unlimited",
-      "teamHint": "Guests form teams themselves in the lobby · team score is the average per person, so a big team gains nothing"
+      "teamHint": "Guests form teams themselves in the lobby · team score is the members’ total"
     },
     "builder": {
       "subtitle": "{{count}} questions",

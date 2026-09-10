@@ -281,7 +281,10 @@ export default function Tiles() {
   if (!player) {
     return (
       <div className="mx-auto max-w-md space-y-3 px-4 pb-28 pt-6">
-        <h1 className="text-xl font-extrabold text-ink">{t('quiz.visitorTitle')}</h1>
+        <div className="flex items-center gap-2">
+          <BackButton to={tp('games')} />
+          <h1 className="text-xl font-extrabold text-ink">{t('quiz.visitorTitle')}</h1>
+        </div>
         <p className="text-sm text-ink-muted">{t('quiz.visitorHint')}</p>
         <input value={visitorName} onChange={(e) => setVisitorName(e.target.value)}
                placeholder={t('quiz.visitorPlaceholder')}
@@ -299,7 +302,12 @@ export default function Tiles() {
   if (phase === 'lobby') {
     return (
       <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col gap-4 px-4 pb-6 pt-4">
-        <h1 className="text-lg font-extrabold text-ink">{session?.name}</h1>
+        <div className="flex items-center gap-2">
+          <BackButton to={tp('games')} />
+          <h1 className="min-w-0 flex-1 truncate text-lg font-extrabold text-ink">
+            {session?.name}
+          </h1>
+        </div>
 
         <img
           src={setMeta?.cover_url || DEFAULT_LOBBY_ART}
@@ -333,9 +341,14 @@ export default function Tiles() {
 
   return (
     <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col px-4 pb-4 pt-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-extrabold text-ink">{session?.name}</h1>
-        <span className="text-sm font-bold text-ink-muted">{opened}/{total}</span>
+      {/* ปุ่มลอย "หน้าหลัก" ไม่โผล่บนหน้าเกมแล้ว (ดู lib/homeButton.js)
+          ทางกลับของหน้านี้จึงต้องอยู่ตรงนี้ — และกลับไปหน้ารวมเกม ไม่ใช่หน้าแรกของทริป */}
+      <div className="flex items-center gap-2">
+        <BackButton to={tp('games')} />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-extrabold text-ink">
+          {session?.name}
+        </h1>
+        <span className="flex-none text-sm font-bold text-ink-muted">{opened}/{total}</span>
       </div>
 
       {/* ป้ายทีมของตัวเอง — ระหว่างเล่นต้องเห็นว่าตัวเองอยู่ทีมไหน ไม่งั้นลืม */}

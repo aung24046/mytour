@@ -130,7 +130,9 @@ export default function TilesStage() {
   }, [session?.set_id])
 
   // เล่นเป็นทีมก็ให้กระดานเป็นของทีม ไม่ใช่รายคน
-  // คะแนนทีมเป็น "ค่าเฉลี่ยต่อคน" (ดู quiz_team_leaderboard) ทีมใหญ่จึงไม่ได้เปรียบ
+  // คะแนนทีม = คะแนนรวมของสมาชิก (เจ้าของโปรเจกต์เปลี่ยน 11 ก.ย. 2026)
+  // เดิมเป็นค่าเฉลี่ยปัดเศษ ซึ่งบนสเกล 1 คะแนน ทีม 3 คนที่ชนะ 1 ข้อ = 0.33 → ขึ้นจอเป็น 0
+  // quiz_team_leaderboard เรียงด้วย total_score ให้เองเมื่อเป็นเกม puzzle/tiles
   useEffect(() => {
     if (phase !== 'scoreboard' && phase !== 'finished') return
     const rpc = session?.team_mode
@@ -153,7 +155,7 @@ export default function TilesStage() {
   const winner = stats.winner_name
     ? { name: stats.winner_name, team: stats.winner_team, sec: stats.winner_seconds }
     : (revealing && reveal.fastest
-        ? { name: reveal.fastest.name, team: null, sec: reveal.fastest.seconds }
+        ? { name: reveal.fastest.name, team: reveal.fastest.team ?? null, sec: reveal.fastest.seconds }
         : null)
 
   return (
@@ -227,7 +229,7 @@ export default function TilesStage() {
                   ) : null}
                 </span>
                 <span className="text-3xl font-black text-black sm:text-5xl">
-                  {row.score ?? row.avg_score}
+                  {row.score ?? row.total_score}
                 </span>
               </li>
             ))}

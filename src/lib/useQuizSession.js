@@ -25,7 +25,7 @@ export const SESSION_COLS =
   'id, tour_id, set_id, name, bus_id, state, current_index, current_question_id,' +
   ' question_started_at, question_ends_at, locked_at, reveal_payload, join_open,' +
   ' late_join, stage_theme, screen_mode, team_mode, team_size_limit, created_at, ended_at,' +
-  ' game_kind, hint_level, hint_payload, revealed_tiles, last_tile_at'
+  ' game_kind, hint_level, hint_payload, revealed_tiles, last_tile_at, solve_limit'
 
 // ---------------------------------------------------------------------
 // นาฬิกา server

@@ -12,28 +12,45 @@ import { useTranslation } from 'react-i18next'
 //     <BackButton to={tp('games')} />
 //     <h1 className="text-2xl font-extrabold text-ink">…</h1>
 //   </div>
-export default function BackButton({ to, className = '' }) {
+//
+// ย้อน "ภายในหน้าเดียวกัน" (เช่น ฟอร์มแก้ข้อ → รายการข้อ) ส่ง onClick แทน to
+// ปุ่มจะเป็น <button> แทนลิงก์ — หน้าตาเหมือนกันทุกอย่าง
+//   <BackButton onClick={() => setDraft(null)} />
+export default function BackButton({ to, onClick, className = '' }) {
   const { t } = useTranslation()
-  if (!to) return null
+  if (!to && !onClick) return null
+
+  const cls = `no-print -ml-1.5 flex h-9 w-9 flex-none items-center justify-center rounded-full text-ink-muted transition active:scale-95 hover:bg-surface-sunken hover:text-ink print:hidden ${className}`
+  const icon = (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  )
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} aria-label={t('common.back')} className={cls}>
+        {icon}
+      </button>
+    )
+  }
 
   return (
     <Link
       to={to}
       aria-label={t('common.back')}
-      className={`no-print -ml-1.5 flex h-9 w-9 flex-none items-center justify-center rounded-full text-ink-muted transition active:scale-95 hover:bg-surface-sunken hover:text-ink print:hidden ${className}`}
+      className={cls}
     >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M15 18l-6-6 6-6" />
-      </svg>
+      {icon}
     </Link>
   )
 }

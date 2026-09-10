@@ -1,4 +1,6 @@
-import { clueGrid, splitSyllables, validateClues, clueTextScale } from '../puzzleLayout.js'
+import {
+  clueGrid, splitSyllables, validateClues, clueTextScale, clueCellHeight, clueFrameStyle,
+} from '../puzzleLayout.js'
 
 let fail = 0
 const ok = (cond, msg) => { if (!cond) { fail++; console.log('  ✗', msg) } }
@@ -52,6 +54,27 @@ ok(validateClues(Array(7).fill({ body: 'x' })) !== null, 'เจ็ดชิ้�
 console.log('── ขนาดตัวอักษรของใบ้แบบอีโมจิ/คำ')
 ok(clueTextScale('emoji', '🐐') > clueTextScale('text', 'กะละมังใบใหญ่'), 'คำยาวต้องเล็กกว่าอีโมจิ')
 ok(clueTextScale('text', 'กา') > clueTextScale('text', 'กะละมังใบใหญ่'), 'คำสั้นใหญ่กว่าคำยาว')
+
+console.log('── ขนาดกรอบรูปใบ้')
+const px = (css) => Number(/(\d+(?:\.\d+)?)px/.exec(css)[1])
+ok(px(clueCellHeight('stage', 1)) > px(clueCellHeight('stage', 2)), 'แถวเดียวได้ช่องสูงกว่าหลายแถว')
+ok(px(clueCellHeight('stage', 1)) > px(clueCellHeight('phone', 1)), 'จอเวทีใหญ่กว่ามือถือ')
+ok(px(clueCellHeight('phone', 2)) <= 130, 'สองแถวบนมือถือต้องไม่กินจอจนช่องพิมพ์ตกขอบ')
+ok(clueCellHeight('bus_tv', 3) === clueCellHeight('stage', 3), 'ทีวีบนรถใช้สเกลเดียวกับจอเวที')
+ok(clueCellHeight('ไม่รู้จัก', 1) === clueCellHeight('stage', 1), 'พื้นผิวแปลกๆ ตกไปที่ค่าจอเวที ไม่พัง')
+
+const H = clueCellHeight('stage', 1)
+const fSquare = clueFrameStyle(1, H)
+ok(fSquare.aspectRatio === '1', 'กรอบมีสัดส่วนเท่ารูป จึงหุ้มรูปพอดี ไม่เหลือขอบขาว')
+ok(fSquare.width === `min(100%, calc(${H} * 1))`, 'กว้างได้ไม่เกินช่อง และไม่เกินความสูงช่องคูณสัดส่วน')
+ok(!('height' in fSquare), 'ความสูงมาจาก aspect-ratio ไม่ใช่ตั้งเอง ไม่งั้นรูปนอนจัดจะมีขอบขาวบน-ล่าง')
+ok(clueFrameStyle(0.6, H).aspectRatio === '0.6', 'รูปแนวตั้งได้กรอบแนวตั้ง ไม่ใช่กรอบขาวเต็มช่อง')
+ok(clueFrameStyle(3, H).width.includes('min(100%'), 'พาโนรามาถูกจำกัดที่ความกว้างช่องก่อน')
+ok(clueFrameStyle(null, H).width === '100%' && !clueFrameStyle(null, H).aspectRatio,
+   'รูปที่ยังโหลดไม่เสร็จใช้เต็มช่องไปก่อน')
+ok(clueFrameStyle(null, H).height === H, 'กรอบที่ยังไม่รู้สัดส่วนต้องสูงเท่าช่อง ไม่ใช่สูงศูนย์')
+ok(clueFrameStyle(0, H).width === '100%' && clueFrameStyle(NaN, H).width === '100%',
+   'สัดส่วนพังๆ ไม่ทำให้กรอบสูงศูนย์')
 
 console.log(fail === 0 ? '✓ ผ่านทั้งหมด' : `✗ ไม่ผ่าน ${fail} ข้อ`)
 process.exit(fail === 0 ? 0 : 1)

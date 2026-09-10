@@ -10,7 +10,10 @@ import {
 } from '../../lib/useQuizSession'
 import { submitGuess, fetchMyState } from '../../lib/puzzleHost'
 import { splitSyllables } from '../../lib/puzzleLayout'
+import { useQuizTeams } from '../../lib/useQuizTeams'
+import { teamStyle } from '../../lib/quizStyle'
 import ClueBoard from '../../components/puzzle/ClueBoard'
+import TeamPicker from '../../components/quiz/TeamPicker'
 import Button from '../../components/common/Button'
 import GuestNav from '../../components/common/GuestNav'
 import BackButton from '../../components/common/BackButton'
@@ -66,6 +69,17 @@ export default function Puzzle() {
 
   const { session, question, phase, msLeft } = useQuizSession(activeId)
   useQuizHeartbeat(player?.id)
+
+  // ทีม — ของกลางตัวเดียวกับควิซและเปิดแผ่นป้าย (อย่าทำสำเนา)
+  const teamMode = Boolean(session?.team_mode)
+  const { teams, myTeam, teamBusy, createTeam, joinTeam, reloadTeams } = useQuizTeams({
+    sessionId: activeId,
+    teamMode: session?.team_mode,
+    sessionState: session?.state,
+    player,
+    setPlayer,
+    onError: setError,
+  })
 
   // ── รายการห้องที่เปิดอยู่ ────────────────────────────────────────
   const loadRooms = useCallback(async () => {
@@ -151,13 +165,15 @@ export default function Puzzle() {
 
   useEffect(() => {
     if (!player?.id || !['reveal', 'scoreboard', 'finished'].includes(phase)) return
+    // คะแนนทีมไม่มากับ realtime (quiz_players ไม่ publish) — ดึงใหม่ตอนเฉลย/กระดาน
+    if (teamMode) reloadTeams()
     supabase
       .from('quiz_players')
       .select('score, correct_count')
       .eq('id', player.id)
       .maybeSingle()
       .then(({ data }) => setMyScore(data ?? null))
-  }, [phase, player?.id, session?.current_index])
+  }, [phase, player?.id, session?.current_index, teamMode, reloadTeams])
 
   async function handleSend() {
     const text = typed.trim()
@@ -234,7 +250,10 @@ export default function Puzzle() {
   if (!player) {
     return (
       <div className="mx-auto max-w-md space-y-3 px-4 pb-28 pt-6">
-        <h1 className="text-xl font-extrabold text-ink">{t('quiz.visitorTitle')}</h1>
+        <div className="flex items-center gap-2">
+          <BackButton to={tp('games')} />
+          <h1 className="text-xl font-extrabold text-ink">{t('quiz.visitorTitle')}</h1>
+        </div>
         <p className="text-sm text-ink-muted">{t('quiz.visitorHint')}</p>
         <input
           value={visitorName}
@@ -252,23 +271,58 @@ export default function Puzzle() {
 
   return (
     <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col px-4 pb-4 pt-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-extrabold text-ink">{session?.name}</h1>
+      {/* ปุ่มย้อนกลับต้องอยู่ "ในห้อง" ด้วย ไม่ใช่เฉพาะหน้ารายการห้อง —
+          เข้าเกมแล้วออกไม่ได้คือเหตุผลเดียวที่คนต้องพึ่งปุ่มลอย "หน้าหลัก"
+          ซึ่งเด้งข้ามหน้ารวมเกมไปหน้าแรกของทริปเลย */}
+      <div className="flex items-center gap-2">
+        <BackButton to={tp('games')} />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-extrabold text-ink">
+          {session?.name}
+        </h1>
         {phase === 'answering' && (
-          <span className="tabular-nums text-sm font-bold text-ink-muted">⏱ {secondsLeft}</span>
+          <span className="flex-none tabular-nums text-sm font-bold text-ink-muted">
+            ⏱ {secondsLeft}
+          </span>
         )}
       </div>
 
+      {/* ป้ายทีมของตัวเอง — ระหว่างเล่นต้องเห็นว่าตัวเองอยู่ทีมไหน ไม่งั้นลืม */}
+      {myTeam && phase !== 'lobby' && (
+        <p
+          className="mt-1 self-start rounded-full px-2.5 py-0.5 text-xs font-bold text-white"
+          style={{ background: teamStyle(myTeam.color_index).color }}
+        >
+          {teamStyle(myTeam.color_index).badge} {t('puzzle.myTeam')}: {myTeam.name}
+        </p>
+      )}
+
       {/* ── รอเริ่ม ───────────────────────────────────────── */}
       {phase === 'lobby' && (
-        <div className="mt-10 space-y-2 text-center">
-          <p className="text-lg font-bold text-ink">{t('quiz.waitingHost')}</p>
+        <div className={`${teamMode ? 'mt-4' : 'mt-10'} space-y-2 text-center`}>
+          <p className="text-lg font-bold text-ink">
+            {teamMode && !myTeam ? t('puzzle.joinTeamFirst') : t('quiz.waitingHost')}
+          </p>
           <ul className="mt-4 space-y-1 text-sm text-ink-muted">
             <li>{t('puzzle.rules.guess')}</li>
-            <li>{t('puzzle.rules.point')}</li>
+            <li>{teamMode ? t('puzzle.rules.teamPoint') : t('puzzle.rules.point')}</li>
             <li>{t('puzzle.rules.unlimited')}</li>
-            <li>{t('puzzle.rules.winner')}</li>
+            <li>{teamMode ? t('puzzle.rules.teamWinner') : t('puzzle.rules.winner')}</li>
           </ul>
+
+          {/* ห้องแบบทีม — เลือก/ตั้งทีมในห้องรอ (ตั้งทีมใหม่ได้เฉพาะก่อนเริ่มเกม) */}
+          {teamMode && (
+            <div className="pt-4 text-left">
+              <TeamPicker
+                teams={teams}
+                myTeamId={player?.team_id ?? null}
+                sizeLimit={session?.team_size_limit ?? 0}
+                onCreate={createTeam}
+                onJoin={joinTeam}
+                busy={teamBusy}
+                t={t}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -352,24 +406,40 @@ export default function Puzzle() {
       )}
 
       {/* ── เฉลย ─────────────────────────────────────────── */}
+      {/* เฉลย — เรียงเหมือนจอใหญ่: คำเฉลยบน · รูปกินที่ที่เหลือ · ตัวสะกดล่าง
+          รูปเดิมถูกล็อกไว้ที่ 208px แล้วมีที่ว่างใต้รูปครึ่งจอ */}
       {phase === 'reveal' && (
-        <div className="mt-6 space-y-3 text-center">
+        <div className="mt-4 flex flex-1 flex-col items-center gap-2 text-center">
           <p className="text-sm text-ink-muted">{t('quiz.answerIs')}</p>
           <p className="text-3xl font-black text-ink">{reveal.answer}</p>
-          {parts.length > 0 && (
-            <p className="text-base font-bold text-ink-muted">{parts.join(' + ')}</p>
-          )}
+
           {reveal.answer_image_url && (
             <img
               src={reveal.answer_image_url}
-              alt=""
-              className="mx-auto max-h-52 rounded-2xl object-contain"
+              alt={reveal.answer ?? ''}
+              className="min-h-0 w-full flex-1 rounded-2xl object-contain"
             />
           )}
-          {reveal.explain && <p className="text-sm text-ink-muted">{reveal.explain}</p>}
-          <p className={`text-lg font-extrabold ${solved ? 'text-success-text' : 'text-ink-faint'}`}>
-            {solved ? t('puzzle.youGotIt') : t('puzzle.youMissed')}
-          </p>
+
+          <div className="mt-auto w-full space-y-1.5 pt-2">
+            {parts.length > 0 && (
+              <p className="text-xl font-extrabold tracking-wide text-ink">{parts.join(' + ')}</p>
+            )}
+            {reveal.explain && <p className="text-sm text-ink-muted">{reveal.explain}</p>}
+            {/* ห้องแบบทีม: บอกว่าทีมไหนได้แต้มข้อนี้ — ทีมเดียวกันจะได้รู้ว่าเพื่อนตอบให้แล้ว */}
+            {teamMode && reveal.fastest && (
+              <p className="text-sm font-bold text-ink">
+                {reveal.fastest.team
+                  ? t('puzzle.winnerTeam', { team: reveal.fastest.team, name: reveal.fastest.name })
+                  : t('puzzle.winner', { name: reveal.fastest.name })}
+              </p>
+            )}
+            <p
+              className={`text-lg font-extrabold ${solved ? 'text-success-text' : 'text-ink-faint'}`}
+            >
+              {solved ? t('puzzle.youGotIt') : t('puzzle.youMissed')}
+            </p>
+          </div>
         </div>
       )}
 
@@ -380,6 +450,15 @@ export default function Puzzle() {
           <p className="text-sm text-ink-muted">
             {t('puzzle.solvedCount', { n: myScore?.correct_count ?? 0 })}
           </p>
+          {myTeam && (
+            <p
+              className="mx-auto mt-4 inline-block rounded-full px-4 py-1.5 text-sm font-extrabold text-white"
+              style={{ background: teamStyle(myTeam.color_index).color }}
+            >
+              {teamStyle(myTeam.color_index).badge} {myTeam.name} ·{' '}
+              {t('puzzle.teamScore', { score: myTeam.total_score ?? 0 })}
+            </p>
+          )}
         </div>
       )}
 

@@ -50,6 +50,31 @@ export async function openHint(sessionId, step) {
   return data
 }
 
+/**
+ * จำนวนคนตอบถูกก่อนเฉลย "ของห้องนี้" — ทับค่าของชุด (quiz_sets.solve_limit)
+ * ใช้ตอนเปิดห้องแบบทีม: ค่าเริ่มต้น 1 = ทีมแรกที่ตอบถูกได้คะแนนแล้วเฉลย
+ *   null = ใช้ค่าของชุด · 0 = ไม่จำกัด · N = ครบ N คนแล้วเฉลย
+ * ตั้งได้ก่อนเริ่มเกมเท่านั้น (ดู 20260911_puzzle_team_mode.sql)
+ */
+export async function setRoomSolveLimit(sessionId, limit, token = getHostToken(sessionId)) {
+  const { error } = await supabase.rpc('quiz_set_solve_limit', {
+    p_session_id: sessionId,
+    p_token: token,
+    p_limit: limit,
+  })
+  if (error) throw error
+}
+
+/**
+ * ค่าที่ห้องใช้จริง — null = ไม่จำกัด
+ * ห้องไม่ได้ตั้ง (null) → ใช้ค่าของชุด · ห้องตั้ง 0 → ไม่จำกัด
+ */
+export function effectiveSolveLimit(roomLimit, setLimit) {
+  if (roomLimit === null || roomLimit === undefined) return setLimit ?? null
+  return roomLimit === 0 ? null : roomLimit
+}
+
+/** winner_name / winner_team / winner_seconds = คนแรกที่ตอบถูก (null ถ้ายังไม่มี) */
 export async function fetchPuzzleStats(sessionId, questionId) {
   const { data, error } = await supabase.rpc('quiz_puzzle_stats', {
     p_session_id: sessionId,

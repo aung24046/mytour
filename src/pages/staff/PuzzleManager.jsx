@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { startSession, setSessionState, getHostToken } from '../../lib/quizHost'
+import { setRoomSolveLimit } from '../../lib/puzzleHost'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
@@ -17,6 +18,13 @@ import StaffHeader from '../../components/common/StaffHeader'
 // ถ้าลืม ชุดควิซจะมาโผล่ที่นี่แล้วกดสร้างห้องได้ทั้งที่หน้าจอคนละแบบ
 
 const SCREEN_MODES = ['projector', 'bus_tv', 'none']
+const SOLVE_LIMIT_OPTIONS = [1, 2, 3, 5, 10]
+
+// ค่าตั้งต้นของฟอร์มเปิดห้อง — ใช้สองที่ (state เริ่มต้น + ตอนกดเปิดฟอร์มใหม่)
+// solveLimit: '0' = ไม่จำกัด · เลขอื่น = ครบกี่คนแล้วเฉลย (ใช้เฉพาะห้องแบบทีม)
+const EMPTY_FORM = {
+  name: '', busId: '', screenMode: 'projector', teamMode: false, teamSizeLimit: 0, solveLimit: '1',
+}
 
 export default function PuzzleManager() {
   const tourId = useActiveTourId()
@@ -31,7 +39,7 @@ export default function PuzzleManager() {
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [creatingFor, setCreatingFor] = useState(null)
-  const [form, setForm] = useState({ name: '', busId: '', screenMode: 'projector' })
+  const [form, setForm] = useState(EMPTY_FORM)
   const [newSetName, setNewSetName] = useState(null) // null = ยังไม่ได้กดสร้าง
   const [error, setError] = useState('')
 
@@ -41,7 +49,7 @@ export default function PuzzleManager() {
     const [{ data: roomRows }, { data: setRows }, { data: busRows }] = await Promise.all([
       supabase
         .from('quiz_sessions')
-        .select('id, name, set_id, bus_id, state, current_index, screen_mode, created_at')
+        .select('id, name, set_id, bus_id, state, current_index, screen_mode, team_mode, created_at')
         .eq('tour_id', tourId)
         .eq('game_kind', 'puzzle')
         .neq('state', 'finished')
@@ -94,7 +102,16 @@ export default function PuzzleManager() {
         busId: form.busId || null,
         screenMode: form.screenMode,
         staffId: staffSession?.staff?.id ?? null,
+        teamMode: form.teamMode,
+        teamSizeLimit: form.teamSizeLimit,
       })
+      // ★ ห้องแบบทีมตั้ง "ตอบถูกกี่คนแล้วเฉลย" ของห้องเอง ทับค่าของชุด
+      //   ค่าเริ่มต้น 1 = ทีมแรกที่ตอบถูกได้คะแนนแล้วเฉลย (เจ้าของโปรเจกต์สั่ง 11 ก.ย. 2026)
+      //   ไม่งั้นคนในทีมเดียวกันบอกคำตอบกันแล้วเก็บคะแนนซ้อนได้ ในเมื่อคะแนนทีมคิดแบบรวม
+      //   ห้องเดี่ยวไม่ส่ง — ใช้ค่าของชุดเหมือนเดิม
+      if (form.teamMode && row?.session_id) {
+        await setRoomSolveLimit(row.session_id, Number(form.solveLimit), row.token)
+      }
       navigate(`/staff/puzzle/host/${row.session_id}`)
     } catch (err) {
       setError(err.message ?? String(err))
@@ -129,6 +146,10 @@ export default function PuzzleManager() {
         default_time_limit: 90,
         // โบนัสถูกติดกันของควิซให้ +100/+200 ซึ่งบนสเกล 1 คะแนนคือชนะขาดตั้งแต่ต้นเกม
         streak_bonus: false,
+        // ใครตอบถูกก่อนได้คนเดียว แล้วเฉลยทันที — แก้ได้ทีหลังใน Builder
+        // ค่าเริ่มต้นนี้สำคัญ เพราะทั้งห้องนั่งรอหมดเวลาทั้งที่มีคนตอบถูกตั้งแต่วินาทีที่ 8
+        // คือสิ่งที่ทำให้เกมนี้ยืดโดยไม่จำเป็น
+        solve_limit: 1,
         created_by: staffSession?.staff?.id ?? null,
       })
       .select('id')
@@ -172,6 +193,7 @@ export default function PuzzleManager() {
                       players: counts[room.id] ?? 0,
                       index: Math.max(room.current_index + 1, 0),
                     })}
+                    {room.team_mode ? ` · ${t('puzzle.manager.teamBadge')}` : ''}
                   </p>
                   <div className="mt-3 flex gap-2">
                     <Button
@@ -236,6 +258,56 @@ export default function PuzzleManager() {
                         </option>
                       ))}
                     </select>
+
+                    {/* เล่นเป็นทีม — ลูกทัวร์ตั้งทีมกันเองในห้องรอ (ของกลางชุดเดียวกับควิซ/แผ่นป้าย)
+                        คะแนนทีม = คะแนนรวมของสมาชิก (quiz_team_leaderboard เรียงด้วย total_score
+                        เมื่อเป็นเกม puzzle/tiles) */}
+                    <label className="flex items-center gap-2 rounded-xl bg-neutral-bg px-3 py-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.teamMode}
+                        onChange={(e) => setForm({ ...form, teamMode: e.target.checked, solveLimit: '1' })}
+                        className="h-4 w-4"
+                      />
+                      <span className="font-semibold text-ink">{t('puzzle.manager.teamMode')}</span>
+                    </label>
+
+                    {form.teamMode && (
+                      <>
+                        <select
+                          value={form.teamSizeLimit}
+                          onChange={(e) => setForm({ ...form, teamSizeLimit: Number(e.target.value) })}
+                          className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                        >
+                          <option value={0}>{t('puzzle.manager.teamSizeFree')}</option>
+                          {[2, 3, 4, 5, 6, 8].map((n) => (
+                            <option key={n} value={n}>
+                              {t('puzzle.manager.teamSize')} {n}
+                            </option>
+                          ))}
+                        </select>
+
+                        <label className="block pt-1 text-xs font-bold text-ink" htmlFor={`solve-limit-${set.id}`}>
+                          {t('puzzle.manager.solveLimit')}
+                        </label>
+                        <select
+                          id={`solve-limit-${set.id}`}
+                          value={form.solveLimit}
+                          onChange={(e) => setForm({ ...form, solveLimit: e.target.value })}
+                          className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+                        >
+                          {SOLVE_LIMIT_OPTIONS.map((n) => (
+                            <option key={n} value={String(n)}>
+                              {t('puzzle.manager.solveLimitN', { n })}
+                            </option>
+                          ))}
+                          <option value="0">{t('puzzle.manager.solveLimitOff')}</option>
+                        </select>
+                        <p className="text-xs text-ink-faint">{t('puzzle.manager.solveLimitHint')}</p>
+                        <p className="text-xs text-ink-faint">{t('puzzle.manager.teamHint')}</p>
+                      </>
+                    )}
+
                     <div className="flex gap-2">
                       <Button fullWidth={false} className="px-3 py-2 text-sm" onClick={() => handleCreateRoom(set)}>
                         {t('puzzle.manager.createRoom')}
@@ -250,7 +322,7 @@ export default function PuzzleManager() {
                     <Button
                       fullWidth={false} className="px-3 py-2 text-sm"
                       onClick={() => {
-                        setForm({ name: '', busId: '', screenMode: 'projector' })
+                        setForm(EMPTY_FORM)
                         setCreatingFor(set.id)
                       }}
                     >

@@ -84,7 +84,7 @@ export default function PuzzleBuilder() {
   useEffect(() => {
     supabase
       .from('quiz_sets')
-      .select('id, title, description, game_kind')
+      .select('id, title, description, game_kind, solve_limit')
       .eq('id', setId)
       .maybeSingle()
       .then(({ data }) => setSetMeta(data ?? null))
@@ -103,6 +103,21 @@ export default function PuzzleBuilder() {
   function patch(next) {
     setDraft((d) => ({ ...d, ...next }))
     setTestResult(null)
+  }
+
+  /**
+   * ค่าระดับ "ชุด" ไม่ใช่ระดับข้อ — เก็บที่ quiz_sets แถวเดียว
+   * โควตาคนตอบถูกต้องเท่ากันทั้งชุด ไม่งั้นคนเล่นต้องเดาเองว่าข้อนี้ยังทันไหม
+   */
+  async function saveSolveLimit(value) {
+    const next = value === '' ? null : Number(value)
+    setSetMeta((m) => ({ ...m, solve_limit: next }))
+    setError('')
+    const { error: err } = await supabase
+      .from('quiz_sets')
+      .update({ solve_limit: next })
+      .eq('id', setId)
+    if (err) setError(err.message)
   }
 
   async function handleClueFile(index, file) {
@@ -229,10 +244,12 @@ export default function PuzzleBuilder() {
   if (draft) {
     return (
       <div className="min-h-screen bg-surface-muted pb-32">
+        {/* ย้อนกลับจากฟอร์มแก้ข้อ = กลับไปรายการข้อ (เหมือนปุ่มยกเลิก) ไม่ใช่ออกจากชุด */}
         <StaffHeader
           icon="edit"
           title={t('puzzle.builder.editItem')}
           subtitle={setMeta?.title ?? ''}
+          onBack={() => setDraft(null)}
         />
 
         <div className="mx-auto max-w-md space-y-5 p-4">
@@ -523,6 +540,29 @@ export default function PuzzleBuilder() {
         {error && (
           <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger-text">{error}</p>
         )}
+
+        {/* ── ตั้งค่าของทั้งชุด ─────────────────────────────────── */}
+        <section className="rounded-2xl border border-line bg-surface p-4 shadow-card">
+          <h2 className="text-sm font-bold text-ink">{t('puzzle.builder.setSettings')}</h2>
+
+          <label className="mt-3 block text-sm font-bold text-ink" htmlFor="solve-limit">
+            {t('puzzle.builder.solveLimit')}
+          </label>
+          <p className="mb-1.5 text-xs text-ink-faint">{t('puzzle.builder.solveLimitHint')}</p>
+          <select
+            id="solve-limit"
+            value={setMeta?.solve_limit == null ? '' : String(setMeta.solve_limit)}
+            onChange={(e) => saveSolveLimit(e.target.value)}
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+          >
+            {[1, 2, 3, 5, 10].map((n) => (
+              <option key={n} value={String(n)}>
+                {t('puzzle.builder.solveLimitN', { n })}
+              </option>
+            ))}
+            <option value="">{t('puzzle.builder.solveLimitOff')}</option>
+          </select>
+        </section>
 
         {items.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-line-strong p-4 text-sm text-ink-faint">

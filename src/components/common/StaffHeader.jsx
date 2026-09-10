@@ -13,6 +13,7 @@ import BackButton from './BackButton'
 //   <StaffHeader title="..." actions={<button>…</button>} />       // ปุ่มมุมขวา
 //   <StaffHeader title="..." backTo="/staff/documents" />          // กำหนดปลายทางเอง
 //   <StaffHeader title="..." backTo={null} />                      // ไม่มีปุ่มย้อนกลับ (หน้าแรก)
+//   <StaffHeader title="..." onBack={() => setDraft(null)} />      // ย้อนภายในหน้า (ฟอร์ม → รายการ)
 //
 // ⚠️ ต้องวางเป็นลูกตัวแรกของ root ที่ "ไม่มี padding" แล้วค่อยห่อเนื้อหาด้วย p-4 ข้างใน
 //    ไม่งั้นแถบจะไม่เต็มความกว้างตอนปักบน:
@@ -21,10 +22,26 @@ import BackButton from './BackButton'
 //        <div className="mx-auto max-w-md p-4">…</div>
 //      </div>
 
+// ส่วนเกม — ลำดับชั้นจริงคือ แดชบอร์ด → หน้ารวมเกม → หน้าของเกม → คุมห้อง/แก้ชุด
+// ★ เดิมทุกหน้าในนี้ตกไปที่ '/staff' กดย้อนกลับจากห้องปริศนาจึงเด้งข้ามสองชั้นไปแดชบอร์ด
+//   (เจ้าของโปรเจกต์แจ้ง 11 ก.ย. 2026: บิงโก · ปริศนาใบ้คำ · เปิดแผ่นป้าย)
+//   ควิซกับสุ่มรายชื่อไม่เจอเพราะส่ง backTo เองไว้ — ย้ายกติกามาไว้ที่นี่ที่เดียว
+//   เกมใหม่ที่ใช้โครง /staff/<เกม>/(builder|host|report)/:id จะย้อนถูกเองโดยไม่ต้องจำ
+const GAME_HUB = '/staff/games'
+const GAME_PAGES = ['bingo-host', 'lucky-draw', 'quiz', 'puzzle', 'tiles']
+
 /** เดาปลายทางของปุ่มย้อนกลับจาก path — หน้าลูกกลับไปหาหน้าแม่ ที่เหลือกลับแดชบอร์ด */
 export function defaultBackTo(pathname) {
   if (pathname.startsWith('/staff/documents/')) return '/staff/documents'
   if (pathname.startsWith('/staff/broadcast/')) return '/staff/broadcast'
+
+  // /staff/<เกม>            → หน้ารวมเกม
+  // /staff/<เกม>/<อะไรก็ได้> → หน้าของเกมนั้น
+  const game = /^\/staff\/([^/]+)(\/.*)?$/.exec(pathname)
+  if (game && GAME_PAGES.includes(game[1])) {
+    const rest = (game[2] ?? '').replace(/\/+$/, '')
+    return rest ? `/staff/${game[1]}` : GAME_HUB
+  }
   return '/staff'
 }
 
@@ -33,6 +50,7 @@ export default function StaffHeader({
   subtitle,
   icon,
   backTo,
+  onBack,
   actions,
   className = '',
 }) {
@@ -45,7 +63,7 @@ export default function StaffHeader({
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
       <div className="mx-auto flex max-w-md items-center gap-2.5">
-        <BackButton to={target} />
+        <BackButton to={target} onClick={onBack} />
 
         {icon && (
           <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-brand-lighter text-brand">

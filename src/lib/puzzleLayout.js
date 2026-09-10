@@ -70,6 +70,62 @@ export function clueGrid(count, { surface = 'stage', aspects = [] } = {}) {
 }
 
 /**
+ * ความสูงของช่องรูปใบ้ตามพื้นผิวและจำนวนแถว
+ *
+ * ตัวเลขชุดนี้เคยใหญ่กว่านี้ราวหนึ่งในห้า แล้วได้ฟีดแบ็กว่า "กรอบรูปแต่ละรูปใบ้
+ * ใหญ่เกินไป" — บนมือถือ กรอบสองใบกินจอจนช่องพิมพ์คำตอบตกไปอยู่ใต้เส้นพับ
+ * ซึ่งเป็นปุ่มเดียวที่หน้านั้นมี
+ */
+const CELL_HEIGHT = {
+  stage:          { single: 'min(38vh, 380px)', multi: 'min(21vh, 210px)' },
+  bus_tv:         { single: 'min(38vh, 380px)', multi: 'min(21vh, 210px)' },
+  phone:          { single: 'min(22vh, 180px)', multi: 'min(15vh, 124px)' },
+  phoneLandscape: { single: 'min(30vh, 240px)', multi: 'min(18vh, 150px)' },
+}
+
+/**
+ * @param {'stage'|'bus_tv'|'phone'|'phoneLandscape'} surface
+ * @param {number} rows  จำนวนแถวที่ clueGrid คำนวณได้
+ * @returns {string} CSS length
+ */
+export function clueCellHeight(surface, rows) {
+  const set = CELL_HEIGHT[surface] ?? CELL_HEIGHT.stage
+  return Number(rows) > 1 ? set.multi : set.single
+}
+
+/**
+ * สไตล์ของ "กรอบ" รูปใบ้หนึ่งใบ
+ *
+ * ของเดิมกรอบกินเต็มความกว้างของช่องเสมอ ส่วนรูปข้างในเป็น object-contain
+ * รูปแนวตั้งในช่องกว้างจึงได้กรอบขาวโล่งสองข้างที่กว้างกว่าตัวรูปเอง
+ * และรูปพาโนรามาได้กรอบขาวโล่งบน-ล่าง — สายตาอ่านว่า "กรอบใหญ่"
+ * ทั้งที่รูปเท่าเดิม
+ *
+ * แก้ด้วยการให้กรอบมีสัดส่วนเท่ารูปจริง แล้วจำกัดความกว้างสองชั้น:
+ *   • ไม่เกินความกว้างของช่อง (100%)  — รูปนอนจัดจะได้ไม่ล้นออกข้าง
+ *   • ไม่เกิน "ความสูงช่อง × สัดส่วน" — รูปตั้งจะได้ไม่สูงเกินแถว
+ * min() ของสองค่านี้คือกรอบที่ใหญ่ที่สุดที่ยังหุ้มรูปพอดี ไม่มีขอบขาวเหลือ
+ *
+ * ช่องยังสูงเท่ากันทุกใบเหมือนเดิม (กรอบลอยกลางช่อง) เพราะสิ่งที่ทำให้แถว
+ * ดูเป็นระเบียบคือความสูงของช่อง ไม่ใช่ความกว้างของกรอบ
+ *
+ * รูปที่ยังโหลดไม่เสร็จ (aspect = null) ใช้เต็มช่องไปก่อน แล้วหดเองตอนรู้สัดส่วน
+ *
+ * @param {number|null} aspect  กว้าง/สูง ของรูปจริง
+ * @param {string} cellHeight   ความสูงของช่อง (CSS length)
+ * @returns {object} style object
+ */
+export function clueFrameStyle(aspect, cellHeight) {
+  if (typeof aspect !== 'number' || !(aspect > 0) || !cellHeight) {
+    return { width: '100%', height: cellHeight }
+  }
+  return {
+    width: `min(100%, calc(${cellHeight} * ${aspect}))`,
+    aspectRatio: String(aspect),
+  }
+}
+
+/**
  * ขนาดตัวอักษรของใบ้แบบอีโมจิ/คำ — ต้องผูกกับขนาดช่อง ไม่ใช่ตั้ง px ตายตัว
  * ช่องของ 1 รูป กับ 6 รูป ต่างกันราวสามเท่า ถ้าตั้งค่าเดียวจะได้อีโมจิจิ๋วอยู่กลางช่องว่าง
  * คืนเป็นหน่วย cqw (ขนาดเทียบกับความกว้างของช่อง) เพื่อให้ CSS container query จัดการต่อ

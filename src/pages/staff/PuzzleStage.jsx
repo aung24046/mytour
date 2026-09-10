@@ -39,6 +39,11 @@ export default function PuzzleStage() {
 
   const questionId = session?.current_question_id ?? null
 
+  // ข้อใหม่ = ล้างตัวเลขข้อเก่า (ไม่งั้นชื่อผู้ชนะข้อที่แล้วค้างบนจอ)
+  useEffect(() => {
+    setStats({ solved: 0, online: 0 })
+  }, [questionId])
+
   useEffect(() => {
     if (!questionId || phase === 'reveal' || phase === 'lobby') return undefined
     let alive = true
@@ -63,14 +68,82 @@ export default function PuzzleStage() {
   const parts = useMemo(() => splitSyllables(reveal.answer_split ?? ''), [reveal.answer_split])
   const secondsLeft = Math.max(Math.ceil(msLeft / 1000), 0)
   const busTv = session?.screen_mode === 'bus_tv'
+  const teamMode = Boolean(session?.team_mode)
 
+  // ทีมที่ได้คะแนนข้อนี้ — โชว์ตอนเฉลย "เฉพาะห้องแบบทีม"
+  // ห้องเดี่ยวคงหน้าจอเฉลยเดิมไว้ (จอเฉลยรูปเต็มจอเจ้าของโปรเจกต์สั่งให้มีแค่สามอย่าง)
+  // แต่เล่นเป็นทีม ทั้งห้องต้องรู้ว่าทีมไหนได้แต้ม ไม่งั้นกระดานคะแนนตอนท้ายไม่มีใครเชื่อ
+  // ชื่อมากับ reveal_payload.fastest (20260911_puzzle_team_mode.sql) — ไม่ต้องรอ poll
+  const winner = teamMode && revealing && reveal.fastest
+    ? { name: reveal.fastest.name, team: reveal.fastest.team ?? null }
+    : null
+
+  // เล่นเป็นทีมก็ให้กระดานเป็นของทีม — คะแนนทีม = คะแนนรวมของสมาชิก
+  // (quiz_team_leaderboard เรียงด้วย total_score ให้เองเมื่อเป็นเกม puzzle/tiles)
   const [leaderboard, setLeaderboard] = useState([])
   useEffect(() => {
     if (phase !== 'scoreboard' && phase !== 'finished') return
-    supabase
-      .rpc('quiz_leaderboard', { p_session_id: sessionId, p_limit: busTv ? 3 : 10 })
-      .then(({ data }) => setLeaderboard(data ?? []))
-  }, [phase, sessionId, busTv, session?.current_index])
+    const rpc = teamMode
+      ? supabase.rpc('quiz_team_leaderboard', { p_session_id: sessionId })
+      : supabase.rpc('quiz_leaderboard', { p_session_id: sessionId, p_limit: busTv ? 3 : 10 })
+    rpc.then(({ data }) => setLeaderboard((data ?? []).slice(0, busTv ? 3 : 10)))
+  }, [phase, sessionId, busTv, teamMode, session?.current_index])
+
+  // ── เฉลยแบบเต็มจอ ────────────────────────────────────────────────
+  // ข้อที่มีรูปเฉลย จอใหญ่ต้องยกรูปขึ้นเป็นพระเอก ไม่ใช่รูปขนาดโปสต์การ์ด
+  // ต่อท้ายกระดานรูปใบ้ที่คนทั้งห้องเพิ่งจ้องมาเก้าสิบวินาที
+  //
+  // สามอย่างบนจอนี้เท่านั้น (ตามที่สั่ง): รูปเฉลยเต็มจอ · คำเฉลยบนกลาง · ตัวสะกดล่าง
+  // พื้นหลังเป็นรูปเดียวกันแบบเบลอ-ครอป จอ 16:9 กับรูป 4:3 จึงไม่เหลือแถบดำข้างๆ
+  // โดยที่ตัวรูปจริงยังไม่โดนตัดสักมิลลิเมตร
+  if (revealing && reveal.answer_image_url) {
+    return (
+      <div className="relative flex h-[100dvh] w-full flex-col items-center justify-between overflow-hidden bg-black">
+        <img
+          src={reveal.answer_image_url}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl"
+        />
+        <img
+          src={reveal.answer_image_url}
+          alt={reveal.answer ?? ''}
+          className="absolute inset-0 h-full w-full object-contain"
+        />
+
+        {/* ไล่เฉดบน-ล่าง — ตัวหนังสือขาวบนรูปสว่างอ่านไม่ออกถ้าไม่มีตัวนี้ */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-black/75 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-black/75 to-transparent" />
+
+        <div className="relative z-10 pt-6 sm:pt-10">
+          <Pill>{reveal.answer}</Pill>
+        </div>
+
+        <div className="relative z-10 flex w-full flex-col items-center gap-3 px-6 pb-8 sm:pb-12">
+          {parts.length > 0 && (
+            <p className="text-center text-4xl font-black tracking-wide text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.9)] sm:text-6xl">
+              {parts.map((p, i) => (
+                <span key={i}>
+                  {i > 0 && <span className="mx-2 text-white/50">+</span>}
+                  {p}
+                </span>
+              ))}
+            </p>
+          )}
+          {reveal.explain && (
+            <p className="max-w-4xl text-center text-xl font-bold text-white/90 drop-shadow-[0_2px_0_rgba(0,0,0,0.9)] sm:text-2xl">
+              {reveal.explain}
+            </p>
+          )}
+          {winner && (
+            <p className="text-center text-2xl font-black text-[#f2f75f] drop-shadow-[0_3px_0_rgba(0,0,0,0.9)] sm:text-4xl">
+              🎉 {winner.team ? `ทีม ${winner.team} · ${winner.name}` : winner.name}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -109,9 +182,9 @@ export default function PuzzleStage() {
               <p className="text-4xl font-black text-black sm:text-6xl">กติกา</p>
               <ul className="mt-6 space-y-3 text-2xl font-bold text-black sm:text-4xl">
                 <li>• ทายคำจากภาพใบ้</li>
-                <li>• ตอบถูกได้ 1 คะแนน</li>
+                <li>{teamMode ? '• ทีมที่ตอบถูกได้ 1 คะแนน' : '• ตอบถูกได้ 1 คะแนน'}</li>
                 <li>• ตอบได้ไม่จำกัดครั้ง</li>
-                <li>• คะแนนมากที่สุดเป็นผู้ชนะ</li>
+                <li>{teamMode ? '• ทีมที่คะแนนรวมมากที่สุดเป็นผู้ชนะ' : '• คะแนนมากที่สุดเป็นผู้ชนะ'}</li>
               </ul>
               <p className="mt-8 text-xl text-neutral-500">รอทีมงานเริ่มเกม</p>
             </div>
@@ -152,16 +225,16 @@ export default function PuzzleStage() {
                 </p>
               )}
 
-              {reveal.answer_image_url && (
-                <img
-                  src={reveal.answer_image_url}
-                  alt=""
-                  className="max-h-[34vh] rounded-2xl border-[5px] border-black object-contain shadow-[8px_8px_0_0_rgba(0,0,0,0.9)]"
-                />
-              )}
 
               {reveal.explain && (
                 <p className="text-2xl font-bold text-neutral-700 sm:text-3xl">{reveal.explain}</p>
+              )}
+
+              {winner && (
+                <p className="text-3xl font-black text-black sm:text-5xl">
+                  🎉 {winner.name}
+                  {winner.team ? <span className="text-black/60"> · ทีม {winner.team}</span> : null}
+                </p>
               )}
             </>
           )}
@@ -174,8 +247,14 @@ export default function PuzzleStage() {
                   className="flex items-center gap-4 rounded-2xl border-[3px] border-black bg-[#f2f75f] px-5 py-3 text-2xl font-black text-black sm:text-4xl"
                 >
                   <span className="w-10 text-center">{i + 1}</span>
-                  <span className="min-w-0 flex-1 truncate">{row.display_name}</span>
-                  <span className="tabular-nums">{row.score}</span>
+                  {/* กระดานทีมคืน name/total_score ส่วนกระดานรายคนคืน display_name/score */}
+                  <span className="min-w-0 flex-1 truncate">
+                    {row.display_name ?? row.name}
+                    {row.member_count ? (
+                      <span className="text-black/50"> ({row.member_count})</span>
+                    ) : null}
+                  </span>
+                  <span className="tabular-nums">{row.score ?? row.total_score}</span>
                 </li>
               ))}
             </ol>

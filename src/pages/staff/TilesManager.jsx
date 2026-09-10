@@ -236,8 +236,9 @@ export default function TilesManager() {
                     </select>
 
                     {/* เล่นเป็นทีม — ลูกทัวร์ตั้งทีมกันเองในห้องรอ
-                        คะแนนทีมคิดเป็นค่าเฉลี่ยต่อคน (quiz_team_leaderboard)
-                        ทีมใหญ่จึงไม่ได้เปรียบ ไม่ต้องบังคับให้ทีมเท่ากัน */}
+                        คะแนนทีม = คะแนนรวมของสมาชิก (quiz_team_leaderboard เรียงด้วย total_score)
+                        เกมนี้คนแรกที่ตอบถูกจบข้อ คะแนนรวมจึงเท่ากับจำนวนข้อที่ทีมชนะ
+                        (เดิมเป็นค่าเฉลี่ยปัดเศษ → ทีม 3 คนชนะ 1 ข้อขึ้นเป็น 0 · เปลี่ยน 11 ก.ย. 2026) */}
                     <label className="flex items-center gap-2 rounded-xl bg-neutral-bg px-3 py-2 text-sm">
                       <input
                         type="checkbox"

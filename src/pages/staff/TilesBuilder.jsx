@@ -282,8 +282,10 @@ export default function TilesBuilder() {
 
   return (
     <div className="min-h-screen bg-surface-muted">
+      {/* กำลังแก้ข้อ = ย้อนกลับไปรายการข้อ (เหมือนปุ่มยกเลิก) ไม่ใช่ออกจากชุด */}
       <StaffHeader icon="game" title={setMeta?.title ?? t('tiles.title')}
-                   subtitle={t('tiles.builder.subtitle', { count: items.length })} />
+                   subtitle={t('tiles.builder.subtitle', { count: items.length })}
+                   onBack={draft ? () => { setDraft(null); setConfirmUntested(false) } : undefined} />
 
       <div className="mx-auto max-w-md space-y-5 p-4">
         {error && <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger-text">{error}</p>}
