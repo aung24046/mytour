@@ -80,6 +80,8 @@ export default function Games() {
   const [quiz, setQuiz] = useState({ rooms: 0, players: 0 })
   const [puzzle, setPuzzle] = useState({ rooms: 0, players: 0 })
   const [tiles, setTiles] = useState({ rooms: 0, players: 0 })
+  const [words, setWords] = useState({ rooms: 0, players: 0 })
+  const [shuffle, setShuffle] = useState({ rooms: 0, players: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -118,16 +120,22 @@ export default function Games() {
       const quizIds = rows.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').map((r) => r.id)
       const puzzleIds = rows.filter((r) => r.game_kind === 'puzzle').map((r) => r.id)
       const tilesIds = rows.filter((r) => r.game_kind === 'tiles').map((r) => r.id)
+      const wordsIds = rows.filter((r) => r.game_kind === 'words').map((r) => r.id)
+      const shuffleIds = rows.filter((r) => r.game_kind === 'shuffle').map((r) => r.id)
 
-      const [quizPlayers, puzzlePlayers, tilesPlayers] = await Promise.all([
+      const [quizPlayers, puzzlePlayers, tilesPlayers, wordsPlayers, shufflePlayers] = await Promise.all([
         countPlayers(quizIds),
         countPlayers(puzzleIds),
         countPlayers(tilesIds),
+        countPlayers(wordsIds),
+        countPlayers(shuffleIds),
       ])
       if (!cancelled) {
         setQuiz({ rooms: quizIds.length, players: quizPlayers })
         setPuzzle({ rooms: puzzleIds.length, players: puzzlePlayers })
         setTiles({ rooms: tilesIds.length, players: tilesPlayers })
+        setWords({ rooms: wordsIds.length, players: wordsPlayers })
+        setShuffle({ rooms: shuffleIds.length, players: shufflePlayers })
       }
 
       const drawIds = (drawRes.data ?? []).map((r) => r.id)
@@ -244,6 +252,34 @@ export default function Games() {
           }
           statusLive={tiles.rooms > 0}
           to={can(session, 'tiles.host') ? '/staff/tiles' : null}
+        />
+
+        <GameCard
+          icon="language"
+          tint="#be185d"
+          title={t('words.title')}
+          desc={t('staff.games.wordsDesc')}
+          status={
+            words.rooms > 0
+              ? t('staff.games.wordsLive', { rooms: words.rooms, players: words.players })
+              : t('staff.games.wordsIdle')
+          }
+          statusLive={words.rooms > 0}
+          to={can(session, 'words.host') ? '/staff/words' : null}
+        />
+
+        <GameCard
+          icon="shuffle"
+          tint="#0e7490"
+          title={t('shuffle.title')}
+          desc={t('staff.games.shuffleDesc')}
+          status={
+            shuffle.rooms > 0
+              ? t('staff.games.shuffleLive', { rooms: shuffle.rooms, players: shuffle.players })
+              : t('staff.games.shuffleIdle')
+          }
+          statusLive={shuffle.rooms > 0}
+          to={can(session, 'shuffle.host') ? '/staff/shuffle' : null}
         />
 
         <div className="flex items-center gap-3.5 rounded-2xl border border-dashed border-line-strong p-4">

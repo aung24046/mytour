@@ -413,6 +413,15 @@ const RENDER = {
       <path d="M15.6 8.4 V6.4 A2 2 0 0 0 13.6 4.4 H6.4 A2 2 0 0 0 4.4 6.4 v7.2 a2 2 0 0 0 2 2 h2" fill="none" stroke={c.color} {...S} />
     </>
   ),
+  // สลับตัวอักษร (เกม Word Shuffle) — ลูกศรสองเส้นไขว้กัน
+  shuffle: (c) => (
+    <>
+      <path d="M3.6 7.2 h3.2 c4.4 0 5.6 9.6 10.4 9.6 h3.2" fill="none" stroke={c.color} {...S} />
+      <path d="M3.6 16.8 h3.2 c1.9 0 3.1 -1.8 4.1 -3.8 M13.1 11 c1 -2 2.2 -3.8 4.1 -3.8 h3.2" fill="none" stroke={c.color} {...S} />
+      <polyline points="17.8 4.6 20.4 7.2 17.8 9.8" fill="none" stroke={c.color} {...S} />
+      <polyline points="17.8 14.2 20.4 16.8 17.8 19.4" fill="none" stroke={c.color} {...S} />
+    </>
+  ),
   language: (c) => (
     <>
       <circle cx="12" cy="12" r="8.6" fill={c.body} stroke={c.color} {...S} />

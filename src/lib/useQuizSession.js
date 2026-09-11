@@ -229,6 +229,20 @@ export function useQuizSession(sessionId) {
           setQuestion({ ...data, puzzle: meta ?? null, clues: clues ?? [] })
           return
         }
+        // ข้อของ What Words มีโจทย์ (ช่องที่ซ่อนแล้ว) + หมวดหมู่อยู่อีกตาราง
+        // ★ ตารางนี้ไม่มีตัวที่ซ่อน (อยู่ quiz_keys.words_cells ที่ปิดจาก anon)
+        //   ตัวที่คนคุมเกมเปิดแล้วมากับ session.hint_payload = [{ slot, char, m }]
+        //   pool = กองตัวสลับของ Word Shuffle (What Words = null) — เกมนั้นใช้ข้อชนิด words เดียวกัน
+        if (data?.kind === 'words') {
+          const { data: words } = await supabase
+            .from('quiz_words')
+            .select('category, cells, hidden_count, pool')
+            .eq('question_id', qid)
+            .maybeSingle()
+          if (!mountedRef.current) return
+          setQuestion({ ...data, words: words ?? null })
+          return
+        }
         // ข้อของเกมเปิดแผ่นป้ายมีกระดานอยู่อีกตาราง — ดึงต่อให้เลยด้วยเหตุผลเดียวกัน
         // ★ ตารางนี้ไม่มี URL ภาพจริง (ภาพคือเฉลย อยู่ใน quiz_keys ที่ปิดจาก anon)
         //   จอที่มี token ต้องไปเอาเองผ่าน quiz_tiles_image
@@ -297,6 +311,52 @@ export function useQuizAnswerCount(sessionId, questionId, active) {
       clearInterval(timer)
     }
   }, [sessionId, questionId, active])
+
+  return count
+}
+
+// ---------------------------------------------------------------------
+// นับคนในห้อง (เข้าแล้ว / ยังออนไลน์) — ใช้ได้ทุกช่วงของเกม รวมห้องรอ
+// ---------------------------------------------------------------------
+// ★ มีไว้เพราะตัวเลข "ออนไลน์" ของ quiz_puzzle_stats / quiz_tiles_stats ต้องมีข้อปัจจุบัน
+//   ห้องรอยังไม่มีข้อ → หน้าคนคุมเกมไม่เคยดึงเลย ขึ้น "ออนไลน์ 0 คน" ทั้งที่มีคนเข้าแล้ว
+//   (เจ้าของโปรเจกต์เจอตอนทดสอบ What Words 11 ก.ย. 2026)
+// ออนไลน์ = เต้นหัวใจ (useQuizHeartbeat) ภายใน 60 วิ — ช่วงเวลาเดียวกับ p_online_window_sec ของ RPC
+//   เทียบกับ serverNow() ไม่ใช่ Date.now() — นาฬิกามือถือทีมงานเพี้ยนได้เป็นนาที
+// อ่าน quiz_players ตรงๆ (หน้าคุมควิซก็อ่านแบบนี้) poll ไม่ใช่ realtime ด้วยเหตุผลเดียวกับหัวไฟล์
+const ONLINE_WINDOW_MS = 60000
+
+export function useRoomHeadcount(sessionId, active = true) {
+  const [count, setCount] = useState({ joined: 0, online: 0, loaded: false })
+
+  useEffect(() => {
+    if (!sessionId || !active) return undefined
+    let alive = true
+
+    async function tick() {
+      const { data, error } = await supabase
+        .from('quiz_players')
+        .select('last_seen_at')
+        .eq('session_id', sessionId)
+      if (!alive || error) return
+      const cutoff = serverNow() - ONLINE_WINDOW_MS
+      const rows = data ?? []
+      setCount({
+        joined: rows.length,
+        online: rows.filter((r) => r.last_seen_at && new Date(r.last_seen_at).getTime() > cutoff).length,
+        loaded: true,
+      })
+    }
+
+    tick()
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') tick()
+    }, 3000)
+    return () => {
+      alive = false
+      clearInterval(timer)
+    }
+  }, [sessionId, active])
 
   return count
 }

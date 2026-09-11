@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
-import { useQuizSession, serverNow } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomHeadcount, serverNow } from '../../lib/useQuizSession'
 import {
   nextQuestion, lockAndReveal, setSessionState, resolveHostToken, stageUrl,
 } from '../../lib/quizHost'
@@ -54,6 +54,8 @@ export default function TilesHost() {
 
   const cursorRef = useRef(null)
   const { session, question, phase } = useQuizSession(sessionId)
+  // ออนไลน์ของ stats มีเฉพาะตอนมีข้อ — ห้องรอนับเองจากตัวนี้
+  const headcount = useRoomHeadcount(sessionId)
 
   useEffect(() => {
     setReady(Boolean(resolveHostToken(sessionId)))
@@ -224,11 +226,13 @@ export default function TilesHost() {
           {/* ★ "ยังตอบได้กี่คน" คือตัวเลขที่บอกว่าควรเปิดต่อหรือเฉลยเลย
               เหลือ 3 จาก 40 = การเปิดแผ่นต่อไปไม่มีความหมายแล้ว */}
           <p className="mt-0.5 text-sm text-ink-muted">
-            {t('tiles.host.stats', {
-              stillIn: stats.still_in,
-              online: stats.online,
-              guesses: stats.guesses,
-            })}
+            {phase === 'lobby' || !questionId
+              ? t('tiles.host.lobbyCount', { joined: headcount.joined, online: headcount.online })
+              : t('tiles.host.stats', {
+                  stillIn: stats.still_in,
+                  online: headcount.online,
+                  guesses: stats.guesses,
+                })}
           </p>
         </section>
 

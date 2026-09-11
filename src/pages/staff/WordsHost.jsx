@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -10,35 +10,52 @@ import {
 } from '../../lib/quizHost'
 import { teamStyle } from '../../lib/quizStyle'
 import {
-  openHint, fetchPuzzleStats, fetchNearMisses, acceptAnswer,
-} from '../../lib/puzzleHost'
+  fetchWordsKey, openLetter, undoLetter, fetchWordsStats, fetchNearMisses, acceptAnswer,
+  useWordsAnswerMode,
+} from '../../lib/wordsHost'
+import { hostCells, poolTiles } from '../../lib/wordsMask'
+import { wordGame, useGameT } from '../../lib/wordGames'
+import WordBoard from '../../components/words/WordBoard'
+import ShufflePool from '../../components/words/ShufflePool'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
 
-// มือถือคนคุมเกม — จอสั่งงานอย่างเดียว
+// มือถือคนคุมเกม What Words / Word Shuffle — จอสั่งงานอย่างเดียว โครงเดียวกับ PuzzleHost
+// game = 'words' | 'shuffle' — Word Shuffle เพิ่มแค่กองตัวสลับใต้กระดาน (ตัวที่เปิดแล้วจางลง)
 //
-// สองอย่างที่หน้านี้มีแล้วควิซไม่มี:
-//   1. ปุ่มเปิดคำใบ้ — และต้อง "เห็นเนื้อคำใบ้ก่อนกด" เพราะคนคุมเกมต้องรู้ว่า
-//      กำลังจะแจกอะไรให้ห้อง ไม่ใช่กดแล้วค่อยอ่านพร้อมลูกทัวร์
-//   2. รายการคำที่เกือบถูก — ไม่มีวันเขียนกฎครอบคลุมภาษาไทยได้หมด
-//      แต่คนถือไมค์ตัดสินได้ในครึ่งวินาทีว่า "กะละแม" คือคนที่รู้คำตอบ
+// สิ่งที่หน้านี้มีแล้วเกมอื่นไม่มี: กระดานคำแบบ "เห็นตัวที่ซ่อนจางๆ"
+//   คนคุมเกมต้องรู้ว่ากำลังจะเปิดตัวไหนให้ทั้งห้อง ไม่ใช่กดแล้วค่อยเห็นพร้อมลูกทัวร์
+//   แตะช่องจางๆ = เปิดตัวนั้น · ปุ่ม "เปิดตัวถัดไป" = เปิดจากซ้ายไปขวา
+// ตัวที่ซ่อนมาจาก quiz_words_key (ต้องมี token) — ตารางที่ลูกทัวร์อ่านได้ไม่มีตัวจริง
+//
+// ชุดแบบ "ไม่ต้องตอบ" (answer_mode = 'none'): ไม่มีใครส่งคำตอบ จึงซ่อนทุกอย่างที่เกี่ยวกับการตอบ
+//   (ตอบถูกกี่คน · คนแรกที่ถูก · คำที่เกือบถูก · กระดานอันดับ) เหลือกระดานคำ + ปุ่มเปิดตัว + เฉลย
 
-export default function PuzzleHost() {
+const UNDO_WINDOW_MS = 5000
+const EMPTY_STATS = { solved: 0, guesses: 0, online: 0, total: 0 }
+
+export default function WordsHost({ game: gameKey = 'words' }) {
+  const G = wordGame(gameKey)
   const { sessionId } = useParams()
   const { t } = useTranslation()
+  const tw = useGameT(G)
 
   const [ready, setReady] = useState(false)
-  const [stats, setStats] = useState({ solved: 0, guesses: 0, online: 0, total: 0 })
+  const [stats, setStats] = useState(EMPTY_STATS)
   const [near, setNear] = useState([])
+  const [key, setKey] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [hintPreview, setHintPreview] = useState([])
   const [teamBoard, setTeamBoard] = useState([])
   const [noTeamCount, setNoTeamCount] = useState(0)
 
-  const { session, question, phase, msLeft } = useQuizSession(sessionId)
+  const { session, question, phase, msLeft, now } = useQuizSession(sessionId)
+  const answerMode = useWordsAnswerMode(session?.set_id)
+  // จำนวนคนนับเองทุกช่วง — ตัวเลขออนไลน์ของ stats มีเฉพาะตอนมีข้อ (ห้องรอเลยขึ้น 0 เสมอ)
   const headcount = useRoomHeadcount(sessionId)
+  const watchOnly = answerMode === 'none'
+  const typing = answerMode === 'type' // ระหว่างโหลด (null) ไม่ขึ้นตัวเลขการตอบ
 
   useEffect(() => {
     setReady(Boolean(resolveHostToken(sessionId)))
@@ -47,29 +64,38 @@ export default function PuzzleHost() {
   const questionId = session?.current_question_id ?? null
   const live = phase === 'answering' || phase === 'countdown' || phase === 'locked'
 
+  // คำตอบของข้อปัจจุบัน — ดึงใหม่ทุกครั้งที่เปลี่ยนข้อ
+  useEffect(() => {
+    setKey(null)
+    setStats(EMPTY_STATS)
+    setNear([])
+    if (!ready || !questionId) return
+    let alive = true
+    fetchWordsKey(sessionId)
+      .then((k) => {
+        if (alive && k?.question_id === questionId) setKey(k)
+      })
+      .catch((err) => alive && setError(err.message ?? String(err)))
+    return () => {
+      alive = false
+    }
+  }, [ready, sessionId, questionId])
+
   // poll ไม่ใช่ realtime โดยตั้งใจ — 40 คนเดารัวๆ = event ท่วมจอทุกเครื่อง
   const tick = useCallback(async () => {
     if (!sessionId || !questionId) return
     try {
       const [s, n] = await Promise.all([
-        fetchPuzzleStats(sessionId, questionId),
+        fetchWordsStats(sessionId, questionId),
         fetchNearMisses(sessionId, questionId),
       ])
       setStats(s)
       setNear(n)
     } catch {
-      // เน็ตสะดุดบนรถเป็นเรื่องปกติ — รอบหน้าค่อยว่ากัน ไม่ต้องขึ้น error ให้ตกใจ
+      // เน็ตสะดุดบนรถเป็นเรื่องปกติ — รอบหน้าค่อยว่ากัน
     }
   }, [sessionId, questionId])
 
-  // ข้อใหม่ = ล้างตัวเลขข้อเก่า ไม่งั้นชื่อผู้ชนะข้อที่แล้วค้างอยู่จนกว่า poll รอบแรกจะกลับมา
-  useEffect(() => {
-    setStats({ solved: 0, guesses: 0, online: 0, total: 0 })
-    setNear([])
-  }, [questionId])
-
-  // เฉลยเองอัตโนมัติ (ครบจำนวนคนตอบถูก) = poll หยุดทันทีที่เฟสเปลี่ยน
-  // ดึงอีกรอบตอนเข้าเฉลย ชื่อคน/ทีมที่ตอบถูกจะได้ไม่หลุดไป
   useEffect(() => {
     if (phase === 'reveal') tick()
   }, [phase, tick])
@@ -83,8 +109,7 @@ export default function PuzzleHost() {
     return () => clearInterval(timer)
   }, [live, tick])
 
-  // ── ทีม ── กระดานทีม + คนที่ยังไม่เลือกทีม (poll เบาๆ แบบเดียวกับ QuizHost)
-  // คะแนนทีมของเกมนี้ = คะแนนรวม (quiz_team_leaderboard เรียงด้วย total_score ให้แล้ว)
+  // ── ทีม ── (โครงเดียวกับ PuzzleHost — คะแนนทีม = คะแนนรวม)
   const loadTeams = useCallback(async () => {
     if (!sessionId) return
     try {
@@ -95,7 +120,7 @@ export default function PuzzleHost() {
       setTeamBoard(board ?? [])
       setNoTeamCount((players ?? []).filter((p) => !p.team_id).length)
     } catch {
-      // เน็ตสะดุด — รอบหน้าค่อยว่ากัน
+      // รอบหน้าค่อยว่ากัน
     }
   }, [sessionId])
 
@@ -107,12 +132,6 @@ export default function PuzzleHost() {
     }, 5000)
     return () => clearInterval(timer)
   }, [session?.team_mode, loadTeams])
-
-  // เนื้อคำใบ้ขั้นถัดไป — ต้องเห็นก่อนกด
-  // ดึงมาจาก hint_payload ที่เปิดไปแล้ว + ขั้นถัดไปดึงตอนกดจริง (เฉลยอยู่ในตารางปิด)
-  useEffect(() => {
-    setHintPreview(session?.hint_payload ?? [])
-  }, [session?.hint_payload])
 
   async function run(fn) {
     setBusy(true)
@@ -128,6 +147,13 @@ export default function PuzzleHost() {
     }
   }
 
+  const opened = session?.hint_payload ?? []
+  const cells = useMemo(() => hostCells(key?.cells ?? [], opened), [key?.cells, opened])
+  const hiddenTotal = (key?.cells ?? []).filter((x) => x.h).length
+  const openedCount = opened.filter((o) => Number.isInteger(o?.slot)).length
+  const canUndo =
+    live && session?.last_tile_at && now - new Date(session.last_tile_at).getTime() < UNDO_WINDOW_MS
+
   if (!ready) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
@@ -137,13 +163,12 @@ export default function PuzzleHost() {
   }
 
   const teamMode = Boolean(session?.team_mode)
-  const hintTotal = question?.puzzle?.hint_count ?? 0
-  const hintLevel = session?.hint_level ?? 0
   const secondsLeft = Math.max(Math.ceil(msLeft / 1000), 0)
+  const canOpen = live && phase !== 'countdown' && !busy
 
   return (
     <div className="min-h-screen bg-surface-muted pb-8">
-      <StaffHeader icon="game" title={t('puzzle.title')} subtitle={session?.name ?? ''} />
+      <StaffHeader icon={G.icon} title={tw('title')} subtitle={session?.name ?? ''} />
 
       <div className="mx-auto max-w-md space-y-4 p-4">
         {error && (
@@ -151,44 +176,84 @@ export default function PuzzleHost() {
         )}
 
         <a
-          href={stageUrl(sessionId, 'puzzle')}
+          href={stageUrl(sessionId, G.kind)}
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2.5 text-sm font-bold text-ink"
         >
           <Icon name="expand" size={16} />
-          {t('puzzle.host.openStage')}
+          {tw('host.openStage')}
         </a>
+
+        {/* ── คำของข้อนี้ + เปิดตัวที่ซ่อน ─────────────────────── */}
+        {questionId && key && (
+          <section className="space-y-3 rounded-2xl border border-line bg-surface p-4 shadow-card">
+            <div className="flex items-center justify-between gap-2">
+              <span className="rounded-full bg-brand-lighter px-2.5 py-0.5 text-xs font-bold text-brand">
+                {tw('category', { name: question?.words?.category ?? '' })}
+              </span>
+              <span className="text-xs text-ink-muted">
+                {tw('host.answerIs', { answer: key.answer })}
+              </span>
+            </div>
+
+            <WordBoard
+              cells={cells}
+              surface="phone"
+              onSlotClick={canOpen ? (slot) => run(() => openLetter(sessionId, slot)) : undefined}
+            />
+            {G.shuffle && question?.words?.pool && (
+              <ShufflePool tiles={poolTiles(question.words.pool, cells)} boardCells={cells} surface="phone" />
+            )}
+            <p className="text-center text-xs text-ink-faint">{tw('host.tapHint')}</p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                disabled={!canOpen || openedCount >= hiddenTotal}
+                onClick={() => run(() => openLetter(sessionId, null))}
+              >
+                {tw('host.openNext', { opened: openedCount, total: hiddenTotal })}
+              </Button>
+              {canUndo && (
+                <Button
+                  variant="ghost"
+                  fullWidth={false}
+                  className="px-3 py-2 text-sm"
+                  disabled={busy}
+                  onClick={() => run(() => undoLetter(sessionId))}
+                >
+                  {tw('host.undo')}
+                </Button>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ── สถานะ ─────────────────────────────────────────── */}
         <section className="rounded-2xl border border-line bg-surface p-4 shadow-card">
           <p className="text-sm font-bold text-ink">
-            {t('puzzle.host.progress', {
+            {tw('host.progress', {
               index: (session?.current_index ?? -1) + 1,
-              state: t(`puzzle.state.${phase}`, { defaultValue: phase }),
+              state: tw(`state.${phase}`, { defaultValue: phase }),
             })}
-            {live && phase === 'answering' ? ` · ${secondsLeft} ${t('puzzle.host.sec')}` : ''}
+            {live && phase === 'answering' ? ` · ${secondsLeft} ${tw('host.sec')}` : ''}
           </p>
-
-          {/* "เดามาแล้ว 74 ครั้ง แต่ถูก 12" = ห้องกำลังตัน
-              ต่างจาก "เดา 15 ถูก 12" = ข้อง่ายไป — ตัวเลขคู่นี้คือสิ่งที่ใช้ตัดสิน
-              ว่าจะเปิดคำใบ้ขั้นถัดไปหรือปิดรับเลย */}
           <p className="mt-1 text-sm text-ink-muted">
-            {/* ห้องรอยังไม่มีข้อ = stats ไม่เคยดึง — นับคนเองจาก useRoomHeadcount */}
             {phase === 'lobby' || !questionId
-              ? t('puzzle.host.lobbyCount', { joined: headcount.joined, online: headcount.online })
-              : t('puzzle.host.stats', {
-                  solved: stats.solved,
-                  online: headcount.online,
-                  guesses: stats.guesses,
-                })}
+              ? tw('host.lobbyCount', { joined: headcount.joined, online: headcount.online })
+              : watchOnly
+                ? tw('host.watchStats', { online: headcount.online })
+                : tw('host.stats', {
+                    solved: stats.solved,
+                    online: headcount.online,
+                    guesses: stats.guesses,
+                  })}
           </p>
 
-          {/* ใครตอบถูกคนแรก (และทีมไหน) — ห้องแบบทีมตั้งไว้ 1 คนจะเฉลยเองทันที
-              คนคุมเกมต้องรู้ชื่อทีมเพื่อประกาศ ไม่ใช่เห็นแค่ "ตอบถูก 1" */}
-          {stats.winner_name && (phase === 'answering' || phase === 'locked' || phase === 'reveal') && (
+          {typing && stats.winner_name && (phase === 'answering' || phase === 'locked' || phase === 'reveal') && (
             <p className="mt-2 rounded-xl bg-success-bg px-3 py-2 text-sm font-bold text-success-text">
-              {t(stats.winner_team ? 'puzzle.host.solvedByTeam' : 'puzzle.host.solvedBy', {
+              {tw(stats.winner_team ? 'host.solvedByTeam' : 'host.solvedBy', {
                 name: stats.winner_name,
                 team: stats.winner_team,
                 sec: stats.winner_seconds ?? 0,
@@ -196,11 +261,11 @@ export default function PuzzleHost() {
             </p>
           )}
 
-          {session?.solve_limit != null && (
+          {typing && session?.solve_limit != null && (
             <p className="mt-1 text-xs text-ink-faint">
               {session.solve_limit === 0
-                ? t('puzzle.host.roomSolveLimitOff')
-                : t('puzzle.host.roomSolveLimit', { n: session.solve_limit })}
+                ? tw('host.roomSolveLimitOff')
+                : tw('host.roomSolveLimit', { n: session.solve_limit })}
             </p>
           )}
         </section>
@@ -208,17 +273,16 @@ export default function PuzzleHost() {
         {/* ── ทีม ───────────────────────────────────────────── */}
         {teamMode && (
           <section className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-            <p className="text-sm font-bold text-ink">{t('puzzle.host.teams')}</p>
+            <p className="text-sm font-bold text-ink">{tw('host.teams')}</p>
 
-            {/* คนที่ไม่มีทีมตอบถูกก็ไม่เข้าคะแนนทีมไหนเลย — เตือนก่อนกดเริ่ม */}
             {noTeamCount > 0 && phase === 'lobby' && (
               <p className="mt-2 rounded-xl bg-warning-bg px-3 py-2 text-sm font-semibold text-warning-text">
-                {t('puzzle.host.noTeamWarn', { n: noTeamCount })}
+                {tw('host.noTeamWarn', { n: noTeamCount })}
               </p>
             )}
 
             {teamBoard.length === 0 ? (
-              <p className="mt-1 text-sm text-ink-faint">{t('puzzle.host.noTeams')}</p>
+              <p className="mt-1 text-sm text-ink-faint">{tw('host.noTeams')}</p>
             ) : (
               <ul className="mt-2 space-y-1.5">
                 {teamBoard.map((team) => {
@@ -228,7 +292,7 @@ export default function PuzzleHost() {
                       <span className="h-3.5 w-3.5 flex-none rounded-full" style={{ background: st.color }} />
                       <span className="min-w-0 flex-1 truncate font-bold text-ink">{team.name}</span>
                       <span className="flex-none text-xs text-ink-muted">
-                        {t('puzzle.host.teamRow', { n: team.member_count, score: team.total_score })}
+                        {tw('host.teamRow', { n: team.member_count, score: team.total_score })}
                       </span>
                       {/* ชื่อทีมลูกทัวร์พิมพ์เอง แล้วขึ้นจอใหญ่ — ต้องแก้/ลบได้ทันที */}
                       <button
@@ -268,43 +332,17 @@ export default function PuzzleHost() {
           </section>
         )}
 
-        {/* ── คำใบ้ ─────────────────────────────────────────── */}
-        {hintTotal > 0 && (
-          <section className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-            <p className="text-sm font-bold text-ink">
-              {t('puzzle.host.hintTitle', { level: hintLevel, total: hintTotal })}
-            </p>
-
-            {hintPreview.map((h) => (
-              <p key={h.step} className="mt-1 text-sm text-ink-muted">
-                💡 {h.body}
-              </p>
-            ))}
-
-            {hintLevel < hintTotal && (
-              <Button
-                className="mt-3"
-                variant="secondary"
-                disabled={busy || !live}
-                onClick={() => run(() => openHint(sessionId, hintLevel + 1))}
-              >
-                {t('puzzle.host.openHint', { n: hintLevel + 1, total: hintTotal })}
-              </Button>
-            )}
-          </section>
-        )}
-
         {/* ── คำตอบที่เกือบถูก ─────────────────────────────── */}
-        {near.length > 0 && phase !== 'reveal' && (
+        {typing && near.length > 0 && phase !== 'reveal' && (
           <section className="rounded-2xl border border-warning bg-warning-bg p-4">
-            <p className="text-sm font-bold text-warning-text">{t('puzzle.host.nearTitle')}</p>
-            <p className="mt-0.5 text-xs text-warning-text/80">{t('puzzle.host.nearHint')}</p>
+            <p className="text-sm font-bold text-warning-text">{tw('host.nearTitle')}</p>
+            <p className="mt-0.5 text-xs text-warning-text/80">{tw('host.nearHint')}</p>
             <ul className="mt-2 space-y-1.5">
               {near.map((n) => (
                 <li key={n.guess_text} className="flex items-center gap-2">
                   <span className="min-w-0 flex-1 truncate font-bold text-ink">{n.guess_text}</span>
                   <span className="text-xs text-ink-muted">
-                    {t('puzzle.host.nearPeople', { n: n.people })}
+                    {tw('host.nearPeople', { n: n.people })}
                   </span>
                   <Button
                     fullWidth={false}
@@ -312,7 +350,7 @@ export default function PuzzleHost() {
                     disabled={busy}
                     onClick={() => run(() => acceptAnswer(sessionId, questionId, n.guess_text))}
                   >
-                    {t('puzzle.host.accept')}
+                    {tw('host.accept')}
                   </Button>
                 </li>
               ))}
@@ -327,33 +365,40 @@ export default function PuzzleHost() {
               disabled={busy}
               onClick={() => run(() => nextQuestion(sessionId, session?.current_index ?? -1))}
             >
-              {phase === 'lobby' ? t('puzzle.host.start') : t('puzzle.host.next')}
+              {phase === 'lobby' ? tw('host.start') : tw('host.next')}
             </Button>
           ) : (
             <Button disabled={busy} onClick={() => run(() => lockAndReveal(sessionId))}>
-              {t('puzzle.host.lockReveal')}
+              {watchOnly ? tw('host.reveal') : tw('host.lockReveal')}
             </Button>
           )}
 
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => run(() => setSessionState(sessionId, 'scoreboard'))}
-            >
-              {t('puzzle.host.scoreboard')}
-            </Button>
+            {/* ไม่ต้องตอบ = ไม่มีคะแนน กระดานอันดับจะว่างเปล่า */}
+            {typing && (
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => run(() => setSessionState(sessionId, 'scoreboard'))}
+              >
+                {tw('host.scoreboard')}
+              </Button>
+            )}
             <Button
               variant="ghost"
               disabled={busy}
               onClick={() => run(() => setSessionState(sessionId, 'finished'))}
             >
-              {t('puzzle.host.finish')}
+              {tw('host.finish')}
             </Button>
           </div>
         </section>
 
-        <p className="text-center text-xs text-ink-faint">{t('puzzle.host.shoutReminder')}</p>
+        {answerMode && (
+          <p className="text-center text-xs text-ink-faint">
+            {watchOnly ? tw('host.watchReminder') : tw('host.shoutReminder')}
+          </p>
+        )}
       </div>
     </div>
   )

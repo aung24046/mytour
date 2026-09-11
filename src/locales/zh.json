@@ -387,7 +387,13 @@
       "puzzleClosed": "暂无开放的房间",
       "tilesDesc": "随着方块翻开猜出整张图",
       "tilesOpen": "有房间开放中",
-      "tilesClosed": "目前没有开放的房间"
+      "tilesClosed": "目前没有开放的房间",
+      "wordsDesc": "猜缺字母的词，类别就是提示",
+      "wordsOpen": "有房间开放中",
+      "wordsClosed": "暂无开放的房间",
+      "shuffleDesc": "把打乱的字母排成词，类别就是提示",
+      "shuffleOpen": "有房间开放中",
+      "shuffleClosed": "暂无开放的房间"
     },
     "meetPoint": {
       "title": "集合点",
@@ -1283,7 +1289,13 @@
       "puzzleIdle": "暂无房间",
       "tilesDesc": "把图片切成方块，逐块翻开",
       "tilesLive": "{{rooms}} 个房间进行中 · {{players}} 人",
-      "tilesIdle": "目前没有房间"
+      "tilesIdle": "目前没有房间",
+      "wordsDesc": "大屏猜缺字母的词，类别作提示，答对得 1 分",
+      "wordsLive": "{{rooms}} 个房间 · {{players}} 人",
+      "wordsIdle": "暂无房间",
+      "shuffleDesc": "把打乱的字母排成词，类别作提示，答对得 1 分",
+      "shuffleLive": "{{rooms}} 个房间 · {{players}} 人",
+      "shuffleIdle": "暂无房间"
     },
     "quiz": {
       "title": "知识竞答",
@@ -1595,7 +1607,8 @@
       "solvedBy": "🎉 {{name}} 答对了（{{sec}} 秒）",
       "solvedByTeam": "🎉 {{team}} 队的 {{name}} 答对了（{{sec}} 秒）",
       "roomSolveLimit": "本房间：{{n}} 人答对后立即公布",
-      "roomSolveLimitOff": "本房间：不限人数 — 手动公布"
+      "roomSolveLimitOff": "本房间：不限人数 — 手动公布",
+      "lobbyCount": "已进入 {{joined}} 人 · 在线 {{online}} 人"
     },
     "myTeam": "你的队伍",
     "joinTeamFirst": "开始前请先选队伍",
@@ -1716,7 +1729,8 @@
       "solvedBy": "🎉 {{name}} 答对了（{{sec}} 秒）",
       "solvedByTeam": "🎉 {{team}} 队的 {{name}} 答对了（{{sec}} 秒）",
       "noOneYet": "还没有人答对",
-      "teamMode": "分队模式"
+      "teamMode": "分队模式",
+      "lobbyCount": "已进入 {{joined}} 人 · 在线 {{online}} 人"
     },
     "guest": {
       "placeholder": "输入答案…",
@@ -1746,6 +1760,184 @@
     "lobbyWait": "等待主持人开始",
     "stage": {
       "teamBoard": "队伍得分"
+    }
+  },
+  "words": {
+    "title": "What Words",
+    "noRoom": "暂无开放的房间",
+    "placeholder": "输入答案...",
+    "correct": "答对了！+1 分",
+    "waitReveal": "等待公布答案...",
+    "youGotIt": "你答对了",
+    "youMissed": "这题没答对",
+    "solvedCount": "答对 {{n}} 题",
+    "category": "类别：{{name}}",
+    "hiddenInfo": "隐藏 {{n}} 个字母 · 已揭开 {{opened}} 个",
+    "myTeam": "你的队伍",
+    "joinTeamFirst": "开始前请先选队伍",
+    "winner": "🎉 {{name}} 最先答对",
+    "winnerTeam": "🎉 {{team}} 队得分（{{name}}）",
+    "teamScore": "队伍得分 {{score}}",
+    "state": {
+      "lobby": "等待开始",
+      "countdown": "即将开始",
+      "answering": "进行中",
+      "locked": "已截止",
+      "reveal": "公布答案",
+      "scoreboard": "排行榜",
+      "finished": "已结束"
+    },
+    "rules": {
+      "guess": "• 猜出缺字母的词，类别就是提示",
+      "point": "• 答对得 1 分",
+      "teamPoint": "• 答对的队伍得 1 分",
+      "unlimited": "• 可无限次作答",
+      "winner": "• 得分最高者获胜",
+      "teamWinner": "• 队伍总分最高者获胜",
+      "watchOnly": "• 想到了直接说出来，不用打字"
+    },
+    "feedback": {
+      "wrong": "还不对，再试试",
+      "duplicate": "和刚才的答案一样",
+      "too_fast": "有点快，稍等一下",
+      "closed": "已停止收答案",
+      "not_started": "还没开始",
+      "no_attempts": "次数已用完",
+      "too_long": "答案太长了"
+    },
+    "manager": {
+      "subtitle": "大屏猜缺字母的词",
+      "openRooms": "开放中的房间",
+      "noRooms": "还没有房间 — 从下面选一套题开房",
+      "roomMeta": "{{players}} 人 · 第 {{index}} 题",
+      "enterRoom": "进入主持",
+      "closeRoom": "关闭",
+      "library": "词库",
+      "openRoomFrom": "用这套开房",
+      "createRoom": "创建房间",
+      "edit": "编辑",
+      "newSet": "新建题库",
+      "newSetName": "新的 What Words 题库",
+      "allBuses": "全团（所有车）",
+      "screen": {
+        "projector": "投影仪",
+        "bus_tv": "车上电视",
+        "none": "没有大屏"
+      },
+      "teamMode": "让团员分队进行",
+      "teamSize": "每队人数上限",
+      "teamSizeFree": "每队人数不限",
+      "teamHint": "团员在等待室自行组队 · 队伍得分为队员总分",
+      "solveLimit": "答对几人后公布答案（本房间）",
+      "solveLimitHint": "分队时建议 1 人 — 最先答对的队伍得分并立即公布",
+      "solveLimitN": "前 {{n}} 人答对后公布",
+      "solveLimitOff": "不限 — 主持人手动公布",
+      "teamBadge": "分队",
+      "modeType": "手机打字作答",
+      "modeNone": "不用作答 — 只看",
+      "watchOnlyHint": "本组不用作答 — 不计分，也没有组队模式"
+    },
+    "builder": {
+      "solveLimit": "公布答案前允许多少人答对",
+      "solveLimitHint": "人数一满就立即公布答案，主持人无需按键。",
+      "solveLimitN": "前 {{n}} 人，然后公布",
+      "solveLimitOff": "不限——由主持人公布",
+      "title": "What Words 题库",
+      "pinWhy": "请先输入工作人员 PIN — 此页会读取隐藏的字母，游客无法访问。",
+      "editItem": "编辑题目",
+      "addItem": "新增题目",
+      "setSettings": "整套设置",
+      "empty": "这套还没有题目",
+      "category": "类别（提示）",
+      "categoryHint": "在所有屏幕上与题目同时显示",
+      "categoryPlaceholder": "例如：节日",
+      "answer": "答案",
+      "tapToHide": "点选要隐藏的字母 — 只隐藏字母本身，上下元音和声调符号会保留作为提示",
+      "hiddenCount": "已隐藏 {{n}} 个",
+      "clearHidden": "清除隐藏",
+      "preview": "预览（游客看到的样子）",
+      "aliases": "也接受的写法",
+      "aliasesHint": "用逗号分隔 — 大家实际会写的写法。",
+      "test": "试测",
+      "testPlaceholder": "输入游客可能写的答案",
+      "testPass": "通过 — 会判为正确",
+      "testFail": "不通过 — 想算对请加入「也接受的写法」",
+      "explain": "公布时的说明（可选）",
+      "explainPlaceholder": "例如：1 月 1 日",
+      "timeLimit": "每题时间（秒）",
+      "confirmDelete": "再点一次删除",
+      "err": {
+        "needCategory": "必须填写类别",
+        "needAnswer": "必须填写答案",
+        "needHidden": "至少隐藏一个字母",
+        "tooLong": "答案超过 {{max}} 个字母"
+      },
+      "hiddenLetter": "已隐藏 {{c}}",
+      "answerMode": "作答方式",
+      "modeType": "手机打字作答",
+      "modeNone": "不用作答 — 只揭示给大家看",
+      "modeNoneHint": "手机只能观看，没有输入框，不计分 — 大家口头竞猜，主持人公布答案"
+    },
+    "host": {
+      "openStage": "打开大屏",
+      "progress": "第 {{index}} 题 · {{state}}",
+      "sec": "秒",
+      "stats": "答对 {{solved}}/{{online}} · 共猜 {{guesses}} 次",
+      "nearTitle": "接近的答案",
+      "nearHint": "点「接受」后这些人会补分，本题库也会记住这个写法。",
+      "nearPeople": "{{n}} 人",
+      "accept": "接受",
+      "start": "开始",
+      "next": "下一题",
+      "lockReveal": "截止并公布",
+      "scoreboard": "排行榜",
+      "finish": "结束游戏",
+      "shoutReminder": "开始前提醒大家别喊出答案 — 想到了就打字。",
+      "answerIs": "答案：{{answer}}",
+      "tapHint": "点淡色格子即可向全场揭开该字母",
+      "openNext": "揭开下一个（{{opened}}/{{total}}）",
+      "undo": "撤销",
+      "teams": "队伍",
+      "teamRow": "{{n}} 人 · {{score}} 分",
+      "noTeamWarn": "还有 {{n}} 人没有选队伍",
+      "noTeams": "还没有队伍",
+      "solvedBy": "🎉 {{name}} 答对了（{{sec}} 秒）",
+      "solvedByTeam": "🎉 {{team}} 队的 {{name}} 答对了（{{sec}} 秒）",
+      "roomSolveLimit": "本房间：{{n}} 人答对后立即公布",
+      "roomSolveLimitOff": "本房间：不限人数 — 手动公布",
+      "watchStats": "在线 {{online}} 人 · 不用作答（口头竞猜）",
+      "reveal": "公布答案",
+      "watchReminder": "本组不用打字 — 让大家口头作答，然后公布答案",
+      "lobbyCount": "已进入 {{joined}} 人 · 在线 {{online}} 人"
+    },
+    "watchOnly": "这题用喊的，不用打字",
+    "watchOnlyEnd": "游戏结束，谢谢参与",
+    "watchOnlyBreak": "稍作休息",
+    "watchOnlyNoScore": "本游戏口头竞猜，不计分"
+  },
+  "shuffle": {
+    "title": "Word Shuffle",
+    "hiddenInfo": "已放好 {{opened}} / {{n}} 个字母",
+    "rules": {
+      "guess": "• 把打乱的字母排成词，类别就是提示"
+    },
+    "manager": {
+      "subtitle": "大屏把打乱的字母排成词",
+      "newSetName": "新的 Word Shuffle 题库"
+    },
+    "builder": {
+      "title": "Word Shuffle 题库",
+      "pinWhy": "请先输入工作人员 PIN — 此页会读取答案，游客无法访问。",
+      "tileCount": "已打乱 {{n}} 个字母 — 不满意可以重新打乱",
+      "reshuffle": "重新打乱",
+      "err": {
+        "needTwo": "答案至少要有 2 个不同的字母才能打乱",
+        "needShuffle": "打乱的字母与答案不符 — 请重新打乱",
+        "notShuffled": "打乱后的顺序仍与答案相同 — 请重新打乱"
+      }
+    },
+    "host": {
+      "tapHint": "点淡色格子即可把该字母放入格子"
     }
   }
 }

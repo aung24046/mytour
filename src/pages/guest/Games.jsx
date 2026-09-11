@@ -81,6 +81,8 @@ export default function Games() {
   const [quiz, setQuiz] = useState({ open: 0 })
   const [puzzle, setPuzzle] = useState({ open: 0 })
   const [tiles, setTiles] = useState({ open: 0 })
+  const [words, setWords] = useState({ open: 0 })
+  const [shuffle, setShuffle] = useState({ open: 0 })
 
   useEffect(() => {
     if (!tourId) return
@@ -122,6 +124,8 @@ export default function Games() {
       setQuiz({ open: mine.filter((r) => (r.game_kind ?? 'quiz') === 'quiz').length })
       setPuzzle({ open: mine.filter((r) => r.game_kind === 'puzzle').length })
       setTiles({ open: mine.filter((r) => r.game_kind === 'tiles').length })
+      setWords({ open: mine.filter((r) => r.game_kind === 'words').length })
+      setShuffle({ open: mine.filter((r) => r.game_kind === 'shuffle').length })
       const ids = (games ?? []).map((g) => g.id)
       if (ids.length === 0 || !guestId) {
         setBingo({ open: ids.length, myCard: false })
@@ -208,6 +212,26 @@ export default function Games() {
           status={tiles.open ? t('guest.games.tilesOpen') : t('guest.games.tilesClosed')}
           live={tiles.open > 0}
           onClick={() => navigate(tp('tiles'))}
+        />
+
+        <GameCard
+          icon="language"
+          tint="#be185d"
+          title={t('words.title')}
+          desc={t('guest.games.wordsDesc')}
+          status={words.open ? t('guest.games.wordsOpen') : t('guest.games.wordsClosed')}
+          live={words.open > 0}
+          onClick={() => navigate(tp('words'))}
+        />
+
+        <GameCard
+          icon="shuffle"
+          tint="#0e7490"
+          title={t('shuffle.title')}
+          desc={t('guest.games.shuffleDesc')}
+          status={shuffle.open ? t('guest.games.shuffleOpen') : t('guest.games.shuffleClosed')}
+          live={shuffle.open > 0}
+          onClick={() => navigate(tp('shuffle'))}
         />
       </div>
 

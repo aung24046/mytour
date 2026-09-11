@@ -120,7 +120,13 @@
       "puzzleClosed": "No open room yet",
       "tilesDesc": "Guess the picture as tiles open up",
       "tilesOpen": "A room is open",
-      "tilesClosed": "No open room yet"
+      "tilesClosed": "No open room yet",
+      "wordsDesc": "Guess the word with missing letters — the category is your hint",
+      "wordsOpen": "A room is open",
+      "wordsClosed": "No open room yet",
+      "shuffleDesc": "Unscramble the letters — the category is your hint",
+      "shuffleOpen": "A room is open",
+      "shuffleClosed": "No open room yet"
     },
     "nav": {
       "home": "Home",
@@ -926,7 +932,13 @@
       "puzzleIdle": "No open room",
       "tilesDesc": "Split a picture into tiles and open them one by one",
       "tilesLive": "{{rooms}} rooms live · {{players}} players",
-      "tilesIdle": "No room open"
+      "tilesIdle": "No room open",
+      "wordsDesc": "Guess the word with missing letters, category as the hint, 1 point per answer",
+      "wordsLive": "{{rooms}} rooms · {{players}} players",
+      "wordsIdle": "No open room",
+      "shuffleDesc": "Unscramble the letters into a word, category as the hint, 1 point per answer",
+      "shuffleLive": "{{rooms}} rooms · {{players}} players",
+      "shuffleIdle": "No open room"
     },
     "luckyDraw": {
       "errNoTable": "The tables for this game are not installed yet — run migration 20260818_lucky_draw.sql first",
@@ -1732,7 +1744,8 @@
       "solvedBy": "🎉 {{name}} got it ({{sec}}s)",
       "solvedByTeam": "🎉 {{name}} of {{team}} got it ({{sec}}s)",
       "roomSolveLimit": "This room: reveal after {{n}} correct",
-      "roomSolveLimitOff": "This room: unlimited — reveal manually"
+      "roomSolveLimitOff": "This room: unlimited — reveal manually",
+      "lobbyCount": "{{joined}} joined · {{online}} online"
     },
     "myTeam": "Your team",
     "joinTeamFirst": "Pick a team before the game starts",
@@ -1853,7 +1866,8 @@
       "solvedBy": "🎉 {{name}} got it ({{sec}}s)",
       "solvedByTeam": "🎉 {{name}} of {{team}} got it ({{sec}}s)",
       "noOneYet": "No one has it yet",
-      "teamMode": "Team mode"
+      "teamMode": "Team mode",
+      "lobbyCount": "{{joined}} joined · {{online}} online"
     },
     "guest": {
       "placeholder": "Type your answer...",
@@ -1883,6 +1897,184 @@
     "lobbyWait": "Waiting for the host to start",
     "stage": {
       "teamBoard": "Team scores"
+    }
+  },
+  "words": {
+    "title": "What Words",
+    "noRoom": "No open room yet",
+    "placeholder": "Type your answer...",
+    "correct": "Correct! +1 point",
+    "waitReveal": "Waiting for the reveal...",
+    "youGotIt": "You got it",
+    "youMissed": "You missed this one",
+    "solvedCount": "{{n}} correct",
+    "category": "Category: {{name}}",
+    "hiddenInfo": "{{n}} letters hidden · {{opened}} opened",
+    "myTeam": "Your team",
+    "joinTeamFirst": "Pick a team before the game starts",
+    "winner": "🎉 {{name}} got it first",
+    "winnerTeam": "🎉 {{team}} scores ({{name}})",
+    "teamScore": "Team score {{score}}",
+    "state": {
+      "lobby": "Waiting",
+      "countdown": "Starting",
+      "answering": "In play",
+      "locked": "Closed",
+      "reveal": "Reveal",
+      "scoreboard": "Scoreboard",
+      "finished": "Finished"
+    },
+    "rules": {
+      "guess": "• Guess the word with missing letters — the category is your hint",
+      "point": "• 1 point per correct answer",
+      "teamPoint": "• The team that answers correctly gets 1 point",
+      "unlimited": "• Unlimited attempts",
+      "winner": "• Highest score wins",
+      "teamWinner": "• Highest team total wins",
+      "watchOnly": "• Got it? Say it out loud — no typing"
+    },
+    "feedback": {
+      "wrong": "Not it — try again",
+      "duplicate": "Same as your last guess",
+      "too_fast": "A bit too fast, hold on",
+      "closed": "Answers are closed",
+      "not_started": "Not started yet",
+      "no_attempts": "No attempts left",
+      "too_long": "Answer is too long"
+    },
+    "manager": {
+      "subtitle": "Guess the word with missing letters, on the big screen",
+      "openRooms": "Open rooms",
+      "noRooms": "No room yet — pick a set below and open one",
+      "roomMeta": "{{players}} players · item {{index}}",
+      "enterRoom": "Host",
+      "closeRoom": "Close",
+      "library": "Word sets",
+      "openRoomFrom": "Open a room",
+      "createRoom": "Create room",
+      "edit": "Edit",
+      "newSet": "New set",
+      "newSetName": "New What Words set",
+      "allBuses": "Whole trip (all buses)",
+      "screen": {
+        "projector": "Projector",
+        "bus_tv": "Bus TV",
+        "none": "No big screen"
+      },
+      "teamMode": "Let guests play in teams",
+      "teamSize": "Members per team",
+      "teamSizeFree": "No team size limit",
+      "teamHint": "Guests form teams themselves in the lobby · team score is the members’ total",
+      "solveLimit": "Correct answers before reveal (this room)",
+      "solveLimitHint": "For teams keep it at 1 — the first team to answer scores and the answer is revealed",
+      "solveLimitN": "First {{n}}, then reveal",
+      "solveLimitOff": "Unlimited — host reveals manually",
+      "teamBadge": "Teams",
+      "modeType": "Type answers on phone",
+      "modeNone": "No answering — watch only",
+      "watchOnlyHint": "This set is watch only — no scores and no team mode"
+    },
+    "builder": {
+      "solveLimit": "How many may answer correctly before the reveal",
+      "solveLimitHint": "Once that many are in, the answer shows at once — the host does not have to press anything.",
+      "solveLimitN": "First {{n}}, then reveal",
+      "solveLimitOff": "No limit — the host reveals",
+      "title": "What Words set",
+      "pinWhy": "Enter the staff PIN — this page reads the hidden letters, which guests cannot access.",
+      "editItem": "Edit item",
+      "addItem": "Add item",
+      "setSettings": "Settings for this set",
+      "empty": "No items yet",
+      "category": "Category (the hint)",
+      "categoryHint": "Shown with the word on every screen",
+      "categoryPlaceholder": "e.g. Festival",
+      "answer": "Answer",
+      "tapToHide": "Tap the letters to hide — only the letter is hidden; vowel and tone marks stay as a hint",
+      "hiddenCount": "{{n}} hidden",
+      "clearHidden": "Clear hidden",
+      "preview": "Preview (what guests see)",
+      "aliases": "Also accept",
+      "aliasesHint": "Comma separated — spellings people actually use.",
+      "test": "Test",
+      "testPlaceholder": "Type what a guest might answer",
+      "testPass": "Accepted",
+      "testFail": "Rejected — add it to \"Also accept\" if it should count",
+      "explain": "Reveal note (optional)",
+      "explainPlaceholder": "e.g. 1 January",
+      "timeLimit": "Time per item (seconds)",
+      "confirmDelete": "Tap again to delete",
+      "err": {
+        "needCategory": "A category is required",
+        "needAnswer": "An answer is required",
+        "needHidden": "Hide at least one letter",
+        "tooLong": "Answer is longer than {{max}} letters"
+      },
+      "hiddenLetter": "{{c}} hidden",
+      "answerMode": "How to answer",
+      "modeType": "Type answers on phone",
+      "modeNone": "No answering — just reveal for everyone to watch",
+      "modeNoneHint": "Phones are view-only — no input, no scores. Players guess out loud and the host reveals."
+    },
+    "host": {
+      "openStage": "Open big screen",
+      "progress": "Item {{index}} · {{state}}",
+      "sec": "s",
+      "stats": "{{solved}}/{{online}} solved · {{guesses}} guesses",
+      "nearTitle": "Near misses",
+      "nearHint": "Accepting awards those players retroactively and the set remembers it.",
+      "nearPeople": "{{n}} people",
+      "accept": "Accept",
+      "start": "Start",
+      "next": "Next",
+      "lockReveal": "Close + reveal",
+      "scoreboard": "Scoreboard",
+      "finish": "End game",
+      "shoutReminder": "Remind everyone not to shout the answer — type it instead.",
+      "answerIs": "Answer: {{answer}}",
+      "tapHint": "Tap a faded box to reveal that letter to everyone",
+      "openNext": "Reveal next letter ({{opened}}/{{total}})",
+      "undo": "Undo",
+      "teams": "Teams",
+      "teamRow": "{{n}} members · {{score}} pts",
+      "noTeamWarn": "{{n}} players have not picked a team",
+      "noTeams": "No teams yet",
+      "solvedBy": "🎉 {{name}} got it ({{sec}}s)",
+      "solvedByTeam": "🎉 {{name}} of {{team}} got it ({{sec}}s)",
+      "roomSolveLimit": "This room: reveal after {{n}} correct",
+      "roomSolveLimitOff": "This room: unlimited — reveal manually",
+      "watchStats": "{{online}} online · watch only (guess out loud)",
+      "reveal": "Reveal",
+      "watchReminder": "No typing in this set — let players answer out loud, then reveal.",
+      "lobbyCount": "{{joined}} joined · {{online}} online"
+    },
+    "watchOnly": "Shout it out — no typing for this one",
+    "watchOnlyEnd": "Game over — thanks for playing",
+    "watchOnlyBreak": "Short break",
+    "watchOnlyNoScore": "This game is played out loud — no scores"
+  },
+  "shuffle": {
+    "title": "Word Shuffle",
+    "hiddenInfo": "{{opened}} of {{n}} letters placed",
+    "rules": {
+      "guess": "• Unscramble the letters into a word — the category is your hint"
+    },
+    "manager": {
+      "subtitle": "Unscramble the letters, on the big screen",
+      "newSetName": "New Word Shuffle set"
+    },
+    "builder": {
+      "title": "Word Shuffle set",
+      "pinWhy": "Enter the staff PIN — this page reads the answers, which guests cannot access.",
+      "tileCount": "{{n}} letters shuffled — tap Shuffle again if you don’t like this order",
+      "reshuffle": "Shuffle again",
+      "err": {
+        "needTwo": "The answer needs at least 2 different letters to shuffle",
+        "needShuffle": "The shuffled letters don’t match the answer — shuffle again",
+        "notShuffled": "The shuffled order still matches the answer — shuffle again"
+      }
+    },
+    "host": {
+      "tapHint": "Tap a faded box to place that letter for everyone"
     }
   }
 }

@@ -53,6 +53,8 @@ export const CAPABILITIES = {
   'quiz.host': 'staff', // คุมห้องควิซหน้างาน — ระดับเดียวกับบิงโก
   'puzzle.host': 'staff', // คุมห้องปริศนาใบ้คำ — เกมคนละใบแต่เครื่องยนต์เดียวกับควิซ
   'tiles.host': 'staff', // คุมห้องเปิดแผ่นป้าย — เครื่องยนต์เดียวกันอีกเกม
+  'words.host': 'staff', // คุมห้อง What Words — เกมที่สี่บนเครื่องยนต์ควิซ
+  'shuffle.host': 'staff', // คุมห้อง Word Shuffle — หน้าจอชุดเดียวกับ What Words
   'guest.view': 'staff',
   'dashboard.view': 'guide',
   'guide.read': 'guide',
@@ -66,6 +68,8 @@ export const CAPABILITIES = {
   'quiz.edit': 'lead', // สร้าง/แก้ชุดคำถามควิซ
   'puzzle.edit': 'lead', // สร้าง/แก้ชุดปริศนาใบ้คำ
   'tiles.edit': 'lead', // สร้าง/แก้ชุดเปิดแผ่นป้าย
+  'words.edit': 'lead', // สร้าง/แก้ชุด What Words
+  'shuffle.edit': 'lead', // สร้าง/แก้ชุด Word Shuffle
   'itinerary.edit': 'lead',
   'seat.layout': 'lead',
   'room.layout': 'lead',
@@ -88,6 +92,8 @@ export const CAPABILITIES = {
   'quiz.define': 'admin', // แก้ชุดคำถามในคลังกลาง (กระทบทุกทริปที่หยิบไปใช้)
   'puzzle.define': 'admin', // แก้ชุดปริศนาในคลังกลาง
   'tiles.define': 'admin', // แก้ชุดเปิดแผ่นป้ายในคลังกลาง
+  'words.define': 'admin', // แก้ชุด What Words ในคลังกลาง
+  'shuffle.define': 'admin', // แก้ชุด Word Shuffle ในคลังกลาง
   'destination.manage': 'admin',
   'supplier.manage': 'admin',
   'person.create': 'admin', // สร้างคนใหม่เข้าคลังทีมงาน

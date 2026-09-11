@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom'
 
 // Guest pages
@@ -13,6 +14,7 @@ import GuestLuckyDraw from './pages/guest/LuckyDraw.jsx'
 import GuestQuiz from './pages/guest/Quiz.jsx'
 import GuestPuzzle from './pages/guest/Puzzle.jsx'
 import GuestTiles from './pages/guest/Tiles.jsx'
+import GuestWords from './pages/guest/Words.jsx'
 import ShareLocation from './pages/guest/ShareLocation.jsx'
 import BagLookup from './pages/guest/BagLookup.jsx'
 import SOS from './pages/guest/SOS.jsx'
@@ -31,21 +33,6 @@ import RoomMap from './pages/staff/RoomMap.jsx'
 import LocationMonitor from './pages/staff/LocationMonitor.jsx'
 import BingoHost from './pages/staff/BingoHost.jsx'
 import Games from './pages/staff/Games.jsx'
-import LuckyDraw from './pages/staff/LuckyDraw.jsx'
-import LuckyDrawStage from './pages/staff/LuckyDrawStage.jsx'
-import QuizManager from './pages/staff/QuizManager.jsx'
-import QuizBuilder from './pages/staff/QuizBuilder.jsx'
-import QuizHost from './pages/staff/QuizHost.jsx'
-import QuizStage from './pages/staff/QuizStage.jsx'
-import QuizReport from './pages/staff/QuizReport.jsx'
-import PuzzleManager from './pages/staff/PuzzleManager.jsx'
-import PuzzleBuilder from './pages/staff/PuzzleBuilder.jsx'
-import PuzzleHost from './pages/staff/PuzzleHost.jsx'
-import PuzzleStage from './pages/staff/PuzzleStage.jsx'
-import TilesManager from './pages/staff/TilesManager.jsx'
-import TilesBuilder from './pages/staff/TilesBuilder.jsx'
-import TilesHost from './pages/staff/TilesHost.jsx'
-import TilesStage from './pages/staff/TilesStage.jsx'
 import FormBuilder from './pages/staff/FormBuilder.jsx'
 import ItineraryBuilder from './pages/staff/ItineraryBuilder.jsx'
 import DietarySummary from './pages/staff/DietarySummary.jsx'
@@ -73,6 +60,35 @@ import FeedbackFormPrint from './pages/staff/docs/FeedbackFormPrint.jsx'
 import JoinPoster from './pages/staff/docs/JoinPoster.jsx'
 import SignatureSheet from './pages/staff/docs/SignatureSheet.jsx'
 import NameTag from './pages/staff/docs/NameTag.jsx'
+
+
+// ── หน้าเกมฝั่งทีมงาน โหลดตอนเปิดใช้ (React.lazy) ─────────────────────
+// ★ 11 ก.ย. 2026: ไฟล์ index-*.js ก้อนหลักโตจน build ล้ม — vite-plugin-pwa ไม่ยอม precache
+//   ไฟล์ที่ใหญ่เกิน 2 MiB แล้วโยน error (ก่อนเพิ่มเกม What Words เหลือที่ว่างแค่ ~6 KB)
+//   หน้าเหล่านี้มีแต่สตาฟที่เปิด ลูกทัวร์ 40 คนบนรถไม่ควรต้องโหลดมาตั้งแต่หน้าแรก
+// ⚠️ chunk ที่แยกออกไปยังถูก precache ตาม globPatterns (**/*.js) — ออฟไลน์ใช้ได้เหมือนเดิม
+//    ส่วนไลบรารีแต่งรูปยังแยกเป็น image-cropper-* และถูกกันออกจาก precache ตามเดิม
+//    (TilesBuilder เป็น lazy chunk แล้ว แต่ ImageCropper ข้างในยังถูก manualChunks ดูดไปก้อนนั้น)
+// เกมใหม่ที่เพิ่มวันหลัง ให้ประกาศแบบนี้ ไม่ใช่ import ตรงๆ
+const LuckyDraw = lazy(() => import('./pages/staff/LuckyDraw.jsx'))
+const LuckyDrawStage = lazy(() => import('./pages/staff/LuckyDrawStage.jsx'))
+const QuizManager = lazy(() => import('./pages/staff/QuizManager.jsx'))
+const QuizBuilder = lazy(() => import('./pages/staff/QuizBuilder.jsx'))
+const QuizHost = lazy(() => import('./pages/staff/QuizHost.jsx'))
+const QuizStage = lazy(() => import('./pages/staff/QuizStage.jsx'))
+const QuizReport = lazy(() => import('./pages/staff/QuizReport.jsx'))
+const PuzzleManager = lazy(() => import('./pages/staff/PuzzleManager.jsx'))
+const PuzzleBuilder = lazy(() => import('./pages/staff/PuzzleBuilder.jsx'))
+const PuzzleHost = lazy(() => import('./pages/staff/PuzzleHost.jsx'))
+const PuzzleStage = lazy(() => import('./pages/staff/PuzzleStage.jsx'))
+const TilesManager = lazy(() => import('./pages/staff/TilesManager.jsx'))
+const TilesBuilder = lazy(() => import('./pages/staff/TilesBuilder.jsx'))
+const TilesHost = lazy(() => import('./pages/staff/TilesHost.jsx'))
+const TilesStage = lazy(() => import('./pages/staff/TilesStage.jsx'))
+const WordsManager = lazy(() => import('./pages/staff/WordsManager.jsx'))
+const WordsBuilder = lazy(() => import('./pages/staff/WordsBuilder.jsx'))
+const WordsHost = lazy(() => import('./pages/staff/WordsHost.jsx'))
+const WordsStage = lazy(() => import('./pages/staff/WordsStage.jsx'))
 
 import RequireRole from './components/common/RequireRole.jsx'
 import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
@@ -165,6 +181,15 @@ function staffRoute(capability, element) {
   )
 }
 
+/** ระหว่างโหลด chunk ของหน้าที่ lazy — วงหมุนเฉยๆ ไม่มีข้อความ (ยังไม่รู้ภาษา/ธีมของหน้า) */
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="loading">
+      <span className="h-8 w-8 animate-spin rounded-full border-4 border-line border-t-brand" />
+    </div>
+  )
+}
+
 function App() {
   // โหมดสว่าง/มืดต้องอยู่ระดับบนสุด เพราะทั้งธีมบริษัทและ UI ต้องเห็นค่าเดียวกัน
   const colorMode = useColorMode()
@@ -177,6 +202,7 @@ function App() {
   return (
     <ColorModeContext.Provider value={colorMode}>
       <div style={homeButtonVisible ? { paddingBottom: HOME_BUTTON_SPACE } : undefined}>
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* ── หน้าแรก / เลือกทริป ───────────────────────────────── */}
         <Route path="/" element={<TourEntry />} />
@@ -194,6 +220,9 @@ function App() {
           <Route path="quiz" element={<GuestQuiz />} />
           <Route path="puzzle" element={<GuestPuzzle />} />
           <Route path="tiles" element={<GuestTiles />} />
+          <Route path="words" element={<GuestWords key="words" game="words" />} />
+          {/* Word Shuffle ใช้หน้าเดียวกับ What Words — key แยกกัน ไม่งั้นสลับเกมแล้ว state ห้องเดิมค้าง */}
+          <Route path="shuffle" element={<GuestWords key="shuffle" game="shuffle" />} />
           <Route path="bingo" element={<BingoCard />} />
           <Route path="share-location" element={<ShareLocation />} />
           <Route path="sos" element={<SOS />} />
@@ -311,6 +340,51 @@ function App() {
             </StaffTourLayout>
           }
         />
+
+        {/* ── What Words ──────────────────────────────────────
+            เกมที่สี่บนเครื่องยนต์เดียวกัน แยกด้วย quiz_sets.game_kind = 'words'
+            (ดู supabase/migrations/20260911b_what_words.sql) */}
+        <Route path="/staff/words" element={staffRoute('words.host', <WordsManager key="words" game="words" />)} />
+        <Route
+          path="/staff/words/builder/:setId"
+          element={staffRoute('words.edit', <WordsBuilder key="words" game="words" />)}
+        />
+        <Route
+          path="/staff/words/host/:sessionId"
+          element={staffRoute('words.host', <WordsHost key="words" game="words" />)}
+        />
+        {/* จอใหญ่ไม่ guard ด้วยเหตุผลเดียวกับอีกสามเกม: redirect จะทำให้ hash ที่พา token มาหายไป */}
+        <Route
+          path="/staff/words/stage/:sessionId"
+          element={
+            <StaffTourLayout>
+              <WordsStage key="words" game="words" />
+            </StaffTourLayout>
+          }
+        />
+
+        {/* ── Word Shuffle ────────────────────────────────────
+            เกมที่ห้า — หน้าจอชุดเดียวกับ What Words (ส่ง game="shuffle") แยกด้วย game_kind = 'shuffle'
+            ข้อยังเป็นชนิด words (ดู supabase/migrations/20260912_word_shuffle.sql · lib/wordGames.js)
+            ★ key ต่างกันทุกหน้า: React Router ใช้ component ตัวเดียวกันข้ามสองเกม
+              ถ้าไม่ใส่ key สลับจาก /staff/words ไป /staff/shuffle แล้ว state (ฟอร์มเปิดห้อง ฯลฯ) จะติดมา */}
+        <Route path="/staff/shuffle" element={staffRoute('shuffle.host', <WordsManager key="shuffle" game="shuffle" />)} />
+        <Route
+          path="/staff/shuffle/builder/:setId"
+          element={staffRoute('shuffle.edit', <WordsBuilder key="shuffle" game="shuffle" />)}
+        />
+        <Route
+          path="/staff/shuffle/host/:sessionId"
+          element={staffRoute('shuffle.host', <WordsHost key="shuffle" game="shuffle" />)}
+        />
+        <Route
+          path="/staff/shuffle/stage/:sessionId"
+          element={
+            <StaffTourLayout>
+              <WordsStage key="shuffle" game="shuffle" />
+            </StaffTourLayout>
+          }
+        />
         <Route path="/staff/form-builder" element={staffRoute('form.assign', <FormBuilder />)} />
         <Route
           path="/staff/itinerary-builder"
@@ -365,6 +439,7 @@ function App() {
           element={staffRoute('supplier.assign', <SupplierManager />)}
         />
       </Routes>
+      </Suspense>
       </div>
       <HomeButton />
     </ColorModeContext.Provider>

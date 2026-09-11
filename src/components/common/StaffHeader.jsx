@@ -28,7 +28,7 @@ import BackButton from './BackButton'
 //   ควิซกับสุ่มรายชื่อไม่เจอเพราะส่ง backTo เองไว้ — ย้ายกติกามาไว้ที่นี่ที่เดียว
 //   เกมใหม่ที่ใช้โครง /staff/<เกม>/(builder|host|report)/:id จะย้อนถูกเองโดยไม่ต้องจำ
 const GAME_HUB = '/staff/games'
-const GAME_PAGES = ['bingo-host', 'lucky-draw', 'quiz', 'puzzle', 'tiles']
+const GAME_PAGES = ['bingo-host', 'lucky-draw', 'quiz', 'puzzle', 'tiles', 'words', 'shuffle']
 
 /** เดาปลายทางของปุ่มย้อนกลับจาก path — หน้าลูกกลับไปหาหน้าแม่ ที่เหลือกลับแดชบอร์ด */
 export function defaultBackTo(pathname) {
