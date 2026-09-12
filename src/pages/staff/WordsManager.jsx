@@ -7,6 +7,8 @@ import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staf
 import { startSession, setSessionState, getHostToken } from '../../lib/quizHost'
 import { setRoomSolveLimit } from '../../lib/wordsHost'
 import { wordGame, useGameT } from '../../lib/wordGames'
+import { can } from '../../lib/permissions'
+import SetCardHead from '../../components/quiz/SetCardHead'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
@@ -229,13 +231,26 @@ export default function WordsManager({ game: gameKey = 'words' }) {
           <ul className="space-y-2.5">
             {sets.map((set) => (
               <li key={set.id} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-                <p className="font-bold text-ink">{set.title}</p>
-                <p className="mt-0.5 text-xs text-ink-muted">
-                  {set.answer_mode === 'none' ? tw('manager.modeNone') : tw('manager.modeType')}
-                </p>
-                {set.description ? (
-                  <p className="mt-0.5 text-xs text-ink-muted">{set.description}</p>
-                ) : null}
+                <SetCardHead
+                  set={set}
+                  staffId={staffSession?.staff?.id ?? null}
+                  canEdit={can(staffSession, `${G.perm}.edit`)}
+                  builderBase={`${G.base}/builder`}
+                  meta={
+                    <>
+                      <span className="mt-0.5 block text-xs text-ink-muted">
+                        {set.answer_mode === 'none' ? tw('manager.modeNone') : tw('manager.modeType')}
+                      </span>
+                      {set.description ? (
+                        <span className="mt-0.5 block text-xs text-ink-muted">{set.description}</span>
+                      ) : null}
+                    </>
+                  }
+                  onRenamed={(id, title) =>
+                    setSets((list) => list.map((x) => (x.id === id ? { ...x, title } : x)))}
+                  onCloned={(id) => navigate(`${G.base}/builder/${id}`)}
+                  onError={setError}
+                />
 
                 {creatingFor === set.id ? (
                   <div className="mt-3 space-y-2">
@@ -345,13 +360,6 @@ export default function WordsManager({ game: gameKey = 'words' }) {
                       }}
                     >
                       {tw('manager.openRoomFrom')}
-                    </Button>
-                    <Button
-                      fullWidth={false} className="px-3 py-2 text-sm"
-                      variant="ghost"
-                      onClick={() => navigate(`${G.base}/builder/${set.id}`)}
-                    >
-                      {tw('manager.edit')}
                     </Button>
                   </div>
                 )}

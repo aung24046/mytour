@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { startSession, setSessionState, getHostToken } from '../../lib/quizHost'
+import { can } from '../../lib/permissions'
+import SetCardHead from '../../components/quiz/SetCardHead'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
@@ -196,14 +198,25 @@ export default function TilesManager() {
           <ul className="space-y-2.5">
             {sets.map((set) => (
               <li key={set.id} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-                <p className="font-bold text-ink">{set.title}</p>
-                <p className="mt-0.5 text-xs text-ink-muted">
-                  {set.answer_mode === 'none'
-                    ? t('tiles.manager.modeNone')
-                    : t('tiles.manager.modeType', {
-                        limit: set.attempt_limit ?? t('tiles.manager.unlimited'),
-                      })}
-                </p>
+                <SetCardHead
+                  set={set}
+                  staffId={staffSession?.staff?.id ?? null}
+                  canEdit={can(staffSession, 'tiles.edit')}
+                  builderBase="/staff/tiles/builder"
+                  meta={
+                    <span className="mt-0.5 block text-xs text-ink-muted">
+                      {set.answer_mode === 'none'
+                        ? t('tiles.manager.modeNone')
+                        : t('tiles.manager.modeType', {
+                            limit: set.attempt_limit ?? t('tiles.manager.unlimited'),
+                          })}
+                    </span>
+                  }
+                  onRenamed={(id, title) =>
+                    setSets((list) => list.map((x) => (x.id === id ? { ...x, title } : x)))}
+                  onCloned={(id) => navigate(`/staff/tiles/builder/${id}`)}
+                  onError={setError}
+                />
 
                 {creatingFor === set.id ? (
                   <div className="mt-3 space-y-2">
@@ -298,12 +311,6 @@ export default function TilesManager() {
                       }}
                     >
                       {t('tiles.manager.openRoomFrom')}
-                    </Button>
-                    <Button
-                      fullWidth={false} className="px-3 py-2 text-sm" variant="ghost"
-                      onClick={() => navigate(`/staff/tiles/builder/${set.id}`)}
-                    >
-                      {t('tiles.manager.edit')}
                     </Button>
                   </div>
                 )}

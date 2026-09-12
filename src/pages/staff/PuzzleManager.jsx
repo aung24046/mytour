@@ -6,6 +6,8 @@ import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { startSession, setSessionState, getHostToken } from '../../lib/quizHost'
 import { setRoomSolveLimit } from '../../lib/puzzleHost'
+import { can } from '../../lib/permissions'
+import SetCardHead from '../../components/quiz/SetCardHead'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
@@ -220,10 +222,19 @@ export default function PuzzleManager() {
           <ul className="space-y-2.5">
             {sets.map((set) => (
               <li key={set.id} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-                <p className="font-bold text-ink">{set.title}</p>
-                {set.description ? (
-                  <p className="mt-0.5 text-xs text-ink-muted">{set.description}</p>
-                ) : null}
+                <SetCardHead
+                  set={set}
+                  staffId={staffSession?.staff?.id ?? null}
+                  canEdit={can(staffSession, 'puzzle.edit')}
+                  builderBase="/staff/puzzle/builder"
+                  meta={set.description ? (
+                    <span className="mt-0.5 block text-xs text-ink-muted">{set.description}</span>
+                  ) : null}
+                  onRenamed={(id, title) =>
+                    setSets((list) => list.map((x) => (x.id === id ? { ...x, title } : x)))}
+                  onCloned={(id) => navigate(`/staff/puzzle/builder/${id}`)}
+                  onError={setError}
+                />
 
                 {creatingFor === set.id ? (
                   <div className="mt-3 space-y-2">
@@ -327,13 +338,6 @@ export default function PuzzleManager() {
                       }}
                     >
                       {t('puzzle.manager.openRoomFrom')}
-                    </Button>
-                    <Button
-                      fullWidth={false} className="px-3 py-2 text-sm"
-                      variant="ghost"
-                      onClick={() => navigate(`/staff/puzzle/builder/${set.id}`)}
-                    >
-                      {t('puzzle.manager.edit')}
                     </Button>
                   </div>
                 )}
