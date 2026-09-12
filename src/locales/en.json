@@ -1553,7 +1553,9 @@
       "correctShort": "correct",
       "deleteSet": "Delete this question set",
       "deleteConfirm": "Delete \"{{title}}\" with all {{n}} questions and answer keys?\n\nThis cannot be undone",
-      "deleteInUse": "Cannot delete — this set has been played {{n}} time(s), and deleting it would break those post-game reports.\n\nArchive it instead? (hidden from the list, history kept)"
+      "deleteInUse": "Cannot delete — this set has been played {{n}} time(s), and deleting it would break those post-game reports.\n\nArchive it instead? (hidden from the list, history kept)",
+      "claimHint": "Enter your staff PIN to control this room from this device (same PIN you use to edit sets)",
+      "claimBtn": "Take control"
     }
   },
   "quiz": {

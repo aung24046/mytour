@@ -15,6 +15,7 @@ import {
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
+import HostClaim from '../../components/quiz/HostClaim'
 
 // มือถือคนคุมเกม — จอสั่งงานอย่างเดียว
 //
@@ -128,10 +129,12 @@ export default function PuzzleHost() {
     }
   }
 
+  // เครื่องนี้ยังไม่มี token ของห้อง — ใส่ PIN ทีมงานแล้วคุมต่อได้เลย (ไม่ต้องกลับไปเปิดห้องใหม่)
   if (!ready) {
     return (
-      <div className="mx-auto max-w-md p-6 text-center">
-        <p className="font-bold text-ink">{t('staff.quiz.noToken')}</p>
+      <div className="min-h-screen bg-surface-muted">
+        <StaffHeader icon="lock" title={t('puzzle.title')} subtitle={session?.name ?? ''} />
+        <HostClaim sessionId={sessionId} onClaimed={() => setReady(true)} />
       </div>
     )
   }

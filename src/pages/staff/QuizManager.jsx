@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
 import { can } from '../../lib/permissions'
 import {
-  startSession, setSessionState, getHostToken, cloneSet, replaySession, updateSetMeta,
+  startSession, setSessionState, ensureHostToken, cloneSet, replaySession, updateSetMeta,
 } from '../../lib/quizHost'
 import { STAGE_SKIN_LIST } from '../../lib/quizStyle'
 import { getQuizPin, saveQuizPin } from '../../lib/quizPin'
@@ -159,11 +159,13 @@ export default function QuizManager() {
   async function handleClose(room) {
     setError('')
     try {
-      // ต้องมี token ของห้องนั้นถึงจะสั่งได้ — คนละเครื่องกับคนสร้างห้องจะปิดไม่ได้
-      if (!getHostToken(room.id)) {
-        setError(t('staff.quiz.noToken'))
-        return
-      }
+      // ★ ไม่มี token ของห้องนี้ (คนละเครื่อง/ล้างแคช) — ขอสิทธิ์ด้วย PIN แทนการบอกว่าทำไม่ได้
+      const ok = await ensureHostToken({
+        sessionId: room.id,
+        staffId: session?.staff?.id ?? null,
+        askPin: () => window.prompt(t('staff.quiz.pinTitle')),
+      })
+      if (!ok) return
       await setSessionState(room.id, 'finished')
       load()
     } catch (err) {

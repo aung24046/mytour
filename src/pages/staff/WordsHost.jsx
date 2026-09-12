@@ -20,6 +20,7 @@ import ShufflePool from '../../components/words/ShufflePool'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
+import HostClaim from '../../components/quiz/HostClaim'
 
 // มือถือคนคุมเกม What Words / Word Shuffle — จอสั่งงานอย่างเดียว โครงเดียวกับ PuzzleHost
 // game = 'words' | 'shuffle' — Word Shuffle เพิ่มแค่กองตัวสลับใต้กระดาน (ตัวที่เปิดแล้วจางลง)
@@ -154,10 +155,12 @@ export default function WordsHost({ game: gameKey = 'words' }) {
   const canUndo =
     live && session?.last_tile_at && now - new Date(session.last_tile_at).getTime() < UNDO_WINDOW_MS
 
+  // เครื่องนี้ยังไม่มี token ของห้อง — ใส่ PIN ทีมงานแล้วคุมต่อได้เลย (ไม่ต้องกลับไปเปิดห้องใหม่)
   if (!ready) {
     return (
-      <div className="mx-auto max-w-md p-6 text-center">
-        <p className="font-bold text-ink">{t('staff.quiz.noToken')}</p>
+      <div className="min-h-screen bg-surface-muted">
+        <StaffHeader icon="lock" title={tw('title')} subtitle={session?.name ?? ''} />
+        <HostClaim sessionId={sessionId} onClaimed={() => setReady(true)} />
       </div>
     )
   }

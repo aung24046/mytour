@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getQuizPin, saveQuizPin } from './quizPin'
 
 // ความลับของคนคุมเกม
 //
@@ -57,6 +58,52 @@ export function readTokenFromHash() {
 }
 
 /** ทั้งจอเวทีและมือถือทีมงานเรียกตัวนี้ตัวเดียว */
+/**
+ * ขอสิทธิ์คุมห้องด้วย PIN ทีมงาน — ใช้เมื่อเครื่องนี้ไม่มี token ของห้อง
+ *
+ * ★ 12 ก.ย. 2026 เจ้าของโปรเจกต์: "เจอ 'เครื่องนี้ไม่มีสิทธิ์คุมห้องนี้' ทั้งที่ผมเป็นคนเปิด
+ *   เอาแค่ใส่รหัสผ่านก็พอ" — token ผูกกับ "เครื่อง" (localStorage) ไม่ใช่ "คน"
+ *   เปลี่ยนเครื่อง · เปิดโหมดส่วนตัว · ล้างแคช · เปลี่ยนเบราว์เซอร์ = คุมห้องที่ตัวเองเปิดไม่ได้
+ *   quiz_claim_host ตรวจ PIN + ว่าห้องอยู่ในองค์กร/ทริปของสตาฟคนนั้น แล้วคืน token เดิมของห้อง
+ *   (ไม่ออก token ใหม่ — จอใหญ่ที่เปิดค้างไว้ด้วย token เดิมจึงยังทำงานต่อได้)
+ */
+export async function claimHostToken({ sessionId, staffId, pin }) {
+  const { data, error } = await supabase.rpc('quiz_claim_host', {
+    p_session_id: sessionId,
+    p_staff_id: staffId,
+    p_pin: pin,
+  })
+  if (error) throw error
+  if (!data) throw new Error('ไม่พบห้องนี้')
+  saveHostToken(sessionId, data)
+  return data
+}
+
+/**
+ * มี token อยู่แล้วก็ใช้เลย · ไม่มีก็ขอด้วย PIN — คืน token หรือ null ถ้าคนใช้ยกเลิก
+ * askPin เป็นฟังก์ชันของหน้าจอ (เช่น window.prompt) เพื่อให้ lib ไม่ต้องรู้จัก UI
+ */
+export async function ensureHostToken({ sessionId, staffId, askPin }) {
+  const existing = getHostToken(sessionId)
+  if (existing) return existing
+
+  // PIN ที่เครื่องนี้จำไว้ (จากการแก้ชุดคำถาม) ลองก่อน จะได้ไม่ต้องถามซ้ำ
+  const saved = getQuizPin()
+  if (saved) {
+    try {
+      return await claimHostToken({ sessionId, staffId, pin: saved })
+    } catch {
+      /* PIN ที่จำไว้ใช้กับห้องนี้ไม่ได้ — ถามใหม่ข้างล่าง */
+    }
+  }
+
+  const pin = askPin?.()
+  if (!pin) return null
+  const token = await claimHostToken({ sessionId, staffId, pin })
+  saveQuizPin(pin)
+  return token
+}
+
 export function resolveHostToken(sessionId) {
   const fromHash = readTokenFromHash()
   if (fromHash) {

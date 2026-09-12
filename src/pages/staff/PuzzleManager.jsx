@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { getStaffSession, useActiveTourId, useActiveOrgId } from '../../lib/staffSession'
-import { startSession, setSessionState, getHostToken } from '../../lib/quizHost'
+import { startSession, setSessionState, ensureHostToken } from '../../lib/quizHost'
 import { setRoomSolveLimit } from '../../lib/puzzleHost'
 import { can } from '../../lib/permissions'
 import SetCardHead from '../../components/quiz/SetCardHead'
@@ -122,9 +122,16 @@ export default function PuzzleManager() {
 
   async function handleClose(room) {
     setError('')
-    // ต้องมี token ของห้องนั้นถึงจะสั่งได้ — คนละเครื่องกับคนสร้างห้องจะปิดไม่ได้
-    if (!getHostToken(room.id)) {
-      setError(t('staff.quiz.noToken'))
+    // ★ ไม่มี token ของห้องนี้ (คนละเครื่อง/ล้างแคช) — ขอสิทธิ์ด้วย PIN แทนการบอกว่าทำไม่ได้
+    try {
+      const ok = await ensureHostToken({
+        sessionId: room.id,
+        staffId: staffSession?.staff?.id ?? null,
+        askPin: () => window.prompt(t('staff.quiz.pinTitle')),
+      })
+      if (!ok) return
+    } catch (err) {
+      setError(err.message ?? String(err))
       return
     }
     try {

@@ -15,6 +15,7 @@ import OptionShape from '../../components/quiz/OptionShape'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
+import HostClaim from '../../components/quiz/HostClaim'
 
 // จอสั่งงานของคนคุมเกม — ถือมือเดียว อีกมือถือไมค์
 //
@@ -141,11 +142,7 @@ export default function QuizHost() {
     return (
       <div className="min-h-screen bg-canvas">
         <StaffHeader title={t('staff.quiz.hostTitle')} icon="game" backTo="/staff/quiz" />
-        <div className="mx-auto max-w-md px-4 pt-8 text-center">
-          <Icon name="lock" size={36} className="mx-auto text-ink-faint" />
-          <p className="mt-3 text-base font-extrabold text-ink">{t('staff.quiz.noToken')}</p>
-          <p className="mt-1 text-sm text-ink-muted">{t('staff.quiz.noTokenHint')}</p>
-        </div>
+        <HostClaim sessionId={sessionId} onClaimed={(next) => setToken(next)} />
       </div>
     )
   }
