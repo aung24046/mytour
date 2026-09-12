@@ -76,9 +76,12 @@ export function clueGrid(count, { surface = 'stage', aspects = [] } = {}) {
  * ใหญ่เกินไป" — บนมือถือ กรอบสองใบกินจอจนช่องพิมพ์คำตอบตกไปอยู่ใต้เส้นพับ
  * ซึ่งเป็นปุ่มเดียวที่หน้านั้นมี
  */
+// ★ 12 ก.ย. 2026 เจ้าของโปรเจกต์: "รูปเล็ก · กรอบพื้นหลังกับกล่องขาวดูไม่สมส่วน"
+//   จอเวทีจึงขยายขึ้นราวหนึ่งในสาม — กล่องขาวกินพื้นที่เกือบเต็มจอแล้ว (PuzzleStage)
+//   ที่ว่างที่เหลือรอบรูปไม่ได้ทำให้ดูโปร่ง มันแค่ทำให้รูปใบ้ซึ่งเป็นโจทย์ทั้งหมดของเกมเล็กลง
 const CELL_HEIGHT = {
-  stage:          { single: 'min(38vh, 380px)', multi: 'min(21vh, 210px)' },
-  bus_tv:         { single: 'min(38vh, 380px)', multi: 'min(21vh, 210px)' },
+  stage:          { single: 'min(60vh, 820px)', multi: 'min(31vh, 380px)' },
+  bus_tv:         { single: 'min(60vh, 820px)', multi: 'min(31vh, 380px)' },
   phone:          { single: 'min(22vh, 180px)', multi: 'min(15vh, 124px)' },
   phoneLandscape: { single: 'min(30vh, 240px)', multi: 'min(18vh, 150px)' },
 }

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
 import { useQuizSession, serverNow } from '../../lib/useQuizSession'
+import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchWordsStats, useWordsAnswerMode } from '../../lib/wordsHost'
 import { applyOpened, revealCells, poolTiles } from '../../lib/wordsMask'
@@ -21,8 +22,6 @@ import ShufflePool from '../../components/words/ShufflePool'
 // ชุดแบบ "ไม่ต้องตอบ" (answer_mode = 'none'): ทายกันปากเปล่า — ไม่มี "ตอบถูกแล้ว" · ไม่มีชื่อผู้ชนะ
 //   · ไม่มีกระดานอันดับ (ขึ้น "ไม่มีใครตอบถูก" ตอนเฉลยจะผิด เพราะไม่มีใครได้ตอบเลย)
 
-const CHECKER =
-  'repeating-conic-gradient(#0f8a4a 0% 25%, #ffffff 0% 50%) 50% / 120px 120px'
 
 function Pill({ children, className = '' }) {
   return (
@@ -103,7 +102,7 @@ export default function WordsStage({ game: gameKey = 'words' }) {
   return (
     <div
       className="flex min-h-screen w-full flex-col items-center justify-start p-4 sm:p-8"
-      style={{ background: CHECKER }}
+      style={{ background: stageChecker(sessionId) }}
     >
       <div className="flex w-full max-w-[1500px] flex-1 flex-col rounded-[28px] border-[6px] border-black bg-white p-5 shadow-[10px_10px_0_0_rgba(0,0,0,0.9)] sm:p-10">
         {/* หัวเรื่อง — หมวดหมู่คือคำใบ้ ต้องเห็นตั้งแต่วินาทีแรกของข้อ */}

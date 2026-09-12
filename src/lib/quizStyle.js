@@ -172,3 +172,40 @@ export const STAGE_SKIN_LIST = Object.values(STAGE_SKINS)
 export function stageSkin(key) {
   return STAGE_SKINS[key] ?? STAGE_SKINS.day
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// พื้นหลังตาหมากรุกของจอใหญ่สกิน arcade (ปริศนาใบ้คำ · เปิดแผ่นป้าย · What Words · Word Shuffle)
+// ═══════════════════════════════════════════════════════════════════════
+// ★ 12 ก.ย. 2026 เจ้าของโปรเจกต์: "ช่องเล็กเกินไป ลายตา · ขอสุ่มสีบ้าง จะได้ไม่เดิมๆ"
+//   ช่องจึงใหญ่ขึ้นเท่าตัว (ยืดตามความกว้างจอ) และสีสุ่มจาก 4 ชุด
+//   สุ่มด้วย "รหัสห้อง" ไม่ใช่ Math.random — จอใหญ่ · จอทีวีบนรถ · การรีเฟรชกลางเกม
+//   ต้องได้สีเดียวกันเสมอ ไม่งั้นสีเปลี่ยนเองระหว่างเล่นจะดูเหมือนจอเสีย
+export const CHECKER_COLORS = [
+  { key: 'green', color: '#0f8a4a' },   // เขียวเดิมของเอกสารต้นฉบับ
+  { key: 'blue', color: '#1560bd' },
+  { key: 'orange', color: '#e2701a' },
+  { key: 'violet', color: '#6d3fc4' },
+]
+
+/** ช่องหนึ่งตาราง — ยืดตามจอ: จอเล็กช่องเล็กลงหน่อยจะได้ไม่กินพื้นที่ จอใหญ่ช่องโต ไม่ลายตา */
+const CHECKER_TILE = 'clamp(150px, 15vw, 280px)'
+
+function hashString(text) {
+  let h = 0
+  for (const ch of String(text ?? '')) h = (h * 31 + ch.codePointAt(0)) % 100000
+  return h
+}
+
+/** สีของห้องนี้ — คงที่ตลอดเกมเพราะคิดจากรหัสห้อง */
+export function checkerColor(seed) {
+  return CHECKER_COLORS[hashString(seed) % CHECKER_COLORS.length]
+}
+
+/**
+ * ค่า CSS background ของพื้นหลังตาหมากรุก
+ * @param {string} seed รหัสห้อง (session id) — ห้องเดียวกันได้สีเดียวกันทุกจอ
+ */
+export function stageChecker(seed) {
+  const { color } = checkerColor(seed)
+  return `repeating-conic-gradient(${color} 0% 25%, #ffffff 0% 50%) 50% / ${CHECKER_TILE} ${CHECKER_TILE}`
+}

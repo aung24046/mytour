@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -13,7 +13,7 @@ import {
   ANSWER_IMAGE_WIDTH,
   ANSWER_IMAGE_QUALITY,
 } from '../../lib/quizMedia'
-import { MAX_CLUES, splitSyllables, validateClues } from '../../lib/puzzleLayout'
+import { MAX_CLUES, validateClues } from '../../lib/puzzleLayout'
 import ClueBoard from '../../components/puzzle/ClueBoard'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
@@ -28,7 +28,10 @@ import StaffHeader from '../../components/common/StaffHeader'
 //   ช่องคำตอบ ↔ ช่องคำที่ยอมรับเพิ่ม
 //   คนสร้างข้อ "กาละแม" ต้องนึกถึง "กะละแม" ตอนนั้นเลย ไม่ใช่ตอนยืนอยู่หน้าไมค์
 
-const EMOJI_SUGGEST = ['🐦', '🐐', '🥣', '🚬', '💃', '🐔', '🌰', '🔔', '🐍', '🍚', '🧂', '🪵']
+// จำนวนพยางค์ = ป้ายบนจอใหญ่ ("3 พยางค์") — ตั้งเองด้วยปุ่มเดียว
+// ★ เดิมต้องพิมพ์คำตอบซ้ำแบบแยกพยางค์ ("ภู-กระ-ดึง") ให้ระบบนับเอง
+//   เจ้าของโปรเจกต์บอกว่าเสียเวลากรอกโดยไม่ได้อะไรกลับมา (12 ก.ย. 2026) — เลิกใช้ช่องนั้น
+const SYLLABLE_OPTIONS = [1, 2, 3, 4, 5, 6]
 
 function emptyDraft() {
   return {
@@ -38,7 +41,6 @@ function emptyDraft() {
     time_limit_sec: 90,
     clues: [],
     correct_text: '',
-    answer_split: '',
     answer_aliases: [],
     answer_image_url: null,
     hints: [],
@@ -93,12 +95,6 @@ export default function PuzzleBuilder() {
   useEffect(() => {
     if (pin) load(pin)
   }, [pin, load])
-
-  // จำนวนพยางค์มาจากช่อง "ภู-กระ-ดึง" อัตโนมัติ — ช่องเดียวทำสามหน้าที่
-  // (ป้ายบนจอ · ชิ้นส่วนอนิเมชันตอนเฉลย · เครื่องเตือนว่ากรอกไม่ตรงกัน)
-  const splitParts = useMemo(() => splitSyllables(draft?.answer_split ?? ''), [draft?.answer_split])
-  const syllableMismatch =
-    splitParts.length > 0 && splitParts.length !== Number(draft?.syllable_count ?? 0)
 
   function patch(next) {
     setDraft((d) => ({ ...d, ...next }))
@@ -157,7 +153,7 @@ export default function PuzzleBuilder() {
 
   function addClue(kind) {
     if (draft.clues.length >= MAX_CLUES) return
-    patch({ clues: [...draft.clues, { clue_kind: kind, body: '', label: '' }] })
+    patch({ clues: [...draft.clues, { clue_kind: kind, body: '' }] })
   }
 
   function moveClue(index, delta) {
@@ -188,13 +184,13 @@ export default function PuzzleBuilder() {
         setId,
         questionId: draft.question_id,
         text: draft.question_text,
-        syllableCount: splitParts.length || Number(draft.syllable_count) || 1,
+        syllableCount: Number(draft.syllable_count) || 1,
         timeLimitSec: Number(draft.time_limit_sec) || 90,
         clues: draft.clues
           .filter((c) => (c.body ?? '').trim() !== '')
-          .map((c) => ({ kind: c.clue_kind, body: c.body, label: c.label ?? '' })),
+          .map((c) => ({ kind: c.clue_kind, body: c.body, label: '' })),
         answer: draft.correct_text,
-        answerSplit: draft.answer_split,
+        answerSplit: '',
         aliases: (draft.answer_aliases ?? []).filter((x) => (x ?? '').trim() !== ''),
         answerImageUrl: draft.answer_image_url,
         hints: (draft.hints ?? []).map((h) => (h ?? '').trim()).filter(Boolean),
@@ -296,7 +292,7 @@ export default function PuzzleBuilder() {
                           clues[i] = { ...clue, body: e.target.value }
                           patch({ clues })
                         }}
-                        placeholder={clue.clue_kind === 'emoji' ? '🐐' : t('puzzle.builder.wordClue')}
+                        placeholder={t('puzzle.builder.wordClue')}
                         className="flex-1 rounded-lg border border-line bg-surface px-2 py-1.5 text-center text-xl"
                       />
                     )}
@@ -315,18 +311,6 @@ export default function PuzzleBuilder() {
                       <Icon name="trash" size={16} />
                     </button>
                   </div>
-
-                  {/* คำกำกับ = เฉลยของรูปนั้น จึงเก็บอยู่ฝั่งเฉลย ไม่ใช่ข้าง URL รูป */}
-                  <input
-                    value={clue.label ?? ''}
-                    onChange={(e) => {
-                      const clues = [...draft.clues]
-                      clues[i] = { ...clue, label: e.target.value }
-                      patch({ clues })
-                    }}
-                    placeholder={t('puzzle.builder.clueLabel')}
-                    className="mt-2 w-full rounded-lg border border-line bg-surface px-2 py-1.5 text-sm"
-                  />
                 </li>
               ))}
             </ul>
@@ -345,38 +329,12 @@ export default function PuzzleBuilder() {
                   variant="secondary"
                   fullWidth={false}
                   className="px-3 py-2 text-sm"
-                  onClick={() => addClue('emoji')}
-                >
-                  + {t('puzzle.builder.addEmoji')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  fullWidth={false}
-                  className="px-3 py-2 text-sm"
                   onClick={() => addClue('text')}
                 >
                   + {t('puzzle.builder.addWord')}
                 </Button>
               </div>
             )}
-
-            {/* อีโมจิสร้างข้อได้ใน 10 วินาที ไม่กินสตอเรจ ไม่กิน egress —
-                ถ้าบังคับอัปโหลดรูปอย่างเดียว จะไม่มีใครสร้างชุดเกินสามข้อ */}
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {EMOJI_SUGGEST.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => {
-                    if (draft.clues.length >= MAX_CLUES) return
-                    patch({ clues: [...draft.clues, { clue_kind: 'emoji', body: e, label: '' }] })
-                  }}
-                  className="rounded-lg border border-line bg-surface px-2 py-1 text-xl"
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
           </section>
 
           {/* คำตอบ + คำที่ยอมรับเพิ่ม — ต้องอยู่ติดกันเสมอ */}
@@ -388,18 +346,28 @@ export default function PuzzleBuilder() {
               placeholder="ภูกระดึง"
               className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 font-bold"
             />
-            <input
-              value={draft.answer_split}
-              onChange={(e) => patch({ answer_split: e.target.value })}
-              placeholder="ภู-กระ-ดึง"
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2"
-            />
-            <p className="text-xs text-ink-faint">
-              {t('puzzle.builder.splitHint', { n: splitParts.length || draft.syllable_count })}
-            </p>
-            {syllableMismatch && (
-              <p className="text-xs text-warning-text">{t('puzzle.builder.splitMismatch')}</p>
-            )}
+
+            {/* จำนวนพยางค์ — ป้ายบนจอใหญ่ใช้ค่านี้ตรงๆ */}
+            <label className="block pt-1 text-xs font-bold text-ink-muted">
+              {t('puzzle.builder.syllableCount')}
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {SYLLABLE_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => patch({ syllable_count: n })}
+                  className={`h-10 w-10 rounded-xl border text-sm font-bold ${
+                    Number(draft.syllable_count) === n
+                      ? 'border-brand bg-brand text-white'
+                      : 'border-line bg-surface text-ink'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-ink-faint">{t('puzzle.builder.syllableHint')}</p>
 
             <label className="block text-xs font-bold text-ink-muted">
               {t('puzzle.builder.aliases')}
@@ -436,6 +404,19 @@ export default function PuzzleBuilder() {
                 {testResult ? t('puzzle.builder.testPass') : t('puzzle.builder.testFail')}
               </p>
             )}
+          </section>
+
+          {/* ที่มาของคำตอบ — ขึ้นบนจอใหญ่ตอนเฉลย แทนการแยกพยางค์แบบเดิม */}
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-ink">{t('puzzle.builder.explain')}</h2>
+            <p className="text-xs text-ink-faint">{t('puzzle.builder.explainHint')}</p>
+            <textarea
+              rows={2}
+              value={draft.explain ?? ''}
+              onChange={(e) => patch({ explain: e.target.value })}
+              placeholder={t('puzzle.builder.explainPlaceholder')}
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2"
+            />
           </section>
 
           {/* คำใบ้ 1-3 ขั้น */}
@@ -508,7 +489,7 @@ export default function PuzzleBuilder() {
             <h2 className="mb-2 text-sm font-bold text-ink">{t('puzzle.builder.preview')}</h2>
             <div className="rounded-2xl border-[3px] border-ink bg-white p-3">
               <p className="mb-2 text-center text-sm font-black text-neutral-900">
-                {t('puzzle.syllables', { n: splitParts.length || draft.syllable_count })}
+                {t('puzzle.syllables', { n: draft.syllable_count })}
               </p>
               <ClueBoard clues={draft.clues} surface="phone" cellHeight="88px" />
             </div>
@@ -593,11 +574,7 @@ export default function PuzzleBuilder() {
                     setDraft({
                       ...emptyDraft(),
                       ...item,
-                      clues: (item.clues ?? []).map((c, k) => ({
-                        clue_kind: c.kind,
-                        body: c.body,
-                        label: item.clue_labels?.[k] ?? '',
-                      })),
+                      clues: (item.clues ?? []).map((c) => ({ clue_kind: c.kind, body: c.body })),
                       hints: (item.hints ?? []).map((h) => h.body ?? ''),
                       answer_aliases: item.answer_aliases ?? [],
                     })

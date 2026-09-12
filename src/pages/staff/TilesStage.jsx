@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
 import { useQuizSession } from '../../lib/useQuizSession'
+import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchTileImage, fetchTileStats } from '../../lib/tileHost'
 import { openCount, tileCount } from '../../lib/tileGrid'
@@ -17,8 +18,6 @@ import TileBoard from '../../components/tiles/TileBoard'
 // ★ ไม่มีนาฬิกานับถอยหลังบนจอนี้โดยตั้งใจ — เกมนี้คนคุมเกมกำหนดจังหวะเอง
 //   สิ่งที่แสดงแทนคือ "เปิดไปแล้วกี่แผ่น" ซึ่งคือความคืบหน้าที่มีความหมายจริงของเกม
 
-const CHECKER =
-  'repeating-conic-gradient(#0f8a4a 0% 25%, #ffffff 0% 50%) 50% / 120px 120px'
 
 // โปสเตอร์หน้ารอ — ใช้ cover_url ของชุดถ้าตั้งไว้ ไม่งั้นใช้ของแถมมากับแอป
 // จะได้เปลี่ยนภาพต่อชุดได้โดยไม่ต้องแก้โค้ด (เกมทายภาพวิวกับทายว่าใครควรมีหน้ารอคนละแบบ)
@@ -161,7 +160,7 @@ export default function TilesStage() {
   return (
     <div
       className="flex min-h-screen w-full flex-col items-center justify-start p-4 sm:p-8"
-      style={{ background: CHECKER }}
+      style={{ background: stageChecker(sessionId) }}
     >
       <div className="flex w-full max-w-[1500px] flex-1 flex-col rounded-[28px] border-[6px] border-black bg-white p-5 shadow-[10px_10px_0_0_rgba(0,0,0,0.9)] sm:p-10">
         <div className="-mt-12 mb-6 flex items-center justify-center sm:-mt-16">

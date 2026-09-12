@@ -45,10 +45,11 @@ function useAspects(clues) {
   return aspects
 }
 
+// ★ ช่อง "คำกำกับใต้รูป" ถูกถอดออก 12 ก.ย. 2026 — ไม่เคยขึ้นจอจริงเพราะจอเฉลยเป็นรูปเต็มจอ
+//   ตอนนี้ที่มาของคำตอบเขียนเป็นประโยคเดียวในช่อง "ที่มาของคำตอบ" แทน (ดู PuzzleBuilder)
 export default function ClueBoard({
   clues = [],
   surface = 'stage',
-  labels = null,      // คำกำกับใต้รูป — มีเฉพาะตอนเฉลย
   className = '',
   cellHeight,         // ความสูงของช่อง (CSS length) — ผู้เรียกกำหนดตามพื้นที่ที่มี
 }) {
@@ -68,7 +69,8 @@ export default function ClueBoard({
   // แถวสุดท้ายไม่ได้ — ต้องคำนวณ gridColumnStart เอง ซึ่งได้แค่ "เยื้องไปทางขวา"
   // ไม่ใช่กึ่งกลางจริง (2 ใบใน 3 คอลัมน์ไม่มีคอลัมน์ตรงกลางให้ลง)
   // ส่วน flex ตัดบรรทัดเองแล้วจัดกึ่งกลางให้ทุกแถวโดยไม่ต้องรู้ว่าแถวไหนไม่เต็ม
-  const gap = surface === 'phone' ? 12 : 16
+  const big = surface === 'stage' || surface === 'bus_tv'
+  const gap = surface === 'phone' ? 12 : 20
   const basis = `calc((100% - ${(grid.columns - 1) * gap}px) / ${grid.columns})`
 
   return (
@@ -102,9 +104,11 @@ export default function ClueBoard({
                 style={frame}
                 // รูปไม่ต้องมีขอบขาวข้างใน — กรอบมีสัดส่วนเท่ารูปแล้ว ถ้าใส่ padding
                 // ขอบขาวจะเหลือไม่เท่ากันสี่ด้าน (padding กินสัดส่วนของกล่องข้างใน)
-                className={`flex items-center justify-center overflow-hidden rounded-2xl border-[3px] border-ink bg-white shadow-[4px_4px_0_0_rgba(0,0,0,0.85)] ${
-                  isImage ? '' : 'p-2'
-                }`}
+                // ★ ไม่มีเงา (เจ้าของโปรเจกต์สั่ง 12 ก.ย. 2026) — ขอบดำหนาอย่างเดียวเหมือนต้นฉบับ
+                //   จอใหญ่ใช้ขอบหนากว่า เพราะระยะมองไกลกว่าและรูปใหญ่กว่ามาก
+                className={`flex items-center justify-center overflow-hidden border-ink bg-white ${
+                  big ? 'rounded-[22px] border-[5px]' : 'rounded-2xl border-[3px]'
+                } ${isImage ? '' : 'p-2'}`}
               >
                 {isImage ? (
                   <img
@@ -126,11 +130,6 @@ export default function ClueBoard({
               </div>
             </div>
 
-            {labels?.[i] ? (
-              <figcaption className="mt-1.5 text-center text-base font-extrabold text-ink sm:text-xl">
-                {labels[i]}
-              </figcaption>
-            ) : null}
           </figure>
         )
       })}

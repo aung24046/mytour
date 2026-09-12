@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
@@ -9,7 +9,6 @@ import {
   SESSION_COLS, useQuizSession, useQuizHeartbeat, syncServerClock, serverNow,
 } from '../../lib/useQuizSession'
 import { submitGuess, fetchMyState } from '../../lib/puzzleHost'
-import { splitSyllables } from '../../lib/puzzleLayout'
 import { useQuizTeams } from '../../lib/useQuizTeams'
 import { teamStyle } from '../../lib/quizStyle'
 import ClueBoard from '../../components/puzzle/ClueBoard'
@@ -206,7 +205,6 @@ export default function Puzzle() {
   }
 
   const reveal = session?.reveal_payload ?? {}
-  const parts = useMemo(() => splitSyllables(reveal.answer_split ?? ''), [reveal.answer_split])
   const secondsLeft = Math.max(Math.ceil(msLeft / 1000), 0)
 
   // ── ยังไม่ได้เลือกห้อง ──────────────────────────────────────────
@@ -422,10 +420,8 @@ export default function Puzzle() {
           )}
 
           <div className="mt-auto w-full space-y-1.5 pt-2">
-            {parts.length > 0 && (
-              <p className="text-xl font-extrabold tracking-wide text-ink">{parts.join(' + ')}</p>
-            )}
-            {reveal.explain && <p className="text-sm text-ink-muted">{reveal.explain}</p>}
+            {/* ที่มาของคำตอบ (คนตั้งคำถามเขียนเอง) — แทนการแยกพยางค์แบบเดิม */}
+            {reveal.explain && <p className="text-base font-bold text-ink">{reveal.explain}</p>}
             {/* ห้องแบบทีม: บอกว่าทีมไหนได้แต้มข้อนี้ — ทีมเดียวกันจะได้รู้ว่าเพื่อนตอบให้แล้ว */}
             {teamMode && reveal.fastest && (
               <p className="text-sm font-bold text-ink">
