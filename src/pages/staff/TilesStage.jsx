@@ -37,7 +37,9 @@ export default function TilesStage() {
   const { sessionId } = useParams()
   const { session, question, phase } = useQuizSession(sessionId)
   const [stats, setStats] = useState({ solved: 0, online: 0, still_in: 0, winner_name: null })
-  const [imageUrl, setImageUrl] = useState(null)
+  // ★ เก็บภาพคู่กับ "ข้อที่มันเป็นของ" เสมอ — ถ้าเก็บ url เดี่ยวๆ จะมีเสี้ยวหนึ่งที่
+  //   ข้อเปลี่ยนไปแล้วแต่ url ยังเป็นของข้อเก่า (หรือกลับกัน) แล้วภาพโผล่ใต้แผ่นที่ยังเปิดค้าง
+  const [image, setImage] = useState({ qid: null, url: null })
   const [leaderboard, setLeaderboard] = useState([])
   const [setCover, setSetCover] = useState(null)
   const preloadRef = useRef(new Set())
@@ -58,13 +60,15 @@ export default function TilesStage() {
   // ภาพจริงของข้อปัจจุบัน
   useEffect(() => {
     let alive = true
-    setImageUrl(null)
+    setImage({ qid: null, url: null })
     if (!sessionId || !questionId) return undefined
     fetchTileImage(sessionId, questionId)
-      .then((url) => { if (alive) setImageUrl(url) })
+      .then((url) => { if (alive) setImage({ qid: questionId, url }) })
       .catch(() => {})
     return () => { alive = false }
   }, [sessionId, questionId])
+
+  const imageUrl = image.qid === questionId ? image.url : null
 
   /**
    * ★ โหลดภาพข้อถัดไปไว้ล่วงหน้า

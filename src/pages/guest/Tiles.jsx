@@ -70,7 +70,8 @@ export default function Tiles() {
   const [error, setError] = useState('')
   const [myScore, setMyScore] = useState(null)
 
-  const [tileImage, setTileImage] = useState(null)
+  // ภาพผูกกับข้อของมันเสมอ (เหตุผลเดียวกับจอใหญ่ — ดู TilesStage.jsx)
+  const [tileImage, setTileImage] = useState({ qid: null, url: null })
 
   const questionRef = useRef(null)
   const { session, question, phase } = useQuizSession(activeId)
@@ -82,7 +83,9 @@ export default function Tiles() {
   const reveal = session?.reveal_payload ?? {}
   const revealing = phase === 'reveal' && reveal.kind === 'tiles'
   // ภาพที่เอามาวางใต้แผ่น — ตอนเฉลย reveal_payload พามาให้อยู่แล้ว ใช้เป็นตาข่ายรองรับ
-  const boardImage = tileImage ?? (revealing ? reveal.tile_image_url ?? null : null)
+  const boardImage =
+    (tileImage.qid === session?.current_question_id ? tileImage.url : null) ??
+    (revealing ? reveal.tile_image_url ?? null : null)
   const answerMode = setMeta?.answer_mode ?? 'type'
   const exhausted = left !== null && left <= 0
 
@@ -191,18 +194,18 @@ export default function Tiles() {
   // ดึงภาพของข้อปัจจุบัน — server คืนให้เฉพาะเมื่อเปิดข้อแล้ว จึงต้องลองใหม่
   // เมื่อเฟสขยับ (lobby → countdown → answering) ไม่ใช่ยิงครั้งเดียวตอนเปลี่ยนข้อ
   useEffect(() => {
-    setTileImage(null)
+    setTileImage({ qid: null, url: null })
   }, [session?.current_question_id])
 
   useEffect(() => {
     const qid = session?.current_question_id
-    if (!qid || !session?.id || tileImage || phase === 'lobby') return undefined
+    if (!qid || !session?.id || tileImage.qid === qid || phase === 'lobby') return undefined
     let alive = true
     fetchCurrentTileImage(session.id)
-      .then((url) => { if (alive && url) setTileImage(url) })
+      .then((url) => { if (alive && url) setTileImage({ qid, url }) })
       .catch(() => {})
     return () => { alive = false }
-  }, [session?.id, session?.current_question_id, phase, tileImage])
+  }, [session?.id, session?.current_question_id, phase, tileImage.qid])
 
   useEffect(() => {
     if (!player?.id || !['reveal', 'scoreboard', 'finished'].includes(phase)) return

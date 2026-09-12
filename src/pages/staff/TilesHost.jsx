@@ -47,7 +47,8 @@ export default function TilesHost() {
   })
   const [feed, setFeed] = useState([])
   const [sortBy, setSortBy] = useState('time')   // time | closeness
-  const [imageUrl, setImageUrl] = useState(null)
+  // ภาพผูกกับข้อของมันเสมอ (เหตุผลเดียวกับจอใหญ่ — ดู TilesStage.jsx)
+  const [image, setImage] = useState({ qid: null, url: null })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [tick, setTick] = useState(0)
@@ -72,13 +73,15 @@ export default function TilesHost() {
     let alive = true
     cursorRef.current = null
     setFeed([])
-    setImageUrl(null)
+    setImage({ qid: null, url: null })
     if (!sessionId || !questionId) return undefined
     fetchTileImage(sessionId, questionId)
-      .then((url) => { if (alive) setImageUrl(url) })
+      .then((url) => { if (alive) setImage({ qid: questionId, url }) })
       .catch(() => {})
     return () => { alive = false }
   }, [sessionId, questionId])
+
+  const imageUrl = image.qid === questionId ? image.url : null
 
   const pull = useCallback(async () => {
     if (!sessionId || !questionId) return

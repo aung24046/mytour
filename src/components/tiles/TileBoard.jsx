@@ -97,6 +97,11 @@ export default function TileBoard({
 }
 
 function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable, onClick }) {
+  // ★ อนิเมชันมีทางเดียว: "เปิด" เท่านั้น — ปิดต้องทันที (เจ้าของโปรเจกต์เจอ 12 ก.ย. 2026:
+  //   กดข้อถัดไปแล้วเห็นภาพแว็บหนึ่งก่อนแผ่นจะปิด) เพราะการปิดแบบค่อยๆ จาง
+  //   = ปล่อยให้ภาพเฉลยข้อเดิม/ภาพข้อใหม่โผล่ให้ทั้งห้องเห็นราวครึ่งวินาที ซึ่งทำให้ข้อนั้นเสียทันที
+  const ms = open ? FLIP_MS : 0
+  const wait = open ? delayMs : 0
   return (
     <button
       type="button"
@@ -110,7 +115,7 @@ function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable
       style={{
         // ทั้งด้านหน้าและด้านหลังซ้อนกันอยู่ ใช้ opacity สลับ ไม่ใช่ถอด DOM ออก
         // เพื่อไม่ให้ภาพกระพริบตอนเบราว์เซอร์ต้องโหลด background ใหม่
-        transitionDelay: `${delayMs}ms`,
+        transitionDelay: `${wait}ms`,
       }}
     >
       {/* ด้านหน้า: ส่วนของภาพจริง */}
@@ -121,8 +126,8 @@ function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable
           ...(face ?? {}),
           backgroundColor: face ? undefined : 'rgb(15 23 42)',
           opacity: open ? 1 : 0,
-          transitionDuration: `${FLIP_MS}ms`,
-          transitionDelay: `${delayMs}ms`,
+          transitionDuration: `${ms}ms`,
+          transitionDelay: `${wait}ms`,
         }}
       />
 
@@ -135,8 +140,8 @@ function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable
           backgroundColor: back ? undefined : 'rgb(30 41 59)',
           boxShadow: open ? 'none' : 'inset 0 0 0 1px rgba(255,255,255,.10)',
           opacity: open ? 0 : 1,
-          transitionDuration: `${FLIP_MS}ms`,
-          transitionDelay: `${delayMs}ms`,
+          transitionDuration: `${ms}ms`,
+          transitionDelay: `${wait}ms`,
         }}
       >
         {showNumber && (
@@ -169,7 +174,7 @@ function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-white/80 transition-opacity"
-          style={{ opacity: 0, transitionDuration: `${FLIP_MS}ms`, transitionDelay: `${delayMs}ms` }}
+          style={{ opacity: 0, transitionDuration: `${ms}ms`, transitionDelay: `${wait}ms` }}
         />
       )}
     </button>
