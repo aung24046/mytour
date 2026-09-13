@@ -7,7 +7,7 @@ import { getGuestId } from '../../lib/guestSession'
 import { getStaffSession } from '../../lib/staffSession'
 import { SESSION_COLS, useQuizSession, useQuizHeartbeat, syncServerClock } from '../../lib/useQuizSession'
 import { submitTileGuess, fetchMyTileState, fetchCurrentTileImage } from '../../lib/tileHost'
-import { openCount, tileCount } from '../../lib/tileGrid'
+import { boardRevealed, openCount, tileCount } from '../../lib/tileGrid'
 import { useQuizTeams } from '../../lib/useQuizTeams'
 import { teamStyle } from '../../lib/quizStyle'
 import TileBoard from '../../components/tiles/TileBoard'
@@ -376,7 +376,7 @@ export default function Tiles() {
           imageUrl={boardImage}
           imageAspect={grid.image_aspect}
           coverImageUrl={grid.cover_image_url}
-          revealed={session?.revealed_tiles ?? []}
+          revealed={boardRevealed(session?.revealed_tiles, grid.grid_rows, grid.grid_cols, revealing)}
           showNumbers={!revealing}
         />
       </div>

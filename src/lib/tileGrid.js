@@ -181,6 +181,19 @@ export function isOpen(n, revealed) {
   return Array.isArray(revealed) && revealed.some((x) => Number(x) === Number(n))
 }
 
+/**
+ * แผ่นที่ควร "เปิด" บนจอ ณ ตอนนี้
+ *
+ * ★ ตอนเฉลยต้องเปิดครบทุกแผ่นเสมอ ไม่ว่า revealed_tiles ในฐานข้อมูลจะมีกี่แผ่น
+ *   (เจ้าของโปรเจกต์เจอ 12 ก.ย. 2026: กดเฉลยทั้งที่ไม่มีใครตอบถูก แล้วแผ่นเปิดไม่หมด
+ *   เพราะ quiz_reveal_internal สาขา tiles ไม่ได้เติม revealed_tiles — ฝั่ง DB แก้แล้ว
+ *   แต่จอต้องไม่พึ่งฐานข้อมูลอย่างเดียว ห้องที่เปิดค้างอยู่ก่อนดีพลอยต้องถูกด้วย)
+ */
+export function boardRevealed(revealed, rows, cols, revealAll = false) {
+  if (revealAll) return tileNumbers(rows, cols)
+  return Array.isArray(revealed) ? revealed : []
+}
+
 export function openCount(revealed, rows, cols) {
   const total = tileCount(rows, cols)
   const list = Array.isArray(revealed) ? revealed : []

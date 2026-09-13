@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom'
 
 // Guest pages
@@ -57,6 +57,8 @@ import EmergencyCard from './pages/staff/docs/EmergencyCard.jsx'
 import ExpenseReport from './pages/staff/docs/ExpenseReport.jsx'
 import FeedbackReport from './pages/staff/docs/FeedbackReport.jsx'
 import FeedbackFormPrint from './pages/staff/docs/FeedbackFormPrint.jsx'
+import { lazyRoute } from './lib/lazyRoute'
+import RouteBoundary from './components/common/RouteBoundary.jsx'
 import JoinPoster from './pages/staff/docs/JoinPoster.jsx'
 import SignatureSheet from './pages/staff/docs/SignatureSheet.jsx'
 import NameTag from './pages/staff/docs/NameTag.jsx'
@@ -70,25 +72,25 @@ import NameTag from './pages/staff/docs/NameTag.jsx'
 //    ส่วนไลบรารีแต่งรูปยังแยกเป็น image-cropper-* และถูกกันออกจาก precache ตามเดิม
 //    (TilesBuilder เป็น lazy chunk แล้ว แต่ ImageCropper ข้างในยังถูก manualChunks ดูดไปก้อนนั้น)
 // เกมใหม่ที่เพิ่มวันหลัง ให้ประกาศแบบนี้ ไม่ใช่ import ตรงๆ
-const LuckyDraw = lazy(() => import('./pages/staff/LuckyDraw.jsx'))
-const LuckyDrawStage = lazy(() => import('./pages/staff/LuckyDrawStage.jsx'))
-const QuizManager = lazy(() => import('./pages/staff/QuizManager.jsx'))
-const QuizBuilder = lazy(() => import('./pages/staff/QuizBuilder.jsx'))
-const QuizHost = lazy(() => import('./pages/staff/QuizHost.jsx'))
-const QuizStage = lazy(() => import('./pages/staff/QuizStage.jsx'))
-const QuizReport = lazy(() => import('./pages/staff/QuizReport.jsx'))
-const PuzzleManager = lazy(() => import('./pages/staff/PuzzleManager.jsx'))
-const PuzzleBuilder = lazy(() => import('./pages/staff/PuzzleBuilder.jsx'))
-const PuzzleHost = lazy(() => import('./pages/staff/PuzzleHost.jsx'))
-const PuzzleStage = lazy(() => import('./pages/staff/PuzzleStage.jsx'))
-const TilesManager = lazy(() => import('./pages/staff/TilesManager.jsx'))
-const TilesBuilder = lazy(() => import('./pages/staff/TilesBuilder.jsx'))
-const TilesHost = lazy(() => import('./pages/staff/TilesHost.jsx'))
-const TilesStage = lazy(() => import('./pages/staff/TilesStage.jsx'))
-const WordsManager = lazy(() => import('./pages/staff/WordsManager.jsx'))
-const WordsBuilder = lazy(() => import('./pages/staff/WordsBuilder.jsx'))
-const WordsHost = lazy(() => import('./pages/staff/WordsHost.jsx'))
-const WordsStage = lazy(() => import('./pages/staff/WordsStage.jsx'))
+const LuckyDraw = lazyRoute(() => import('./pages/staff/LuckyDraw.jsx'))
+const LuckyDrawStage = lazyRoute(() => import('./pages/staff/LuckyDrawStage.jsx'))
+const QuizManager = lazyRoute(() => import('./pages/staff/QuizManager.jsx'))
+const QuizBuilder = lazyRoute(() => import('./pages/staff/QuizBuilder.jsx'))
+const QuizHost = lazyRoute(() => import('./pages/staff/QuizHost.jsx'))
+const QuizStage = lazyRoute(() => import('./pages/staff/QuizStage.jsx'))
+const QuizReport = lazyRoute(() => import('./pages/staff/QuizReport.jsx'))
+const PuzzleManager = lazyRoute(() => import('./pages/staff/PuzzleManager.jsx'))
+const PuzzleBuilder = lazyRoute(() => import('./pages/staff/PuzzleBuilder.jsx'))
+const PuzzleHost = lazyRoute(() => import('./pages/staff/PuzzleHost.jsx'))
+const PuzzleStage = lazyRoute(() => import('./pages/staff/PuzzleStage.jsx'))
+const TilesManager = lazyRoute(() => import('./pages/staff/TilesManager.jsx'))
+const TilesBuilder = lazyRoute(() => import('./pages/staff/TilesBuilder.jsx'))
+const TilesHost = lazyRoute(() => import('./pages/staff/TilesHost.jsx'))
+const TilesStage = lazyRoute(() => import('./pages/staff/TilesStage.jsx'))
+const WordsManager = lazyRoute(() => import('./pages/staff/WordsManager.jsx'))
+const WordsBuilder = lazyRoute(() => import('./pages/staff/WordsBuilder.jsx'))
+const WordsHost = lazyRoute(() => import('./pages/staff/WordsHost.jsx'))
+const WordsStage = lazyRoute(() => import('./pages/staff/WordsStage.jsx'))
 
 import RequireRole from './components/common/RequireRole.jsx'
 import LegacyTourRedirect from './components/common/LegacyTourRedirect.jsx'
@@ -202,6 +204,7 @@ function App() {
   return (
     <ColorModeContext.Provider value={colorMode}>
       <div style={homeButtonVisible ? { paddingBottom: HOME_BUTTON_SPACE } : undefined}>
+      <RouteBoundary>
       <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* ── หน้าแรก / เลือกทริป ───────────────────────────────── */}
@@ -440,6 +443,7 @@ function App() {
         />
       </Routes>
       </Suspense>
+      </RouteBoundary>
       </div>
       <HomeButton />
     </ColorModeContext.Provider>

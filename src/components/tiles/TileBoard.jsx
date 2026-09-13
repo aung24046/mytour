@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import {
   clampGrid, tileNumbers, tileStyle, coverStyle, boardAspect, isOpen, justOpened,
@@ -30,6 +30,7 @@ export default function TileBoard({
   revealed = [],
   peek = false,             // โหมดคนคุมเกม: เห็นภาพหรี่แสงใต้แผ่นที่ยังปิด
   showNumbers = true,
+  fit = false,              // จอเวที: บีบกระดานให้พอดี "ทั้งกว้างและสูง" ของกล่องแม่
   onTileClick = null,
   animate = true,
   className = '',
@@ -47,10 +48,22 @@ export default function TileBoard({
 
   const fresh = useFreshlyOpened(revealed, animate)
 
-  return (
+  // ★ โหมด fit — ใช้กับจอโปรเจกเตอร์
+  //   กระดานที่กว้าง 100% แล้วสูงตาม aspect-ratio จะสูงเกินจอ 16:9 เสมอเมื่อภาพตั้ง
+  //   (เจ้าของโปรเจกต์เจอ 12 ก.ย. 2026: ต่อ HDMI แล้วต้องเลื่อนจอถึงจะเห็นเลขครบ)
+  //   วัดกล่องแม่จริงๆ แล้วเลือกด้านที่บีบกว่า ไม่ใช้ container query
+  //   เพราะทีวีบนรถบางรุ่นไม่รองรับ และ cqh ต้องการ container-type: size ซึ่งเปราะกว่า
+  const boxRef = useRef(null)
+  const fitWidth = useFitWidth(boxRef, fit ? aspect : null)
+
+  const board = (
     <div
-      className={`relative w-full overflow-hidden rounded-2xl bg-slate-900/60 ${className}`}
-      style={{ aspectRatio: aspect || undefined }}
+      className={`relative overflow-hidden rounded-2xl bg-slate-900/60 ${fit ? '' : 'w-full'} ${className}`}
+      style={{
+        aspectRatio: aspect || undefined,
+        width: fit ? (fitWidth ? `${fitWidth}px` : undefined) : undefined,
+        visibility: fit && !fitWidth ? 'hidden' : undefined,
+      }}
     >
       {/* ภาพเต็มใบสำหรับคนคุมเกม — อยู่ใต้ทุกแผ่น หรี่แสงไว้ให้ต่างจากของจริงชัดเจน */}
       {peek && imageUrl && (
@@ -92,6 +105,13 @@ export default function TileBoard({
           )
         })}
       </div>
+    </div>
+  )
+
+  if (!fit) return board
+  return (
+    <div ref={boxRef} className="flex h-full w-full items-center justify-center">
+      {board}
     </div>
   )
 }
@@ -179,6 +199,35 @@ function Tile({ n, open, face, back, showNumber, justFlipped, delayMs, clickable
       )}
     </button>
   )
+}
+
+/**
+ * ความกว้างที่กระดานควรเป็น เพื่อให้ "ไม่ล้นทั้งกว้างและสูง" ของกล่องแม่
+ * aspect = null → ปิดการทำงาน (โหมดปกติ กระดานกว้างเต็มแล้วสูงตามสัดส่วน)
+ */
+function useFitWidth(ref, aspect) {
+  const [size, setSize] = useState(null)
+
+  // useLayoutEffect: วัดก่อนเบราว์เซอร์วาด จะได้ไม่มีเฟรมที่กระดานขนาดผิด
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !aspect) return undefined
+    const read = () => {
+      const r = el.getBoundingClientRect()
+      if (r.width > 0 && r.height > 0) setSize({ w: r.width, h: r.height })
+    }
+    read()
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', read)
+      return () => window.removeEventListener('resize', read)
+    }
+    const ro = new ResizeObserver(read)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref, aspect])
+
+  if (!aspect || !size) return null
+  return Math.max(Math.floor(Math.min(size.w, size.h * aspect)), 1)
 }
 
 /** ภาพเต็มใบตามกรอบครอป — ใช้กับพื้นหลังหรี่แสงของคนคุมเกม */

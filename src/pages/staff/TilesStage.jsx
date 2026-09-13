@@ -6,7 +6,7 @@ import { useQuizSession } from '../../lib/useQuizSession'
 import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchTileImage, fetchTileStats } from '../../lib/tileHost'
-import { openCount, tileCount } from '../../lib/tileGrid'
+import { boardRevealed, openCount, tileCount } from '../../lib/tileGrid'
 import TileBoard from '../../components/tiles/TileBoard'
 
 // จอใหญ่ของเกมเปิดแผ่นป้าย — เปิดแท็บแยก ไม่มีปุ่มสั่งงานแม้แต่ปุ่มเดียว
@@ -23,10 +23,12 @@ import TileBoard from '../../components/tiles/TileBoard'
 // จะได้เปลี่ยนภาพต่อชุดได้โดยไม่ต้องแก้โค้ด (เกมทายภาพวิวกับทายว่าใครควรมีหน้ารอคนละแบบ)
 const DEFAULT_LOBBY_ART = '/games/who-is-who.jpg'
 
+/** ป้ายพิลเหลืองคร่อมขอบบน — ชุดเดียวกับเกมปริศนาใบ้คำ ไม่มีเงา ตัวย่อขยายตามจอ */
 function Pill({ children, className = '' }) {
   return (
     <span
-      className={`inline-block rounded-full border-[4px] border-black bg-[#f2f75f] px-8 py-2 text-3xl font-black text-black shadow-[6px_6px_0_0_rgba(0,0,0,0.9)] sm:text-5xl ${className}`}
+      className={`inline-block max-w-full truncate rounded-full border-[5px] border-black bg-[#f2f75f] px-10 py-2 font-black text-black ${className}`}
+      style={{ fontSize: 'clamp(1.5rem, 3.4vw, 4rem)' }}
     >
       {children}
     </span>
@@ -56,6 +58,13 @@ export default function TilesStage() {
   const reveal = session?.reveal_payload ?? {}
   const revealing = phase === 'reveal' && reveal.kind === 'tiles'
   const busTv = session?.screen_mode === 'bus_tv'
+
+  // ★ ตอนเฉลยต้องเปิดครบทุกแผ่นเสมอ — ไม่รอว่า revealed_tiles ในฐานข้อมูลจะครบไหม
+  //   (ห้องที่เปิดค้างอยู่ก่อนดีพลอย หรือกดเฉลยทั้งที่ไม่มีใครตอบถูก)
+  const shown = useMemo(
+    () => boardRevealed(session?.revealed_tiles, grid.grid_rows, grid.grid_cols, revealing),
+    [session?.revealed_tiles, grid.grid_rows, grid.grid_cols, revealing]
+  )
 
   // ภาพจริงของข้อปัจจุบัน
   useEffect(() => {
@@ -163,19 +172,25 @@ export default function TilesStage() {
 
   return (
     <div
-      className="flex min-h-screen w-full flex-col items-center justify-start p-4 sm:p-8"
+      // ★ h-[100dvh] + min-h-0 ทุกชั้น = จอโปรเจกเตอร์ 16:9 ไม่ต้องเลื่อน
+      //   (เจ้าของโปรเจกต์เจอ 12 ก.ย. 2026: ต่อ HDMI แล้วเห็นเลขไม่ครบ ต้องเลื่อนขึ้นลง)
+      //   ของเดิมใช้ min-h-screen แล้วปล่อยกระดานสูงตาม aspect ซึ่งล้นจอเตี้ยเสมอ
+      className="flex h-[100dvh] w-full flex-col items-center overflow-hidden p-2 sm:p-4"
       style={{ background: stageChecker(sessionId) }}
     >
-      <div className="flex w-full max-w-[1500px] flex-1 flex-col rounded-[28px] border-[6px] border-black bg-white p-5 shadow-[10px_10px_0_0_rgba(0,0,0,0.9)] sm:p-10">
-        <div className="-mt-12 mb-6 flex items-center justify-center sm:-mt-16">
+      <div className="relative flex min-h-0 w-full max-w-[1800px] flex-1 flex-col rounded-[32px] border-[7px] border-black bg-white px-4 pb-4 pt-14 sm:px-8 sm:pb-6 sm:pt-20">
+        <div className="pointer-events-none absolute inset-x-0 -top-1 flex items-start justify-center px-4">
           <Pill>{heading}</Pill>
         </div>
 
         {showBoard && (
-          <>
+          <div className="flex min-h-0 flex-1 flex-col gap-2 sm:gap-3">
             {/* ความคืบหน้าที่มีความหมายของเกมนี้คือจำนวนแผ่น ไม่ใช่วินาที */}
             {!revealing && (
-              <div className="mb-4 flex items-center justify-between text-2xl font-black text-black sm:text-3xl">
+              <div
+                className="flex shrink-0 items-center justify-between font-black text-black"
+                style={{ fontSize: 'clamp(1rem, 1.9vw, 2.25rem)' }}
+              >
                 <span>เปิดแล้ว {opened}/{total}</span>
                 {winner
                   ? <span className="text-[#0f8a4a]">🎉 {winner.name} ตอบถูกแล้ว</span>
@@ -183,7 +198,8 @@ export default function TilesStage() {
               </div>
             )}
 
-            <div className="mx-auto w-full max-w-[1100px] flex-1">
+            {/* กระดานกินที่ที่เหลือทั้งหมด แล้วบีบตัวเองให้พอดีทั้งกว้างและสูง */}
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center">
               <TileBoard
                 rows={grid.grid_rows}
                 cols={grid.grid_cols}
@@ -191,62 +207,69 @@ export default function TilesStage() {
                 imageUrl={imageUrl}
                 imageAspect={grid.image_aspect}
                 coverImageUrl={grid.cover_image_url}
-                revealed={session?.revealed_tiles ?? []}
+                revealed={shown}
                 showNumbers={!revealing}
+                fit
               />
             </div>
 
             {/* ผู้ชนะ — จังหวะพีคของข้อ ตัวใหญ่กว่าทุกอย่างบนจอ */}
             {revealing && winner && (
-              <div className="mt-6 text-center">
-                <p className="text-4xl font-black text-black sm:text-6xl">
+              <div className="shrink-0 text-center">
+                <p className="font-black leading-tight text-black" style={{ fontSize: 'clamp(1.5rem, 3.4vw, 3.75rem)' }}>
                   🎉 {winner.name}
                   {winner.team ? <span className="text-black/60"> · ทีม {winner.team}</span> : null}
                 </p>
                 {reveal.explain && (
-                  <p className="mt-2 text-2xl font-bold text-black/70 sm:text-3xl">{reveal.explain}</p>
+                  <p className="font-bold text-black/70" style={{ fontSize: 'clamp(1rem, 1.9vw, 2rem)' }}>
+                    {reveal.explain}
+                  </p>
                 )}
               </div>
             )}
             {revealing && !winner && (
-              <p className="mt-6 text-center text-3xl font-black text-black/60 sm:text-5xl">
+              <p
+                className="shrink-0 text-center font-black text-black/60"
+                style={{ fontSize: 'clamp(1.25rem, 2.8vw, 3rem)' }}
+              >
                 ไม่มีใครตอบถูก
               </p>
             )}
-          </>
+          </div>
         )}
 
         {(phase === 'scoreboard' || phase === 'finished') && (
-          <ol className="mx-auto w-full max-w-3xl space-y-3">
+          <ol className="mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col justify-center gap-2 overflow-hidden">
             {leaderboard.map((row, i) => (
               <li
                 key={row.id ?? i}
-                className="flex items-center gap-4 rounded-2xl border-[4px] border-black bg-white px-5 py-3 shadow-[6px_6px_0_0_rgba(0,0,0,0.9)]"
+                className="flex items-center gap-4 rounded-2xl border-[4px] border-black bg-[#f2f75f] px-5 py-2 font-black text-black"
+                style={{ fontSize: 'clamp(1.25rem, 2.4vw, 2.75rem)' }}
               >
-                <span className="text-3xl font-black text-black sm:text-5xl">{i + 1}</span>
-                <span className="min-w-0 flex-1 truncate text-3xl font-black text-black sm:text-5xl">
+                <span className="w-10 text-center">{i + 1}</span>
+                <span className="min-w-0 flex-1 truncate">
                   {/* กระดานทีมคืนคอลัมน์ name ส่วนกระดานรายคนคืน display_name */}
                   {row.display_name ?? row.name}
                   {row.member_count ? (
                     <span className="text-black/50"> ({row.member_count})</span>
                   ) : null}
                 </span>
-                <span className="text-3xl font-black text-black sm:text-5xl">
-                  {row.score ?? row.total_score}
-                </span>
+                <span className="tabular-nums">{row.score ?? row.total_score}</span>
               </li>
             ))}
           </ol>
         )}
 
         {phase === 'lobby' && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
             <img
               src={setCover || DEFAULT_LOBBY_ART}
               alt=""
-              className="w-full max-w-[1100px] rounded-2xl border-[4px] border-black object-contain shadow-[8px_8px_0_0_rgba(0,0,0,0.9)]"
+              className="max-h-full min-h-0 max-w-full rounded-2xl border-[4px] border-black object-contain"
             />
-            <p className="text-3xl font-black text-black/60 sm:text-5xl">รอเริ่มเกม</p>
+            <p className="shrink-0 font-black text-black/60" style={{ fontSize: 'clamp(1.25rem, 2.4vw, 2.75rem)' }}>
+              รอเริ่มเกม
+            </p>
           </div>
         )}
       </div>

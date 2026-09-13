@@ -63,6 +63,10 @@ export default defineConfig({
         // already handle their own offline fallback via localStorage (offlineCache.js).
         globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
         navigateFallbackDenylist: [/^\/staff/], // staff routes need fresh data, don't serve stale app-shell fallback for deep links
+        // ★ ลบ precache ของเวอร์ชันเก่าทิ้งทุกครั้งที่ service worker ใหม่ทำงาน
+        //   ไม่งั้น index.html เก่าค้างอยู่แล้วชี้ไปหา chunk ที่ถูกลบไปแล้วตอน deploy ใหม่
+        //   (อาการ: จอขาว "Failed to fetch dynamically imported module" — ดู src/lib/lazyRoute.js)
+        cleanupOutdatedCaches: true,
       },
     }),
   ],

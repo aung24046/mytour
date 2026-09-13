@@ -9,7 +9,7 @@ import {
 import {
   openTile, undoTile, fetchTileImage, fetchTileStats, fetchTileFeed, acceptTileAnswer,
 } from '../../lib/tileHost'
-import { openCount, tileCount } from '../../lib/tileGrid'
+import { boardRevealed, openCount, tileCount } from '../../lib/tileGrid'
 import TileBoard from '../../components/tiles/TileBoard'
 import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
@@ -183,7 +183,7 @@ export default function TilesHost() {
               imageUrl={imageUrl}
               imageAspect={grid.image_aspect}
               coverImageUrl={grid.cover_image_url}
-              revealed={session?.revealed_tiles ?? []}
+              revealed={boardRevealed(session?.revealed_tiles, grid.grid_rows, grid.grid_cols, phase === 'reveal')}
               peek
               onTileClick={live && !busy ? (n) => run(() => openTile(sessionId, n)) : null}
             />
