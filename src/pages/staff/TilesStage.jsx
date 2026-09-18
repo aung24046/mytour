@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
-import { useQuizSession } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers } from '../../lib/useQuizSession'
 import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchTileImage, fetchTileStats } from '../../lib/tileHost'
 import { boardRevealed, openCount, tileCount } from '../../lib/tileGrid'
 import TileBoard from '../../components/tiles/TileBoard'
+import StageRoster from '../../components/quiz/StageRoster'
 
 // จอใหญ่ของเกมเปิดแผ่นป้าย — เปิดแท็บแยก ไม่มีปุ่มสั่งงานแม้แต่ปุ่มเดียว
 // รับ token ผ่าน #t= เหมือน QuizStage/PuzzleStage เพราะต้องเห็นภาพจริงซึ่งเป็นเฉลย
@@ -38,6 +39,8 @@ function Pill({ children, className = '' }) {
 export default function TilesStage() {
   const { sessionId } = useParams()
   const { session, question, phase } = useQuizSession(sessionId)
+  // คนในห้อง — จอใหญ่ตอนรอเริ่มขึ้นชื่อคนที่เข้ามาแล้ว (ดู StageRoster.jsx)
+  const room = useRoomPlayers(sessionId, phase === 'lobby')
   const [stats, setStats] = useState({ solved: 0, online: 0, still_in: 0, winner_name: null })
   // ★ เก็บภาพคู่กับ "ข้อที่มันเป็นของ" เสมอ — ถ้าเก็บ url เดี่ยวๆ จะมีเสี้ยวหนึ่งที่
   //   ข้อเปลี่ยนไปแล้วแต่ url ยังเป็นของข้อเก่า (หรือกลับกัน) แล้วภาพโผล่ใต้แผ่นที่ยังเปิดค้าง
@@ -270,6 +273,8 @@ export default function TilesStage() {
             <p className="shrink-0 font-black text-black/60" style={{ fontSize: 'clamp(1.25rem, 2.4vw, 2.75rem)' }}>
               รอเริ่มเกม
             </p>
+            {/* ชื่อคนที่เข้ามาแล้ว — โปสเตอร์หดให้เอง เพราะมันเป็น min-h-0 ในคอลัมน์เดียวกัน */}
+            <StageRoster players={room.players} tone="light" className="shrink-0 max-h-[24vh]" />
           </div>
         )}
       </div>

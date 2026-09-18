@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { useQuizSession } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers } from '../../lib/useQuizSession'
 import { resolveHostToken, fetchLeaderboard, fetchTeamLeaderboard } from '../../lib/quizHost'
 import { optionStyles, optionLabels, stagePreset, stageSkin, teamStyle } from '../../lib/quizStyle'
 import OptionShape from '../../components/quiz/OptionShape'
+import StageRoster from '../../components/quiz/StageRoster'
 
 // จอใหญ่ — เปิดแท็บแยกบนโปรเจกเตอร์หรือทีวีบนรถ
 //
@@ -31,7 +32,6 @@ export default function QuizStage() {
 
   const [token, setToken] = useState(null)
   const [board, setBoard] = useState([])
-  const [playerCount, setPlayerCount] = useState(0)
   const [liveNumbers, setLiveNumbers] = useState([])
   const [setMedia, setSetMedia] = useState([])
   const [teamBoard, setTeamBoard] = useState([])
@@ -82,20 +82,9 @@ export default function QuizStage() {
     return undefined
   }, [setMedia, session?.current_index])
 
-  // จำนวนคนในห้อง (หน้า lobby)
-  useEffect(() => {
-    if (!sessionId) return undefined
-    const tick = async () => {
-      const { count } = await supabase
-        .from('quiz_players')
-        .select('id', { count: 'exact', head: true })
-        .eq('session_id', sessionId)
-      setPlayerCount(count ?? 0)
-    }
-    tick()
-    const timer = setInterval(tick, 3000)
-    return () => clearInterval(timer)
-  }, [sessionId, phase])
+  // คนในห้อง — จอใหญ่ขึ้น "ชื่อ" ไม่ใช่แค่ตัวเลข (ดูเหตุผลใน StageRoster.jsx)
+  //   hook ตัวเดียวกับมือถือคนคุมเกม จะได้ไม่มีทางที่สองจอนับไม่ตรงกัน
+  const room = useRoomPlayers(sessionId, phase === 'lobby')
 
   // ห้องรอแบบทีม — ทีมโผล่เพิ่มได้ตลอดจนกว่าจะเริ่มเกม
   useEffect(() => {
@@ -158,8 +147,11 @@ export default function QuizStage() {
     return (
       <div className={shell} style={skinStyle}>
         <p className="text-2xl font-bold opacity-70">{session.name}</p>
-        <p className="mt-6 text-[12rem] font-black leading-none tabular-nums">{playerCount}</p>
-        <p className="mt-2 text-3xl font-bold opacity-70">{t('quiz.stage.joined')}</p>
+        <p className="mt-4 text-[9rem] font-black leading-none tabular-nums">{room.joined}</p>
+        <p className="mt-1 text-3xl font-bold opacity-70">{t('quiz.stage.joined')}</p>
+
+        {/* ชื่อคนที่เข้ามาแล้ว — คนที่ยังไม่เข้าจะเห็นว่าตัวเองไม่อยู่บนจอ แล้วเข้าเอง */}
+        <StageRoster players={room.players} className="mt-6 max-h-[34vh] max-w-6xl" />
 
         {/* โหมดทีม: จอใหญ่ต้องโชว์ทีมที่ตั้งกันแล้ว ไม่งั้นคนที่ยังไม่เลือก
             ต้องก้มดูมือถือทีละคน ซึ่งช้ากว่าเงยหน้าดูจอมาก */}

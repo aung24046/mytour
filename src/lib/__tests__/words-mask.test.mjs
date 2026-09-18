@@ -4,6 +4,7 @@ import {
   splitCells, joinCells, resplit, maskCells, hiddenSlots, applyOpened, validateCells, canHide,
   revealCells, hostCells,
   shuffleCells, tilesOf, shuffleTiles, samePoolLetters, fixedPoints, validateShuffle, poolTiles,
+  applyPlaced, nextEmptySlot, isArranged, slotsLeft, reconcilePlaced, markPicked, maskShuffle,
 } from '../wordsMask.js'
 
 let n = 0
@@ -174,6 +175,98 @@ test('Word Shuffle: เปิดตัวแล้วตัวในกองจ
 test('applyOpened: payload เก่าไม่มี m ใช้เครื่องหมายของโจทย์ (What Words)', () => {
   const masked = [{ c: null, m: 'ี' }, { c: 'ใ', m: '' }]
   assert.equal(`${applyOpened(masked, [{ slot: 0, char: 'ป' }])[0].c}${applyOpened(masked, [{ slot: 0, char: 'ป' }])[0].m}`, 'ปี')
+})
+
+// ── โหมดเรียงตัวอักษรของ Word Shuffle ──────────────────────────────────
+// กองของ "แม่ฮ่องสอน" ที่ใช้ทั้งหมดข้างล่าง (ลำดับสลับแล้ว · มี อ ซ้ำสองตัว)
+const MHS_POOL = [
+  { c: 'ฮ', m: '่' }, { c: 'ง', m: '' }, { c: 'แ', m: '' }, { c: 'อ', m: '' },
+  { c: 'ม', m: '่' }, { c: 'อ', m: '' }, { c: 'น', m: '' }, { c: 'ส', m: '' },
+]
+// ช่องโจทย์ของ แม่ฮ่องสอน = แ ม่ ฮ่ อ ง ส อ น (ว่างทุกช่อง)
+const mhsCells = (opened = []) => applyOpened(maskShuffle(shuffleCells('แม่ฮ่องสอน')), opened)
+
+test('เรียงตัวอักษร: วางแล้วช่องเป็น filled และต่อกลับได้คำตอบ', () => {
+  const cells = mhsCells()
+  const tiles = poolTiles(MHS_POOL, cells)
+  // เรียงให้ถูก: แ(2) ม่(4) ฮ่(0) อ(3) ง(1) ส(7) อ(5) น(6)
+  const placed = { 0: 2, 1: 4, 2: 0, 3: 3, 4: 1, 5: 7, 6: 5, 7: 6 }
+  const board = applyPlaced(cells, placed, tiles)
+  assert.ok(board.every((x) => x.state === 'filled'))
+  assert.equal(joinCells(board), 'แม่ฮ่องสอน')
+  assert.ok(isArranged(board))
+  assert.equal(slotsLeft(board), 0)
+})
+
+test('เรียงตัวอักษร: ช่องถัดไปข้ามช่องว่างระหว่างคำและช่องที่เปิดให้แล้ว', () => {
+  // "ทะเล สาบ" — ช่องว่างเป็น state shown ไม่ใช่ช่องที่ต้องเติม
+  const cells = applyOpened(maskShuffle(shuffleCells('ทะเล สาบ')), [{ slot: 1, char: 'ะ', m: '' }])
+  assert.equal(cells[4].state, 'shown', 'ช่องว่างระหว่างคำ')
+  assert.equal(cells[1].state, 'opened')
+  assert.equal(nextEmptySlot(cells, 0), 0)
+  assert.equal(nextEmptySlot(cells, 1), 2, 'ข้ามช่องที่เปิดให้แล้ว')
+  assert.equal(nextEmptySlot(cells, 4), 5, 'ข้ามช่องว่าง')
+  const tail = applyOpened(maskShuffle(shuffleCells('ทะเล สาบ')), [{ slot: 7, char: 'บ', m: '' }])
+  assert.equal(nextEmptySlot(tail, 7), 0, 'ช่องท้ายเต็มแล้ววนกลับหัวคำ')
+  assert.equal(nextEmptySlot([], 0), null)
+})
+
+test('เรียงตัวอักษร: เต็มทุกช่องแล้วไม่มีช่องถัดไป', () => {
+  const cells = mhsCells()
+  const tiles = poolTiles(MHS_POOL, cells)
+  const placed = Object.fromEntries(cells.map((_, i) => [i, i]))
+  const board = applyPlaced(cells, placed, tiles)
+  assert.equal(nextEmptySlot(board, 0), null)
+  assert.ok(!isArranged(mhsCells()), 'ยังไม่วางอะไรเลย = ยังไม่ครบ')
+})
+
+test('เรียงตัวอักษร: คนคุมเกมเปิดช่องที่ผู้เล่นวางไว้ → ตัวนั้นกลับเข้ากอง', () => {
+  const before = mhsCells()
+  const placed = reconcilePlaced({ 1: 4, 2: 0 }, before, poolTiles(MHS_POOL, before))
+  assert.deepEqual(placed, { 1: 4, 2: 0 })
+  // คนคุมเกมเปิด ม่ ที่ช่อง 1 (ช่องที่ผู้เล่นวางตัวไว้พอดี)
+  const after = mhsCells([{ slot: 1, char: 'ม', m: '่' }])
+  const tiles = poolTiles(MHS_POOL, after)
+  assert.equal(tiles[4].used, true, 'ป้าย ม่ ถูกใช้ไปแล้ว')
+  assert.deepEqual(reconcilePlaced(placed, after, tiles), { 2: 0 }, 'เหลือแต่ ฮ่ ที่ช่อง 2')
+})
+
+test('เรียงตัวอักษร: คนคุมเกมใช้ป้ายที่ผู้เล่นถืออยู่ → ย้ายไปป้ายซ้ำที่ยังว่าง', () => {
+  // ผู้เล่นวาง อ ป้ายแรก (index 3) ไว้ที่ช่อง 6
+  const before = mhsCells()
+  assert.deepEqual(reconcilePlaced({ 6: 3 }, before, poolTiles(MHS_POOL, before)), { 6: 3 })
+  // คนคุมเกมเปิด อ ที่ช่อง 3 → poolTiles ทำให้ป้าย อ ตัวซ้ายสุด (index 3) used
+  const after = mhsCells([{ slot: 3, char: 'อ', m: '' }])
+  const tiles = poolTiles(MHS_POOL, after)
+  assert.deepEqual(tiles.map((x) => x.used), [false, false, false, true, false, false, false, false])
+  // ตัวที่ผู้เล่นถืออยู่ต้องย้ายไปป้าย อ อีกตัว (index 5) ไม่ใช่หายไป
+  assert.deepEqual(reconcilePlaced({ 6: 3 }, after, tiles), { 6: 5 })
+})
+
+test('เรียงตัวอักษร: ไม่มีป้ายซ้ำให้ย้าย → ถอดออกจากช่อง', () => {
+  const after = mhsCells([{ slot: 2, char: 'ฮ', m: '่' }])
+  const tiles = poolTiles(MHS_POOL, after)
+  assert.deepEqual(reconcilePlaced({ 7: 0 }, after, tiles), {}, 'ฮ่ มีป้ายเดียว')
+})
+
+test('เรียงตัวอักษร: ป้ายเดียวลงสองช่องไม่ได้ (กันสถานะเพี้ยน)', () => {
+  const cells = mhsCells()
+  const tiles = poolTiles(MHS_POOL, cells)
+  assert.deepEqual(reconcilePlaced({ 0: 3, 1: 3 }, cells, tiles), { 0: 3, 1: 5 }, 'ช่องหลังย้ายไป อ อีกตัว')
+  assert.deepEqual(reconcilePlaced({ 0: 0, 1: 0 }, cells, tiles), { 0: 0 }, 'ไม่มีตัวซ้ำก็ถอดช่องหลัง')
+})
+
+test('เรียงตัวอักษร: ป้ายที่หยิบไปวางแล้วมีธง picked', () => {
+  const tiles = markPicked(poolTiles(MHS_POOL, mhsCells()), { 0: 2, 5: 7 })
+  assert.deepEqual(tiles.map((x) => Boolean(x.picked)), [false, false, true, false, false, false, false, true])
+  assert.ok(tiles.every((x) => x.used === false), 'picked คนละเรื่องกับ used ของคนคุมเกม')
+})
+
+test('เรียงตัวอักษร: applyPlaced ไม่แตะช่องที่คนคุมเกมเปิดหรือช่องว่าง', () => {
+  const cells = applyOpened(maskShuffle(shuffleCells('ทะเล สาบ')), [{ slot: 1, char: 'ะ', m: '' }])
+  const board = applyPlaced(cells, { 1: 0, 4: 0 }, poolTiles([{ c: 'ท', m: '' }], cells))
+  assert.equal(board[1].state, 'opened')
+  assert.equal(board[4].state, 'shown')
 })
 
 console.log(`\nwords-mask: ผ่าน ${n} ข้อ`)

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
-import { useQuizSession, serverNow } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers, serverNow } from '../../lib/useQuizSession'
 import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchPuzzleStats } from '../../lib/puzzleHost'
 import ClueBoard from '../../components/puzzle/ClueBoard'
+import StageRoster from '../../components/quiz/StageRoster'
 
 // จอใหญ่ของเกมปริศนาใบ้คำ — เปิดแท็บแยก ไม่มีปุ่มสั่งงานแม้แต่ปุ่มเดียว
 // รับ token ผ่าน #t= เหมือน QuizStage เพราะต้องเห็นตัวเลขที่ลูกทัวร์ไม่ควรเห็น
@@ -75,6 +76,8 @@ function Chip({ children, tone = 'white' }) {
 export default function PuzzleStage() {
   const { sessionId } = useParams()
   const { session, question, phase, msLeft } = useQuizSession(sessionId)
+  // คนในห้อง — จอใหญ่ตอนรอเริ่มขึ้นชื่อคนที่เข้ามาแล้ว (ดู StageRoster.jsx)
+  const room = useRoomPlayers(sessionId, phase === 'lobby')
   const [stats, setStats] = useState({ solved: 0, online: 0 })
 
   useEffect(() => {
@@ -147,8 +150,10 @@ export default function PuzzleStage() {
       className="flex h-[100dvh] w-full flex-col items-center p-2 sm:p-4"
       style={{ background: stageChecker(sessionId) }}
     >
-      <div className="relative flex min-h-0 w-full max-w-[1800px] flex-1 flex-col rounded-[32px] border-[7px] border-black bg-white px-5 pb-5 pt-16 sm:px-10 sm:pb-8 sm:pt-20">
-        {/* ป้ายหัวเรื่องคร่อมขอบบน + นาฬิกาเกาะมุมขวา */}
+      <div className="relative flex min-h-0 w-full max-w-[1800px] flex-1 flex-col rounded-[32px] border-[7px] border-black bg-white px-5 pb-5 pt-24 sm:px-10 sm:pb-8 sm:pt-28">
+        {/* ป้ายหัวเรื่องคร่อมขอบบน + นาฬิกาเกาะมุมขวา
+            ★ pt ของกล่องต้องสูงกว่าป้ายพิลจริงๆ (ป้ายสูงราว 115px ที่จอ 1280)
+              ไม่งั้นบรรทัดแรกของเนื้อหาจะไปซ้อนใต้ป้าย — เห็นชัดตอนห้องรอที่จอเตี้ย */}
         <div className="pointer-events-none absolute inset-x-0 -top-1 flex items-start justify-center px-4">
           <Pill>{title}</Pill>
         </div>
@@ -167,16 +172,20 @@ export default function PuzzleStage() {
         {/* เนื้อกลางจอ */}
         {/* min-h-0 = ลูกในคอลัมน์ยอมหดได้ ไม่งั้นรูปเฉลยดันข้อความที่มาของคำตอบตกขอบจอ */}
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 sm:gap-7">
+          {/* ★ ห้องรอ = กติกา + รายชื่อคนที่เข้ามาแล้ว
+              min-h-0 ทั้งก้อน แล้วให้รายชื่อเป็นตัวที่ยอมหด (กติกาเป็น shrink-0)
+              ไม่งั้นพอคนเข้าครบรถ กติกาจะถูกดันขึ้นไปซ้อนใต้ป้ายพิลเหลือง */}
           {phase === 'lobby' && (
-            <div className="text-center">
-              <p className="text-5xl font-black text-black sm:text-7xl">กติกา</p>
-              <ul className="mt-8 space-y-4 text-3xl font-bold text-black sm:text-5xl">
+            <div className="flex min-h-0 flex-col items-center text-center">
+              <p className="shrink-0 text-4xl font-black text-black sm:text-6xl">กติกา</p>
+              <ul className="mt-5 shrink-0 space-y-2.5 text-2xl font-bold text-black sm:text-4xl">
                 <li>• ทายคำจากภาพใบ้</li>
                 <li>{teamMode ? '• ทีมที่ตอบถูกได้ 1 คะแนน' : '• ตอบถูกได้ 1 คะแนน'}</li>
                 <li>• ตอบได้ไม่จำกัดครั้ง</li>
                 <li>{teamMode ? '• ทีมที่คะแนนรวมมากที่สุดเป็นผู้ชนะ' : '• คะแนนมากที่สุดเป็นผู้ชนะ'}</li>
               </ul>
-              <p className="mt-10 text-2xl text-neutral-500">รอทีมงานเริ่มเกม</p>
+              <p className="mt-5 shrink-0 text-xl text-neutral-500">รอทีมงานเริ่มเกม</p>
+              <StageRoster players={room.players} tone="light" className="mt-4 min-h-0" />
             </div>
           )}
 

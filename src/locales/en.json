@@ -2059,7 +2059,14 @@
     "title": "Word Shuffle",
     "hiddenInfo": "{{opened}} of {{n}} letters placed",
     "rules": {
-      "guess": "• Unscramble the letters into a word — the category is your hint"
+      "guess": "• Unscramble the letters into a word — the category is your hint",
+      "tap": "• Tap the letters into the boxes, then confirm"
+    },
+    "arrange": {
+      "left": "{{n}} boxes to go · tap a filled box to take that letter back",
+      "ready": "All letters placed — tap Confirm",
+      "clear": "Clear",
+      "confirm": "Confirm answer"
     },
     "manager": {
       "subtitle": "Unscramble the letters, on the big screen",
@@ -2079,5 +2086,15 @@
     "host": {
       "tapHint": "Tap a faded box to place that letter for everyone"
     }
+  },
+  "quizRoster": {
+    "title": "In the room: {{joined}} · online {{online}}",
+    "empty": "No one has joined yet",
+    "loading": "Loading…",
+    "justJoined": "just joined",
+    "visitor": "Guest player",
+    "kick": "Remove {{name}} from the room",
+    "more": "+{{n}} more",
+    "stageTitle": "Joined"
   }
 }

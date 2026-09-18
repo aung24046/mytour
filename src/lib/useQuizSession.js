@@ -326,39 +326,130 @@ export function useQuizAnswerCount(sessionId, questionId, active) {
 // อ่าน quiz_players ตรงๆ (หน้าคุมควิซก็อ่านแบบนี้) poll ไม่ใช่ realtime ด้วยเหตุผลเดียวกับหัวไฟล์
 const ONLINE_WINDOW_MS = 60000
 
-export function useRoomHeadcount(sessionId, active = true) {
-  const [count, setCount] = useState({ joined: 0, online: 0, loaded: false })
+/**
+ * รายชื่อคนในห้อง — ใช้ทั้งมือถือคนคุมเกมและจอใหญ่ของทุกเกม
+ *
+ * ★ ทำไมต้องมีรายชื่อ ไม่ใช่แค่ตัวเลข (เจ้าของโปรเจกต์ขอ 17 ก.ย. 2026 "เหมือนเกมบิงโก")
+ *   บนรถบัส คนคุมเกมต้องรู้ว่า "ใครยังไม่เข้า" ไม่ใช่ "ขาดอีกกี่คน" — ตัวเลข 38/40
+ *   บอกไม่ได้ว่าจะไปตามใคร ส่วนจอใหญ่ที่ขึ้นชื่อทีละคนตอนคนเข้าคือตัวเรียกคนที่เหลือ
+ *   ให้หยิบมือถือขึ้นมาเองโดยไม่ต้องประกาศซ้ำ
+ *
+ * คืน: { players, joined, online, loaded }
+ *   players เรียงตามเวลาเข้าห้อง (คนเข้าก่อนอยู่บน) แต่ละคนมี
+ *     id · display_name · kind · team_id · team (ชื่อทีม) · team_color · online · fresh
+ *   fresh = เพิ่งโผล่ในรอบนี้ (ยังไม่เคยเห็น id นี้) — ไว้ไฮไลต์ แล้วดับเองใน FRESH_MS
+ *
+ * ⚠️ poll ไม่ใช่ realtime ด้วยเหตุผลเดียวกับหัวไฟล์ — 40 คนกดเข้าพร้อมกัน
+ *    = 40 event ยิงใส่ทุกเครื่อง ทั้งที่รีเฟรชทุก 3 วิก็ทันคนเดินขึ้นรถอยู่แล้ว
+ */
+const FRESH_MS = 12000
+const PLAYER_COLS = 'id, display_name, kind, team_id, last_seen_at, joined_at'
+
+export function useRoomPlayers(sessionId, active = true) {
+  const [state, setState] = useState({ players: [], joined: 0, online: 0, loaded: false })
+
+  // id ที่เคยเห็นแล้ว + เวลาที่เพิ่งเห็นคนใหม่ — เก็บใน ref เพราะไม่ควรทำให้ re-render เอง
+  const seenRef = useRef(null)
+  const freshRef = useRef(new Map())
+
+  useEffect(() => {
+    seenRef.current = null
+    freshRef.current = new Map()
+  }, [sessionId])
 
   useEffect(() => {
     if (!sessionId || !active) return undefined
     let alive = true
 
     async function tick() {
-      const { data, error } = await supabase
-        .from('quiz_players')
-        .select('last_seen_at')
-        .eq('session_id', sessionId)
+      const { data: rows, error } = await supabase
+        .from('quiz_players').select(PLAYER_COLS).eq('session_id', sessionId).order('joined_at')
       if (!alive || error) return
-      const cutoff = serverNow() - ONLINE_WINDOW_MS
-      const rows = data ?? []
-      setCount({
-        joined: rows.length,
-        online: rows.filter((r) => r.last_seen_at && new Date(r.last_seen_at).getTime() > cutoff).length,
+      const list = rows ?? []
+
+      // ห้องที่ไม่ได้เล่นเป็นทีมไม่ต้องยิงถามชื่อทีมทุก 3 วิ
+      let teams = new Map()
+      if (list.some((r) => r.team_id)) {
+        const { data: teamRows } = await supabase
+          .from('quiz_teams').select('id, name, color_index').eq('session_id', sessionId)
+        if (!alive) return
+        teams = new Map((teamRows ?? []).map((t) => [t.id, t]))
+      }
+      const now = serverNow()
+      const cutoff = now - ONLINE_WINDOW_MS
+
+      // รอบแรกของห้อง: คนที่อยู่แล้วไม่ใช่ "คนเข้าใหม่" ไม่งั้นเปิดหน้ามาไฮไลต์ยกห้อง
+      const first = seenRef.current === null
+      const seen = first ? new Set() : seenRef.current
+      const fresh = freshRef.current
+
+      for (const r of list) {
+        if (!seen.has(r.id)) {
+          seen.add(r.id)
+          if (!first) fresh.set(r.id, Date.now())
+        }
+      }
+      for (const [id, at] of fresh) {
+        if (Date.now() - at > FRESH_MS) fresh.delete(id)
+      }
+      seenRef.current = seen
+
+      setState({
         loaded: true,
+        joined: list.length,
+        online: list.filter((r) => r.last_seen_at && new Date(r.last_seen_at).getTime() > cutoff).length,
+        players: list.map((r) => {
+          const team = r.team_id ? teams.get(r.team_id) : null
+          return {
+            id: r.id,
+            display_name: r.display_name,
+            kind: r.kind,
+            team_id: r.team_id ?? null,
+            team: team?.name ?? null,
+            team_color_index: team?.color_index ?? null,
+            joined_at: r.joined_at,
+            online: Boolean(r.last_seen_at) && new Date(r.last_seen_at).getTime() > cutoff,
+            fresh: fresh.has(r.id),
+          }
+        }),
       })
     }
 
     tick()
+    // ★ เดินต่อแม้แท็บถูกซ่อน "ไม่ได้" — จอใหญ่เปิดค้างไว้ทั้งทริป ถ้า poll ตอนซ่อนด้วย
+    //   จะยิงฟรีทั้งวัน เงื่อนไขเดียวกับ hook อื่นในไฟล์นี้
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') tick()
     }, 3000)
+    // ไฮไลต์ต้องดับเองแม้ไม่มีใครเข้าเพิ่ม — ไม่งั้นค้างจนกว่าจะมีคนใหม่
+    const dim = setInterval(() => {
+      if (freshRef.current.size === 0) return
+      let changed = false
+      for (const [id, at] of freshRef.current) {
+        if (Date.now() - at > FRESH_MS) { freshRef.current.delete(id); changed = true }
+      }
+      if (changed) {
+        setState((prev) => ({
+          ...prev,
+          players: prev.players.map((p) => (p.fresh && !freshRef.current.has(p.id) ? { ...p, fresh: false } : p)),
+        }))
+      }
+    }, 1000)
+
     return () => {
       alive = false
       clearInterval(timer)
+      clearInterval(dim)
     }
   }, [sessionId, active])
 
-  return count
+  return state
+}
+
+/** นับอย่างเดียว — หน้าที่ต้องการแค่ตัวเลขเรียกตัวนี้ (ผลลัพธ์มาจาก useRoomPlayers ตัวเดียวกัน) */
+export function useRoomHeadcount(sessionId, active = true) {
+  const { joined, online, loaded } = useRoomPlayers(sessionId, active)
+  return { joined, online, loaded }
 }
 
 // ---------------------------------------------------------------------

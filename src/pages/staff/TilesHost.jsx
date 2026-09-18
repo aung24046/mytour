@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
-import { useQuizSession, useRoomHeadcount, serverNow } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers, serverNow } from '../../lib/useQuizSession'
 import {
   nextQuestion, lockAndReveal, setSessionState, resolveHostToken, stageUrl,
 } from '../../lib/quizHost'
@@ -15,6 +15,7 @@ import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
 import HostClaim from '../../components/quiz/HostClaim'
+import PlayerRoster from '../../components/quiz/PlayerRoster'
 
 // มือถือคนคุมเกม — จอสั่งงานอย่างเดียว
 //
@@ -57,7 +58,9 @@ export default function TilesHost() {
   const cursorRef = useRef(null)
   const { session, question, phase } = useQuizSession(sessionId)
   // ออนไลน์ของ stats มีเฉพาะตอนมีข้อ — ห้องรอนับเองจากตัวนี้
-  const headcount = useRoomHeadcount(sessionId)
+  // รายชื่อ + จำนวนคนในห้อง — hook ตัวเดียวกันทั้ง 5 เกม
+  const room = useRoomPlayers(sessionId)
+  const headcount = room
 
   useEffect(() => {
     setReady(Boolean(resolveHostToken(sessionId)))
@@ -241,6 +244,16 @@ export default function TilesHost() {
                 })}
           </p>
         </section>
+
+        {/* ── คนในห้อง ───────────────────────────────────────── */}
+        {/* ห้องรอเปิดรายชื่อค้างไว้ — ช่วงที่ต้องดูว่าใครยังไม่เข้าคือก่อนเริ่มเกม */}
+        <PlayerRoster
+          players={room.players}
+          joined={room.joined}
+          online={room.online}
+          loaded={room.loaded}
+          defaultOpen={phase === 'lobby'}
+        />
 
         {/* ── feed คำตอบ ────────────────────────────────────── */}
         {feed.length > 0 && (

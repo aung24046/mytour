@@ -1,7 +1,10 @@
 // กองตัวอักษรที่สลับแล้วของเกม Word Shuffle — ตัวเดียวใช้ทุกจอ (มือถือ · จอใหญ่ · ทีวีบนรถ · Builder)
 //
-// รับ tiles จาก poolTiles(): [{ c, m, used }]
-//   used = ตัวนี้ถูกคนคุมเกมเปิดลงช่องคำตอบแล้ว → จางลง (ยังเห็นอยู่ ให้รู้ว่าเหลือตัวไหน)
+// รับ tiles จาก poolTiles(): [{ c, m, used }] (+ picked จาก markPicked())
+//   used   = ตัวนี้ถูกคนคุมเกมเปิดลงช่องคำตอบแล้ว → จางลง (ยังเห็นอยู่ ให้รู้ว่าเหลือตัวไหน)
+//   picked = ผู้เล่นหยิบไปวางในช่องเองแล้ว (18 ก.ย. 2026) → จางเหมือนกันแต่ขอบประ
+//            เอาคืนโดยแตะที่ "ช่อง" ไม่ใช่แตะที่กอง — กองคือของที่หยิบได้ ช่องคือที่วาง
+//   onPick(i) = หน้าเล่นส่งมาเมื่อผู้เล่นเรียงเองได้ · ไม่ส่ง = กองนี้ดูอย่างเดียว (จอใหญ่ · Builder)
 //
 // ── ขนาด: เท่ากับช่องคำตอบด้านบนพอดี ─────────────────────────────────────
 // เจ้าของโปรเจกต์ขอ (12 ก.ย. 2026) หลังลองสองรอบ: รอบแรกป้ายเล็ก/ขอบหนา/มีเงา · รอบสองป้ายใหญ่กว่าช่องด้านบน
@@ -22,7 +25,9 @@ const TILE = {
   mini: 'border border-neutral-400 bg-white text-neutral-900',
 }
 
-export default function ShufflePool({ tiles = [], surface = 'phone', boardCells = null, className = '' }) {
+export default function ShufflePool({
+  tiles = [], surface = 'phone', boardCells = null, onPick, className = '',
+}) {
   const tile = TILE[surface] ?? TILE.phone
   const font = boardFont(surface)
   // units ของกระดานด้านบน — ขนาดตัวในกองจะคิดสูตรเดียวกันทุกประการ
@@ -38,20 +43,27 @@ export default function ShufflePool({ tiles = [], surface = 'phone', boardCells 
         style={{ fontSize: font.fit, rowGap: '0.15em' }}
         data-testid="shuffle-pool"
       >
-        {tiles.map((x, i) => (
-          <span
-            key={i}
-            role="listitem"
-            data-used={x.used ? 'true' : 'false'}
-            className={`inline-flex justify-center rounded-[0.1em] transition-opacity ${tile} ${
-              x.used ? 'opacity-20' : ''
-            }`}
+        {tiles.map((x, i) => {
+          const gone = x.used || x.picked
+          const pickable = Boolean(onPick) && !gone
+          const props = {
+            role: 'listitem',
+            'data-used': x.used ? 'true' : 'false',
+            'data-picked': x.picked ? 'true' : 'false',
+            className: `inline-flex justify-center rounded-[0.1em] transition-opacity ${tile} ${
+              x.picked ? 'border-dashed opacity-30' : x.used ? 'opacity-20' : ''
+            }${pickable ? ' cursor-pointer touch-manipulation active:scale-90' : ''}`,
             // ความสูงล็อกไว้เท่าช่องด้านบน — ไม่งั้นเส้นกรอบบวกเพิ่มอีก 2-4px
-            style={{ ...BOX_GEOMETRY, height: `${BOX_GEOMETRY.lineHeight}em` }}
-          >
-            {`${x.c ?? ''}${x.m ?? ''}`}
-          </span>
-        ))}
+            style: { ...BOX_GEOMETRY, height: `${BOX_GEOMETRY.lineHeight}em` },
+          }
+          const text = `${x.c ?? ''}${x.m ?? ''}`
+          if (!pickable) return <span key={i} {...props}>{text}</span>
+          return (
+            <button key={i} type="button" {...props} onClick={() => onPick(i)}>
+              {text}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

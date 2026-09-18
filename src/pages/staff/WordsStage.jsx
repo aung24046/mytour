@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { supabase } from '../../lib/supabase'
-import { useQuizSession, serverNow } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers, serverNow } from '../../lib/useQuizSession'
 import { stageChecker } from '../../lib/quizStyle'
 import { resolveHostToken } from '../../lib/quizHost'
 import { fetchWordsStats, useWordsAnswerMode } from '../../lib/wordsHost'
@@ -10,6 +10,7 @@ import { applyOpened, revealCells, poolTiles } from '../../lib/wordsMask'
 import { wordGame } from '../../lib/wordGames'
 import WordBoard from '../../components/words/WordBoard'
 import ShufflePool from '../../components/words/ShufflePool'
+import StageRoster from '../../components/quiz/StageRoster'
 
 // จอใหญ่ของเกม What Words / Word Shuffle — เปิดแท็บแยก ไม่มีปุ่มสั่งงาน
 // game = 'words' | 'shuffle' — Word Shuffle มีกองตัวสลับใต้ช่องคำตอบ (ตอนเฉลยซ่อนกอง ให้คำตอบเด่นอย่างเดียว)
@@ -37,6 +38,8 @@ export default function WordsStage({ game: gameKey = 'words' }) {
   const G = wordGame(gameKey)
   const { sessionId } = useParams()
   const { session, question, phase, msLeft } = useQuizSession(sessionId)
+  // คนในห้อง — จอใหญ่ตอนรอเริ่มขึ้นชื่อคนที่เข้ามาแล้ว (ดู StageRoster.jsx)
+  const room = useRoomPlayers(sessionId, phase === 'lobby')
   const answerMode = useWordsAnswerMode(session?.set_id)
   const watchOnly = answerMode === 'none'
   const typing = answerMode === 'type' // ระหว่างโหลด (null) ไม่ใช่ทั้งสองแบบ — ไม่ขึ้นของที่อาจต้องหายไป
@@ -101,10 +104,12 @@ export default function WordsStage({ game: gameKey = 'words' }) {
 
   return (
     <div
-      className="flex min-h-screen w-full flex-col items-center justify-start p-4 sm:p-8"
+      // ★ 17 ก.ย. 2026: h-[100dvh] + min-h-0 ทุกชั้น เหมือนอีกสองเกมสกิน arcade
+      //   จอโปรเจกเตอร์เลื่อนไม่ได้ ห้องรอที่มีรายชื่อ 40 คนต้องหดเอง ไม่ใช่ดันตกขอบจอ
+      className="flex h-[100dvh] w-full flex-col items-center overflow-hidden p-3 sm:p-4"
       style={{ background: stageChecker(sessionId) }}
     >
-      <div className="flex w-full max-w-[1500px] flex-1 flex-col rounded-[28px] border-[6px] border-black bg-white p-5 shadow-[10px_10px_0_0_rgba(0,0,0,0.9)] sm:p-10">
+      <div className="flex min-h-0 w-full max-w-[1500px] flex-1 flex-col rounded-[28px] border-[6px] border-black bg-white p-5 shadow-[10px_10px_0_0_rgba(0,0,0,0.9)] sm:p-10">
         {/* หัวเรื่อง — หมวดหมู่คือคำใบ้ ต้องเห็นตั้งแต่วินาทีแรกของข้อ */}
         <div className="-mt-12 mb-6 flex items-center justify-center sm:-mt-16">
           <Pill>
@@ -120,11 +125,11 @@ export default function WordsStage({ game: gameKey = 'words' }) {
           </div>
         )}
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
           {phase === 'lobby' && (
-            <div className="text-center">
-              <p className="text-5xl font-black text-black sm:text-7xl">{G.stageTitle}</p>
-              <ul className="mt-6 space-y-3 text-2xl font-bold text-black sm:text-4xl">
+            <div className="flex min-h-0 flex-col items-center text-center">
+              <p className="shrink-0 text-4xl font-black text-black sm:text-6xl">{G.stageTitle}</p>
+              <ul className="mt-4 shrink-0 space-y-2 text-xl font-bold text-black sm:text-3xl">
                 <li>• {G.stageRule}</li>
                 {watchOnly ? (
                   <li>• คิดออกแล้วตอบได้เลย ไม่ต้องพิมพ์</li>
@@ -136,7 +141,8 @@ export default function WordsStage({ game: gameKey = 'words' }) {
                   </>
                 )}
               </ul>
-              <p className="mt-8 text-xl text-neutral-500">รอทีมงานเริ่มเกม</p>
+              <p className="mt-4 shrink-0 text-xl text-neutral-500">รอทีมงานเริ่มเกม</p>
+              <StageRoster players={room.players} tone="light" className="mt-4 min-h-0" />
             </div>
           )}
 

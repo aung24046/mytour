@@ -6,6 +6,9 @@
 //   opened  ตัวที่คนคุมเกมเปิดแล้วระหว่างเล่น — กล่องสีเขียวพร้อมตัวจริง
 //   answer  ตอนเฉลย — ตัวที่เคยซ่อนโชว์ในกล่องสีเขียว ให้เห็นว่าคำตอบคือตัวไหน
 //   peek    จอคนคุมเกม — กล่องว่างแต่เห็นตัวจริงจางๆ (รู้ว่ากำลังจะเปิดตัวอะไร)
+//   filled  Word Shuffle — ตัวที่ "ผู้เล่นเอง" หยิบจากกองมาวาง (กล่องฟ้า) แตะเพื่อเอาคืนได้
+//           ★ ต้องคนละสีกับ opened/answer (เขียว = ของจริงที่ระบบยืนยันแล้ว)
+//           ไม่งั้นผู้เล่นจะอ่านว่าตัวที่ตัวเองวางคือคำตอบที่ถูกแล้ว
 //
 // ── วาดเครื่องหมายลอยเหนือช่องว่างยังไง ─────────────────────────────────
 // สระบน/วรรณยุกต์ของไทยไม่มีความกว้างของตัวเอง ต้องมีตัวฐานให้เกาะถึงจะวางถูกที่
@@ -29,26 +32,26 @@ const SKINS = {
   // size = ขนาดสำรองของเบราว์เซอร์ที่ไม่รู้จัก cqw · fit = ขนาดจริงที่คิดจากความกว้างกล่องที่วางกระดาน
   stage: {
     box: '#e5e7eb', bar: '#000000', ink: '#000000', open: '#bbf7d0', openInk: '#065f46',
-    peekInk: 'rgba(0,0,0,0.25)',
+    peekInk: 'rgba(0,0,0,0.25)', fill: '#dbeafe', fillInk: '#1e3a8a', sel: '#2563eb',
     size: 'clamp(3rem, calc(86vw / var(--ww-units)), 12rem)',
     fit: 'clamp(2.25rem, calc(100cqw * 0.95 / var(--ww-units)), 12rem)',
   },
   bus_tv: {
     box: '#e5e7eb', bar: '#000000', ink: '#000000', open: '#bbf7d0', openInk: '#065f46',
-    peekInk: 'rgba(0,0,0,0.25)',
+    peekInk: 'rgba(0,0,0,0.25)', fill: '#dbeafe', fillInk: '#1e3a8a', sel: '#2563eb',
     size: 'clamp(3.5rem, calc(92vw / var(--ww-units)), 16rem)',
     fit: 'clamp(2.5rem, calc(100cqw * 0.95 / var(--ww-units)), 16rem)',
   },
   // มือถือ — ตัวที่ไม่ซ่อนใช้สีธีม (currentColor) ส่วนในกล่องใช้สีตายตัว อ่านได้ทั้งโหมดมืด/สว่าง
   phone: {
     box: '#e5e7eb', bar: '#1f2937', ink: '#111827', open: '#bbf7d0', openInk: '#065f46',
-    peekInk: 'rgba(17,24,39,0.3)',
+    peekInk: 'rgba(17,24,39,0.3)', fill: '#dbeafe', fillInk: '#1e3a8a', sel: '#2563eb',
     size: 'clamp(1.75rem, calc(min(100vw, 28rem) * 0.82 / var(--ww-units)), 3.5rem)',
     fit: 'clamp(1.25rem, calc(100cqw * 0.95 / var(--ww-units)), 3.5rem)',
   },
   mini: {
     box: '#e5e7eb', bar: '#1f2937', ink: '#111827', open: '#bbf7d0', openInk: '#065f46',
-    peekInk: 'rgba(17,24,39,0.3)',
+    peekInk: 'rgba(17,24,39,0.3)', fill: '#dbeafe', fillInk: '#1e3a8a', sel: '#2563eb',
     size: '1.6rem',
     fit: '1.6rem',
   },
@@ -112,12 +115,16 @@ export function boardFont(surface) {
 // ขนาดกล่องหนึ่งช่อง (em) — ShufflePool ใช้ชุดเดียวกัน แก้ที่นี่ที่เดียว
 export const BOX_GEOMETRY = { minWidth: '0.9em', padding: '0 0.06em', margin: '0 0.05em', lineHeight: 1.7 }
 
-function Box({ cell, skin, onClick }) {
-  const filled = cell.state === 'opened' || cell.state === 'answer'
-  const bg = filled ? skin.open : skin.box
+function Box({ cell, skin, onClick, selected = false }) {
+  const byHost = cell.state === 'opened' || cell.state === 'answer'
+  const byPlayer = cell.state === 'filled'
+  const bg = byHost ? skin.open : byPlayer ? skin.fill : skin.box
   const style = {
     background: bg,
-    boxShadow: `inset 0 -0.09em 0 ${skin.bar}`,
+    // ช่องที่กำลังจะวางตัวถัดไป: กรอบสีรอบกล่อง (เงานอก) — ขีดล่างเดิมยังอยู่ (เงาใน)
+    boxShadow: selected
+      ? `inset 0 -0.09em 0 ${skin.bar}, 0 0 0 0.08em ${skin.sel}`
+      : `inset 0 -0.09em 0 ${skin.bar}`,
     minWidth: BOX_GEOMETRY.minWidth,
     padding: BOX_GEOMETRY.padding,
     margin: BOX_GEOMETRY.margin,
@@ -125,8 +132,12 @@ function Box({ cell, skin, onClick }) {
   }
 
   let inner
-  if (filled) {
-    inner = <span style={{ color: skin.openInk }}>{`${cell.c ?? ''}${cell.m ?? ''}`}</span>
+  if (byHost || byPlayer) {
+    inner = (
+      <span style={{ color: byHost ? skin.openInk : skin.fillInk }}>
+        {`${cell.c ?? ''}${cell.m ?? ''}`}
+      </span>
+    )
   } else if (cell.state === 'peek') {
     inner = <span style={{ color: skin.peekInk }}>{`${cell.c ?? ''}${cell.m ?? ''}`}</span>
   } else {
@@ -145,7 +156,8 @@ function Box({ cell, skin, onClick }) {
       <button
         type="button"
         {...common}
-        className={`${common.className} cursor-pointer transition active:scale-95`}
+        // touch-manipulation = ไม่ต้องรอ 300ms เช็คว่าดับเบิลแท็ป — แตะเรียงตัวอักษรรัวๆ ต้องติดมือ
+        className={`${common.className} cursor-pointer touch-manipulation transition active:scale-95`}
         onClick={() => onClick(cell.slot)}
       >
         {inner}
@@ -155,7 +167,14 @@ function Box({ cell, skin, onClick }) {
   return <span {...common}>{inner}</span>
 }
 
-export default function WordBoard({ cells = [], surface = 'phone', onSlotClick, className = '' }) {
+/**
+ * clickStates = สถานะที่แตะได้ (ค่าเริ่มต้น peek = จอคนคุมเกมเท่านั้น)
+ *   หน้าเล่น Word Shuffle ส่ง ['hidden', 'filled'] — แตะช่องว่างเพื่อเลือก แตะช่องที่วางแล้วเพื่อเอาตัวคืน
+ * selectedSlot = ช่องที่ตัวถัดไปจะลง (กรอบสี)
+ */
+export default function WordBoard({
+  cells = [], surface = 'phone', onSlotClick, clickStates = ['peek'], selectedSlot = null, className = '',
+}) {
   const skin = SKINS[surface] ?? SKINS.phone
   const words = splitWords(cells)
   const units = unitsOf(cells)
@@ -164,6 +183,7 @@ export default function WordBoard({ cells = [], surface = 'phone', onSlotClick, 
   const label = cells
     .map((x) => (x.state === 'hidden' || x.state === 'peek' ? '_' : `${x.c ?? ''}${x.m ?? ''}`))
     .join('')
+  const clickable = (state) => Boolean(onSlotClick) && clickStates.includes(state)
 
   // ★ ขนาดตัวอักษรคิดจากความกว้างของ "กล่องที่วางกระดาน" (container query) ไม่ใช่ความกว้างจอ
   //   เดิมคิดจาก vw — จอ 1920 การ์ดกว้างสุดแค่ 1500px คำ 12 ช่อง (Word Shuffle: กรุงเทพมหานคร)
@@ -197,7 +217,8 @@ export default function WordBoard({ cells = [], surface = 'phone', onSlotClick, 
                   key={cell.slot}
                   cell={cell}
                   skin={skin}
-                  onClick={onSlotClick && cell.state === 'peek' ? onSlotClick : undefined}
+                  selected={cell.slot === selectedSlot}
+                  onClick={clickable(cell.state) ? onSlotClick : undefined}
                 />
               )
             )}

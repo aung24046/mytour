@@ -229,3 +229,85 @@ export function poolTiles(pool, openedCells = [], allUsed = false) {
     return { c: x.c, m: x.m ?? '', used: false }
   })
 }
+
+// ── โหมดเรียงตัวอักษร (18 ก.ย. 2026) ────────────────────────────────────
+// เจ้าของโปรเจกต์ขอ: Word Shuffle ไม่ต้องพิมพ์ตอบแล้ว — แตะตัวในกองให้ลงช่องเหมือน Scrabble
+//   เหตุผล: ตัวอักษรครบอยู่ในกองแล้ว การให้พิมพ์ซ้ำคือการบังคับให้สะกดถูก ซึ่งเป็นคนละเกม
+// ★ ตรรกะทั้งหมดอยู่ที่นี่ (ทดสอบได้) หน้าจอแค่เรียก — อย่าเขียนซ้ำใน Words.jsx
+//
+// placed = { [slot]: tileIndex } — slot คือลำดับช่องในคำตอบ · tileIndex คือลำดับตัวในกอง (pool)
+//   ยึด "ลำดับตัวในกอง" ไม่ใช่ตัวอักษร เพราะกองมีตัวซ้ำได้ (อ สองตัวใน แม่ฮ่องสอน)
+//   ถ้ายึดตัวอักษร จะบอกไม่ได้ว่าป้ายไหนในกองถูกหยิบไปแล้ว
+
+/** ใส่ตัวที่ผู้เล่นวางลงในช่อง — คืน cells สำหรับ WordBoard (state ใหม่: 'filled') */
+export function applyPlaced(cells, placed = {}, tiles = []) {
+  return (cells ?? []).map((x, i) => {
+    if (x.state !== 'hidden') return x
+    const ti = placed?.[i]
+    const tile = Number.isInteger(ti) ? tiles[ti] : null
+    if (!tile || tile.used) return x
+    return { c: tile.c, m: tile.m ?? '', state: 'filled' }
+  })
+}
+
+/** ช่องว่างถัดไปที่รับตัวได้ (วนกลับหัวคำ) — null = เต็มหมดแล้ว */
+export function nextEmptySlot(cells, from = 0) {
+  const n = (cells ?? []).length
+  if (!n) return null
+  const start = ((from % n) + n) % n
+  for (let k = 0; k < n; k++) {
+    const i = (start + k) % n
+    if (cells[i].state === 'hidden') return i
+  }
+  return null
+}
+
+/** เรียงครบทุกช่องหรือยัง (ช่องที่คนคุมเกมเปิดให้นับว่าครบแล้ว) */
+export function isArranged(cells) {
+  const boxes = (cells ?? []).filter((x) => x.state !== 'shown')
+  return boxes.length > 0 && boxes.every((x) => x.state !== 'hidden')
+}
+
+/** เหลืออีกกี่ช่องที่ยังว่าง */
+export function slotsLeft(cells) {
+  return (cells ?? []).filter((x) => x.state === 'hidden').length
+}
+
+/**
+ * ปรับตัวที่วางไว้ให้ยังใช้ได้ หลังกระดาน/กองเปลี่ยน — ต้องเรียกทุกครั้งที่คนคุมเกมเปิดตัวใหม่
+ *   · ช่องที่ถูกเปิดให้แล้ว (opened) → ถอดตัวที่ผู้เล่นวางไว้ออก ตัวนั้นกลับเข้ากอง
+ *   · ตัวที่คนคุมเกมใช้ไปแล้ว (used) → ย้ายไปใช้ป้ายหน้าตาเหมือนกันที่ยังว่าง ไม่มีก็ถอดออก
+ * ★ ไม่ทำแบบนี้ ผู้เล่นจะเห็นตัวเดียวกันอยู่สองที่ หรือช่องค้างตัวที่กองไม่มีแล้ว
+ */
+export function reconcilePlaced(placed = {}, cells = [], tiles = []) {
+  const entries = Object.entries(placed ?? {})
+    .map(([s, ti]) => [Number(s), ti])
+    .filter(([s, ti]) => cells[s]?.state === 'hidden' && tiles[ti])
+    .sort((a, b) => a[0] - b[0])
+
+  const next = {}
+  const taken = new Set()
+  const moved = []
+  for (const [slot, ti] of entries) {
+    if (!tiles[ti].used && !taken.has(ti)) {
+      next[slot] = ti
+      taken.add(ti)
+    } else {
+      moved.push([slot, tileText(tiles[ti])])
+    }
+  }
+  for (const [slot, text] of moved) {
+    const alt = tiles.findIndex((t, i) => !t.used && !taken.has(i) && tileText(t) === text)
+    if (alt >= 0) {
+      next[slot] = alt
+      taken.add(alt)
+    }
+  }
+  return next
+}
+
+/** ป้ายในกองที่ผู้เล่นหยิบไปวางแล้ว — ใส่ธง picked ให้ ShufflePool ทำให้จาง */
+export function markPicked(tiles = [], placed = {}) {
+  const used = new Set(Object.values(placed ?? {}))
+  return (tiles ?? []).map((x, i) => (used.has(i) ? { ...x, picked: true } : x))
+}

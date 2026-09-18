@@ -1922,7 +1922,14 @@
     "title": "Word Shuffle",
     "hiddenInfo": "已放好 {{opened}} / {{n}} 个字母",
     "rules": {
-      "guess": "• 把打乱的字母排成词，类别就是提示"
+      "guess": "• 把打乱的字母排成词，类别就是提示",
+      "tap": "• 点字母放进格子，排好后按确认"
+    },
+    "arrange": {
+      "left": "还差 {{n}} 格 · 点已放好的格子可取回字母",
+      "ready": "已排好，按确认即可",
+      "clear": "清空",
+      "confirm": "确认答案"
     },
     "manager": {
       "subtitle": "大屏把打乱的字母排成词",
@@ -1942,5 +1949,15 @@
     "host": {
       "tapHint": "点淡色格子即可把该字母放入格子"
     }
+  },
+  "quizRoster": {
+    "title": "房间内 {{joined}} 人 · 在线 {{online}}",
+    "empty": "还没有人加入",
+    "loading": "加载中…",
+    "justJoined": "刚加入",
+    "visitor": "临时玩家",
+    "kick": "将 {{name}} 移出房间",
+    "more": "还有 {{n}} 人",
+    "stageTitle": "已加入"
   }
 }

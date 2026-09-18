@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
 import { getStaffSession } from '../../lib/staffSession'
-import { useQuizSession, useQuizAnswerCount } from '../../lib/useQuizSession'
+import { useQuizSession, useQuizAnswerCount, useRoomPlayers } from '../../lib/useQuizSession'
 import {
   resolveHostToken, nextQuestion, lockAnswers, revealAnswer, lockAndReveal,
   setSessionState, removePlayer, fetchPendingPlayers, fetchLeaderboard, stageUrl,
@@ -16,6 +16,7 @@ import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
 import HostClaim from '../../components/quiz/HostClaim'
+import PlayerRoster from '../../components/quiz/PlayerRoster'
 
 // จอสั่งงานของคนคุมเกม — ถือมือเดียว อีกมือถือไมค์
 //
@@ -37,8 +38,6 @@ export default function QuizHost() {
   const [error, setError] = useState('')
   const [pending, setPending] = useState([])
   const [board, setBoard] = useState([])
-  const [players, setPlayers] = useState([])
-  const [showPlayers, setShowPlayers] = useState(false)
   const [copied, setCopied] = useState(false)
   const [teamBoard, setTeamBoard] = useState([])
 
@@ -88,22 +87,9 @@ export default function QuizHost() {
     return () => clearInterval(timer)
   }, [sessionId, session?.team_mode])
 
-  const loadPlayers = useCallback(async () => {
-    const { data } = await supabase
-      .from('quiz_players')
-      .select('id, display_name, kind, score, team_id, last_seen_at')
-      .eq('session_id', sessionId)
-      .order('joined_at')
-    setPlayers(data ?? [])
-  }, [sessionId])
-
-  useEffect(() => {
-    loadPlayers()
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') loadPlayers()
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [loadPlayers])
+  // รายชื่อคนในห้อง — hook ตัวเดียวกับอีก 4 เกม (ชื่อ · ทีม · ออนไลน์ · คนเพิ่งเข้า)
+  const room = useRoomPlayers(sessionId)
+  const players = room.players
 
   const run = useCallback(async (fn) => {
     setBusy(true)
@@ -451,7 +437,6 @@ export default function QuizHost() {
                         run(async () => {
                           await deleteTeam(sessionId, team.id)
                           fetchTeamLeaderboard(sessionId).then(setTeamBoard)
-                          loadPlayers()
                         })
                       }
                       className="flex-none rounded-full p-1 text-ink-faint hover:bg-danger-bg hover:text-danger-text"
@@ -466,57 +451,20 @@ export default function QuizHost() {
         )}
 
         {/* ── คนในห้อง ───────────────────────────────────────── */}
-        <div className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-          <button
-            type="button"
-            onClick={() => setShowPlayers((v) => !v)}
-            className="flex w-full items-center gap-2"
-          >
-            <Icon name="people" size={18} className="text-ink-muted" />
-            <span className="flex-1 text-left text-sm font-extrabold text-ink">
-              {t('staff.quiz.playersInRoom', { n: players.length })}
-            </span>
-            <Icon
-              name="chevronRight"
-              size={16}
-              className={`text-ink-faint transition ${showPlayers ? 'rotate-90' : ''}`}
-            />
-          </button>
-
-          {showPlayers && (
-            <ul className="mt-2 space-y-1">
-              {players.map((p) => (
-                <li key={p.id} className="flex items-center gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate text-ink">{p.display_name}</span>
-                  {p.kind === 'visitor' && (
-                    <span className="flex-none rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-bold text-ink-faint">
-                      {t('staff.quiz.visitor')}
-                    </span>
-                  )}
-                  {/* visitor พิมพ์ชื่อเองได้ และชื่อนั้นขึ้นจอใหญ่ต่อหน้าทุกคน — ต้องเตะออกได้ */}
-                  <button
-                    type="button"
-                    aria-label={t('staff.quiz.kick')}
-                    onClick={() => {
-                      // ถังขยะ 15px บนมือถือที่ถือมือเดียว — กดพลาดแล้วคนนั้น
-                      // เสียคะแนนทั้งหมด (quiz_answers cascade) และต้องเข้าห้องใหม่
-                      if (!window.confirm(t('staff.quiz.confirmKick', { name: p.display_name }))) {
-                        return
-                      }
-                      run(async () => {
-                        await removePlayer(sessionId, p.id)
-                        loadPlayers()
-                      })
-                    }}
-                    className="flex-none rounded-full p-1 text-ink-faint hover:bg-danger-bg hover:text-danger-text"
-                  >
-                    <Icon name="trash" size={15} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* ห้องรอเปิดรายชื่อค้างไว้ — ช่วงที่ต้องดูว่าใครยังไม่เข้าคือก่อนเริ่มเกม */}
+        <PlayerRoster
+          players={players}
+          joined={room.joined}
+          online={room.online}
+          loaded={room.loaded}
+          defaultOpen={session.state === 'lobby'}
+          onKick={(p) => {
+            // ถังขยะ 15px บนมือถือที่ถือมือเดียว — กดพลาดแล้วคนนั้น
+            // เสียคะแนนทั้งหมด (quiz_answers cascade) และต้องเข้าห้องใหม่
+            if (!window.confirm(t('staff.quiz.confirmKick', { name: p.display_name }))) return
+            run(() => removePlayer(sessionId, p.id))
+          }}
+        />
       </div>
     </div>
   )

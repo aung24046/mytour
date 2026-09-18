@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { supabase } from '../../lib/supabase'
-import { useQuizSession, useRoomHeadcount } from '../../lib/useQuizSession'
+import { useQuizSession, useRoomPlayers } from '../../lib/useQuizSession'
 import {
   nextQuestion, lockAndReveal, setSessionState, resolveHostToken, stageUrl,
   fetchTeamLeaderboard, renameTeam, deleteTeam,
@@ -21,6 +21,7 @@ import Icon from '../../components/common/Icon'
 import Button from '../../components/common/Button'
 import StaffHeader from '../../components/common/StaffHeader'
 import HostClaim from '../../components/quiz/HostClaim'
+import PlayerRoster from '../../components/quiz/PlayerRoster'
 
 // มือถือคนคุมเกม What Words / Word Shuffle — จอสั่งงานอย่างเดียว โครงเดียวกับ PuzzleHost
 // game = 'words' | 'shuffle' — Word Shuffle เพิ่มแค่กองตัวสลับใต้กระดาน (ตัวที่เปิดแล้วจางลง)
@@ -54,7 +55,9 @@ export default function WordsHost({ game: gameKey = 'words' }) {
   const { session, question, phase, msLeft, now } = useQuizSession(sessionId)
   const answerMode = useWordsAnswerMode(session?.set_id)
   // จำนวนคนนับเองทุกช่วง — ตัวเลขออนไลน์ของ stats มีเฉพาะตอนมีข้อ (ห้องรอเลยขึ้น 0 เสมอ)
-  const headcount = useRoomHeadcount(sessionId)
+  // รายชื่อ + จำนวนคนในห้อง — hook ตัวเดียวกันทั้ง 5 เกม
+  const room = useRoomPlayers(sessionId)
+  const headcount = room
   const watchOnly = answerMode === 'none'
   const typing = answerMode === 'type' // ระหว่างโหลด (null) ไม่ขึ้นตัวเลขการตอบ
 
@@ -272,6 +275,16 @@ export default function WordsHost({ game: gameKey = 'words' }) {
             </p>
           )}
         </section>
+
+        {/* ── คนในห้อง ───────────────────────────────────────── */}
+        {/* ห้องรอเปิดรายชื่อค้างไว้ — ช่วงที่ต้องดูว่าใครยังไม่เข้าคือก่อนเริ่มเกม */}
+        <PlayerRoster
+          players={room.players}
+          joined={room.joined}
+          online={room.online}
+          loaded={room.loaded}
+          defaultOpen={phase === 'lobby'}
+        />
 
         {/* ── ทีม ───────────────────────────────────────────── */}
         {teamMode && (
